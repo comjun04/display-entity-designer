@@ -1,11 +1,9 @@
 import { CameraControls, Grid } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
-import { useRef } from 'react'
-import { Camera, Color } from 'three'
+import { Color } from 'three'
+import Box from './Box'
 
 function App() {
-  const cameraRef = useRef<Camera>(null)
-
   return (
     <div className="h-full w-full">
       <Canvas
@@ -15,9 +13,9 @@ function App() {
         camera={{
           position: [3, 3, 3],
           // rotation: [0.0, Math.PI / 4, 0],
-          ref: cameraRef as any,
         }}
       >
+        {/* Axis lines */}
         <line>
           <bufferGeometry>
             <bufferAttribute
@@ -52,13 +50,7 @@ function App() {
           <lineBasicMaterial color={0x0000ff} />
         </line>
 
-        <mesh>
-          <boxGeometry />
-          <meshStandardMaterial />
-        </mesh>
-
-        <ambientLight intensity={0.1} />
-        <directionalLight position={[3, 3, 3]} color="red" />
+        <Box color={0xc0ffee} />
 
         <Grid
           cellSize={1}
@@ -71,7 +63,7 @@ function App() {
         <CameraControls
           makeDefault
           smoothTime={0}
-          draggingSmoothTime={0}
+          draggingSmoothTime={0.025}
           maxZoom={1}
         />
       </Canvas>
