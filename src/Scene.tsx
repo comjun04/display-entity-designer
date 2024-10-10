@@ -58,8 +58,8 @@ const Scene: FC = () => {
         <lineBasicMaterial color={0x0000ff} />
       </line>
 
-      {entities.map((entity, idx) => (
-        <Box key={idx} />
+      {entities.map((entity) => (
+        <Box key={entity.id} />
       ))}
 
       <Grid
