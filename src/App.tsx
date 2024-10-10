@@ -5,7 +5,7 @@ import { IoCubeOutline } from 'react-icons/io5'
 function App() {
   return (
     <div className="flex h-full w-full flex-row">
-      <div className="relative grow">
+      <div className="relative flex-1 overflow-hidden">
         <Scene />
 
         {/* floating buttons */}

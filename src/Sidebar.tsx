@@ -3,7 +3,7 @@ import { IoCubeOutline } from 'react-icons/io5'
 
 const Sidebar: FC = () => {
   return (
-    <div className="w-[500px] p-1">
+    <div className="w-[400px] p-1">
       <div className="flex select-none flex-col gap-[2px] bg-neutral-900 p-1 text-sm">
         <span className="font-bold">Objects</span>
 
