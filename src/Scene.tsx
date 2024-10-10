@@ -3,8 +3,16 @@ import { Canvas } from '@react-three/fiber'
 import { FC } from 'react'
 import { Color } from 'three'
 import Box from './components/canvas/Box'
+import { useDisplayEntityStore } from './store'
+import { useShallow } from 'zustand/shallow'
 
 const Scene: FC = () => {
+  const { entities } = useDisplayEntityStore(
+    useShallow((state) => ({
+      entities: state.entities,
+    })),
+  )
+
   return (
     <Canvas
       scene={{
@@ -50,7 +58,9 @@ const Scene: FC = () => {
         <lineBasicMaterial color={0x0000ff} />
       </line>
 
-      <Box color={0xc0ffee} />
+      {entities.map((entity, idx) => (
+        <Box key={idx} />
+      ))}
 
       <Grid
         cellSize={1}
