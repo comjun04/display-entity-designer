@@ -1,72 +1,22 @@
-import { CameraControls, Grid } from '@react-three/drei'
-import { Canvas } from '@react-three/fiber'
-import { Color } from 'three'
-import Box from './Box'
+import Sidebar from './Sidebar'
+import Scene from './Scene'
+import { IoCubeOutline } from 'react-icons/io5'
 
 function App() {
   return (
-    <div className="h-full w-full">
-      <Canvas
-        scene={{
-          background: new Color(0x333333),
-        }}
-        camera={{
-          position: [3, 3, 3],
-          // rotation: [0.0, Math.PI / 4, 0],
-        }}
-      >
-        {/* Axis lines */}
-        <line>
-          <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              count={2}
-              array={new Float32Array([-100, 0, 0, 100, 0, 0])}
-              itemSize={3}
-            />
-          </bufferGeometry>
-          <lineBasicMaterial color={0xff0000} />
-        </line>
-        <line>
-          <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              count={2}
-              array={new Float32Array([0, -100, 0, 0, 100, 0])}
-              itemSize={3}
-            />
-          </bufferGeometry>
-          <lineBasicMaterial color={0x00ff00} />
-        </line>
-        <line>
-          <bufferGeometry>
-            <bufferAttribute
-              attach="attributes-position"
-              count={2}
-              array={new Float32Array([0, 0, -100, 0, 0, 100])}
-              itemSize={3}
-            />
-          </bufferGeometry>
-          <lineBasicMaterial color={0x0000ff} />
-        </line>
+    <div className="flex h-full w-full flex-row">
+      <div className="relative grow">
+        <Scene />
 
-        <Box color={0xc0ffee} />
+        {/* floating buttons */}
+        <div className="absolute left-0 top-0 z-[5] mt-4 flex w-full justify-center">
+          <button className="rounded-lg bg-black p-2 text-neutral-300">
+            <IoCubeOutline size={32} />
+          </button>
+        </div>
+      </div>
 
-        <Grid
-          cellSize={1}
-          cellColor={0xffffff}
-          sectionColor={0x0}
-          sectionSize={5}
-          infiniteGrid
-        />
-
-        <CameraControls
-          makeDefault
-          smoothTime={0}
-          draggingSmoothTime={0.025}
-          maxZoom={1}
-        />
-      </Canvas>
+      <Sidebar />
     </div>
   )
 }
