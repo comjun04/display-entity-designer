@@ -1,10 +1,11 @@
-import { CameraControls, Grid, PerspectiveCamera } from '@react-three/drei'
+import { Grid, PerspectiveCamera } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { FC } from 'react'
 import { Color } from 'three'
 import Box from './components/canvas/Box'
 import { useDisplayEntityStore } from './store'
 import { useShallow } from 'zustand/shallow'
+import CustomCameraControls from './CustomCameraControls'
 
 const Scene: FC = () => {
   const { entities } = useDisplayEntityStore(
@@ -60,16 +61,7 @@ const Scene: FC = () => {
 
       <PerspectiveCamera makeDefault position={[3, 3, 3]}>
         <pointLight decay={0} intensity={Math.PI} />
-
-        <CameraControls
-          makeDefault
-          smoothTime={0}
-          draggingSmoothTime={0.025}
-          maxZoom={1}
-          onUpdate={(cam) => {
-            console.log(cam)
-          }}
-        />
+        <CustomCameraControls />
       </PerspectiveCamera>
 
       <Grid

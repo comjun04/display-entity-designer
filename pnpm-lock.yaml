@@ -17,6 +17,9 @@ importers:
       '@types/three':
         specifier: ^0.169.0
         version: 0.169.0
+      camera-controls:
+        specifier: ^2.9.0
+        version: 2.9.0(three@0.169.0)
       immer:
         specifier: ^10.1.1
         version: 10.1.1
