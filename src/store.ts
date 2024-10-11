@@ -12,12 +12,15 @@ type DisplayEntity = {
 
 type DisplayEntityState = {
   entities: DisplayEntity[]
+  selectedEntity: DisplayEntity | null
   createNew: () => void
+  setSelected: (id: string) => void
 }
 
 export const useDisplayEntityStore = create(
   immer<DisplayEntityState>((set) => ({
     entities: [],
+    selectedEntity: null,
     createNew: () =>
       set((state) => {
         state.entities.push({
@@ -27,6 +30,13 @@ export const useDisplayEntityStore = create(
           location: [0, 0, 0],
           color: 0x888888,
         })
+      }),
+    setSelected: (id) =>
+      set((state) => {
+        const entity = state.entities.find((e) => e.id === id)
+        if (entity != null) {
+          state.selectedEntity = entity
+        }
       }),
   })),
 )

@@ -1,6 +1,6 @@
-import { Grid, PerspectiveCamera } from '@react-three/drei'
+import { Grid, PerspectiveCamera, TransformControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
-import { FC } from 'react'
+import { FC, useRef } from 'react'
 import { Color } from 'three'
 import Box from './components/canvas/Box'
 import { useDisplayEntityStore } from './store'
@@ -8,11 +8,14 @@ import { useShallow } from 'zustand/shallow'
 import CustomCameraControls from './CustomCameraControls'
 
 const Scene: FC = () => {
-  const { entities } = useDisplayEntityStore(
+  const { entities, selectedEntity } = useDisplayEntityStore(
     useShallow((state) => ({
       entities: state.entities,
+      selectedEntity: state.selectedEntity,
     })),
   )
+
+  const selectedEntityRef = useRef(null!)
 
   return (
     <Canvas
@@ -55,9 +58,28 @@ const Scene: FC = () => {
         <lineBasicMaterial color={0x0000ff} />
       </line>
 
-      {entities.map((entity) => (
-        <Box key={entity.id} size={entity.size} position={entity.location} />
-      ))}
+      {entities.map((entity) => {
+        return (
+          <Box
+            key={entity.id}
+            id={entity.id}
+            size={entity.size}
+            position={entity.location}
+            object3DRef={
+              selectedEntity?.id === entity.id ? selectedEntityRef : undefined
+            }
+          />
+        )
+      })}
+
+      <TransformControls
+        object={selectedEntity != null ? selectedEntityRef : undefined}
+        // visible={selectedEntity != null} // 왜인지 모르겠는데 작동 안함
+        showX={selectedEntity != null}
+        showY={selectedEntity != null}
+        showZ={selectedEntity != null}
+        enabled={selectedEntity != null}
+      />
 
       <PerspectiveCamera makeDefault position={[3, 3, 3]}>
         <pointLight decay={0} intensity={Math.PI} />
