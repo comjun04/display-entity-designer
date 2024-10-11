@@ -1,4 +1,4 @@
-import { CameraControls, Grid } from '@react-three/drei'
+import { CameraControls, Grid, PerspectiveCamera } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { FC } from 'react'
 import { Color } from 'three'
@@ -17,10 +17,6 @@ const Scene: FC = () => {
     <Canvas
       scene={{
         background: new Color(0x333333),
-      }}
-      camera={{
-        position: [3, 3, 3],
-        // rotation: [0.0, Math.PI / 4, 0],
       }}
     >
       {/* Axis lines */}
@@ -62,19 +58,26 @@ const Scene: FC = () => {
         <Box key={entity.id} size={entity.size} position={entity.location} />
       ))}
 
+      <PerspectiveCamera makeDefault position={[3, 3, 3]}>
+        <pointLight decay={0} intensity={Math.PI} />
+
+        <CameraControls
+          makeDefault
+          smoothTime={0}
+          draggingSmoothTime={0.025}
+          maxZoom={1}
+          onUpdate={(cam) => {
+            console.log(cam)
+          }}
+        />
+      </PerspectiveCamera>
+
       <Grid
         cellSize={1}
         cellColor={0xffffff}
         sectionColor={0x0}
         sectionSize={5}
         infiniteGrid
-      />
-
-      <CameraControls
-        makeDefault
-        smoothTime={0}
-        draggingSmoothTime={0.025}
-        maxZoom={1}
       />
     </Canvas>
   )

@@ -1,5 +1,5 @@
 import { FC, useMemo } from 'react'
-import { BoxGeometry, MeshBasicMaterial } from 'three'
+import { BoxGeometry, MeshStandardMaterial } from 'three'
 
 type BoxProps = {
   size: [number, number, number]
@@ -15,7 +15,7 @@ const Box: FC<BoxProps> = ({ color = 0x888888, size, position }) => {
   )
   const material = useMemo(
     () =>
-      new MeshBasicMaterial({
+      new MeshStandardMaterial({
         color,
       }),
     [color],
