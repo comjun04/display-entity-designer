@@ -59,7 +59,7 @@ const Scene: FC = () => {
       </line>
 
       {entities.map((entity) => (
-        <Box key={entity.id} />
+        <Box key={entity.id} size={entity.size} position={entity.location} />
       ))}
 
       <Grid
