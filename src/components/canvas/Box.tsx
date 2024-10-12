@@ -1,5 +1,5 @@
 import { useDisplayEntityStore } from '@/store'
-import { FC, MutableRefObject, useMemo } from 'react'
+import { FC, Ref, useMemo } from 'react'
 import {
   BoxGeometry,
   EdgesGeometry,
@@ -14,7 +14,7 @@ type BoxProps = {
   size: [number, number, number]
   position: [number, number, number]
   color?: number | string
-  object3DRef?: MutableRefObject<Object3D>
+  object3DRef?: Ref<Object3D>
 }
 
 const Box: FC<BoxProps> = ({
@@ -24,8 +24,11 @@ const Box: FC<BoxProps> = ({
   position,
   object3DRef: ref,
 }) => {
-  const { setSelected } = useDisplayEntityStore(
-    useShallow((state) => ({ setSelected: state.setSelected })),
+  const { selectedEntity, setSelected } = useDisplayEntityStore(
+    useShallow((state) => ({
+      selectedEntity: state.selectedEntity,
+      setSelected: state.setSelected,
+    })),
   )
 
   const geometry = useMemo(
@@ -57,6 +60,7 @@ const Box: FC<BoxProps> = ({
       />
 
       <lineSegments
+        visible={selectedEntity?.id === id}
         geometry={edgesGeometry}
         material={lineMaterial}
         position={[size[0] / 2, size[1] / 2, size[2] / 2]}

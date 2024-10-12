@@ -1,6 +1,6 @@
 import { Grid, PerspectiveCamera, TransformControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
-import { FC, useRef } from 'react'
+import { FC } from 'react'
 import { Color } from 'three'
 import Box from './components/canvas/Box'
 import { useDisplayEntityStore } from './store'
@@ -14,8 +14,6 @@ const Scene: FC = () => {
       selectedEntity: state.selectedEntity,
     })),
   )
-
-  const selectedEntityRef = useRef(null!)
 
   return (
     <Canvas
@@ -65,15 +63,17 @@ const Scene: FC = () => {
             id={entity.id}
             size={entity.size}
             position={entity.location}
-            object3DRef={
-              selectedEntity?.id === entity.id ? selectedEntityRef : undefined
-            }
+            object3DRef={entity.objectRef}
           />
         )
       })}
 
       <TransformControls
-        object={selectedEntity != null ? selectedEntityRef : undefined}
+        object={
+          selectedEntity?.objectRef != null
+            ? selectedEntity.objectRef
+            : undefined
+        }
         // visible={selectedEntity != null} // 왜인지 모르겠는데 작동 안함
         showX={selectedEntity != null}
         showY={selectedEntity != null}
