@@ -14,7 +14,7 @@ const ObjectsPanel: FC = () => {
   )
 
   return (
-    <div className="flex select-none flex-col gap-[2px] bg-neutral-900 p-1 text-sm">
+    <div className="flex select-none flex-col gap-[2px] rounded-lg bg-neutral-900 p-2 text-sm">
       <span className="font-bold">Objects</span>
 
       {entities.map((entity, idx) => (
