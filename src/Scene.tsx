@@ -1,19 +1,23 @@
 import { Grid, PerspectiveCamera, TransformControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { FC } from 'react'
-import { Color } from 'three'
+import { Color, Event } from 'three'
 import Box from './components/canvas/Box'
 import { useDisplayEntityStore } from './store'
 import { useShallow } from 'zustand/shallow'
 import CustomCameraControls from './CustomCameraControls'
+import { TransformControls as OriginalTransformControls } from 'three/examples/jsm/Addons.js'
 
 const Scene: FC = () => {
-  const { entities, selectedEntity } = useDisplayEntityStore(
-    useShallow((state) => ({
-      entities: state.entities,
-      selectedEntity: state.selectedEntity,
-    })),
-  )
+  const { entities, entityRefs, selectedEntity, setEntityTranslation } =
+    useDisplayEntityStore(
+      useShallow((state) => ({
+        entities: state.entities,
+        entityRefs: state.entityRefs,
+        selectedEntity: state.getSelectedEntity(),
+        setEntityTranslation: state.setEntityTranslation,
+      })),
+    )
 
   return (
     <Canvas
@@ -57,28 +61,35 @@ const Scene: FC = () => {
       </line>
 
       {entities.map((entity) => {
+        const refData = entityRefs.find((d) => d.id === entity.id)!
         return (
           <Box
             key={entity.id}
             id={entity.id}
             size={entity.size}
             position={entity.location}
-            object3DRef={entity.objectRef}
+            object3DRef={refData.objectRef}
           />
         )
       })}
 
       <TransformControls
         object={
-          selectedEntity?.objectRef != null
-            ? selectedEntity.objectRef
-            : undefined
+          entityRefs.find((d) => d.id === selectedEntity?.id)?.objectRef ??
+          undefined
         }
         // visible={selectedEntity != null} // 왜인지 모르겠는데 작동 안함
         showX={selectedEntity != null}
         showY={selectedEntity != null}
         showZ={selectedEntity != null}
         enabled={selectedEntity != null}
+        onObjectChange={(e) => {
+          const target = (e as Event<string, OriginalTransformControls>).target
+          setEntityTranslation(
+            selectedEntity!.id,
+            target.object.position.toArray(),
+          )
+        }}
       />
 
       <PerspectiveCamera makeDefault position={[3, 3, 3]}>

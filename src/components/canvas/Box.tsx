@@ -26,7 +26,7 @@ const Box: FC<BoxProps> = ({
 }) => {
   const { selectedEntity, setSelected } = useDisplayEntityStore(
     useShallow((state) => ({
-      selectedEntity: state.selectedEntity,
+      selectedEntity: state.getSelectedEntity(),
       setSelected: state.setSelected,
     })),
   )

@@ -8,7 +8,7 @@ const ObjectsPanel: FC = () => {
   const { entities, selectedEntity, setSelectedEntity } = useDisplayEntityStore(
     useShallow((state) => ({
       entities: state.entities,
-      selectedEntity: state.selectedEntity,
+      selectedEntity: state.getSelectedEntity(),
       setSelectedEntity: state.setSelected,
     })),
   )
