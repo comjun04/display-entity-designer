@@ -3,7 +3,7 @@ import { Canvas } from '@react-three/fiber'
 import { FC } from 'react'
 import { Color, Event } from 'three'
 import Box from './components/canvas/Box'
-import { useDisplayEntityStore } from './store'
+import { useDisplayEntityStore, useEditorStore } from './store'
 import { useShallow } from 'zustand/shallow'
 import CustomCameraControls from './CustomCameraControls'
 import { TransformControls as OriginalTransformControls } from 'three/examples/jsm/Addons.js'
@@ -18,6 +18,7 @@ const Scene: FC = () => {
         setEntityTranslation: state.setEntityTranslation,
       })),
     )
+  const { mode } = useEditorStore(useShallow((state) => ({ mode: state.mode })))
 
   return (
     <Canvas
@@ -78,6 +79,7 @@ const Scene: FC = () => {
           entityRefs.find((d) => d.id === selectedEntity?.id)?.objectRef ??
           undefined
         }
+        mode={mode}
         translationSnap={0.0625}
         rotationSnap={Math.PI / 12} // 15도
         scaleSnap={0.0625}
