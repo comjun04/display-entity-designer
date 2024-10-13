@@ -9,7 +9,7 @@ type DisplayEntity = {
   type: 'block'
   id: string
   size: [number, number, number]
-  location: [number, number, number]
+  position: [number, number, number]
   color: string | number
 }
 
@@ -51,7 +51,7 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
             type: 'block',
             id,
             size: [1, 1, 1],
-            location: [0, 0, 0],
+            position: [0, 0, 0],
             color: 0x888888,
           },
         ],
@@ -98,7 +98,7 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
       produce((state: DisplayEntityState) => {
         const entity = state.entities.find((e) => e.id === id)
         if (entity != null) {
-          entity.location = translation
+          entity.position = translation
         }
       }),
     ),

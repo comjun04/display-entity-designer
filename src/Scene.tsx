@@ -68,7 +68,7 @@ const Scene: FC = () => {
             key={entity.id}
             id={entity.id}
             size={entity.size}
-            position={entity.location}
+            position={entity.position}
             object3DRef={refData.objectRef}
           />
         )

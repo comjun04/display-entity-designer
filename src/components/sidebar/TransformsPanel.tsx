@@ -8,7 +8,7 @@ const TransformsPanel: FC = () => {
     useDisplayEntityStore(
       useShallow((state) => ({
         selectedEntity: state.getSelectedEntity(),
-        selectedEntityPosition: state.getSelectedEntity()?.location,
+        selectedEntityPosition: state.getSelectedEntity()?.position,
         setEntityTranslation: state.setEntityTranslation,
       })),
     )
