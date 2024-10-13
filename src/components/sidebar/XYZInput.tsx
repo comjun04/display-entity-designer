@@ -30,7 +30,7 @@ const NumberInput: FC<NumberInputProps> = ({
         if (evt.target.value.length < 1) return
 
         const num = Number(evt.target.value)
-        if (!isNaN(num) && isFinite(num)) {
+        if (!isNaN(num) && isFinite(num) && (allowNegative || num > 0)) {
           onChange?.(num)
         }
       }}
