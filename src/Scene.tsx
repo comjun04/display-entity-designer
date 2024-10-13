@@ -13,6 +13,7 @@ const Scene: FC = () => {
     entities,
     entityRefs,
     selectedEntity,
+    setSelected,
     setEntityTranslation,
     setEntityRotation,
     setEntityScale,
@@ -21,6 +22,7 @@ const Scene: FC = () => {
       entities: state.entities,
       entityRefs: state.entityRefs,
       selectedEntity: state.getSelectedEntity(),
+      setSelected: state.setSelected,
       setEntityTranslation: state.setEntityTranslation,
       setEntityRotation: state.setEntityRotation,
       setEntityScale: state.setEntityScale,
@@ -120,6 +122,9 @@ const Scene: FC = () => {
             rotation.y,
             rotation.z,
           ])
+        }}
+        onPointerMissed={() => {
+          setSelected(null)
         }}
       />
 

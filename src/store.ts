@@ -24,7 +24,7 @@ type DisplayEntityState = {
   selectedEntityId: string | null
   createNew: () => void
   setEntityRef: (id: string, ref: MutableRefObject<Object3D>) => void
-  setSelected: (id: string) => void
+  setSelected: (id: string | null) => void
   getSelectedEntity: () => DisplayEntity | null
   setEntityTranslation: (
     id: string,
@@ -87,6 +87,12 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
   setSelected: (id) =>
     set(
       produce((state: DisplayEntityState) => {
+        // selectedEntityId 삭제
+        if (id == null) {
+          state.selectedEntityId = null
+          return
+        }
+
         const entity = state.entities.find((e) => e.id === id)
         if (entity != null) {
           state.selectedEntityId = entity.id
