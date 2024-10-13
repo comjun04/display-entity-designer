@@ -1,6 +1,7 @@
 import Sidebar from './Sidebar'
 import Scene from './Scene'
 import TopButtonPanel from './components/TopButtonPanel'
+import LeftButtonPanel from './components/LeftButtonPanel'
 
 function App() {
   return (
@@ -10,6 +11,7 @@ function App() {
 
         {/* floating buttons */}
         <TopButtonPanel />
+        <LeftButtonPanel />
       </div>
 
       <Sidebar />
