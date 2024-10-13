@@ -1,5 +1,6 @@
 import { FC } from 'react'
 import ObjectsPanel from './components/sidebar/ObjectsPanel'
+import PropertiesPanel from './components/sidebar/PropertiesPanel'
 import TransformsPanel from './components/sidebar/TransformsPanel'
 
 const Sidebar: FC = () => {
@@ -7,6 +8,7 @@ const Sidebar: FC = () => {
     <div className="flex w-[400px] flex-col gap-2 p-2">
       <ObjectsPanel />
       <TransformsPanel />
+      <PropertiesPanel />
     </div>
   )
 }
