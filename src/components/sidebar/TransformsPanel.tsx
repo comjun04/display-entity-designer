@@ -34,6 +34,7 @@ const TransformsPanel: FC = () => {
           Translation
         </div>
         <XYZInput
+          allowNegative
           value={translation}
           onChange={(xyz) => setEntityTranslation(selectedEntity.id, xyz)}
         />
@@ -44,7 +45,7 @@ const TransformsPanel: FC = () => {
           Rotation
         </div>
         {/* temp */}
-        <XYZInput value={{ x: 0, y: 0, z: 0 }} />
+        <XYZInput allowNegative value={{ x: 0, y: 0, z: 0 }} />
       </div>
 
       <div className="mt-2">
