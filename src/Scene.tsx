@@ -78,6 +78,9 @@ const Scene: FC = () => {
           entityRefs.find((d) => d.id === selectedEntity?.id)?.objectRef ??
           undefined
         }
+        translationSnap={0.0625}
+        rotationSnap={Math.PI / 12} // 15도
+        scaleSnap={0.0625}
         // visible={selectedEntity != null} // 왜인지 모르겠는데 작동 안함
         showX={selectedEntity != null}
         showY={selectedEntity != null}
