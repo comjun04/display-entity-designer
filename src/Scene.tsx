@@ -14,6 +14,7 @@ const Scene: FC = () => {
     entityRefs,
     selectedEntity,
     setEntityTranslation,
+    setEntityRotation,
     setEntityScale,
   } = useDisplayEntityStore(
     useShallow((state) => ({
@@ -21,6 +22,7 @@ const Scene: FC = () => {
       entityRefs: state.entityRefs,
       selectedEntity: state.getSelectedEntity(),
       setEntityTranslation: state.setEntityTranslation,
+      setEntityRotation: state.setEntityRotation,
       setEntityScale: state.setEntityScale,
     })),
   )
@@ -75,6 +77,7 @@ const Scene: FC = () => {
             id={entity.id}
             size={entity.size}
             position={entity.position}
+            rotation={entity.rotation}
             object3DRef={refData.objectRef}
           />
         )
@@ -110,6 +113,13 @@ const Scene: FC = () => {
           // state를 건드리기 전에 object3d에 먼저 scale 값을 세팅해야 음수 값일 경우 음수 <-> 양수로 계속 바뀌면서 생기는 깜빡거림을 방지할 수 있음
           target.object.scale.fromArray(scale)
           setEntityScale(selectedEntity!.id, scale) // 그 이후에 state 조작
+
+          const rotation = target.object.rotation
+          setEntityRotation(selectedEntity!.id, [
+            rotation.x,
+            rotation.y,
+            rotation.z,
+          ])
         }}
       />
 

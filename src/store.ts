@@ -10,6 +10,7 @@ type DisplayEntity = {
   id: string
   size: [number, number, number]
   position: [number, number, number]
+  rotation: [number, number, number]
   color: string | number
 }
 
@@ -29,6 +30,7 @@ type DisplayEntityState = {
     id: string,
     translation: [number, number, number],
   ) => void
+  setEntityRotation: (id: string, rotation: [number, number, number]) => void
   setEntityScale: (id: string, scale: [number, number, number]) => void
 }
 
@@ -53,6 +55,7 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
             id,
             size: [1, 1, 1],
             position: [0, 0, 0],
+            rotation: [0, 0, 0],
             color: 0x888888,
           },
         ],
@@ -100,6 +103,15 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
         const entity = state.entities.find((e) => e.id === id)
         if (entity != null) {
           entity.position = translation
+        }
+      }),
+    ),
+  setEntityRotation: (id, rotation) =>
+    set(
+      produce((state: DisplayEntityState) => {
+        const entity = state.entities.find((e) => e.id === id)
+        if (entity != null) {
+          entity.rotation = rotation
         }
       }),
     ),

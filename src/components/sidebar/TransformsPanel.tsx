@@ -4,20 +4,31 @@ import { useDisplayEntityStore } from '@/store'
 import { useShallow } from 'zustand/shallow'
 
 const TransformsPanel: FC = () => {
-  const { selectedEntity, setEntityTranslation, setEntityScale } =
-    useDisplayEntityStore(
-      useShallow((state) => ({
-        selectedEntity: state.getSelectedEntity(),
-        setEntityTranslation: state.setEntityTranslation,
-        setEntityScale: state.setEntityScale,
-      })),
-    )
+  const {
+    selectedEntity,
+    setEntityTranslation,
+    setEntityRotation,
+    setEntityScale,
+  } = useDisplayEntityStore(
+    useShallow((state) => ({
+      selectedEntity: state.getSelectedEntity(),
+      setEntityTranslation: state.setEntityTranslation,
+      setEntityRotation: state.setEntityRotation,
+      setEntityScale: state.setEntityScale,
+    })),
+  )
 
   const translation = useMemo(
     () => selectedEntity?.position ?? ([0, 0, 0] as [number, number, number]),
     [selectedEntity?.position],
   )
-
+  const rotation = useMemo(
+    () =>
+      (selectedEntity?.rotation ?? [0, 0, 0]).map(
+        (d) => (d / Math.PI) * 180,
+      ) as [number, number, number],
+    [selectedEntity?.rotation],
+  )
   const scale = useMemo(
     () => selectedEntity?.size ?? ([1, 1, 1] as [number, number, number]),
     [selectedEntity?.size],
@@ -46,7 +57,18 @@ const TransformsPanel: FC = () => {
           Rotation
         </div>
         {/* temp */}
-        <XYZInput allowNegative value={[0, 0, 0]} />
+        <XYZInput
+          allowNegative
+          value={rotation}
+          onChange={(xyz) => {
+            const radianRotation = xyz.map((d) => (d * Math.PI) / 180) as [
+              number,
+              number,
+              number,
+            ]
+            setEntityRotation(selectedEntity.id, radianRotation)
+          }}
+        />
       </div>
 
       <div className="mt-2">

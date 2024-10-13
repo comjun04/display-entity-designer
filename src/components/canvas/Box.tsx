@@ -13,6 +13,7 @@ type BoxProps = {
   id: string
   size: [number, number, number]
   position: [number, number, number]
+  rotation: [number, number, number]
   color?: number | string
   object3DRef?: Ref<Object3D>
 }
@@ -22,6 +23,7 @@ const Box: FC<BoxProps> = ({
   color = 0x888888,
   size,
   position,
+  rotation,
   object3DRef: ref,
 }) => {
   const { selectedEntity, setSelected } = useDisplayEntityStore(
@@ -47,7 +49,7 @@ const Box: FC<BoxProps> = ({
   )
 
   return (
-    <object3D position={position} ref={ref} scale={size}>
+    <object3D position={position} ref={ref} scale={size} rotation={rotation}>
       <mesh
         geometry={geometry}
         material={material}
