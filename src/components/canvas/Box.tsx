@@ -31,11 +31,7 @@ const Box: FC<BoxProps> = ({
     })),
   )
 
-  const geometry = useMemo(
-    () => new BoxGeometry(size[0], size[1], size[2]),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [size[0], size[1], size[2]],
-  )
+  const geometry = useMemo(() => new BoxGeometry(1, 1, 1), [])
   const material = useMemo(
     () =>
       new MeshStandardMaterial({
@@ -51,11 +47,11 @@ const Box: FC<BoxProps> = ({
   )
 
   return (
-    <object3D position={position} ref={ref}>
+    <object3D position={position} ref={ref} scale={size}>
       <mesh
         geometry={geometry}
         material={material}
-        position={[size[0] / 2, size[1] / 2, size[2] / 2]} // 왼쪽 아래 점이 기준점이 되도록 각 축 변 길이의 반만큼 이동
+        position={[0.5, 0.5, 0.5]} // 왼쪽 아래 점이 기준점이 되도록 geometry 각 축 변 길이의 반만큼 이동
         onClick={() => setSelected(id)}
       />
 
@@ -63,7 +59,7 @@ const Box: FC<BoxProps> = ({
         visible={selectedEntity?.id === id}
         geometry={edgesGeometry}
         material={lineMaterial}
-        position={[size[0] / 2, size[1] / 2, size[2] / 2]}
+        position={[0.5, 0.5, 0.5]}
       />
     </object3D>
   )
