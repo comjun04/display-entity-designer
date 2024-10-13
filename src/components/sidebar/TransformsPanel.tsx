@@ -4,18 +4,23 @@ import { useDisplayEntityStore } from '@/store'
 import { useShallow } from 'zustand/shallow'
 
 const TransformsPanel: FC = () => {
-  const { selectedEntity, selectedEntityPosition, setEntityTranslation } =
+  const { selectedEntity, setEntityTranslation, setEntityScale } =
     useDisplayEntityStore(
       useShallow((state) => ({
         selectedEntity: state.getSelectedEntity(),
-        selectedEntityPosition: state.getSelectedEntity()?.position,
         setEntityTranslation: state.setEntityTranslation,
+        setEntityScale: state.setEntityScale,
       })),
     )
 
   const translation = useMemo(
-    () => selectedEntityPosition ?? ([0, 0, 0] as [number, number, number]),
-    [selectedEntityPosition],
+    () => selectedEntity?.position ?? ([0, 0, 0] as [number, number, number]),
+    [selectedEntity?.position],
+  )
+
+  const scale = useMemo(
+    () => selectedEntity?.size ?? ([1, 1, 1] as [number, number, number]),
+    [selectedEntity?.size],
   )
 
   if (selectedEntity == null) return null
@@ -49,7 +54,10 @@ const TransformsPanel: FC = () => {
           Scale
         </div>
         {/* temp */}
-        <XYZInput value={[0, 0, 0]} />
+        <XYZInput
+          value={scale}
+          onChange={(xyz) => setEntityScale(selectedEntity.id, xyz)}
+        />
       </div>
     </div>
   )

@@ -9,15 +9,21 @@ import CustomCameraControls from './CustomCameraControls'
 import { TransformControls as OriginalTransformControls } from 'three/examples/jsm/Addons.js'
 
 const Scene: FC = () => {
-  const { entities, entityRefs, selectedEntity, setEntityTranslation } =
-    useDisplayEntityStore(
-      useShallow((state) => ({
-        entities: state.entities,
-        entityRefs: state.entityRefs,
-        selectedEntity: state.getSelectedEntity(),
-        setEntityTranslation: state.setEntityTranslation,
-      })),
-    )
+  const {
+    entities,
+    entityRefs,
+    selectedEntity,
+    setEntityTranslation,
+    setEntityScale,
+  } = useDisplayEntityStore(
+    useShallow((state) => ({
+      entities: state.entities,
+      entityRefs: state.entityRefs,
+      selectedEntity: state.getSelectedEntity(),
+      setEntityTranslation: state.setEntityTranslation,
+      setEntityScale: state.setEntityScale,
+    })),
+  )
   const { mode } = useEditorStore(useShallow((state) => ({ mode: state.mode })))
 
   return (
@@ -94,6 +100,16 @@ const Scene: FC = () => {
             selectedEntity!.id,
             target.object.position.toArray(),
           )
+
+          const scale = target.object.scale.toArray().map(Math.abs) as [
+            number,
+            number,
+            number,
+          ]
+
+          // state를 건드리기 전에 object3d에 먼저 scale 값을 세팅해야 음수 값일 경우 음수 <-> 양수로 계속 바뀌면서 생기는 깜빡거림을 방지할 수 있음
+          target.object.scale.fromArray(scale)
+          setEntityScale(selectedEntity!.id, scale) // 그 이후에 state 조작
         }}
       />
 

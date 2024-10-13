@@ -29,6 +29,7 @@ type DisplayEntityState = {
     id: string,
     translation: [number, number, number],
   ) => void
+  setEntityScale: (id: string, scale: [number, number, number]) => void
 }
 
 // DisplayEntity#objectRef는 mutable해야 하므로(object 내부 property를 수정할 수 있어야 하므로)
@@ -99,6 +100,15 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
         const entity = state.entities.find((e) => e.id === id)
         if (entity != null) {
           entity.position = translation
+        }
+      }),
+    ),
+  setEntityScale: (id, scale) =>
+    set(
+      produce((state: DisplayEntityState) => {
+        const entity = state.entities.find((e) => e.id === id)
+        if (entity != null) {
+          entity.size = scale
         }
       }),
     ),
