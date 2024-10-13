@@ -24,9 +24,13 @@ const TransformsPanel: FC = () => {
   )
   const rotation = useMemo(
     () =>
-      (selectedEntity?.rotation ?? [0, 0, 0]).map(
-        (d) => (d / Math.PI) * 180,
-      ) as [number, number, number],
+      (selectedEntity?.rotation ?? [0, 0, 0]).map((d) => {
+        const degree = (d / Math.PI) * 180
+
+        // 소수점 7자리에서 반올림
+        const rounded = Math.round(degree * 1000000) / 1000000
+        return rounded
+      }) as [number, number, number],
     [selectedEntity?.rotation],
   )
   const scale = useMemo(
