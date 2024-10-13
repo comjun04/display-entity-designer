@@ -8,7 +8,7 @@ type NumberInputProps = {
 }
 
 type XYZInputProps = {
-  value: { x: number; y: number; z: number }
+  value: [number, number, number]
   allowNegative?: boolean
   onChange?: (xyz: [number, number, number]) => void
 }
@@ -46,32 +46,33 @@ const XYZInput: FC<XYZInputProps> = ({
   allowNegative = false,
   onChange,
 }) => {
+  const [x, y, z] = value
   return (
     <div className="flex flex-row justify-stretch gap-2">
       <div className="flex flex-row items-center gap-2">
         <span>X</span>
         <NumberInput
-          value={value.x}
+          value={x}
           allowNegative={allowNegative}
-          onChange={(num) => onChange?.([num, value.y, value.z])}
+          onChange={(num) => onChange?.([num, y, z])}
           className="w-full rounded border-l-4 border-red-500 bg-neutral-800 py-1 pl-1 text-xs outline-none"
         />
       </div>
       <div className="flex flex-row items-center gap-2">
         <span>Y</span>
         <NumberInput
-          value={value.y}
+          value={y}
           allowNegative={allowNegative}
-          onChange={(num) => onChange?.([value.x, num, value.z])}
+          onChange={(num) => onChange?.([x, num, z])}
           className="w-full rounded border-l-4 border-green-500 bg-neutral-800 py-1 pl-1 text-xs outline-none"
         />
       </div>
       <div className="flex flex-row items-center gap-2">
         <span>Z</span>
         <NumberInput
-          value={value.z}
+          value={z}
           allowNegative={allowNegative}
-          onChange={(num) => onChange?.([value.x, value.y, num])}
+          onChange={(num) => onChange?.([x, y, num])}
           className="w-full rounded border-l-4 border-blue-500 bg-neutral-800 py-1 pl-1 text-xs outline-none"
         />
       </div>

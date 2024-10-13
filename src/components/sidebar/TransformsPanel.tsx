@@ -14,11 +14,7 @@ const TransformsPanel: FC = () => {
     )
 
   const translation = useMemo(
-    () => ({
-      x: selectedEntityPosition?.[0] ?? 0,
-      y: selectedEntityPosition?.[1] ?? 0,
-      z: selectedEntityPosition?.[2] ?? 0,
-    }),
+    () => selectedEntityPosition ?? ([0, 0, 0] as [number, number, number]),
     [selectedEntityPosition],
   )
 
@@ -45,7 +41,7 @@ const TransformsPanel: FC = () => {
           Rotation
         </div>
         {/* temp */}
-        <XYZInput allowNegative value={{ x: 0, y: 0, z: 0 }} />
+        <XYZInput allowNegative value={[0, 0, 0]} />
       </div>
 
       <div className="mt-2">
@@ -53,7 +49,7 @@ const TransformsPanel: FC = () => {
           Scale
         </div>
         {/* temp */}
-        <XYZInput value={{ x: 0, y: 0, z: 0 }} />
+        <XYZInput value={[0, 0, 0]} />
       </div>
     </div>
   )
