@@ -6,7 +6,9 @@ settings:
 
 importers:
 
-  .:
+  .: {}
+
+  packages/app:
     dependencies:
       '@react-three/drei':
         specifier: ^9.114.3
