@@ -132,4 +132,5 @@ dist
 # =====
 
 workdir
-output
+output/**/*
+!output/serve.json
