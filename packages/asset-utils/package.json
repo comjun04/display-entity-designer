@@ -4,11 +4,13 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "generate": "tsx src/generate.ts"
+    "generate": "tsx src/generate.ts",
+    "serve": "serve output"
   },
   "devDependencies": {
     "@types/node": "^22.7.5",
     "@types/unzipper": "^0.10.10",
+    "serve": "^14.2.3",
     "tsx": "^4.19.1"
   },
   "dependencies": {
