@@ -17,23 +17,28 @@ const serverJarfilePath = args[3]
 const mcVersion = args[4]
 
 const workdirFolderPath = pathJoin(pathResolve(), 'workdir')
-const mcVersionFolderPath = pathJoin(workdirFolderPath, mcVersion)
+const outputFolderPath = pathJoin(pathResolve(), 'output', mcVersion)
 const assetsMinecraftFolderPath = pathJoin(
-  mcVersionFolderPath,
+  outputFolderPath,
   'assets',
   'minecraft',
 )
 
+// workdir 폴더 미리 생성
+if (!existsSync(workdirFolderPath)) {
+  await mkdir(workdirFolderPath)
+}
+
 // 버전 이름 폴더가 이미 있는지 확인
 if (
-  !existsSync(mcVersionFolderPath) ||
-  !(await lstat(mcVersionFolderPath)).isDirectory()
+  !existsSync(outputFolderPath) ||
+  !(await lstat(outputFolderPath)).isDirectory()
 ) {
-  console.log(`${mcVersion} folder does not exist. Creating a new one.`)
-  await mkdir(mcVersionFolderPath)
-} else if ((await readdir(mcVersionFolderPath)).length > 0) {
+  console.log(`output/${mcVersion} folder does not exist. Creating a new one.`)
+  await mkdir(outputFolderPath, { recursive: true })
+} else if ((await readdir(outputFolderPath)).length > 0) {
   console.error(
-    `The folder ${mcVersion} in workdir folder is not empty. Specify a different version name or empty the folder and rerun the command.`,
+    `The folder output/${mcVersion} folder is not empty. Specify a different version name or empty the folder and rerun the command.`,
   )
   process.exit(1)
 }
@@ -53,12 +58,12 @@ const filesToExtract = zip.files.filter((f) =>
 )
 for await (const file of filesToExtract) {
   const dirPath = file.path.split('/').slice(0, -1).join('/')
-  await mkdir(pathJoin(mcVersionFolderPath, dirPath), { recursive: true })
+  await mkdir(pathJoin(outputFolderPath, dirPath), { recursive: true })
 
   await new Promise((resolve, reject) => {
     file
       .stream()
-      .pipe(createWriteStream(pathJoin(mcVersionFolderPath, file.path)))
+      .pipe(createWriteStream(pathJoin(outputFolderPath, file.path)))
       .on('finish', resolve)
       .on('error', reject)
   })
