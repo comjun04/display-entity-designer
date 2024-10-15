@@ -150,3 +150,22 @@ export const useEditorStore = create(
       }),
   })),
 )
+
+// ==========
+
+type DialogType = 'blockDisplaySelect' | null
+
+type DialogState = {
+  openedDialog: DialogType
+  setOpenedDialog: (dialog: DialogType) => void
+}
+
+export const useDialogStore = create(
+  immer<DialogState>((set) => ({
+    openedDialog: null,
+    setOpenedDialog: (dialog) =>
+      set((state) => {
+        state.openedDialog = dialog
+      }),
+  })),
+)

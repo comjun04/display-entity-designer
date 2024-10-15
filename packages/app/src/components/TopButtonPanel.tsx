@@ -1,14 +1,13 @@
-import { useDisplayEntityStore } from '@/store'
+import { useDialogStore } from '@/store'
 import { FC } from 'react'
 import { IoCubeOutline } from 'react-icons/io5'
 import { useShallow } from 'zustand/shallow'
 import FloatingButton from './FloatingButton'
 
 const TopButtonPanel: FC = () => {
-  const { createNew } = useDisplayEntityStore(
+  const { setOpenedDialog } = useDialogStore(
     useShallow((state) => ({
-      entities: state.entities,
-      createNew: state.createNew,
+      setOpenedDialog: state.setOpenedDialog,
     })),
   )
 
@@ -16,7 +15,7 @@ const TopButtonPanel: FC = () => {
     <div className="absolute left-0 top-0 z-[5] mt-4 flex w-full justify-center">
       <FloatingButton
         onClick={() => {
-          createNew()
+          setOpenedDialog('blockDisplaySelect')
         }}
       >
         <IoCubeOutline size={24} />
