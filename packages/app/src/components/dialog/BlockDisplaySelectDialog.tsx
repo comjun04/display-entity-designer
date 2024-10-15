@@ -13,6 +13,7 @@ import { useShallow } from 'zustand/shallow'
 
 const BlockDisplaySelectDialog: FC = () => {
   const [firstOpened, setFirstOpened] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
 
   const { isOpen, setOpenedDialog } = useDialogStore(
     useShallow((state) => ({
@@ -33,6 +34,11 @@ const BlockDisplaySelectDialog: FC = () => {
       setFirstOpened(true)
     }
   }, [isOpen])
+
+  // search filtering
+  const searchResult = (data?.blocks ?? []).filter((block) =>
+    block.includes(searchQuery),
+  )
 
   return (
     <Dialog open={isOpen} onClose={closeDialog} className="relative z-50">
@@ -55,11 +61,13 @@ const BlockDisplaySelectDialog: FC = () => {
             <input
               type="text"
               className="grow rounded px-2 py-1 text-sm outline-none"
+              value={searchQuery}
+              onChange={(evt) => setSearchQuery(evt.target.value)}
             />
           </div>
 
           <div className="flex h-full flex-col gap-1 overflow-auto rounded-lg p-1">
-            {(data?.blocks ?? []).map((block) => (
+            {searchResult.map((block) => (
               <button
                 key={block}
                 className="rounded-lg bg-neutral-700 p-1 text-center text-xs transition duration-150 hover:bg-neutral-700/50"
