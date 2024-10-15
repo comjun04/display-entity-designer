@@ -1,14 +1,19 @@
+import fetcher from '@/fetcher'
 import { useDialogStore } from '@/store'
+import { CDNBlocksListResponse } from '@/types'
 import {
   Dialog,
   DialogBackdrop,
   DialogPanel,
   DialogTitle,
 } from '@headlessui/react'
-import { FC } from 'react'
+import { FC, useEffect, useState } from 'react'
+import useSWRImmutable from 'swr/immutable'
 import { useShallow } from 'zustand/shallow'
 
 const BlockDisplaySelectDialog: FC = () => {
+  const [firstOpened, setFirstOpened] = useState(false)
+
   const { isOpen, setOpenedDialog } = useDialogStore(
     useShallow((state) => ({
       isOpen: state.openedDialog === 'blockDisplaySelect',
@@ -17,6 +22,17 @@ const BlockDisplaySelectDialog: FC = () => {
   )
 
   const closeDialog = () => setOpenedDialog(null)
+
+  const { data } = useSWRImmutable<CDNBlocksListResponse>(
+    firstOpened ? '/assets/minecraft/blocks.json' : null,
+    fetcher,
+  )
+
+  useEffect(() => {
+    if (isOpen) {
+      setFirstOpened(true)
+    }
+  }, [isOpen])
 
   return (
     <Dialog open={isOpen} onClose={closeDialog} className="relative z-50">
@@ -28,7 +44,7 @@ const BlockDisplaySelectDialog: FC = () => {
       <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
         <DialogPanel
           transition
-          className="h-[75vh] w-full max-w-screen-md space-y-2 rounded-xl bg-neutral-800 p-4 duration-200 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
+          className="flex h-[75vh] w-full max-w-screen-md select-none flex-col gap-2 rounded-xl bg-neutral-800 p-4 duration-200 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
         >
           <DialogTitle className="text-2xl font-bold">
             Add Block Display
@@ -42,22 +58,15 @@ const BlockDisplaySelectDialog: FC = () => {
             />
           </div>
 
-          <div className="flex flex-col gap-1 rounded-lg p-1">
-            <button className="rounded-lg bg-neutral-700 p-1 text-center text-xs transition duration-150 hover:bg-neutral-700/50">
-              test_block_name
-            </button>
-            <button className="rounded-lg bg-neutral-700 p-1 text-center text-xs transition duration-150 hover:bg-neutral-700/50">
-              smooth_stone
-            </button>
-            <button className="rounded-lg bg-neutral-700 p-1 text-center text-xs transition duration-150 hover:bg-neutral-700/50">
-              structure_block
-            </button>
-            <button className="rounded-lg bg-neutral-700 p-1 text-center text-xs transition duration-150 hover:bg-neutral-700/50">
-              bedrock
-            </button>
-            <button className="rounded-lg bg-neutral-700 p-1 text-center text-xs transition duration-150 hover:bg-neutral-700/50">
-              asdfasdf
-            </button>
+          <div className="flex h-full flex-col gap-1 overflow-auto rounded-lg p-1">
+            {(data?.blocks ?? []).map((block) => (
+              <button
+                key={block}
+                className="rounded-lg bg-neutral-700 p-1 text-center text-xs transition duration-150 hover:bg-neutral-700/50"
+              >
+                {block}
+              </button>
+            ))}
           </div>
         </DialogPanel>
       </div>
