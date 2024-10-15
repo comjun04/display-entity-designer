@@ -1,5 +1,5 @@
 import fetcher from '@/fetcher'
-import { useDialogStore } from '@/store'
+import { useDialogStore, useDisplayEntityStore } from '@/store'
 import { CDNBlocksListResponse } from '@/types'
 import {
   Dialog,
@@ -15,6 +15,11 @@ const BlockDisplaySelectDialog: FC = () => {
   const [firstOpened, setFirstOpened] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
+  const { createNewEntity } = useDisplayEntityStore(
+    useShallow((state) => ({
+      createNewEntity: state.createNew,
+    })),
+  )
   const { isOpen, setOpenedDialog } = useDialogStore(
     useShallow((state) => ({
       isOpen: state.openedDialog === 'blockDisplaySelect',
@@ -71,6 +76,10 @@ const BlockDisplaySelectDialog: FC = () => {
               <button
                 key={block}
                 className="rounded-lg bg-neutral-700 p-1 text-center text-xs transition duration-150 hover:bg-neutral-700/50"
+                onClick={() => {
+                  createNewEntity(block)
+                  setOpenedDialog(null)
+                }}
               >
                 {block}
               </button>

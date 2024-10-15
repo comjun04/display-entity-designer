@@ -6,8 +6,9 @@ import { produce } from 'immer'
 import { immer } from 'zustand/middleware/immer'
 
 type DisplayEntity = {
-  type: 'block'
+  kind: 'block'
   id: string
+  type: string
   size: [number, number, number]
   position: [number, number, number]
   rotation: [number, number, number]
@@ -22,7 +23,7 @@ type DisplayEntityState = {
   entityRefs: { id: string; objectRef: MutableRefObject<Object3D> }[]
 
   selectedEntityId: string | null
-  createNew: () => void
+  createNew: (type: string) => void
   setEntityRef: (id: string, ref: MutableRefObject<Object3D>) => void
   setSelected: (id: string | null) => void
   getSelectedEntity: () => DisplayEntity | null
@@ -42,7 +43,7 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
   selectedEntityId: null,
 
   // immer를 사용하면 안 되는 데이터 (ref)들을 수정해야 하는 경우 다른 데이터들도 immer를 사용하지 않고 변경할 것
-  createNew: () => {
+  createNew: (type) => {
     const id = nanoid(16)
 
     return set((state: DisplayEntityState) => {
@@ -51,8 +52,9 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
         entities: [
           ...state.entities,
           {
-            type: 'block',
+            kind: 'block',
             id,
+            type,
             size: [1, 1, 1],
             position: [0, 0, 0],
             rotation: [0, 0, 0],

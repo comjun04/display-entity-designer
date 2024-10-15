@@ -27,7 +27,7 @@ const ObjectsPanel: FC = () => {
           onClick={() => setSelectedEntity(entity.id)}
         >
           <IoCubeOutline size={16} />
-          <span>asdfasdf</span>
+          <span>{entity.type}</span>
         </div>
       ))}
     </div>
