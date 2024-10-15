@@ -1,10 +1,10 @@
 {
-  "name": "asset-uploader",
+  "name": "asset-utils",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "start": "tsx src/index.ts"
+    "generate": "tsx src/generate.ts"
   },
   "devDependencies": {
     "@types/node": "^22.7.5",
