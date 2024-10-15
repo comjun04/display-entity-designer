@@ -1,14 +1,30 @@
 import { createWriteStream, existsSync } from 'fs'
-import { lstat, mkdir, readdir } from 'fs/promises'
-import { join, resolve } from 'path'
+import { lstat, mkdir, readdir, readFile, writeFile } from 'fs/promises'
+import {
+  join as pathJoin,
+  resolve as pathResolve,
+  relative as pathRelative,
+} from 'path'
 import { Open } from 'unzipper'
+import { rimraf } from 'rimraf'
+import { spawnSync } from 'child_process'
+
+// =====
 
 const args = process.argv
-const jarfilePath = args[2]
-const mcVersion = args[3]
+const clientJarfilePath = args[2]
+const serverJarfilePath = args[3]
+const mcVersion = args[4]
+
+const workdirFolderPath = pathJoin(pathResolve(), 'workdir')
+const mcVersionFolderPath = pathJoin(workdirFolderPath, mcVersion)
+const assetsMinecraftFolderPath = pathJoin(
+  mcVersionFolderPath,
+  'assets',
+  'minecraft',
+)
 
 // 버전 이름 폴더가 이미 있는지 확인
-const mcVersionFolderPath = join(resolve(), 'workdir', mcVersion)
 if (
   !existsSync(mcVersionFolderPath) ||
   !(await lstat(mcVersionFolderPath)).isDirectory()
@@ -22,54 +38,83 @@ if (
   process.exit(1)
 }
 
-const jarfileAbsolutePath = join(resolve(), jarfilePath)
+console.log('Cleaning up previous server jar reports files')
+await cleanupWorkdir()
+
+const jarfileAbsolutePath = pathJoin(pathResolve(), clientJarfilePath)
 const zip = await Open.file(jarfileAbsolutePath)
 
-// console.log(zip.files.filter((f) => f.path.startsWith('assets')))
-
-console.log('Creating necesseary folders')
-
-// 필요한 폴더: blockstates, models, textures
-const assetsMinecraftFolderPath = join(
-  mcVersionFolderPath,
-  'assets',
-  'minecraft',
-)
-// blockstates
-await mkdir(join(assetsMinecraftFolderPath, 'blockstates'), {
-  recursive: true,
-})
-// models
-await Promise.all(
-  ['block', 'item'].map((folderName) =>
-    mkdir(join(assetsMinecraftFolderPath, 'models', folderName), {
-      recursive: true,
-    }),
-  ),
-)
-await Promise.all(
-  ['block', 'colormap', 'font', 'item'].map((folderName) =>
-    mkdir(join(assetsMinecraftFolderPath, 'textures', folderName), {
-      recursive: true,
-    }),
-  ),
-)
-
-console.log('Extracting...')
+console.log('Extracting asset files...')
 
 const filesToExtract = zip.files.filter((f) =>
-  /^assets\/minecraft\/(blockstates|models|textures\/(block|colormap|font|item))/.test(
+  /^assets\/minecraft\/(blockstates|models|textures\/(block|colormap|font|item))\//.test(
     f.path,
   ),
 )
 for await (const file of filesToExtract) {
+  const dirPath = file.path.split('/').slice(0, -1).join('/')
+  await mkdir(pathJoin(mcVersionFolderPath, dirPath), { recursive: true })
+
   await new Promise((resolve, reject) => {
     file
       .stream()
-      .pipe(createWriteStream(join(mcVersionFolderPath, file.path)))
+      .pipe(createWriteStream(pathJoin(mcVersionFolderPath, file.path)))
       .on('finish', resolve)
       .on('error', reject)
   })
 }
 
+// generate server resource reports file to get blocks.json and items.json
+console.log('Generating server.jar resource reports...')
+const relativeServerJarfilePath = pathRelative(
+  workdirFolderPath,
+  pathJoin(pathResolve(), serverJarfilePath),
+)
+spawnSync(
+  'java',
+  [
+    '-DbundlerMainClass=net.minecraft.data.Main',
+    '-jar',
+    relativeServerJarfilePath,
+    '--reports',
+  ],
+  {
+    cwd: workdirFolderPath,
+  },
+)
+
+const reportsPath = pathJoin(workdirFolderPath, 'generated', 'reports')
+
+// blocks.json
+console.log('Generating blocks list')
+
+const generatedBlocksJson = JSON.parse(
+  await readFile(pathJoin(reportsPath, 'blocks.json'), 'utf8'),
+)
+const blocks = [...Object.keys(generatedBlocksJson)].map(
+  (k) => k.match(/^minecraft:(.+)$/)![1], // strip `minecraft:` prefix
+)
+await writeFile(
+  pathJoin(assetsMinecraftFolderPath, 'blocks.json'),
+  JSON.stringify({ blocks }),
+)
+
+// items.json
+console.log('Generating items list')
+
+const generatedItemsJson = JSON.parse(
+  await readFile(pathJoin(reportsPath, 'items.json'), 'utf8'),
+)
+const items = [...Object.keys(generatedItemsJson)].map(
+  (k) => k.match(/^minecraft:(.+)$/)![1],
+)
+await writeFile(
+  pathJoin(assetsMinecraftFolderPath, 'items.json'),
+  JSON.stringify({ items }),
+)
+
 console.log('Done')
+
+async function cleanupWorkdir() {
+  await rimraf('./workdir/{generated,libraries,logs,versions}', { glob: true })
+}
