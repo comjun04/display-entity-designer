@@ -77,6 +77,7 @@ const Scene: FC = () => {
           <Box
             key={entity.id}
             id={entity.id}
+            type={entity.type}
             size={entity.size}
             position={entity.position}
             rotation={entity.rotation}

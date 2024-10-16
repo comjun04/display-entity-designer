@@ -1,3 +1,4 @@
+import useBlockStates from '@/hooks/useBlockStates'
 import { useDisplayEntityStore } from '@/store'
 import { FC, Ref, useMemo } from 'react'
 import {
@@ -11,6 +12,7 @@ import { useShallow } from 'zustand/shallow'
 
 type BoxProps = {
   id: string
+  type: string
   size: [number, number, number]
   position: [number, number, number]
   rotation: [number, number, number]
@@ -20,6 +22,7 @@ type BoxProps = {
 
 const Box: FC<BoxProps> = ({
   id,
+  type,
   color = 0x888888,
   size,
   position,
@@ -32,6 +35,9 @@ const Box: FC<BoxProps> = ({
       setSelected: state.setSelected,
     })),
   )
+
+  const blockstates = useBlockStates(type)
+  console.log(blockstates)
 
   const geometry = useMemo(() => new BoxGeometry(1, 1, 1), [])
   const material = useMemo(
