@@ -4,6 +4,7 @@ import { stripMinecraftPrefix } from '@/utils'
 import { FC, ReactNode, useState } from 'react'
 import useSWRImmutable from 'swr/immutable'
 import BlockFace from './BlockFace'
+import { Vector3 } from 'three'
 
 type ModelProps = {
   initialResourceLocation: string
@@ -56,6 +57,10 @@ const Model: FC<ModelProps> = ({ initialResourceLocation }) => {
   return (
     <group>
       {elements.map((element, idx) => {
+        const fromVec = new Vector3(...element.from).divideScalar(16)
+        const toVec = new Vector3(...element.to).divideScalar(16)
+        const sizeVec = new Vector3().add(toVec).sub(fromVec)
+
         const faces: ReactNode[] = []
         for (const faceKey in element.faces) {
           const face = faceKey as ModelFaceKey
@@ -68,6 +73,9 @@ const Model: FC<ModelProps> = ({ initialResourceLocation }) => {
               key={face}
               textureResourceLocation={texture}
               faceName={face}
+              parentElementSize={sizeVec.toArray()}
+              parentElementFrom={element.from}
+              parentElementTo={element.to}
             />,
           )
         }
