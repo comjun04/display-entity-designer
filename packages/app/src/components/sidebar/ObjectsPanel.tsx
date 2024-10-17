@@ -1,5 +1,5 @@
 import { useDisplayEntityStore } from '@/store'
-import cn from '@/utils'
+import { cn } from '@/utils'
 import { FC } from 'react'
 import { IoCubeOutline } from 'react-icons/io5'
 import { useShallow } from 'zustand/shallow'
