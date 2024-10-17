@@ -113,7 +113,10 @@ const Box: FC<BoxProps> = ({
 
         if (!shouldRender) return null
 
-        return <Model key={idx} initialResourceLocation={model.apply.model} />
+        return (
+          // apply가 여러 개 있는 경우(랜덤), 맨 처음 것만 고정으로 사용
+          <Model key={idx} initialResourceLocation={model.apply[0].model} />
+        )
       })}
     </object3D>
   )

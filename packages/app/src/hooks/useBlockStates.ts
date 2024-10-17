@@ -16,7 +16,7 @@ const useBlockStates = (blockType: string) => {
       // array 안에 있는 object들은 OR조건으로 계산, object들 중 하나만 맞아도 통과
       // 각 object들은 AND조건으로 계산, object 안에 있는 key와 value들이 모두 맞아야 함
       when: Record<string, string[]>[]
-      apply: BlockStateApplyModelInfo
+      apply: BlockStateApplyModelInfo[]
     }[] = []
 
     if (data == null) {
@@ -38,6 +38,9 @@ const useBlockStates = (blockType: string) => {
           }
         }
 
+        const applyInfos = Array.isArray(data.variants[key])
+          ? data.variants[key]
+          : [data.variants[key]]
         models.push({
           when: [
             blockstateDefinition.reduce<Record<string, string[]>>(
@@ -45,10 +48,10 @@ const useBlockStates = (blockType: string) => {
               {},
             ),
           ],
-          apply: {
-            ...data.variants[key],
-            model: stripMinecraftPrefix(data.variants[key].model),
-          },
+          apply: applyInfos.map((info) => ({
+            ...info,
+            model: stripMinecraftPrefix(info.model),
+          })),
         })
       }
     } else if ('multipart' in data) {
@@ -74,12 +77,15 @@ const useBlockStates = (blockType: string) => {
               }
             }
 
+            const applyInfos = Array.isArray(multipartItem.apply)
+              ? multipartItem.apply
+              : [multipartItem.apply]
             models.push({
               when: [obj],
-              apply: {
-                ...multipartItem.apply,
-                model: stripMinecraftPrefix(multipartItem.apply.model),
-              },
+              apply: applyInfos.map((info) => ({
+                ...info,
+                model: stripMinecraftPrefix(info.model),
+              })),
             })
           } else if (
             'OR' in multipartItem.when &&
@@ -105,12 +111,15 @@ const useBlockStates = (blockType: string) => {
               conditions.push(obj)
             }
 
+            const applyInfos = Array.isArray(multipartItem.apply)
+              ? multipartItem.apply
+              : [multipartItem.apply]
             models.push({
               when: conditions,
-              apply: {
-                ...multipartItem.apply,
-                model: stripMinecraftPrefix(multipartItem.apply.model),
-              },
+              apply: applyInfos.map((info) => ({
+                ...info,
+                model: stripMinecraftPrefix(info.model),
+              })),
             })
           } else if (
             !('AND' in multipartItem.when) &&
@@ -132,12 +141,15 @@ const useBlockStates = (blockType: string) => {
               obj[key] = values
             }
 
+            const applyInfos = Array.isArray(multipartItem.apply)
+              ? multipartItem.apply
+              : [multipartItem.apply]
             models.push({
               when: [obj],
-              apply: {
-                ...multipartItem.apply,
-                model: stripMinecraftPrefix(multipartItem.apply.model),
-              },
+              apply: applyInfos.map((info) => ({
+                ...info,
+                model: stripMinecraftPrefix(info.model),
+              })),
             })
           }
         }

@@ -11,11 +11,13 @@ export type BlockStateApplyModelInfo = {
 
 export type CDNBlockStatesResponse =
   | {
-      variants: Record<string, BlockStateApplyModelInfo>
+      variants:
+        | Record<string, BlockStateApplyModelInfo>
+        | Record<string, BlockStateApplyModelInfo[]>
     }
   | {
       multipart: {
-        apply: BlockStateApplyModelInfo
+        apply: BlockStateApplyModelInfo | BlockStateApplyModelInfo[]
         when?:
           | {
               AND: Record<string, string>[]
