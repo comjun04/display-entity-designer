@@ -67,7 +67,7 @@ const Model: FC<ModelProps> = ({ initialResourceLocation }) => {
             <BlockFace
               key={face}
               textureResourceLocation={texture}
-              face={face}
+              faceName={face}
             />,
           )
         }
