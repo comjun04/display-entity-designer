@@ -1,5 +1,6 @@
 import fetcher from '@/fetcher'
 import { BlockStateApplyModelInfo, CDNBlockStatesResponse } from '@/types'
+import { stripMinecraftPrefix } from '@/utils'
 import { useMemo } from 'react'
 import useSWRImmutable from 'swr/immutable'
 
@@ -44,7 +45,10 @@ const useBlockStates = (blockType: string) => {
               {},
             ),
           ],
-          apply: data.variants[key],
+          apply: {
+            ...data.variants[key],
+            model: stripMinecraftPrefix(data.variants[key].model),
+          },
         })
       }
     } else if ('multipart' in data) {
@@ -72,7 +76,10 @@ const useBlockStates = (blockType: string) => {
 
             models.push({
               when: [obj],
-              apply: multipartItem.apply,
+              apply: {
+                ...multipartItem.apply,
+                model: stripMinecraftPrefix(multipartItem.apply.model),
+              },
             })
           } else if (
             'OR' in multipartItem.when &&
@@ -100,7 +107,10 @@ const useBlockStates = (blockType: string) => {
 
             models.push({
               when: conditions,
-              apply: multipartItem.apply,
+              apply: {
+                ...multipartItem.apply,
+                model: stripMinecraftPrefix(multipartItem.apply.model),
+              },
             })
           } else if (
             !('AND' in multipartItem.when) &&
@@ -124,7 +134,10 @@ const useBlockStates = (blockType: string) => {
 
             models.push({
               when: [obj],
-              apply: multipartItem.apply,
+              apply: {
+                ...multipartItem.apply,
+                model: stripMinecraftPrefix(multipartItem.apply.model),
+              },
             })
           }
         }
