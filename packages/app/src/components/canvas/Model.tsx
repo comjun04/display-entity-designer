@@ -1,7 +1,7 @@
 import fetcher from '@/fetcher'
 import { CDNModelResponse, ModelElement, ModelFaceKey } from '@/types'
 import { stripMinecraftPrefix } from '@/utils'
-import { FC, ReactNode, useState } from 'react'
+import { FC, ReactNode, Suspense, useState } from 'react'
 import useSWRImmutable from 'swr/immutable'
 import BlockFace from './BlockFace'
 import { Vector3 } from 'three'
@@ -81,7 +81,11 @@ const Model: FC<ModelProps> = ({ initialResourceLocation }) => {
           )
         }
 
-        return <group key={idx}>{faces}</group>
+        return (
+          <group key={idx}>
+            <Suspense>{faces}</Suspense>
+          </group>
+        )
       })}
     </group>
   )
