@@ -90,6 +90,8 @@ const BlockFace: FC<BlockFaceProps> = ({
         uv = [elementFrom[2], elementFrom[1], elementTo[2], elementTo[1]]
         break
     }
+  } else {
+    uv = [uv[0], 16 - uv[3], uv[2], 16 - uv[1]] // y좌표 반전
   }
 
   // bottom-left first

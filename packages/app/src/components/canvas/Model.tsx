@@ -73,6 +73,7 @@ const Model: FC<ModelProps> = ({ initialResourceLocation }) => {
               key={face}
               textureResourceLocation={texture}
               faceName={face}
+              uv={faceData.uv}
               parentElementSize={sizeVec.toArray()}
               parentElementFrom={element.from}
               parentElementTo={element.to}
