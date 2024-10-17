@@ -1,6 +1,6 @@
 import useBlockStates from '@/hooks/useBlockStates'
 import { useDisplayEntityStore } from '@/store'
-import { FC, Ref, useMemo } from 'react'
+import { FC, Ref, useEffect, useMemo, useState } from 'react'
 import {
   BoxGeometry,
   EdgesGeometry,
@@ -9,6 +9,7 @@ import {
   Object3D,
 } from 'three'
 import { useShallow } from 'zustand/shallow'
+import Model from './Model'
 
 type BoxProps = {
   id: string
@@ -36,9 +37,6 @@ const Box: FC<BoxProps> = ({
     })),
   )
 
-  const blockstates = useBlockStates(type)
-  console.log(blockstates)
-
   const geometry = useMemo(() => new BoxGeometry(1, 1, 1), [])
   const material = useMemo(
     () =>
@@ -53,6 +51,30 @@ const Box: FC<BoxProps> = ({
     () => new LineBasicMaterial({ color: 'gold' }),
     [],
   )
+
+  // =====
+
+  const { data: blockstatesData, isLoading: isBlockstatesLoading } =
+    useBlockStates(type)
+  console.log(blockstatesData, isBlockstatesLoading)
+
+  const [blockstates, setBlockstates] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    if (blockstatesData == null) return
+
+    console.log('trigger')
+
+    const newBlockstateObject: Record<string, string> = {}
+    for (const [
+      blockstateKey,
+      blockstateValues,
+    ] of blockstatesData.blockstates.entries()) {
+      newBlockstateObject[blockstateKey] = [...blockstateValues.values()][0]
+    }
+
+    setBlockstates(newBlockstateObject)
+  }, [blockstatesData])
 
   return (
     <object3D position={position} ref={ref} scale={size} rotation={rotation}>
@@ -69,6 +91,30 @@ const Box: FC<BoxProps> = ({
         material={lineMaterial}
         position={[0.5, 0.5, 0.5]}
       />
+
+      {(blockstatesData?.models ?? []).map((model, idx) => {
+        let shouldRender = false
+        for (const conditionObject of model.when) {
+          let andConditionCheckSuccess = true
+          for (const conditionKey in conditionObject) {
+            if (
+              !conditionObject[conditionKey].includes(blockstates[conditionKey])
+            ) {
+              andConditionCheckSuccess = false
+              break
+            }
+          }
+
+          if (andConditionCheckSuccess) {
+            shouldRender = true
+            break
+          }
+        }
+
+        if (!shouldRender) return null
+
+        return <Model key={idx} initialResourceLocation={model.apply.model} />
+      })}
     </object3D>
   )
 }
