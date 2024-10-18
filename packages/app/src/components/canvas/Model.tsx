@@ -1,7 +1,7 @@
 import fetcher from '@/fetcher'
 import { CDNModelResponse, ModelElement, ModelFaceKey } from '@/types'
 import { stripMinecraftPrefix } from '@/utils'
-import { FC, ReactNode, Suspense, useState } from 'react'
+import { FC, ReactNode, Suspense, useEffect, useState } from 'react'
 import useSWRImmutable from 'swr/immutable'
 import BlockFace from './BlockFace'
 import { Vector3 } from 'three'
@@ -25,23 +25,26 @@ const Model: FC<ModelProps> = ({ initialResourceLocation }) => {
     fetcher,
   )
 
+  useEffect(() => {
+    if (data == null) return
+
+    if (data.parent != null) {
+      setCurrentResourceLocation(stripMinecraftPrefix(data.parent))
+    }
+
+    setTextures((textures) => ({ ...textures, ...data.textures }))
+    setDisplay((display) => ({ ...display, ...data.display }))
+
+    if (elements == null) {
+      setElements(data.elements)
+    }
+  }, [data, elements])
+
   if (data == null) {
     return null
   }
 
   console.log(currentResourceLocation, textures, display, elements)
-
-  if (data.parent != null) {
-    setCurrentResourceLocation(stripMinecraftPrefix(data.parent))
-
-    setTextures({ ...textures, ...data.textures })
-    setDisplay({ ...display, ...data.display })
-    if (elements == null) {
-      setElements(data.elements)
-    }
-
-    return null
-  }
 
   if (elements == null || elements.length < 1) return null
 
