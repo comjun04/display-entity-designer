@@ -59,6 +59,9 @@ const Model: FC<ModelProps> = ({ initialResourceLocation }) => {
       {elements.map((element, idx) => {
         const fromVec = new Vector3(...element.from).divideScalar(16)
         const toVec = new Vector3(...element.to).divideScalar(16)
+        const centerVec = new Vector3()
+          .addVectors(fromVec, toVec)
+          .divideScalar(2)
         const sizeVec = new Vector3().add(toVec).sub(fromVec)
 
         const faces: ReactNode[] = []
@@ -74,6 +77,7 @@ const Model: FC<ModelProps> = ({ initialResourceLocation }) => {
               textureResourceLocation={texture}
               faceName={face}
               uv={faceData.uv}
+              rotation={faceData.rotation}
               parentElementSize={sizeVec.toArray()}
               parentElementFrom={element.from}
               parentElementTo={element.to}
@@ -82,7 +86,7 @@ const Model: FC<ModelProps> = ({ initialResourceLocation }) => {
         }
 
         return (
-          <group key={idx}>
+          <group key={idx} position={centerVec}>
             <Suspense>{faces}</Suspense>
           </group>
         )
