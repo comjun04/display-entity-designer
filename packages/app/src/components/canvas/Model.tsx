@@ -4,7 +4,7 @@ import { stripMinecraftPrefix } from '@/utils'
 import { FC, ReactNode, Suspense, useEffect, useState } from 'react'
 import useSWRImmutable from 'swr/immutable'
 import BlockFace from './BlockFace'
-import { Vector3 } from 'three'
+import { MathUtils, Vector3 } from 'three'
 
 type ModelProps = {
   initialResourceLocation: string
@@ -88,8 +88,47 @@ const Model: FC<ModelProps> = ({ initialResourceLocation }) => {
           )
         }
 
+        // element rotation
+        let rotation = [0, 0, 0] as [number, number, number]
+        let groupScale = [1, 1, 1] as [number, number, number]
+        if (element.rotation != null) {
+          const rad = MathUtils.degToRad(element.rotation.angle)
+
+          switch (element.rotation.axis) {
+            case 'x':
+              rotation = [rad, 0, 0]
+              break
+            case 'y':
+              rotation = [0, rad, 0]
+              break
+            case 'z':
+              rotation = [0, 0, rad]
+              break
+          }
+
+          if (element.rotation.rescale) {
+            const scaleBy = 1 / Math.cos(rad)
+            switch (element.rotation.axis) {
+              case 'x':
+                groupScale = [1, scaleBy, scaleBy]
+                break
+              case 'y':
+                groupScale = [scaleBy, 1, scaleBy]
+                break
+              case 'z':
+                groupScale = [scaleBy, scaleBy, 1]
+                break
+            }
+          }
+        }
+
         return (
-          <group key={idx} position={centerVec}>
+          <group
+            key={idx}
+            position={centerVec}
+            rotation={rotation}
+            scale={groupScale}
+          >
             <Suspense>{faces}</Suspense>
           </group>
         )
