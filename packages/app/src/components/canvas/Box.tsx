@@ -1,13 +1,7 @@
 import useBlockStates from '@/hooks/useBlockStates'
 import { useDisplayEntityStore } from '@/store'
 import { FC, Ref, useEffect, useMemo, useState } from 'react'
-import {
-  BoxGeometry,
-  EdgesGeometry,
-  LineBasicMaterial,
-  MeshStandardMaterial,
-  Object3D,
-} from 'three'
+import { BoxGeometry, EdgesGeometry, LineBasicMaterial, Object3D } from 'three'
 import { useShallow } from 'zustand/shallow'
 import Model from './Model'
 
@@ -24,7 +18,6 @@ type BoxProps = {
 const Box: FC<BoxProps> = ({
   id,
   type,
-  color = 0x888888,
   size,
   position,
   rotation,
@@ -38,13 +31,6 @@ const Box: FC<BoxProps> = ({
   )
 
   const geometry = useMemo(() => new BoxGeometry(1, 1, 1), [])
-  const material = useMemo(
-    () =>
-      new MeshStandardMaterial({
-        color,
-      }),
-    [color],
-  )
 
   const edgesGeometry = useMemo(() => new EdgesGeometry(geometry), [geometry])
   const lineMaterial = useMemo(
@@ -78,13 +64,6 @@ const Box: FC<BoxProps> = ({
 
   return (
     <object3D position={position} ref={ref} scale={size} rotation={rotation}>
-      <mesh
-        geometry={geometry}
-        material={material}
-        position={[0.5, 0.5, 0.5]} // 왼쪽 아래 점이 기준점이 되도록 geometry 각 축 변 길이의 반만큼 이동
-        onClick={() => setSelected(id)}
-      />
-
       <lineSegments
         visible={selectedEntity?.id === id}
         geometry={edgesGeometry}
@@ -92,32 +71,36 @@ const Box: FC<BoxProps> = ({
         position={[0.5, 0.5, 0.5]}
       />
 
-      {(blockstatesData?.models ?? []).map((model, idx) => {
-        let shouldRender = false
-        for (const conditionObject of model.when) {
-          let andConditionCheckSuccess = true
-          for (const conditionKey in conditionObject) {
-            if (
-              !conditionObject[conditionKey].includes(blockstates[conditionKey])
-            ) {
-              andConditionCheckSuccess = false
+      <group onClick={() => setSelected(id)}>
+        {(blockstatesData?.models ?? []).map((model, idx) => {
+          let shouldRender = false
+          for (const conditionObject of model.when) {
+            let andConditionCheckSuccess = true
+            for (const conditionKey in conditionObject) {
+              if (
+                !conditionObject[conditionKey].includes(
+                  blockstates[conditionKey],
+                )
+              ) {
+                andConditionCheckSuccess = false
+                break
+              }
+            }
+
+            if (andConditionCheckSuccess) {
+              shouldRender = true
               break
             }
           }
 
-          if (andConditionCheckSuccess) {
-            shouldRender = true
-            break
-          }
-        }
+          if (!shouldRender) return null
 
-        if (!shouldRender) return null
-
-        return (
-          // apply가 여러 개 있는 경우(랜덤), 맨 처음 것만 고정으로 사용
-          <Model key={idx} initialResourceLocation={model.apply[0].model} />
-        )
-      })}
+          return (
+            // apply가 여러 개 있는 경우(랜덤), 맨 처음 것만 고정으로 사용
+            <Model key={idx} initialResourceLocation={model.apply[0].model} />
+          )
+        })}
+      </group>
     </object3D>
   )
 }
