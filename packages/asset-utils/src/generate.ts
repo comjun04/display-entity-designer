@@ -1,5 +1,12 @@
 import { createWriteStream, existsSync } from 'fs'
-import { lstat, mkdir, readdir, readFile, writeFile } from 'fs/promises'
+import {
+  copyFile,
+  lstat,
+  mkdir,
+  readdir,
+  readFile,
+  writeFile,
+} from 'fs/promises'
 import {
   join as pathJoin,
   resolve as pathResolve,
@@ -11,6 +18,14 @@ import { spawnSync } from 'child_process'
 import { BlockstatesFile, ModelFile } from './types'
 
 // =====
+
+const renderableBlockEntityModels = ['chest'].map((type) => `block/${type}`)
+const renderableBlockEntityModelTextures = [
+  'chest/normal', // chest
+].map(
+  (resourceLocation) =>
+    `assets/minecraft/textures/entity/${resourceLocation}.png`,
+)
 
 const args = process.argv
 const clientJarfilePath = args[2]
@@ -52,10 +67,11 @@ const zip = await Open.file(jarfileAbsolutePath)
 
 console.log('Extracting asset files...')
 
-const filesToExtract = zip.files.filter((f) =>
-  /^assets\/minecraft\/(blockstates|models|textures\/(block|colormap|font|item))\//.test(
-    f.path,
-  ),
+const filesToExtract = zip.files.filter(
+  (f) =>
+    /^assets\/minecraft\/(blockstates|models|textures\/(block|colormap|font|item))\//.test(
+      f.path,
+    ) || renderableBlockEntityModelTextures.includes(f.path),
 )
 for await (const file of filesToExtract) {
   const dirPath = file.path.split('/').slice(0, -1).join('/')
@@ -142,6 +158,25 @@ for await (const blockNameWithPrefix of [...Object.keys(generatedBlocksJson)]) {
   }
 
   if (canRender) {
+    if (renderableBlockEntityModels.includes(`block/${blockName}`)) {
+      // 하드코딩된 모델 데이터 복사
+      await copyFile(
+        pathJoin(
+          pathResolve(),
+          'hardcoded',
+          'models',
+          'block',
+          `${blockName}.json`,
+        ),
+        pathJoin(
+          assetsMinecraftFolderPath,
+          'models',
+          'block',
+          `${blockName}.json`,
+        ),
+      )
+    }
+
     renderableBlocks.push(blockName)
   } else {
     console.log(`[BlockListGen] excluding block ${blockName}`)
@@ -184,6 +219,11 @@ function stripMinecraftPrefix(input: string) {
 async function canRenderToBlockDisplay(modelResourceLocation: string) {
   if (modelResourceLocation.startsWith('minecraft:')) {
     modelResourceLocation = modelResourceLocation.slice(10)
+  }
+
+  // 블록 엔티티 모델은 하드코딩된 모델 데이터를 사용하므로 뒤에서 체크하지 않아도 됨
+  if (renderableBlockEntityModels.includes(modelResourceLocation)) {
+    return true
   }
 
   const modelData = JSON.parse(
