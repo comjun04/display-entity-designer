@@ -32,8 +32,8 @@ const Model: FC<ModelProps> = ({ initialResourceLocation }) => {
       setCurrentResourceLocation(stripMinecraftPrefix(data.parent))
     }
 
-    setTextures((textures) => ({ ...textures, ...data.textures }))
-    setDisplay((display) => ({ ...display, ...data.display }))
+    setTextures((textures) => ({ ...data.textures, ...textures }))
+    setDisplay((display) => ({ ...data.display, ...display }))
 
     if (elements == null) {
       setElements(data.elements)
