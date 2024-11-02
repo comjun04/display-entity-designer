@@ -1,0 +1,108 @@
+import useBlockStates from '@/hooks/useBlockStates'
+import { useDisplayEntityStore } from '@/store'
+import { FC, Ref, useEffect, useMemo, useState } from 'react'
+import { BoxGeometry, EdgesGeometry, LineBasicMaterial, Object3D } from 'three'
+import { useShallow } from 'zustand/shallow'
+import Model from './Model'
+
+type BoxProps = {
+  id: string
+  type: string
+  size: [number, number, number]
+  position: [number, number, number]
+  rotation: [number, number, number]
+  color?: number | string
+  object3DRef?: Ref<Object3D>
+}
+
+const Box: FC<BoxProps> = ({
+  id,
+  type,
+  size,
+  position,
+  rotation,
+  object3DRef: ref,
+}) => {
+  const { selectedEntity, setSelected } = useDisplayEntityStore(
+    useShallow((state) => ({
+      selectedEntity: state.getSelectedEntity(),
+      setSelected: state.setSelected,
+    })),
+  )
+
+  const geometry = useMemo(() => new BoxGeometry(1, 1, 1), [])
+
+  const edgesGeometry = useMemo(() => new EdgesGeometry(geometry), [geometry])
+  const lineMaterial = useMemo(
+    () => new LineBasicMaterial({ color: 'gold' }),
+    [],
+  )
+
+  // =====
+
+  const { data: blockstatesData, isLoading: isBlockstatesLoading } =
+    useBlockStates(type)
+  console.log(blockstatesData, isBlockstatesLoading)
+
+  const [blockstates, setBlockstates] = useState<Record<string, string>>({})
+
+  useEffect(() => {
+    if (blockstatesData == null) return
+
+    console.log('trigger')
+
+    const newBlockstateObject: Record<string, string> = {}
+    for (const [
+      blockstateKey,
+      blockstateValues,
+    ] of blockstatesData.blockstates.entries()) {
+      newBlockstateObject[blockstateKey] = [...blockstateValues.values()][0]
+    }
+
+    setBlockstates(newBlockstateObject)
+  }, [blockstatesData])
+
+  return (
+    <object3D position={position} ref={ref} scale={size} rotation={rotation}>
+      <lineSegments
+        visible={selectedEntity?.id === id}
+        geometry={edgesGeometry}
+        material={lineMaterial}
+        position={[0.5, 0.5, 0.5]}
+      />
+
+      <group onClick={() => setSelected(id)}>
+        {(blockstatesData?.models ?? []).map((model, idx) => {
+          let shouldRender = false
+          for (const conditionObject of model.when) {
+            let andConditionCheckSuccess = true
+            for (const conditionKey in conditionObject) {
+              if (
+                !conditionObject[conditionKey].includes(
+                  blockstates[conditionKey],
+                )
+              ) {
+                andConditionCheckSuccess = false
+                break
+              }
+            }
+
+            if (andConditionCheckSuccess) {
+              shouldRender = true
+              break
+            }
+          }
+
+          if (!shouldRender) return null
+
+          return (
+            // apply가 여러 개 있는 경우(랜덤), 맨 처음 것만 고정으로 사용
+            <Model key={idx} initialResourceLocation={model.apply[0].model} />
+          )
+        })}
+      </group>
+    </object3D>
+  )
+}
+
+export default Box
