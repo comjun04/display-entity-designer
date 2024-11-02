@@ -27,6 +27,7 @@ type DisplayEntityState = {
   ) => void
   setEntityRotation: (id: string, rotation: [number, number, number]) => void
   setEntityScale: (id: string, scale: [number, number, number]) => void
+  deleteEntity: (id: string) => void
 }
 
 export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
@@ -103,6 +104,16 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
         }
       }),
     ),
+  deleteEntity: (id) =>
+    set((state: DisplayEntityState) => {
+      const entityIdx = state.entities.findIndex((e) => e.id === id)
+      if (entityIdx >= 0) {
+        useEntityRefStore.getState().deleteEntityRef(id)
+        return { entities: state.entities.toSpliced(entityIdx, 1) }
+      } else {
+        return {}
+      }
+    }),
 }))
 
 // ==========
@@ -110,6 +121,7 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
 type EntityRefStoreState = {
   entityRefs: { id: string; objectRef: MutableRefObject<Object3D> }[]
   setEntityRef: (id: string, ref: MutableRefObject<Object3D>) => void
+  deleteEntityRef: (id: string) => void
 }
 
 // DisplayEntity#objectRef는 mutable해야 하므로(object 내부 property를 수정할 수 있어야 하므로)
@@ -138,6 +150,15 @@ export const useEntityRefStore = create<EntityRefStoreState>((set) => ({
           ],
         }
       }
+    }),
+  deleteEntityRef: (id) =>
+    set((state) => {
+      const entityIdx = state.entityRefs.findIndex((e) => e.id === id)
+      if (entityIdx >= 0) {
+        return { entityRefs: state.entityRefs.toSpliced(entityIdx, 1) }
+      }
+
+      return {}
     }),
 }))
 

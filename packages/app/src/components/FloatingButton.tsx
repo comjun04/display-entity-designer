@@ -15,7 +15,7 @@ const FloatingButton: FC<FloatingButtonProps> = ({
   return (
     <button
       className={cn(
-        'rounded-lg p-2',
+        'rounded-lg p-2 outline-none',
         active ? 'bg-neutral-300 text-black' : 'bg-black text-neutral-300',
       )}
       onClick={onClick}
