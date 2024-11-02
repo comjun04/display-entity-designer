@@ -3,7 +3,11 @@ import { Canvas } from '@react-three/fiber'
 import { FC } from 'react'
 import { Color, Event } from 'three'
 import Box from './components/canvas/Box'
-import { useDisplayEntityStore, useEditorStore } from './store'
+import {
+  useDisplayEntityStore,
+  useEditorStore,
+  useEntityRefStore,
+} from './store'
 import { useShallow } from 'zustand/shallow'
 import CustomCameraControls from './CustomCameraControls'
 import { TransformControls as OriginalTransformControls } from 'three/examples/jsm/Addons.js'
@@ -11,7 +15,6 @@ import { TransformControls as OriginalTransformControls } from 'three/examples/j
 const Scene: FC = () => {
   const {
     entities,
-    entityRefs,
     selectedEntity,
     setSelected,
     setEntityTranslation,
@@ -20,12 +23,16 @@ const Scene: FC = () => {
   } = useDisplayEntityStore(
     useShallow((state) => ({
       entities: state.entities,
-      entityRefs: state.entityRefs,
       selectedEntity: state.getSelectedEntity(),
       setSelected: state.setSelected,
       setEntityTranslation: state.setEntityTranslation,
       setEntityRotation: state.setEntityRotation,
       setEntityScale: state.setEntityScale,
+    })),
+  )
+  const { entityRefs } = useEntityRefStore(
+    useShallow((state) => ({
+      entityRefs: state.entityRefs,
     })),
   )
   const { mode } = useEditorStore(useShallow((state) => ({ mode: state.mode })))

@@ -17,14 +17,8 @@ type DisplayEntity = {
 
 type DisplayEntityState = {
   entities: DisplayEntity[]
-
-  // ref는 mutable해야 하므로 immer 적용을 하지 않기 위해 별도로 분리
-  // (적용될 경우 ref.current을 수정하는 과정에서 readonly property를 수정하려 시도했다고 오류 발생)
-  entityRefs: { id: string; objectRef: MutableRefObject<Object3D> }[]
-
   selectedEntityId: string | null
   createNew: (type: string) => void
-  setEntityRef: (id: string, ref: MutableRefObject<Object3D>) => void
   setSelected: (id: string | null) => void
   getSelectedEntity: () => DisplayEntity | null
   setEntityTranslation: (
@@ -35,11 +29,8 @@ type DisplayEntityState = {
   setEntityScale: (id: string, scale: [number, number, number]) => void
 }
 
-// DisplayEntity#objectRef는 mutable해야 하므로(object 내부 property를 수정할 수 있어야 하므로)
-// immer middleware로 전체 적용하지 않고 필요한 부분만 produce로 따로 적용
 export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
   entities: [],
-  entityRefs: [],
   selectedEntityId: null,
 
   // immer를 사용하면 안 되는 데이터 (ref)들을 수정해야 하는 경우 다른 데이터들도 immer를 사용하지 않고 변경할 것
@@ -47,7 +38,9 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
     const id = nanoid(16)
 
     return set((state: DisplayEntityState) => {
-      state.setEntityRef(id, createRef() as MutableRefObject<Object3D>)
+      useEntityRefStore
+        .getState()
+        .setEntityRef(id, createRef() as MutableRefObject<Object3D>)
       return {
         entities: [
           ...state.entities,
@@ -64,28 +57,6 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
       }
     })
   },
-  setEntityRef: (id, ref) =>
-    set((state) => {
-      const entityIdx = state.entities.findIndex((e) => e.id === id)
-      if (entityIdx >= 0) {
-        return {
-          entityRefs: state.entityRefs.toSpliced(entityIdx, 1, {
-            id,
-            objectRef: ref,
-          }),
-        }
-      } else {
-        return {
-          entityRefs: [
-            ...state.entityRefs,
-            {
-              id,
-              objectRef: ref,
-            },
-          ],
-        }
-      }
-    }),
   setSelected: (id) =>
     set(
       produce((state: DisplayEntityState) => {
@@ -132,6 +103,42 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
         }
       }),
     ),
+}))
+
+// ==========
+
+type EntityRefStoreState = {
+  entityRefs: { id: string; objectRef: MutableRefObject<Object3D> }[]
+  setEntityRef: (id: string, ref: MutableRefObject<Object3D>) => void
+}
+
+// DisplayEntity#objectRef는 mutable해야 하므로(object 내부 property를 수정할 수 있어야 하므로)
+// immer middleware로 전체 적용하지 않고 필요한 부분만 produce로 따로 적용
+// DO NOT USE IMMER ON THIS STORE
+export const useEntityRefStore = create<EntityRefStoreState>((set) => ({
+  entityRefs: [],
+  setEntityRef: (id, ref) =>
+    set((state) => {
+      const entityIdx = state.entityRefs.findIndex((e) => e.id === id)
+      if (entityIdx >= 0) {
+        return {
+          entityRefs: state.entityRefs.toSpliced(entityIdx, 1, {
+            id,
+            objectRef: ref,
+          }),
+        }
+      } else {
+        return {
+          entityRefs: [
+            ...state.entityRefs,
+            {
+              id,
+              objectRef: ref,
+            },
+          ],
+        }
+      }
+    }),
 }))
 
 // ==========
