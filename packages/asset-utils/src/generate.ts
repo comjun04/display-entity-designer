@@ -12,28 +12,6 @@ import { BlockstatesFile, ModelFile } from './types'
 
 // =====
 
-const renderableBlockEntityModels = [
-  'chest',
-  'ender_chest',
-  'conduit',
-  'shulker_box',
-  'black_shulker_box',
-  'blue_shulker_box',
-  'brown_shulker_box',
-  'cyan_shulker_box',
-  'gray_shulker_box',
-  'green_shulker_box',
-  'light_blue_shulker_box',
-  'light_gray_shulker_box',
-  'lime_shulker_box',
-  'magenta_shulker_box',
-  'orange_shulker_box',
-  'pink_shulker_box',
-  'purple_shulker_box',
-  'red_shulker_box',
-  'white_shulker_box',
-  'yellow_shulker_box',
-].map((type) => `block/${type}`)
 const renderableBlockEntityModelTextures = [
   'chest/normal', // chest
   'chest/ender', // ender_chest
@@ -137,7 +115,8 @@ for await (const file of filesToExtract) {
   })
 }
 
-// 하드코딩된 데이터 복사
+// chest, shulker_box 등 엔티티 모델로 렌더링되는 블록들은 원래는 model .json파일에 element가 없어 렌더링 가능한 블록으로 인식되지 않는데,
+// 이를 렌더링 가능한 블록으로 인식시키기 위해 따로 만든 파일들을 복사해서 지정된 폴더에 붙여넣기
 console.log('Copying data in hardcoded folder to destination folder...')
 await cp(pathJoin(pathResolve(), 'hardcoded'), assetsMinecraftFolderPath, {
   recursive: true,
@@ -252,16 +231,9 @@ function stripMinecraftPrefix(input: string) {
   return input.startsWith('minecraft:') ? input.slice(10) : input
 }
 
-// TODO: chest, shulker_box 등 엔티티 모델로 렌더링되는 블록들은 모델 .json에 `elements`가 있는지 여부로 알 수 없음.
-// 이 모델들은 하드코딩되어있기 때문에 별도로 처리해줘야 함
 async function canRenderToBlockDisplay(modelResourceLocation: string) {
   if (modelResourceLocation.startsWith('minecraft:')) {
     modelResourceLocation = modelResourceLocation.slice(10)
-  }
-
-  // 블록 엔티티 모델은 하드코딩된 모델 데이터를 사용하므로 뒤에서 체크하지 않아도 됨
-  if (renderableBlockEntityModels.includes(modelResourceLocation)) {
-    return true
   }
 
   const modelData = JSON.parse(
