@@ -20,6 +20,7 @@ const Scene: FC = () => {
     setEntityTranslation,
     setEntityRotation,
     setEntityScale,
+    deleteEntity,
   } = useDisplayEntityStore(
     useShallow((state) => ({
       entities: state.entities,
@@ -28,6 +29,7 @@ const Scene: FC = () => {
       setEntityTranslation: state.setEntityTranslation,
       setEntityRotation: state.setEntityRotation,
       setEntityScale: state.setEntityScale,
+      deleteEntity: state.deleteEntity,
     })),
   )
   const { entityRefs } = useEntityRefStore(
@@ -61,12 +63,17 @@ const Scene: FC = () => {
           break
         case 's':
           setMode('scale')
+          break
+        case 'Delete':
+          if (selectedEntity != null) {
+            deleteEntity(selectedEntity.id)
+          }
       }
     }
 
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [setMode])
+  }, [setMode, deleteEntity, selectedEntity])
 
   return (
     <Canvas
