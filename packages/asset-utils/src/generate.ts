@@ -55,6 +55,24 @@ const renderableBlockEntityModelTextures = [
   'shulker/shulker_red',
   'shulker/shulker_white',
   'shulker/shulker_yellow',
+
+  // beds
+  'bed/black',
+  'bed/blue',
+  'bed/brown',
+  'bed/cyan',
+  'bed/gray',
+  'bed/green',
+  'bed/light_blue',
+  'bed/light_gray',
+  'bed/lime',
+  'bed/magenta',
+  'bed/orange',
+  'bed/pink',
+  'bed/purple',
+  'bed/red',
+  'bed/white',
+  'bed/yellow',
 ].map(
   (resourceLocation) =>
     `assets/minecraft/textures/entity/${resourceLocation}.png`,
