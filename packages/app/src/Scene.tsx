@@ -1,6 +1,6 @@
 import { Grid, PerspectiveCamera, TransformControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
-import { FC } from 'react'
+import { FC, useEffect } from 'react'
 import { Color, Event } from 'three'
 import Box from './components/canvas/Box'
 import {
@@ -35,7 +35,38 @@ const Scene: FC = () => {
       entityRefs: state.entityRefs,
     })),
   )
-  const { mode } = useEditorStore(useShallow((state) => ({ mode: state.mode })))
+  const { mode, setMode } = useEditorStore(
+    useShallow((state) => ({ mode: state.mode, setMode: state.setMode })),
+  )
+
+  useEffect(() => {
+    const focusableElements = ['input', 'textarea']
+    const handler = (evt: KeyboardEvent) => {
+      // <input>아니 <textarea>에 focus가 잡혀 있다면 이벤트를 처리하지 않음
+      if (
+        focusableElements.includes(
+          (document.activeElement?.tagName ?? '').toLowerCase(),
+        )
+      ) {
+        return true
+      }
+
+      // 단축키 처리
+      switch (evt.key) {
+        case 't':
+          setMode('translate')
+          break
+        case 'r':
+          setMode('rotate')
+          break
+        case 's':
+          setMode('scale')
+      }
+    }
+
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [setMode])
 
   return (
     <Canvas
