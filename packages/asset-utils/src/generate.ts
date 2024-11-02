@@ -14,9 +14,13 @@ import { BlockstatesFile, ModelFile } from './types'
 
 const renderableBlockEntityModelTextures = [
   'chest/normal', // chest
+  'chest/trapped', // trapped_chest
   'chest/ender', // ender_chest
+
   'conduit/base', // conduit
-  'shulker/shulker', // shulker_box
+
+  // shulker boxes
+  'shulker/shulker',
   'shulker/shulker_black',
   'shulker/shulker_blue',
   'shulker/shulker_brown',
