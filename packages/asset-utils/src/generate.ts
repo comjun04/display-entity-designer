@@ -1,12 +1,5 @@
 import { createWriteStream, existsSync } from 'fs'
-import {
-  copyFile,
-  lstat,
-  mkdir,
-  readdir,
-  readFile,
-  writeFile,
-} from 'fs/promises'
+import { cp, lstat, mkdir, readdir, readFile, writeFile } from 'fs/promises'
 import {
   join as pathJoin,
   resolve as pathResolve,
@@ -126,6 +119,12 @@ for await (const file of filesToExtract) {
   })
 }
 
+// 하드코딩된 데이터 복사
+console.log('Copying data in hardcoded folder to destination folder...')
+await cp(pathJoin(pathResolve(), 'hardcoded'), assetsMinecraftFolderPath, {
+  recursive: true,
+})
+
 // generate server resource reports file to get blocks.json and items.json
 console.log('Generating server.jar resource reports...')
 const relativeServerJarfilePath = pathRelative(
@@ -198,25 +197,6 @@ for await (const blockNameWithPrefix of [...Object.keys(generatedBlocksJson)]) {
   }
 
   if (canRender) {
-    if (renderableBlockEntityModels.includes(`block/${blockName}`)) {
-      // 하드코딩된 모델 데이터 복사
-      await copyFile(
-        pathJoin(
-          pathResolve(),
-          'hardcoded',
-          'models',
-          'block',
-          `${blockName}.json`,
-        ),
-        pathJoin(
-          assetsMinecraftFolderPath,
-          'models',
-          'block',
-          `${blockName}.json`,
-        ),
-      )
-    }
-
     renderableBlocks.push(blockName)
   } else {
     console.log(`[BlockListGen] excluding block ${blockName}`)
