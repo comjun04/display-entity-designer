@@ -33,7 +33,7 @@ const Scene: FC = () => {
   return (
     <Canvas
       scene={{
-        background: new Color(0x333333),
+        background: new Color(0x222222),
       }}
     >
       {/* Axis lines */}
@@ -135,10 +135,10 @@ const Scene: FC = () => {
       </PerspectiveCamera>
 
       <Grid
-        cellSize={1}
-        cellColor={0xffffff}
-        sectionColor={0x0}
-        sectionSize={5}
+        cellSize={1 / 16}
+        cellColor={0x777777}
+        sectionColor={0x333333}
+        sectionSize={1}
         infiniteGrid
       />
     </Canvas>
