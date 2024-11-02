@@ -13,4 +13,16 @@ export default defineConfig({
       },
     ],
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ['react', 'react-dom'],
+          threejs: ['three'],
+          r3f: ['@react-three/fiber', '@react-three/drei'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 700, // 700 KB
+  },
 })
