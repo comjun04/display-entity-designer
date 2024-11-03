@@ -1,6 +1,6 @@
 import useBlockStates from '@/hooks/useBlockStates'
 import { useDisplayEntityStore } from '@/store'
-import { FC, Ref, useEffect, useMemo, useState } from 'react'
+import { FC, Ref, useEffect, useMemo } from 'react'
 import { BoxGeometry, EdgesGeometry, LineBasicMaterial, Object3D } from 'three'
 import { useShallow } from 'zustand/shallow'
 import Model from './Model'
@@ -23,12 +23,15 @@ const Box: FC<BoxProps> = ({
   rotation,
   object3DRef: ref,
 }) => {
-  const { selectedEntity, setSelected } = useDisplayEntityStore(
-    useShallow((state) => ({
-      selectedEntity: state.getSelectedEntity(),
-      setSelected: state.setSelected,
-    })),
-  )
+  const { thisEntity, selectedEntity, setSelected, setEntityBlockstates } =
+    useDisplayEntityStore(
+      useShallow((state) => ({
+        thisEntity: state.entities.find((e) => e.id === id),
+        selectedEntity: state.getSelectedEntity(),
+        setSelected: state.setSelected,
+        setEntityBlockstates: state.setEntityBlockstates,
+      })),
+    )
 
   const geometry = useMemo(() => new BoxGeometry(1, 1, 1), [])
 
@@ -44,8 +47,6 @@ const Box: FC<BoxProps> = ({
     useBlockStates(type)
   console.log(blockstatesData, isBlockstatesLoading)
 
-  const [blockstates, setBlockstates] = useState<Record<string, string>>({})
-
   useEffect(() => {
     if (blockstatesData == null) return
 
@@ -59,8 +60,10 @@ const Box: FC<BoxProps> = ({
       newBlockstateObject[blockstateKey] = [...blockstateValues.values()][0]
     }
 
-    setBlockstates(newBlockstateObject)
-  }, [blockstatesData])
+    setEntityBlockstates(id, newBlockstateObject)
+  }, [blockstatesData, id, setEntityBlockstates])
+
+  if (thisEntity == null) return null
 
   return (
     <object3D position={position} ref={ref} scale={size} rotation={rotation}>
@@ -79,7 +82,7 @@ const Box: FC<BoxProps> = ({
             for (const conditionKey in conditionObject) {
               if (
                 !conditionObject[conditionKey].includes(
-                  blockstates[conditionKey],
+                  thisEntity.blockstates[conditionKey],
                 )
               ) {
                 andConditionCheckSuccess = false

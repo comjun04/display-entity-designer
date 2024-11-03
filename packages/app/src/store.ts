@@ -12,7 +12,7 @@ type DisplayEntity = {
   size: [number, number, number]
   position: [number, number, number]
   rotation: [number, number, number]
-  color: string | number
+  blockstates: Record<string, string>
 }
 
 type DisplayEntityState = {
@@ -27,6 +27,10 @@ type DisplayEntityState = {
   ) => void
   setEntityRotation: (id: string, rotation: [number, number, number]) => void
   setEntityScale: (id: string, scale: [number, number, number]) => void
+  setEntityBlockstates: (
+    id: string,
+    blockstates: Record<string, string>,
+  ) => void
   deleteEntity: (id: string) => void
 }
 
@@ -52,7 +56,7 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
             size: [1, 1, 1],
             position: [0, 0, 0],
             rotation: [0, 0, 0],
-            color: 0x888888,
+            blockstates: {},
           },
         ],
       }
@@ -101,6 +105,15 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
         const entity = state.entities.find((e) => e.id === id)
         if (entity != null) {
           entity.size = scale
+        }
+      }),
+    ),
+  setEntityBlockstates: (id, blockstates) =>
+    set(
+      produce((state: DisplayEntityState) => {
+        const entity = state.entities.find((e) => e.id === id)
+        if (entity != null) {
+          entity.blockstates = { ...entity.blockstates, ...blockstates }
         }
       }),
     ),
