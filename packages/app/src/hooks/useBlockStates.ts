@@ -4,9 +4,11 @@ import { stripMinecraftPrefix } from '@/utils'
 import { useMemo } from 'react'
 import useSWRImmutable from 'swr/immutable'
 
-const useBlockStates = (blockType: string) => {
+const useBlockStates = (blockType?: string) => {
   const { data, isLoading } = useSWRImmutable<CDNBlockStatesResponse>(
-    `/assets/minecraft/blockstates/${blockType}.json`,
+    blockType != null
+      ? `/assets/minecraft/blockstates/${blockType}.json`
+      : null,
     fetcher,
   )
 
