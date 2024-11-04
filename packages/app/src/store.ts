@@ -196,7 +196,7 @@ export const useEditorStore = create(
 
 // ==========
 
-type DialogType = 'blockDisplaySelect' | null
+type DialogType = 'appInfo' | 'blockDisplaySelect' | null
 
 type DialogState = {
   openedDialog: DialogType

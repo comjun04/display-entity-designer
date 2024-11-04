@@ -3,6 +3,7 @@ import Scene from './Scene'
 import TopButtonPanel from './components/TopButtonPanel'
 import LeftButtonPanel from './components/LeftButtonPanel'
 import BlockDisplaySelectDialog from './components/dialog/BlockDisplaySelectDialog'
+import AppInfoDialog from './components/dialog/AppInfoDialog'
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
 
       <Sidebar />
 
+      <AppInfoDialog />
       <BlockDisplaySelectDialog />
     </div>
   )
