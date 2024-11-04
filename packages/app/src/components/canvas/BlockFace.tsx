@@ -152,7 +152,12 @@ const BlockFace: FC<BlockFaceProps> = ({
       </planeGeometry>
       {/* transparent일 경우 빈 공간을 transparent 처리하면 opacity=0이 되는데 */}
       {/* alphaTest > 0 이어야 빈 공간이 실제로 렌더링되지 않음 (안 할 경우 빈 공간이 다른 mesh도 안보이게 만듬) */}
-      <meshStandardMaterial map={texture} transparent alphaTest={0.01} />
+      <meshStandardMaterial
+        map={texture}
+        transparent
+        alphaTest={0.01}
+        toneMapped={false} // 인게임에서는 블록이 실제 텍스쳐보다 덜 선명하게 렌더링됨
+      />
     </mesh>
   )
 }

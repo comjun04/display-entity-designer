@@ -185,8 +185,7 @@ const Scene: FC = () => {
         }}
       />
 
-      {/* TODO: 마크 클라이언트 렌더링 로직 분석해서 최적의 intensity 값 찾기  */}
-      <ambientLight intensity={Math.PI / 2} />
+      <ambientLight intensity={1.7} color={0xffffff} />
 
       <PerspectiveCamera makeDefault position={[3, 3, 3]}>
         <CustomCameraControls />
