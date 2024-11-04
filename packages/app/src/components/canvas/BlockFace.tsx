@@ -4,15 +4,68 @@ import { MathUtils, NearestFilter } from 'three'
 
 type BlockFaceProps = {
   faceName: 'up' | 'down' | 'north' | 'south' | 'west' | 'east'
+  modelResourceLocation: string
   textureResourceLocation: string
   parentElementSize: [number, number, number]
   parentElementFrom: [number, number, number]
   parentElementTo: [number, number, number]
   uv?: [number, number, number, number]
   rotation?: 0 | 90 | 180 | 270
+  tintindex?: number
+}
+
+const blocksUsingDefaultGrassColors = [
+  'block/grass_block',
+  'block/short_grass',
+  'block/tall_grass',
+  'block/fern',
+  'block/large_fern_top',
+  'block/large_fern_bottom',
+  'block/potted_fern',
+]
+const blocksUsingDefaultFoliageColors = [
+  'block/oak_leaves',
+  'block/jungle_leaves',
+  'block/acacia_leaves',
+  'block/dark_oak_leaves',
+  'block/vine',
+  'block/mangrove_leaves',
+]
+function getTextureColor(modelResourceLocation: string, tintindex?: number) {
+  if (tintindex == null) {
+    return 0xffffff
+  }
+
+  // 잔디 색
+  if (
+    blocksUsingDefaultGrassColors.includes(modelResourceLocation) &&
+    tintindex === 0
+  ) {
+    // https://minecraft.fandom.com/wiki/Grass_Block#Item
+    return 0x7cbd6b
+  }
+
+  if (
+    blocksUsingDefaultFoliageColors.includes(modelResourceLocation) &&
+    tintindex === 0
+  ) {
+    // net.minecraft.world.biome.FoliageColors.getDefaultColor()
+    return 0x48b518
+  }
+  if (modelResourceLocation === 'block/birch_leaves' && tintindex === 0) {
+    // net.minecraft.world.biome.FoliageColors.getBirchColor()
+    return 0x80a755
+  }
+  if (modelResourceLocation === 'block/spruce_leaves' && tintindex === 0) {
+    // net.minecraft.world.biome.FoliageColors.getSpruceColor()
+    return 0x619961
+  }
+
+  return 0xffffff
 }
 
 const BlockFace: FC<BlockFaceProps> = ({
+  modelResourceLocation,
   textureResourceLocation,
   parentElementSize: elementSize,
   parentElementFrom: elementFrom,
@@ -20,6 +73,7 @@ const BlockFace: FC<BlockFaceProps> = ({
   uv,
   rotation = 0,
   faceName,
+  tintindex,
 }) => {
   const texture = useTexture(
     `${import.meta.env.VITE_CDN_BASE_URL}/assets/minecraft/textures/${textureResourceLocation}.png`,
@@ -140,6 +194,8 @@ const BlockFace: FC<BlockFaceProps> = ({
   // const f = new Float32Array([0, 1, 1, 1, 0, 0, 1, 0])
   const vertexUVArr = new Float32Array(vertexUV)
 
+  const textureColor = getTextureColor(modelResourceLocation, tintindex)
+
   return (
     <mesh position={meshPosition} rotation={meshRotation}>
       <planeGeometry args={[width, height]}>
@@ -157,6 +213,7 @@ const BlockFace: FC<BlockFaceProps> = ({
         transparent
         alphaTest={0.01}
         toneMapped={false} // 인게임에서는 블록이 실제 텍스쳐보다 덜 선명하게 렌더링됨
+        color={textureColor}
       />
     </mesh>
   )

@@ -92,10 +92,12 @@ const Model: FC<ModelProps> = ({
             faces.push(
               <BlockFace
                 key={face}
+                modelResourceLocation={initialResourceLocation}
                 textureResourceLocation={texture}
                 faceName={face}
                 uv={faceData.uv}
                 rotation={faceData.rotation}
+                tintindex={faceData.tintindex}
                 parentElementSize={sizeVec.toArray()}
                 parentElementFrom={element.from}
                 parentElementTo={element.to}

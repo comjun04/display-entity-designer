@@ -49,7 +49,7 @@ export type ModelElement = {
       uv?: [number, number, number, number]
       texture: string
       rotation?: 0 | 90 | 180 | 270
-      // cullface: string
+      tintindex?: number
     }
   }
   rotation?: {
