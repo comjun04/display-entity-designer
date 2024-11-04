@@ -4,6 +4,7 @@ import { FC, useEffect } from 'react'
 import { Color, Event } from 'three'
 import Box from './components/canvas/Box'
 import {
+  useDialogStore,
   useDisplayEntityStore,
   useEditorStore,
   useEntityRefStore,
@@ -40,16 +41,26 @@ const Scene: FC = () => {
   const { mode, setMode } = useEditorStore(
     useShallow((state) => ({ mode: state.mode, setMode: state.setMode })),
   )
+  const { openedDialog } = useDialogStore(
+    useShallow((state) => ({
+      openedDialog: state.openedDialog,
+    })),
+  )
 
   useEffect(() => {
     const focusableElements = ['input', 'textarea']
     const handler = (evt: KeyboardEvent) => {
-      // <input>아니 <textarea>에 focus가 잡혀 있다면 이벤트를 처리하지 않음
+      // <input>이나 <textarea>에 focus가 잡혀 있다면 이벤트를 처리하지 않음
       if (
         focusableElements.includes(
           (document.activeElement?.tagName ?? '').toLowerCase(),
         )
       ) {
+        return true
+      }
+
+      // dialog 창이 열려 있을 떄는 이벤트를 처리하지 않음
+      if (openedDialog != null) {
         return true
       }
 
@@ -73,7 +84,7 @@ const Scene: FC = () => {
 
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [setMode, deleteEntity, selectedEntity])
+  }, [setMode, deleteEntity, selectedEntity, openedDialog])
 
   return (
     <Canvas
