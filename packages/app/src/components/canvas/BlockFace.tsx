@@ -110,7 +110,6 @@ const BlockFace: FC<BlockFaceProps> = ({
     vertexUVBottomLeft,
     vertexUVBottomRight,
   )
-  console.log(faceName, rotation)
   switch (rotation) {
     case 90:
       vertexUV = vertexUVBottomLeft.concat(

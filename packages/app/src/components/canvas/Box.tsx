@@ -45,7 +45,10 @@ const Box: FC<BoxProps> = ({
 
   const { data: blockstatesData, isLoading: isBlockstatesLoading } =
     useBlockStates(type)
-  console.log(blockstatesData, isBlockstatesLoading)
+  console.log(
+    `Blockstates data for ${type}, isLoading: ${isBlockstatesLoading}`,
+    blockstatesData,
+  )
 
   useEffect(() => {
     if (blockstatesData == null) return
