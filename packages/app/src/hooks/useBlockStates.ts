@@ -13,7 +13,7 @@ const useBlockStates = (blockType?: string) => {
   )
 
   const blockstatesData = useMemo(() => {
-    const blockstateMap = new Map<string, Set<string>>()
+    const blockstateMap = new Map<string, Set<string | null>>()
     const models: {
       // array 안에 있는 object들은 OR조건으로 계산, object들 중 하나만 맞아도 통과
       // 각 object들은 AND조건으로 계산, object 안에 있는 key와 value들이 모두 맞아야 함
@@ -87,7 +87,7 @@ const useBlockStates = (blockType?: string) => {
               if (blockstateMap.has(key)) {
                 values.forEach((v) => blockstateMap.get(key)!.add(v))
               } else {
-                blockstateMap.set(key, new Set(values))
+                blockstateMap.set(key, new Set([null, ...values]))
               }
 
               obj[key] = values
@@ -119,7 +119,7 @@ const useBlockStates = (blockType?: string) => {
               if (blockstateMap.has(key)) {
                 values.forEach((v) => blockstateMap.get(key)!.add(v))
               } else {
-                blockstateMap.set(key, new Set(values))
+                blockstateMap.set(key, new Set([null, ...values]))
               }
 
               obj[key] = values
@@ -152,7 +152,7 @@ const useBlockStates = (blockType?: string) => {
             if (blockstateMap.has(key)) {
               values.forEach((v) => blockstateMap.get(key)!.add(v))
             } else {
-              blockstateMap.set(key, new Set(values))
+              blockstateMap.set(key, new Set([null, ...values]))
             }
 
             obj[key] = values

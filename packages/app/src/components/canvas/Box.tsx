@@ -55,7 +55,7 @@ const Box: FC<BoxProps> = ({
 
     console.log('trigger')
 
-    const newBlockstateObject: Record<string, string> = {}
+    const newBlockstateObject: Record<string, string | null> = {}
     for (const [
       blockstateKey,
       blockstateValues,
@@ -84,6 +84,7 @@ const Box: FC<BoxProps> = ({
             let andConditionCheckSuccess = true
             for (const conditionKey in conditionObject) {
               if (
+                thisEntity.blockstates[conditionKey] == null ||
                 !conditionObject[conditionKey].includes(
                   thisEntity.blockstates[conditionKey],
                 )
