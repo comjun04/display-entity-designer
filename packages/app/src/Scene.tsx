@@ -1,6 +1,6 @@
 import { Grid, PerspectiveCamera, TransformControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
-import { FC, useEffect } from 'react'
+import { FC, useEffect, useState } from 'react'
 import { Color, Event } from 'three'
 import Box from './components/canvas/Box'
 import {
@@ -47,6 +47,8 @@ const Scene: FC = () => {
     })),
   )
 
+  const [shiftPressed, setShiftPressed] = useState(false)
+
   useEffect(() => {
     const focusableElements = ['input', 'textarea']
     const handler = (evt: KeyboardEvent) => {
@@ -85,6 +87,19 @@ const Scene: FC = () => {
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
   }, [setMode, deleteEntity, selectedEntity, openedDialog])
+
+  useEffect(() => {
+    const handler = (evt: KeyboardEvent) => {
+      setShiftPressed(evt.shiftKey)
+    }
+
+    document.addEventListener('keydown', handler)
+    document.addEventListener('keyup', handler)
+    return () => {
+      document.removeEventListener('keydown', handler)
+      document.removeEventListener('keyup', handler)
+    }
+  }, [])
 
   return (
     <Canvas
@@ -148,7 +163,7 @@ const Scene: FC = () => {
           undefined
         }
         mode={mode}
-        translationSnap={0.0625}
+        translationSnap={shiftPressed ? 0.00125 : 0.0625}
         rotationSnap={Math.PI / 12} // 15도
         scaleSnap={0.0625}
         // visible={selectedEntity != null} // 왜인지 모르겠는데 작동 안함
