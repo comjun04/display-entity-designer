@@ -58,81 +58,63 @@ const useBlockStates = (blockType?: string) => {
       }
     } else if ('multipart' in data) {
       for (const multipartItem of data.multipart) {
-        if (multipartItem.when != null) {
-          if (
-            'AND' in multipartItem.when &&
-            Array.isArray(multipartItem.when.AND)
-          ) {
-            const obj: Record<string, string[]> = {}
+        // when 구문이 없을 경우, 무조건 적용
+        if (multipartItem.when == null) {
+          const applyInfos = Array.isArray(multipartItem.apply)
+            ? multipartItem.apply
+            : [multipartItem.apply]
+          models.push({
+            when: [],
+            apply: applyInfos.map((info) => ({
+              ...info,
+              model: stripMinecraftPrefix(info.model),
+            })),
+          })
 
-            for (const andConditions of multipartItem.when.AND) {
-              for (const key in andConditions) {
-                const values = andConditions[key].split('|')
+          continue
+        }
 
-                if (blockstateMap.has(key)) {
-                  values.forEach((v) => blockstateMap.get(key)!.add(v))
-                } else {
-                  blockstateMap.set(key, new Set(values))
-                }
+        if (
+          'AND' in multipartItem.when &&
+          Array.isArray(multipartItem.when.AND)
+        ) {
+          const obj: Record<string, string[]> = {}
 
-                obj[key] = values
-              }
-            }
+          for (const andConditions of multipartItem.when.AND) {
+            for (const key in andConditions) {
+              const values = andConditions[key].split('|')
 
-            const applyInfos = Array.isArray(multipartItem.apply)
-              ? multipartItem.apply
-              : [multipartItem.apply]
-            models.push({
-              when: [obj],
-              apply: applyInfos.map((info) => ({
-                ...info,
-                model: stripMinecraftPrefix(info.model),
-              })),
-            })
-          } else if (
-            'OR' in multipartItem.when &&
-            Array.isArray(multipartItem.when.OR)
-          ) {
-            const conditions: Record<string, string[]>[] = []
-
-            for (const orConditions of multipartItem.when.OR) {
-              const obj: Record<string, string[]> = {}
-
-              for (const key in orConditions) {
-                const values = orConditions[key].split('|')
-
-                if (blockstateMap.has(key)) {
-                  values.forEach((v) => blockstateMap.get(key)!.add(v))
-                } else {
-                  blockstateMap.set(key, new Set(values))
-                }
-
-                obj[key] = values
+              if (blockstateMap.has(key)) {
+                values.forEach((v) => blockstateMap.get(key)!.add(v))
+              } else {
+                blockstateMap.set(key, new Set(values))
               }
 
-              conditions.push(obj)
+              obj[key] = values
             }
+          }
 
-            const applyInfos = Array.isArray(multipartItem.apply)
-              ? multipartItem.apply
-              : [multipartItem.apply]
-            models.push({
-              when: conditions,
-              apply: applyInfos.map((info) => ({
-                ...info,
-                model: stripMinecraftPrefix(info.model),
-              })),
-            })
-          } else if (
-            !('AND' in multipartItem.when) &&
-            !('OR' in multipartItem.when)
-          ) {
-            // AND와 OR key가 둘 다 없는 경우, object 안에 있는 key들을 전부 하나의 AND조건으로 계산
+          const applyInfos = Array.isArray(multipartItem.apply)
+            ? multipartItem.apply
+            : [multipartItem.apply]
+          models.push({
+            when: [obj],
+            apply: applyInfos.map((info) => ({
+              ...info,
+              model: stripMinecraftPrefix(info.model),
+            })),
+          })
+        } else if (
+          'OR' in multipartItem.when &&
+          Array.isArray(multipartItem.when.OR)
+        ) {
+          const conditions: Record<string, string[]>[] = []
 
+          for (const orConditions of multipartItem.when.OR) {
             const obj: Record<string, string[]> = {}
 
-            for (const key in multipartItem.when) {
-              const values = multipartItem.when[key].split('|')
+            for (const key in orConditions) {
+              const values = orConditions[key].split('|')
 
               if (blockstateMap.has(key)) {
                 values.forEach((v) => blockstateMap.get(key)!.add(v))
@@ -143,17 +125,49 @@ const useBlockStates = (blockType?: string) => {
               obj[key] = values
             }
 
-            const applyInfos = Array.isArray(multipartItem.apply)
-              ? multipartItem.apply
-              : [multipartItem.apply]
-            models.push({
-              when: [obj],
-              apply: applyInfos.map((info) => ({
-                ...info,
-                model: stripMinecraftPrefix(info.model),
-              })),
-            })
+            conditions.push(obj)
           }
+
+          const applyInfos = Array.isArray(multipartItem.apply)
+            ? multipartItem.apply
+            : [multipartItem.apply]
+          models.push({
+            when: conditions,
+            apply: applyInfos.map((info) => ({
+              ...info,
+              model: stripMinecraftPrefix(info.model),
+            })),
+          })
+        } else if (
+          !('AND' in multipartItem.when) &&
+          !('OR' in multipartItem.when)
+        ) {
+          // AND와 OR key가 둘 다 없는 경우, object 안에 있는 key들을 전부 하나의 AND조건으로 계산
+
+          const obj: Record<string, string[]> = {}
+
+          for (const key in multipartItem.when) {
+            const values = multipartItem.when[key].split('|')
+
+            if (blockstateMap.has(key)) {
+              values.forEach((v) => blockstateMap.get(key)!.add(v))
+            } else {
+              blockstateMap.set(key, new Set(values))
+            }
+
+            obj[key] = values
+          }
+
+          const applyInfos = Array.isArray(multipartItem.apply)
+            ? multipartItem.apply
+            : [multipartItem.apply]
+          models.push({
+            when: [obj],
+            apply: applyInfos.map((info) => ({
+              ...info,
+              model: stripMinecraftPrefix(info.model),
+            })),
+          })
         }
       }
     }

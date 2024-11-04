@@ -79,7 +79,7 @@ const Box: FC<BoxProps> = ({
 
       <group onClick={() => setSelected(id)}>
         {(blockstatesData?.models ?? []).map((model, idx) => {
-          let shouldRender = false
+          let shouldRender = model.when.length < 1 // when 배열 안에 조건이 정의되어 있지 않다면 무조건 렌더링
           for (const conditionObject of model.when) {
             let andConditionCheckSuccess = true
             for (const conditionKey in conditionObject) {
