@@ -8,9 +8,15 @@ import { MathUtils, Vector3 } from 'three'
 
 type ModelProps = {
   initialResourceLocation: string
+  xRotation?: number
+  yRotation?: number
 }
 
-const Model: FC<ModelProps> = ({ initialResourceLocation }) => {
+const Model: FC<ModelProps> = ({
+  initialResourceLocation,
+  xRotation = 0,
+  yRotation = 0,
+}) => {
   const [currentResourceLocation, setCurrentResourceLocation] = useState(
     initialResourceLocation,
   )
@@ -40,6 +46,8 @@ const Model: FC<ModelProps> = ({ initialResourceLocation }) => {
     }
   }, [data, elements])
 
+  // ==========
+
   if (data == null) {
     return null
   }
@@ -57,82 +65,90 @@ const Model: FC<ModelProps> = ({ initialResourceLocation }) => {
     else return stripMinecraftPrefix(textures[key])
   }
 
+  const modelRotation = [
+    MathUtils.degToRad(-xRotation),
+    MathUtils.degToRad(-yRotation),
+    0,
+  ] satisfies [number, number, number]
+
   return (
-    <group>
-      {elements.map((element, idx) => {
-        const fromVec = new Vector3(...element.from).divideScalar(16)
-        const toVec = new Vector3(...element.to).divideScalar(16)
-        const centerVec = new Vector3()
-          .addVectors(fromVec, toVec)
-          .divideScalar(2)
-        const sizeVec = new Vector3().add(toVec).sub(fromVec)
+    <group rotation={modelRotation} position={[0.5, 0.5, 0.5]}>
+      <group position={[-0.5, -0.5, -0.5]}>
+        {elements.map((element, idx) => {
+          const fromVec = new Vector3(...element.from).divideScalar(16)
+          const toVec = new Vector3(...element.to).divideScalar(16)
+          const centerVec = new Vector3()
+            .addVectors(fromVec, toVec)
+            .divideScalar(2)
+          const sizeVec = new Vector3().add(toVec).sub(fromVec)
 
-        const faces: ReactNode[] = []
-        for (const faceKey in element.faces) {
-          const face = faceKey as ModelFaceKey
-          const faceData = element.faces[face]!
-          const texture = getTexture(faceData.texture)
-          if (texture == null) continue
+          const faces: ReactNode[] = []
+          for (const faceKey in element.faces) {
+            const face = faceKey as ModelFaceKey
+            const faceData = element.faces[face]!
+            const texture = getTexture(faceData.texture)
+            if (texture == null) continue
 
-          faces.push(
-            <BlockFace
-              key={face}
-              textureResourceLocation={texture}
-              faceName={face}
-              uv={faceData.uv}
-              rotation={faceData.rotation}
-              parentElementSize={sizeVec.toArray()}
-              parentElementFrom={element.from}
-              parentElementTo={element.to}
-            />,
-          )
-        }
-
-        // element rotation
-        let rotation = [0, 0, 0] as [number, number, number]
-        let groupScale = [1, 1, 1] as [number, number, number]
-        if (element.rotation != null) {
-          const rad = MathUtils.degToRad(element.rotation.angle)
-
-          switch (element.rotation.axis) {
-            case 'x':
-              rotation = [rad, 0, 0]
-              break
-            case 'y':
-              rotation = [0, rad, 0]
-              break
-            case 'z':
-              rotation = [0, 0, rad]
-              break
+            faces.push(
+              <BlockFace
+                key={face}
+                textureResourceLocation={texture}
+                faceName={face}
+                uv={faceData.uv}
+                rotation={faceData.rotation}
+                parentElementSize={sizeVec.toArray()}
+                parentElementFrom={element.from}
+                parentElementTo={element.to}
+              />,
+            )
           }
 
-          if (element.rotation.rescale) {
-            const scaleBy = 1 / Math.cos(rad)
+          // element rotation
+          let rotation = [0, 0, 0] as [number, number, number]
+          let groupScale = [1, 1, 1] as [number, number, number]
+          if (element.rotation != null) {
+            const rad = MathUtils.degToRad(element.rotation.angle)
+
             switch (element.rotation.axis) {
               case 'x':
-                groupScale = [1, scaleBy, scaleBy]
+                rotation = [rad, 0, 0]
                 break
               case 'y':
-                groupScale = [scaleBy, 1, scaleBy]
+                rotation = [0, rad, 0]
                 break
               case 'z':
-                groupScale = [scaleBy, scaleBy, 1]
+                rotation = [0, 0, rad]
                 break
             }
-          }
-        }
 
-        return (
-          <group
-            key={idx}
-            position={centerVec}
-            rotation={rotation}
-            scale={groupScale}
-          >
-            <Suspense>{faces}</Suspense>
-          </group>
-        )
-      })}
+            if (element.rotation.rescale) {
+              const scaleBy = 1 / Math.cos(rad)
+              switch (element.rotation.axis) {
+                case 'x':
+                  groupScale = [1, scaleBy, scaleBy]
+                  break
+                case 'y':
+                  groupScale = [scaleBy, 1, scaleBy]
+                  break
+                case 'z':
+                  groupScale = [scaleBy, scaleBy, 1]
+                  break
+              }
+            }
+          }
+
+          return (
+            <group
+              key={idx}
+              position={centerVec}
+              rotation={rotation}
+              scale={groupScale}
+            >
+              <Suspense>{faces}</Suspense>
+            </group>
+          )
+        })}
+      </group>
     </group>
   )
 }
