@@ -61,6 +61,15 @@ function getTextureColor(modelResourceLocation: string, tintindex?: number) {
     return 0x619961
   }
 
+  // redstone_wire
+  if (
+    modelResourceLocation.startsWith('block/redstone_dust_') &&
+    tintindex === 0
+  ) {
+    // 항상 꺼진 상태
+    return 0x4b0000
+  }
+
   return 0xffffff
 }
 
