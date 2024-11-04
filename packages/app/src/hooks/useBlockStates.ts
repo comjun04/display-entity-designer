@@ -45,10 +45,12 @@ const useBlockStates = (blockType?: string) => {
           : [data.variants[key]]
         models.push({
           when: [
-            blockstateDefinition.reduce<Record<string, string[]>>(
-              (acc, cur) => ({ ...acc, [cur.key]: [cur.value] }),
-              {},
-            ),
+            blockstateDefinition
+              .filter((d) => d.key.length > 0) // key값이 `''`인 조건 없애기
+              .reduce<Record<string, string[]>>(
+                (acc, cur) => ({ ...acc, [cur.key]: [cur.value] }),
+                {},
+              ),
           ],
           apply: applyInfos.map((info) => ({
             ...info,
@@ -171,6 +173,8 @@ const useBlockStates = (blockType?: string) => {
         }
       }
     }
+
+    console.log('before', models)
 
     // blockstate가 없을 경우 empty string을 key로 사용하게 되어 map에 들어가게 됨
     // 데이터 리턴 전에 빼주기
