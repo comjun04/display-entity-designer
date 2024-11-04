@@ -24,6 +24,7 @@ const PropertiesPanel: FC = () => {
                 <label className="flex-1 text-end">{key}</label>
                 <select
                   className="flex-[2] rounded bg-neutral-800 px-2 py-1"
+                  value={selectedEntity.blockstates[key] as string} // null값도 받아야 하지만, type error가 나기 때문에 강제로 string으로 인식시키기
                   onChange={(evt) => {
                     setEntityBlockstates(selectedEntity.id, {
                       [key]: evt.target.value,
