@@ -16,8 +16,11 @@ const PropertiesPanel: FC = () => {
   return (
     <div className="flex select-none flex-col gap-[2px] rounded-lg bg-neutral-900 p-2 text-sm">
       <span className="font-bold">Properties</span>
-      {selectedEntity != null && (
+      {selectedEntity != null && blockstatesData.blockstates.size > 0 && (
         <div className="flex flex-col gap-2">
+          <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
+            Blockstates
+          </div>
           {[...blockstatesData.blockstates.entries()].map(([key, values]) => {
             return (
               <div key={key} className="flex flex-row items-center gap-2">
