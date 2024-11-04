@@ -137,14 +137,26 @@ const Model: FC<ModelProps> = ({
             }
           }
 
+          // 회전 중심 위치
+          const rotationOriginVec = new Vector3(
+            ...(element.rotation?.origin ?? ([0, 0, 0] as const)),
+          ).divideScalar(16)
+
+          const vec1 = centerVec.clone().sub(rotationOriginVec)
+
+          // rotation origin 적용할 때
+          // 1. centerVec - rotationOriginVec 위치로 이동 => 회전 중심위치가 (0,0,0)에 위치하도록 함
+          // 2. 부모 group에서 rotation을 적용하고 원래 위치로 다시 움직임 (centerVec - rotationOriginVec + rotationOriginVec = centerVec)
           return (
             <group
               key={idx}
-              position={centerVec}
               rotation={rotation}
+              position={rotationOriginVec}
               scale={groupScale}
             >
-              <Suspense>{faces}</Suspense>
+              <group position={vec1}>
+                <Suspense>{faces}</Suspense>
+              </group>
             </group>
           )
         })}
