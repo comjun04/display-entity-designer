@@ -12,7 +12,7 @@ type DisplayEntity = {
   size: [number, number, number]
   position: [number, number, number]
   rotation: [number, number, number]
-  blockstates: Record<string, string | null>
+  blockstates: Record<string, string>
 }
 
 type DisplayEntityState = {
@@ -29,7 +29,7 @@ type DisplayEntityState = {
   setEntityScale: (id: string, scale: [number, number, number]) => void
   setEntityBlockstates: (
     id: string,
-    blockstates: Record<string, string | null>,
+    blockstates: Record<string, string>,
   ) => void
   deleteEntity: (id: string) => void
 }

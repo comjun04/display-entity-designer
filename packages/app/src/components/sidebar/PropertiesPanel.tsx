@@ -34,7 +34,7 @@ const PropertiesPanel: FC = () => {
                     })
                   }}
                 >
-                  {[...values.values()].map((item) => (
+                  {[...values.states.values()].map((item) => (
                     <option key={item}>{item}</option>
                   ))}
                 </select>

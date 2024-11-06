@@ -4,7 +4,9 @@ import { stripMinecraftPrefix } from '@/utils'
 import { useMemo } from 'react'
 import useSWRImmutable from 'swr/immutable'
 
-const useBlockStates = (blockType?: string) => {
+const useBlockStates = (blockString?: string) => {
+  const blockType = blockString != null ? blockString.split('[')[0] : null
+
   const { data, isLoading } = useSWRImmutable<CDNBlockStatesResponse>(
     blockType != null
       ? `/assets/minecraft/blockstates/${blockType}.json`
@@ -13,7 +15,27 @@ const useBlockStates = (blockType?: string) => {
   )
 
   const blockstatesData = useMemo(() => {
-    const blockstateMap = new Map<string, Set<string | null>>()
+    const blockDefaultValues: Record<string, string> =
+      blockString != null
+        ? blockString
+            .slice(blockType!.length + 1, -1)
+            .split(',')
+            .reduce((acc, cur) => {
+              const [key, value] = cur.split('=')
+              return {
+                ...acc,
+                [key]: value,
+              }
+            }, {})
+        : {}
+
+    const blockstateMap = new Map<
+      string,
+      {
+        states: Set<string>
+        default: string
+      }
+    >()
     const models: {
       // array 안에 있는 object들은 OR조건으로 계산, object들 중 하나만 맞아도 통과
       // 각 object들은 AND조건으로 계산, object 안에 있는 key와 value들이 모두 맞아야 함
@@ -34,9 +56,12 @@ const useBlockStates = (blockType?: string) => {
 
         for (const blockstate of blockstateDefinition) {
           if (blockstateMap.has(blockstate.key)) {
-            blockstateMap.get(blockstate.key)!.add(blockstate.value)
+            blockstateMap.get(blockstate.key)!.states.add(blockstate.value)
           } else {
-            blockstateMap.set(blockstate.key, new Set([blockstate.value]))
+            blockstateMap.set(blockstate.key, {
+              states: new Set([blockstate.value]),
+              default: blockDefaultValues[blockstate.key] ?? blockstate.value,
+            })
           }
         }
 
@@ -87,9 +112,12 @@ const useBlockStates = (blockType?: string) => {
               const values = andConditions[key].split('|')
 
               if (blockstateMap.has(key)) {
-                values.forEach((v) => blockstateMap.get(key)!.add(v))
+                values.forEach((v) => blockstateMap.get(key)!.states.add(v))
               } else {
-                blockstateMap.set(key, new Set([null, ...values]))
+                blockstateMap.set(key, {
+                  states: new Set(['none', ...values]),
+                  default: blockDefaultValues[key] ?? 'none',
+                })
               }
 
               obj[key] = values
@@ -119,9 +147,12 @@ const useBlockStates = (blockType?: string) => {
               const values = orConditions[key].split('|')
 
               if (blockstateMap.has(key)) {
-                values.forEach((v) => blockstateMap.get(key)!.add(v))
+                values.forEach((v) => blockstateMap.get(key)!.states.add(v))
               } else {
-                blockstateMap.set(key, new Set([null, ...values]))
+                blockstateMap.set(key, {
+                  states: new Set(['none', ...values]),
+                  default: blockDefaultValues[key] ?? 'none',
+                })
               }
 
               obj[key] = values
@@ -152,9 +183,12 @@ const useBlockStates = (blockType?: string) => {
             const values = multipartItem.when[key].split('|')
 
             if (blockstateMap.has(key)) {
-              values.forEach((v) => blockstateMap.get(key)!.add(v))
+              values.forEach((v) => blockstateMap.get(key)!.states.add(v))
             } else {
-              blockstateMap.set(key, new Set([null, ...values]))
+              blockstateMap.set(key, {
+                states: new Set(['none', ...values]),
+                default: blockDefaultValues[key] ?? 'none',
+              })
             }
 
             obj[key] = values
@@ -181,7 +215,7 @@ const useBlockStates = (blockType?: string) => {
     blockstateMap.delete('')
 
     return { blockstates: blockstateMap, models }
-  }, [data])
+  }, [data, blockString, blockType])
 
   return {
     data: blockstatesData,
