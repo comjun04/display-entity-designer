@@ -1,5 +1,5 @@
 import { useTexture } from '@react-three/drei'
-import { FC } from 'react'
+import { FC, useEffect, useState } from 'react'
 import { MathUtils, NearestFilter } from 'three'
 
 type BlockFaceProps = {
@@ -125,9 +125,30 @@ const BlockFace: FC<BlockFaceProps> = ({
   faceName,
   tintindex,
 }) => {
+  const [processedImageDataUrl, setProcessedImageDataUrl] = useState<string>()
   const texture = useTexture(
-    `${import.meta.env.VITE_CDN_BASE_URL}/assets/minecraft/textures/${textureResourceLocation}.png`,
+    processedImageDataUrl ??
+      `${import.meta.env.VITE_CDN_BASE_URL}/assets/minecraft/textures/${textureResourceLocation}.png`,
   )
+
+  // 텍스쳐 사진을 처음 로드했을 경우 맨 위 16x16만 잘라서 적용
+  useEffect(() => {
+    if (processedImageDataUrl != null || texture == null) {
+      return
+    }
+
+    const img = texture.image as HTMLImageElement
+
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')!
+    canvas.width = 16
+    canvas.height = 16
+
+    ctx.drawImage(img, 0, 0, 16, 16, 0, 0, 16, 16)
+
+    const croppedTextureDataUrl = canvas.toDataURL()
+    setProcessedImageDataUrl(croppedTextureDataUrl)
+  }, [processedImageDataUrl, texture])
 
   // 텍스쳐 픽셀끼리 뭉쳐져서 blur되어 보이지 않게 설정
   // https://discourse.threejs.org/t/low-resolution-texture-is-very-blurry-how-can-i-get-around-this-issue/29948
