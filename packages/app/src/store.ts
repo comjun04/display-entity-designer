@@ -7,14 +7,20 @@ import { immer } from 'zustand/middleware/immer'
 import { ModelElement } from './types'
 
 type DisplayEntity = {
-  kind: 'block'
   id: string
   type: string
   size: [number, number, number]
   position: [number, number, number]
   rotation: [number, number, number]
-  blockstates: Record<string, string>
-}
+} & (
+  | {
+      kind: 'block'
+      blockstates: Record<string, string>
+    }
+  | {
+      kind: 'item'
+    }
+)
 
 type DisplayEntityState = {
   entities: DisplayEntity[]
@@ -28,7 +34,7 @@ type DisplayEntityState = {
   ) => void
   setEntityRotation: (id: string, rotation: [number, number, number]) => void
   setEntityScale: (id: string, scale: [number, number, number]) => void
-  setEntityBlockstates: (
+  setBDEntityBlockstates: (
     id: string,
     blockstates: Record<string, string>,
   ) => void
@@ -109,13 +115,23 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
         }
       }),
     ),
-  setEntityBlockstates: (id, blockstates) =>
+  setBDEntityBlockstates: (id, blockstates) =>
     set(
       produce((state: DisplayEntityState) => {
         const entity = state.entities.find((e) => e.id === id)
-        if (entity != null) {
-          entity.blockstates = { ...entity.blockstates, ...blockstates }
+        if (entity == null) {
+          console.error(
+            `Attempted to set blockstates for unknown block display entity: ${id}`,
+          )
+          return
+        } else if (entity.kind !== 'block') {
+          console.error(
+            `Attempted to set blockstates for non-block display entity: ${id}, kind: ${entity.kind}`,
+          )
+          return
         }
+
+        entity.blockstates = { ...entity.blockstates, ...blockstates }
       }),
     ),
   deleteEntity: (id) =>

@@ -2,6 +2,7 @@ import { useDisplayEntityStore } from '@/store'
 import { cn } from '@/utils'
 import { FC } from 'react'
 import { IoCubeOutline } from 'react-icons/io5'
+import { TbDiamondFilled } from 'react-icons/tb'
 import { useShallow } from 'zustand/shallow'
 
 const ObjectsPanel: FC = () => {
@@ -19,8 +20,10 @@ const ObjectsPanel: FC = () => {
 
       {entities.map((entity, idx) => {
         const blockstateArr: string[] = []
-        for (const key in entity.blockstates) {
-          blockstateArr.push(`${key}=${entity.blockstates[key]}`)
+        if (entity.kind === 'block') {
+          for (const key in entity.blockstates) {
+            blockstateArr.push(`${key}=${entity.blockstates[key]}`)
+          }
         }
 
         return (
@@ -32,7 +35,10 @@ const ObjectsPanel: FC = () => {
             )}
             onClick={() => setSelectedEntity(entity.id)}
           >
-            <IoCubeOutline size={16} className="flex-none" />
+            <span className="flex-none">
+              {entity.kind === 'block' && <IoCubeOutline size={16} />}
+              {entity.kind === 'item' && <TbDiamondFilled size={16} />}
+            </span>
             <span>{entity.type}</span>
             {blockstateArr.length > 0 && (
               <span className="truncate opacity-50">
