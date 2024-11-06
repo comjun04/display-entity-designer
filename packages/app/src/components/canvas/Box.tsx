@@ -55,12 +55,16 @@ const Box: FC<BoxProps> = ({
 
     console.log('trigger')
 
-    const newBlockstateObject: Record<string, string | null> = {}
+    const newBlockstateObject: Record<string, string> = {}
     for (const [
       blockstateKey,
       blockstateValues,
     ] of blockstatesData.blockstates.entries()) {
-      newBlockstateObject[blockstateKey] = [...blockstateValues.values()][0]
+      newBlockstateObject[blockstateKey] = blockstateValues.states.has(
+        blockstateValues.default,
+      )
+        ? blockstateValues.default
+        : [...blockstateValues.states.values()][0]
     }
 
     setEntityBlockstates(id, newBlockstateObject)

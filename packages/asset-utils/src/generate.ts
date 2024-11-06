@@ -9,56 +9,12 @@ import { Open } from 'unzipper'
 import { rimraf } from 'rimraf'
 import { spawnSync } from 'child_process'
 import { BlockstatesFile, ModelFile } from './types'
+import {
+  blockstatesDefaultValues,
+  renderableBlockEntityModelTextures,
+} from './constants'
 
 // =====
-
-const renderableBlockEntityModelTextures = [
-  'chest/normal', // chest
-  'chest/trapped', // trapped_chest
-  'chest/ender', // ender_chest
-
-  'conduit/base', // conduit
-
-  // shulker boxes
-  'shulker/shulker',
-  'shulker/shulker_black',
-  'shulker/shulker_blue',
-  'shulker/shulker_brown',
-  'shulker/shulker_cyan',
-  'shulker/shulker_gray',
-  'shulker/shulker_green',
-  'shulker/shulker_light_blue',
-  'shulker/shulker_light_gray',
-  'shulker/shulker_lime',
-  'shulker/shulker_magenta',
-  'shulker/shulker_orange',
-  'shulker/shulker_pink',
-  'shulker/shulker_purple',
-  'shulker/shulker_red',
-  'shulker/shulker_white',
-  'shulker/shulker_yellow',
-
-  // beds
-  'bed/black',
-  'bed/blue',
-  'bed/brown',
-  'bed/cyan',
-  'bed/gray',
-  'bed/green',
-  'bed/light_blue',
-  'bed/light_gray',
-  'bed/lime',
-  'bed/magenta',
-  'bed/orange',
-  'bed/pink',
-  'bed/purple',
-  'bed/red',
-  'bed/white',
-  'bed/yellow',
-].map(
-  (resourceLocation) =>
-    `assets/minecraft/textures/entity/${resourceLocation}.png`,
-)
 
 const args = process.argv
 const clientJarfilePath = args[2]
@@ -198,7 +154,19 @@ for await (const blockNameWithPrefix of [...Object.keys(generatedBlocksJson)]) {
   }
 
   if (canRender) {
-    renderableBlocks.push(blockName)
+    const defaultBlockstateValues = [
+      ...Object.entries(blockstatesDefaultValues[blockName] ?? {}),
+    ]
+    const stringifiedDefaultBlockstateValues =
+      defaultBlockstateValues.length > 0
+        ? '[' +
+          defaultBlockstateValues
+            .map(([key, value]) => `${key}=${value}`)
+            .join(',') +
+          ']'
+        : ''
+
+    renderableBlocks.push(blockName + stringifiedDefaultBlockstateValues)
   } else {
     console.log(`[BlockListGen] excluding block ${blockName}`)
   }

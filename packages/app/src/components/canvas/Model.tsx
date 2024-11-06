@@ -5,6 +5,8 @@ import { FC, ReactNode, Suspense, useEffect, useState } from 'react'
 import useSWRImmutable from 'swr/immutable'
 import BlockFace from './BlockFace'
 import { MathUtils, Vector3 } from 'three'
+import { useModelDataStore } from '@/store'
+import { useShallow } from 'zustand/shallow'
 
 type ModelProps = {
   initialResourceLocation: string
@@ -17,12 +19,26 @@ const Model: FC<ModelProps> = ({
   xRotation = 0,
   yRotation = 0,
 }) => {
+  const { cachedModelData, setCachedModelData } = useModelDataStore(
+    useShallow((state) => ({
+      cachedModelData: state.modelData[initialResourceLocation], // nullable
+      setCachedModelData: state.setModelData,
+    })),
+  )
+
   const [currentResourceLocation, setCurrentResourceLocation] = useState(
     initialResourceLocation,
   )
-  const [textures, setTextures] = useState<Record<string, string>>({})
-  const [display, setDisplay] = useState({})
-  const [elements, setElements] = useState<ModelElement[]>()
+
+  // textures, display, elements들은 캐싱된 데이터가 있을 경우 받아오고,
+  // 없을 경우 밑에서 연산하면서 데이터를 저장함
+  const [textures, setTextures] = useState<Record<string, string>>(
+    cachedModelData?.textures ?? {},
+  )
+  const [display, setDisplay] = useState(cachedModelData?.display ?? {})
+  const [elements, setElements] = useState<ModelElement[]>(
+    cachedModelData?.elements ?? [],
+  )
 
   const { data } = useSWRImmutable<CDNModelResponse>(
     currentResourceLocation.length > 0
@@ -32,29 +48,59 @@ const Model: FC<ModelProps> = ({
   )
 
   useEffect(() => {
-    if (data == null) return
+    // 모델 파일 데이터가 없거나, 캐싱된 데이터가 있다면 모델 데이터 계산을 수행하지 않음
+    if (data == null || cachedModelData != null) return
 
+    // parent 값이 있다면 state에다 설정해서
+    // 다음 render할 떄 parent의 model 데이터를 불러오도록 처리
     if (data.parent != null) {
       setCurrentResourceLocation(stripMinecraftPrefix(data.parent))
     }
 
+    // 불러온 model 데이터들을 합쳐서 state로 저장
     setTextures((textures) => ({ ...data.textures, ...textures }))
     setDisplay((display) => ({ ...data.display, ...display }))
 
-    if (elements == null) {
+    if (
+      elements.length < 1 &&
+      data.elements != null &&
+      data.elements.length > 0
+    ) {
       setElements(data.elements)
     }
-  }, [data, elements])
+  }, [data, elements, cachedModelData])
+
+  // elements 데이터가 있고, data.parent 값이 null일 경우(=최상위 model 파일에 도달한 경우)
+  // 다음에 로드 시 모델 데이터를 다시 계산할 필요가 없도록 캐싱
+  useEffect(() => {
+    if (data == null || elements.length < 1) return
+
+    if (data.parent == null) {
+      setCachedModelData(initialResourceLocation, {
+        elements,
+        textures,
+        display,
+      })
+    }
+  }, [
+    data,
+    display,
+    elements,
+    textures,
+    initialResourceLocation,
+    setCachedModelData,
+  ])
 
   // ==========
 
-  if (data == null) {
+  if (data == null || cachedModelData == null) {
     return null
   }
 
-  console.log(currentResourceLocation, textures, display, elements)
-
-  if (elements == null || elements.length < 1) return null
+  // elements가 없을 경우 렌더링할 것이 없으므로 그냥 null을 리턴
+  if (elements == null || elements.length < 1) {
+    return null
+  }
 
   const getTexture = (key: string) => {
     if (key.startsWith('#')) return getTexture(key.slice(1))

@@ -33,6 +33,7 @@ const BlockDisplaySelectDialog: FC = () => {
     firstOpened ? '/assets/minecraft/blocks.json' : null,
     fetcher,
   )
+  const blocks = (data?.blocks ?? []).map((d) => d.split('[')[0]) // 블록 이름 뒤에 붙는 `[up=true]` 등 blockstate 기본값 텍스트 제거
 
   useEffect(() => {
     if (isOpen) {
@@ -41,9 +42,7 @@ const BlockDisplaySelectDialog: FC = () => {
   }, [isOpen])
 
   // search filtering
-  const searchResult = (data?.blocks ?? []).filter((block) =>
-    block.includes(searchQuery),
-  )
+  const searchResult = blocks.filter((block) => block.includes(searchQuery))
 
   return (
     <Dialog open={isOpen} onClose={closeDialog} className="relative z-50">

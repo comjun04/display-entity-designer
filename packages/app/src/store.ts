@@ -4,6 +4,7 @@ import { Object3D } from 'three'
 import { create } from 'zustand'
 import { produce } from 'immer'
 import { immer } from 'zustand/middleware/immer'
+import { ModelElement } from './types'
 
 type DisplayEntity = {
   kind: 'block'
@@ -12,7 +13,7 @@ type DisplayEntity = {
   size: [number, number, number]
   position: [number, number, number]
   rotation: [number, number, number]
-  blockstates: Record<string, string | null>
+  blockstates: Record<string, string>
 }
 
 type DisplayEntityState = {
@@ -29,7 +30,7 @@ type DisplayEntityState = {
   setEntityScale: (id: string, scale: [number, number, number]) => void
   setEntityBlockstates: (
     id: string,
-    blockstates: Record<string, string | null>,
+    blockstates: Record<string, string>,
   ) => void
   deleteEntity: (id: string) => void
 }
@@ -174,6 +175,33 @@ export const useEntityRefStore = create<EntityRefStoreState>((set) => ({
       return {}
     }),
 }))
+
+// ==========
+
+type ModelData = {
+  textures: Record<string, string>
+  display: Record<string, unknown> // TODO
+  elements: ModelElement[]
+}
+type ModelDataStoreState = {
+  modelData: Record<string, ModelData>
+  setModelData: (resourceLocation: string, data: ModelData) => void
+}
+
+// 모델 데이터 캐시 저장소
+export const useModelDataStore = create(
+  immer<ModelDataStoreState>((set) => ({
+    modelData: {},
+    setModelData: (resourceLocation, data) =>
+      set((state) => {
+        const modelData = state.modelData[resourceLocation]
+
+        if (modelData == null) {
+          state.modelData[resourceLocation] = data
+        }
+      }),
+  })),
+)
 
 // ==========
 

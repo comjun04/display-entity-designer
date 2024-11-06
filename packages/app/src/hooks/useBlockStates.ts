@@ -4,7 +4,9 @@ import { stripMinecraftPrefix } from '@/utils'
 import { useMemo } from 'react'
 import useSWRImmutable from 'swr/immutable'
 
-const useBlockStates = (blockType?: string) => {
+const useBlockStates = (blockString?: string) => {
+  const blockType = blockString != null ? blockString.split('[')[0] : null
+
   const { data, isLoading } = useSWRImmutable<CDNBlockStatesResponse>(
     blockType != null
       ? `/assets/minecraft/blockstates/${blockType}.json`
@@ -13,7 +15,27 @@ const useBlockStates = (blockType?: string) => {
   )
 
   const blockstatesData = useMemo(() => {
-    const blockstateMap = new Map<string, Set<string | null>>()
+    const blockDefaultValues: Record<string, string> =
+      blockString != null
+        ? blockString
+            .slice(blockType!.length + 1, -1)
+            .split(',')
+            .reduce((acc, cur) => {
+              const [key, value] = cur.split('=')
+              return {
+                ...acc,
+                [key]: value,
+              }
+            }, {})
+        : {}
+
+    const blockstateMap = new Map<
+      string,
+      {
+        states: Set<string>
+        default: string
+      }
+    >()
     const models: {
       // array 안에 있는 object들은 OR조건으로 계산, object들 중 하나만 맞아도 통과
       // 각 object들은 AND조건으로 계산, object 안에 있는 key와 value들이 모두 맞아야 함
@@ -25,6 +47,32 @@ const useBlockStates = (blockType?: string) => {
       return { blockstates: blockstateMap, models }
     }
 
+    const addBlockstatesKeyValue = (key: string, originalValues: string[]) => {
+      const values = originalValues.slice()
+
+      // `*_fence` 울타리 블록들은 blockstates 파일에서 true만 뽑아낼 수 있기 떄문에, false 값을 직접 추가
+      if (values.includes('true')) {
+        values.push('false')
+      } else if (values.includes('false')) {
+        // 반대의 경우도 혹시나 모르지만 추가 (어차피 Set에다 넣을거라 중복안됨)
+        values.push('true')
+      }
+
+      // `*_wall` 벽 블록들은 low, tall 외에 none도 state로 사용할 수 있음 (맨 처음에 넣기)
+      if (values.includes('low') || values.includes('tall')) {
+        values.unshift('none')
+      }
+
+      if (blockstateMap.has(key)) {
+        values.forEach((v) => blockstateMap.get(key)!.states.add(v))
+      } else {
+        blockstateMap.set(key, {
+          states: new Set(values),
+          default: blockDefaultValues[key] ?? values[0],
+        })
+      }
+    }
+
     if ('variants' in data) {
       for (const key in data.variants) {
         const blockstateDefinition = key.split(',').map((section) => {
@@ -33,11 +81,7 @@ const useBlockStates = (blockType?: string) => {
         })
 
         for (const blockstate of blockstateDefinition) {
-          if (blockstateMap.has(blockstate.key)) {
-            blockstateMap.get(blockstate.key)!.add(blockstate.value)
-          } else {
-            blockstateMap.set(blockstate.key, new Set([blockstate.value]))
-          }
+          addBlockstatesKeyValue(blockstate.key, [blockstate.value])
         }
 
         const applyInfos = Array.isArray(data.variants[key])
@@ -86,11 +130,7 @@ const useBlockStates = (blockType?: string) => {
             for (const key in andConditions) {
               const values = andConditions[key].split('|')
 
-              if (blockstateMap.has(key)) {
-                values.forEach((v) => blockstateMap.get(key)!.add(v))
-              } else {
-                blockstateMap.set(key, new Set([null, ...values]))
-              }
+              addBlockstatesKeyValue(key, values)
 
               obj[key] = values
             }
@@ -118,11 +158,7 @@ const useBlockStates = (blockType?: string) => {
             for (const key in orConditions) {
               const values = orConditions[key].split('|')
 
-              if (blockstateMap.has(key)) {
-                values.forEach((v) => blockstateMap.get(key)!.add(v))
-              } else {
-                blockstateMap.set(key, new Set([null, ...values]))
-              }
+              addBlockstatesKeyValue(key, values)
 
               obj[key] = values
             }
@@ -151,11 +187,7 @@ const useBlockStates = (blockType?: string) => {
           for (const key in multipartItem.when) {
             const values = multipartItem.when[key].split('|')
 
-            if (blockstateMap.has(key)) {
-              values.forEach((v) => blockstateMap.get(key)!.add(v))
-            } else {
-              blockstateMap.set(key, new Set([null, ...values]))
-            }
+            addBlockstatesKeyValue(key, values)
 
             obj[key] = values
           }
@@ -181,7 +213,7 @@ const useBlockStates = (blockType?: string) => {
     blockstateMap.delete('')
 
     return { blockstates: blockstateMap, models }
-  }, [data])
+  }, [data, blockString, blockType])
 
   return {
     data: blockstatesData,
