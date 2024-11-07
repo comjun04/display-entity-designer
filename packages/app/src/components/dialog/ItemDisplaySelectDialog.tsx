@@ -1,6 +1,6 @@
 import fetcher from '@/fetcher'
 import { useDialogStore, useDisplayEntityStore } from '@/store'
-import { CDNBlocksListResponse } from '@/types'
+import { CDNItemsListResponse } from '@/types'
 import {
   Dialog,
   DialogBackdrop,
@@ -11,7 +11,7 @@ import { FC, useEffect, useState } from 'react'
 import useSWRImmutable from 'swr/immutable'
 import { useShallow } from 'zustand/shallow'
 
-const BlockDisplaySelectDialog: FC = () => {
+const ItemDisplaySelectDialog: FC = () => {
   const [firstOpened, setFirstOpened] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -22,18 +22,19 @@ const BlockDisplaySelectDialog: FC = () => {
   )
   const { isOpen, setOpenedDialog } = useDialogStore(
     useShallow((state) => ({
-      isOpen: state.openedDialog === 'blockDisplaySelect',
+      isOpen: state.openedDialog === 'itemDisplaySelect',
       setOpenedDialog: state.setOpenedDialog,
     })),
   )
 
   const closeDialog = () => setOpenedDialog(null)
 
-  const { data } = useSWRImmutable<CDNBlocksListResponse>(
-    firstOpened ? '/assets/minecraft/blocks.json' : null,
+  const { data } = useSWRImmutable<CDNItemsListResponse>(
+    firstOpened ? '/assets/minecraft/items.json' : null,
     fetcher,
   )
-  const blocks = (data?.blocks ?? []).map((d) => d.split('[')[0]) // 블록 이름 뒤에 붙는 `[up=true]` 등 blockstate 기본값 텍스트 제거
+
+  const items = data?.items ?? []
 
   useEffect(() => {
     if (isOpen) {
@@ -42,7 +43,7 @@ const BlockDisplaySelectDialog: FC = () => {
   }, [isOpen])
 
   // search filtering
-  const searchResult = blocks.filter((block) => block.includes(searchQuery))
+  const searchResult = items.filter((item) => item.includes(searchQuery))
 
   return (
     <Dialog open={isOpen} onClose={closeDialog} className="relative z-50">
@@ -57,7 +58,7 @@ const BlockDisplaySelectDialog: FC = () => {
           className="flex h-[75vh] w-full max-w-screen-md select-none flex-col gap-2 rounded-xl bg-neutral-800 p-4 duration-200 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
         >
           <DialogTitle className="text-2xl font-bold">
-            Add Block Display
+            Add Item Display
           </DialogTitle>
 
           <div className="flex flex-row items-center gap-4">
@@ -71,16 +72,16 @@ const BlockDisplaySelectDialog: FC = () => {
           </div>
 
           <div className="flex h-full flex-col gap-1 overflow-auto rounded-lg p-1">
-            {searchResult.map((block) => (
+            {searchResult.map((item) => (
               <button
-                key={block}
+                key={item}
                 className="rounded-lg bg-neutral-700 p-1 text-center text-xs transition duration-150 hover:bg-neutral-700/50"
                 onClick={() => {
-                  createNewEntity('block', block)
+                  createNewEntity('item', item)
                   setOpenedDialog(null)
                 }}
               >
-                {block}
+                {item}
               </button>
             ))}
           </div>
@@ -90,4 +91,4 @@ const BlockDisplaySelectDialog: FC = () => {
   )
 }
 
-export default BlockDisplaySelectDialog
+export default ItemDisplaySelectDialog

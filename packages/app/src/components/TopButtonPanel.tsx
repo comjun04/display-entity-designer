@@ -30,7 +30,11 @@ const TopButtonPanel: FC = () => {
         >
           <IoCubeOutline size={24} />
         </FloatingButton>
-        <FloatingButton>
+        <FloatingButton
+          onClick={() => {
+            setOpenedDialog('itemDisplaySelect')
+          }}
+        >
           <TbDiamondFilled size={24} />
         </FloatingButton>
 

@@ -25,7 +25,7 @@ type DisplayEntity = {
 type DisplayEntityState = {
   entities: DisplayEntity[]
   selectedEntityId: string | null
-  createNew: (type: string) => void
+  createNew: (kind: DisplayEntity['kind'], type: string) => void
   setSelected: (id: string | null) => void
   getSelectedEntity: () => DisplayEntity | null
   setEntityTranslation: (
@@ -46,27 +46,46 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
   selectedEntityId: null,
 
   // immer를 사용하면 안 되는 데이터 (ref)들을 수정해야 하는 경우 다른 데이터들도 immer를 사용하지 않고 변경할 것
-  createNew: (type) => {
+  createNew: (kind, type) => {
     const id = nanoid(16)
 
     return set((state: DisplayEntityState) => {
       useEntityRefStore
         .getState()
         .setEntityRef(id, createRef() as MutableRefObject<Object3D>)
-      return {
-        entities: [
-          ...state.entities,
-          {
-            kind: 'block',
-            id,
-            type,
-            size: [1, 1, 1],
-            position: [0, 0, 0],
-            rotation: [0, 0, 0],
-            blockstates: {},
-          },
-        ],
+
+      if (kind === 'block') {
+        return {
+          entities: [
+            ...state.entities,
+            {
+              kind: 'block',
+              id,
+              type,
+              size: [1, 1, 1],
+              position: [0, 0, 0],
+              rotation: [0, 0, 0],
+              blockstates: {},
+            },
+          ],
+        }
+      } else if (kind === 'item') {
+        return {
+          entities: [
+            ...state.entities,
+            {
+              kind: 'item',
+              id,
+              type,
+              size: [1, 1, 1],
+              position: [0, 0, 0],
+              rotation: [0, 0, 0],
+            },
+          ],
+        }
       }
+
+      return {}
     })
   },
   setSelected: (id) =>
@@ -240,7 +259,7 @@ export const useEditorStore = create(
 
 // ==========
 
-type DialogType = 'appInfo' | 'blockDisplaySelect' | null
+type DialogType = 'appInfo' | 'blockDisplaySelect' | 'itemDisplaySelect' | null
 
 type DialogState = {
   openedDialog: DialogType

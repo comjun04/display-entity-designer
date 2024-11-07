@@ -1,15 +1,27 @@
 import { useDisplayEntityStore } from '@/store'
-import { FC, useMemo } from 'react'
-import { BoxGeometry, EdgesGeometry, LineBasicMaterial } from 'three'
+import { FC, Ref, useMemo } from 'react'
+import { BoxGeometry, EdgesGeometry, LineBasicMaterial, Object3D } from 'three'
 import { useShallow } from 'zustand/shallow'
 import Model from './Model'
 
 type ItemDisplayProps = {
   id: string
+  type: string
+  size: [number, number, number]
+  position: [number, number, number]
+  rotation: [number, number, number]
+  object3DRef?: Ref<Object3D>
 }
 
-const ItemDisplay: FC<ItemDisplayProps> = ({ id }) => {
-  const { thisEntity, selectedEntity, setSelected } = useDisplayEntityStore(
+const ItemDisplay: FC<ItemDisplayProps> = ({
+  id,
+  type,
+  size,
+  position,
+  rotation,
+  object3DRef: ref,
+}) => {
+  const { selectedEntity, setSelected } = useDisplayEntityStore(
     useShallow((state) => ({
       thisEntity: state.entities.find((e) => e.id === id),
       selectedEntity: state.getSelectedEntity(),
@@ -26,16 +38,16 @@ const ItemDisplay: FC<ItemDisplayProps> = ({ id }) => {
   )
 
   return (
-    <object3D>
+    <object3D position={position} scale={size} rotation={rotation} ref={ref}>
       <lineSegments
-        // visible={selectedEntity?.id === id}
+        visible={selectedEntity?.id === id}
         geometry={edgesGeometry}
         material={lineMaterial}
         // position={[0.5, 0.5, 0.5]}
       />
 
       <group onClick={() => setSelected(id)} position={[-0.5, -0.5, -0.5]}>
-        <Model initialResourceLocation="item/diamond" />
+        <Model initialResourceLocation={`item/${type}`} />
       </group>
     </object3D>
   )
