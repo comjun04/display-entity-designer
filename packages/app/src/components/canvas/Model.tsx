@@ -1,6 +1,6 @@
 import fetcher from '@/fetcher'
 import { CDNModelResponse, ModelElement, ModelFaceKey } from '@/types'
-import { stripMinecraftPrefix } from '@/utils'
+import { generateBuiltinItemModel, stripMinecraftPrefix } from '@/utils'
 import { FC, ReactNode, Suspense, useEffect, useState } from 'react'
 import useSWRImmutable from 'swr/immutable'
 import BlockFace from './BlockFace'
@@ -26,6 +26,9 @@ const Model: FC<ModelProps> = ({
     })),
   )
 
+  const isItemModel = stripMinecraftPrefix(initialResourceLocation).startsWith(
+    'item/',
+  )
   const [currentResourceLocation, setCurrentResourceLocation] = useState(
     initialResourceLocation,
   )
@@ -51,15 +54,25 @@ const Model: FC<ModelProps> = ({
     // 모델 파일 데이터가 없거나, 캐싱된 데이터가 있다면 모델 데이터 계산을 수행하지 않음
     if (data == null || cachedModelData != null) return
 
-    // parent 값이 있다면 state에다 설정해서
-    // 다음 render할 떄 parent의 model 데이터를 불러오도록 처리
-    if (data.parent != null) {
-      setCurrentResourceLocation(stripMinecraftPrefix(data.parent))
-    }
-
     // 불러온 model 데이터들을 합쳐서 state로 저장
     setTextures((textures) => ({ ...data.textures, ...textures }))
     setDisplay((display) => ({ ...data.display, ...display }))
+
+    // parent 값이 있다면 state에다 설정해서
+    // 다음 render할 떄 parent의 model 데이터를 불러오도록 처리
+    if (data.parent != null) {
+      if (data.parent === 'builtin/generated' && elements.length < 1) {
+        // item display model 파일에 parent가 builtin/generated인 경우
+        // layer0 텍스쳐 이미지에서 모델 구조를 직접 생성
+        generateBuiltinItemModel(stripMinecraftPrefix(textures['layer0']))
+          .then((modelJson) => {
+            setElements(modelJson.elements)
+          })
+          .catch(console.error)
+      } else {
+        setCurrentResourceLocation(stripMinecraftPrefix(data.parent))
+      }
+    }
 
     if (
       elements.length < 1 &&
@@ -68,7 +81,7 @@ const Model: FC<ModelProps> = ({
     ) {
       setElements(data.elements)
     }
-  }, [data, elements, cachedModelData])
+  }, [data, elements, textures, cachedModelData])
 
   // elements 데이터가 있고, data.parent 값이 null일 경우(=최상위 model 파일에 도달한 경우)
   // 다음에 로드 시 모델 데이터를 다시 계산할 필요가 없도록 캐싱
@@ -93,7 +106,7 @@ const Model: FC<ModelProps> = ({
 
   // ==========
 
-  if (data == null || cachedModelData == null) {
+  if (!isItemModel && (data == null || cachedModelData == null)) {
     return null
   }
 
