@@ -187,9 +187,9 @@ const Model: FC<ModelProps> = ({
     0,
   ] satisfies [number, number, number]
 
-  // display rotat
+  // display info
 
-  const displayInfo = displayType != null ? display[displayType] : {}
+  const displayInfo = displayType != null ? (display[displayType] ?? {}) : {}
   const displayRotation = (displayInfo.rotation ?? [0, 0, 0]).map((d) =>
     MathUtils.degToRad(d),
   ) as [number, number, number]
