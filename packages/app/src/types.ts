@@ -72,3 +72,7 @@ export type CDNModelResponse = {
   elements?: ModelElement[]
   textures?: Record<string, string>
 }
+
+export type CDNItemsListResponse = {
+  items: string[]
+}

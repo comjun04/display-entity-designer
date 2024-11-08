@@ -12,6 +12,7 @@ import {
 import { useShallow } from 'zustand/shallow'
 import CustomCameraControls from './CustomCameraControls'
 import { TransformControls as OriginalTransformControls } from 'three/examples/jsm/Addons.js'
+import ItemDisplay from './components/canvas/ItemDisplay'
 
 const Scene: FC = () => {
   const {
@@ -144,17 +145,31 @@ const Scene: FC = () => {
 
       {entities.map((entity) => {
         const refData = entityRefs.find((d) => d.id === entity.id)!
-        return (
-          <Box
-            key={entity.id}
-            id={entity.id}
-            type={entity.type}
-            size={entity.size}
-            position={entity.position}
-            rotation={entity.rotation}
-            object3DRef={refData.objectRef}
-          />
-        )
+        if (entity.kind === 'block') {
+          return (
+            <Box
+              key={entity.id}
+              id={entity.id}
+              type={entity.type}
+              size={entity.size}
+              position={entity.position}
+              rotation={entity.rotation}
+              object3DRef={refData.objectRef}
+            />
+          )
+        } else if (entity.kind === 'item') {
+          return (
+            <ItemDisplay
+              key={entity.id}
+              id={entity.id}
+              type={entity.type}
+              size={entity.size}
+              position={entity.position}
+              rotation={entity.rotation}
+              object3DRef={refData.objectRef}
+            />
+          )
+        }
       })}
 
       <TransformControls

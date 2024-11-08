@@ -5,6 +5,7 @@ import { useShallow } from 'zustand/shallow'
 import FloatingButton from './FloatingButton'
 import { IoMdTrash } from 'react-icons/io'
 import { LuInfo } from 'react-icons/lu'
+import { TbDiamondFilled } from 'react-icons/tb'
 
 const TopButtonPanel: FC = () => {
   const { setOpenedDialog } = useDialogStore(
@@ -28,6 +29,13 @@ const TopButtonPanel: FC = () => {
           }}
         >
           <IoCubeOutline size={24} />
+        </FloatingButton>
+        <FloatingButton
+          onClick={() => {
+            setOpenedDialog('itemDisplaySelect')
+          }}
+        >
+          <TbDiamondFilled size={24} />
         </FloatingButton>
 
         <div className="my-2 border-l border-gray-700" />

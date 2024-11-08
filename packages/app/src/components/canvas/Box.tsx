@@ -23,13 +23,13 @@ const Box: FC<BoxProps> = ({
   rotation,
   object3DRef: ref,
 }) => {
-  const { thisEntity, selectedEntity, setSelected, setEntityBlockstates } =
+  const { thisEntity, selectedEntity, setSelected, setBDEntityBlockstates } =
     useDisplayEntityStore(
       useShallow((state) => ({
         thisEntity: state.entities.find((e) => e.id === id),
         selectedEntity: state.getSelectedEntity(),
         setSelected: state.setSelected,
-        setEntityBlockstates: state.setEntityBlockstates,
+        setBDEntityBlockstates: state.setBDEntityBlockstates,
       })),
     )
 
@@ -67,10 +67,10 @@ const Box: FC<BoxProps> = ({
         : [...blockstateValues.states.values()][0]
     }
 
-    setEntityBlockstates(id, newBlockstateObject)
-  }, [blockstatesData, id, setEntityBlockstates])
+    setBDEntityBlockstates(id, newBlockstateObject)
+  }, [blockstatesData, id, setBDEntityBlockstates])
 
-  if (thisEntity == null) return null
+  if (thisEntity?.kind !== 'block') return null
 
   return (
     <object3D position={position} ref={ref} scale={size} rotation={rotation}>

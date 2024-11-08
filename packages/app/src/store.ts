@@ -4,22 +4,29 @@ import { Object3D } from 'three'
 import { create } from 'zustand'
 import { produce } from 'immer'
 import { immer } from 'zustand/middleware/immer'
-import { ModelElement } from './types'
+import { ModelDisplayPositionKey, ModelElement } from './types'
 
 type DisplayEntity = {
-  kind: 'block'
   id: string
   type: string
   size: [number, number, number]
   position: [number, number, number]
   rotation: [number, number, number]
-  blockstates: Record<string, string>
-}
+  display: ModelDisplayPositionKey | null
+} & (
+  | {
+      kind: 'block'
+      blockstates: Record<string, string>
+    }
+  | {
+      kind: 'item'
+    }
+)
 
 type DisplayEntityState = {
   entities: DisplayEntity[]
   selectedEntityId: string | null
-  createNew: (type: string) => void
+  createNew: (kind: DisplayEntity['kind'], type: string) => void
   setSelected: (id: string | null) => void
   getSelectedEntity: () => DisplayEntity | null
   setEntityTranslation: (
@@ -28,7 +35,11 @@ type DisplayEntityState = {
   ) => void
   setEntityRotation: (id: string, rotation: [number, number, number]) => void
   setEntityScale: (id: string, scale: [number, number, number]) => void
-  setEntityBlockstates: (
+  setEntityDisplayType: (
+    id: string,
+    display: ModelDisplayPositionKey | null,
+  ) => void
+  setBDEntityBlockstates: (
     id: string,
     blockstates: Record<string, string>,
   ) => void
@@ -40,27 +51,48 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
   selectedEntityId: null,
 
   // immer를 사용하면 안 되는 데이터 (ref)들을 수정해야 하는 경우 다른 데이터들도 immer를 사용하지 않고 변경할 것
-  createNew: (type) => {
+  createNew: (kind, type) => {
     const id = nanoid(16)
 
     return set((state: DisplayEntityState) => {
       useEntityRefStore
         .getState()
         .setEntityRef(id, createRef() as MutableRefObject<Object3D>)
-      return {
-        entities: [
-          ...state.entities,
-          {
-            kind: 'block',
-            id,
-            type,
-            size: [1, 1, 1],
-            position: [0, 0, 0],
-            rotation: [0, 0, 0],
-            blockstates: {},
-          },
-        ],
+
+      if (kind === 'block') {
+        return {
+          entities: [
+            ...state.entities,
+            {
+              kind: 'block',
+              id,
+              type,
+              size: [1, 1, 1],
+              position: [0, 0, 0],
+              rotation: [0, 0, 0],
+              display: null,
+              blockstates: {},
+            },
+          ],
+        }
+      } else if (kind === 'item') {
+        return {
+          entities: [
+            ...state.entities,
+            {
+              kind: 'item',
+              id,
+              type,
+              size: [1, 1, 1],
+              position: [0, 0, 0],
+              rotation: [0, 0, 0],
+              display: null,
+            },
+          ],
+        }
       }
+
+      return {}
     })
   },
   setSelected: (id) =>
@@ -109,13 +141,42 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
         }
       }),
     ),
-  setEntityBlockstates: (id, blockstates) =>
+  setEntityDisplayType: (id, display) =>
     set(
       produce((state: DisplayEntityState) => {
         const entity = state.entities.find((e) => e.id === id)
-        if (entity != null) {
-          entity.blockstates = { ...entity.blockstates, ...blockstates }
+        if (entity == null) {
+          console.error(
+            `Attempted to set display type for unknown display entity: ${id}`,
+          )
+          return
+        } else if (entity.kind !== 'item') {
+          console.error(
+            `Attempted to set display type for non-item display entity: ${id}, kind: ${entity.kind}`,
+          )
+          return
         }
+
+        entity.display = display
+      }),
+    ),
+  setBDEntityBlockstates: (id, blockstates) =>
+    set(
+      produce((state: DisplayEntityState) => {
+        const entity = state.entities.find((e) => e.id === id)
+        if (entity == null) {
+          console.error(
+            `Attempted to set blockstates for unknown block display entity: ${id}`,
+          )
+          return
+        } else if (entity.kind !== 'block') {
+          console.error(
+            `Attempted to set blockstates for non-block display entity: ${id}, kind: ${entity.kind}`,
+          )
+          return
+        }
+
+        entity.blockstates = { ...entity.blockstates, ...blockstates }
       }),
     ),
   deleteEntity: (id) =>
@@ -180,24 +241,41 @@ export const useEntityRefStore = create<EntityRefStoreState>((set) => ({
 
 type ModelData = {
   textures: Record<string, string>
-  display: Record<string, unknown> // TODO
+  display: Record<
+    ModelDisplayPositionKey,
+    {
+      rotation?: [number, number, number]
+      translation?: [number, number, number]
+      scale?: [number, number, number]
+    }
+  >
   elements: ModelElement[]
 }
 type ModelDataStoreState = {
-  modelData: Record<string, ModelData>
-  setModelData: (resourceLocation: string, data: ModelData) => void
+  modelData: Record<
+    string,
+    {
+      data: ModelData
+      isBlockShapedItemModel: boolean
+    }
+  >
+  setModelData: (
+    resourceLocation: string,
+    data: ModelData,
+    isBlockShapedItemModel: boolean,
+  ) => void
 }
 
 // 모델 데이터 캐시 저장소
 export const useModelDataStore = create(
   immer<ModelDataStoreState>((set) => ({
     modelData: {},
-    setModelData: (resourceLocation, data) =>
+    setModelData: (resourceLocation, data, isBlockShapedItemModel) =>
       set((state) => {
         const modelData = state.modelData[resourceLocation]
 
         if (modelData == null) {
-          state.modelData[resourceLocation] = data
+          state.modelData[resourceLocation] = { data, isBlockShapedItemModel }
         }
       }),
   })),
@@ -224,7 +302,7 @@ export const useEditorStore = create(
 
 // ==========
 
-type DialogType = 'appInfo' | 'blockDisplaySelect' | null
+type DialogType = 'appInfo' | 'blockDisplaySelect' | 'itemDisplaySelect' | null
 
 type DialogState = {
   openedDialog: DialogType
