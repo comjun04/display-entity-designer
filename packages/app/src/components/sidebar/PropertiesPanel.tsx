@@ -72,6 +72,7 @@ const PropertiesPanel: FC = () => {
             <label className="flex-1 text-end">display</label>
             <select
               className="flex-[2] rounded bg-neutral-800 px-2 py-1"
+              value={selectedEntity.display ?? 'none'}
               onChange={(evt) => {
                 setEntityDisplayType(
                   selectedEntity.id,
