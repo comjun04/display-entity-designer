@@ -18,8 +18,8 @@ export async function generateBuiltinItemModel(
   } = {
     elements: [
       {
-        from: [0, 0, 7.5],
-        to: [16, 16, 8.5],
+        from: [-8, -8, -0.5],
+        to: [8, 8, 0.5],
         faces: {
           north: { uv: [16, 0, 0, 16], texture: '#layer0' },
           south: { uv: [0, 0, 16, 16], texture: '#layer0' },
@@ -69,8 +69,8 @@ export async function generateBuiltinItemModel(
       } as const
 
       const elementTemplate: ModelElement = {
-        from: [x, 16 - (y + 1), 7.5],
-        to: [x + 1, 16 - y, 8.5],
+        from: [x - 8, 16 - (y + 1) - 8, -0.5],
+        to: [x + 1 - 8, 16 - y - 8, 0.5],
         faces: {},
       }
 

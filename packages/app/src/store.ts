@@ -4,7 +4,7 @@ import { Object3D } from 'three'
 import { create } from 'zustand'
 import { produce } from 'immer'
 import { immer } from 'zustand/middleware/immer'
-import { ModelElement } from './types'
+import { ModelDisplayPositionKey, ModelElement } from './types'
 
 type DisplayEntity = {
   id: string
@@ -12,6 +12,7 @@ type DisplayEntity = {
   size: [number, number, number]
   position: [number, number, number]
   rotation: [number, number, number]
+  display: ModelDisplayPositionKey | null
 } & (
   | {
       kind: 'block'
@@ -34,6 +35,10 @@ type DisplayEntityState = {
   ) => void
   setEntityRotation: (id: string, rotation: [number, number, number]) => void
   setEntityScale: (id: string, scale: [number, number, number]) => void
+  setEntityDisplayType: (
+    id: string,
+    display: ModelDisplayPositionKey | null,
+  ) => void
   setBDEntityBlockstates: (
     id: string,
     blockstates: Record<string, string>,
@@ -65,6 +70,7 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
               size: [1, 1, 1],
               position: [0, 0, 0],
               rotation: [0, 0, 0],
+              display: null,
               blockstates: {},
             },
           ],
@@ -80,6 +86,7 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
               size: [1, 1, 1],
               position: [0, 0, 0],
               rotation: [0, 0, 0],
+              display: null,
             },
           ],
         }
@@ -132,6 +139,25 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
         if (entity != null) {
           entity.size = scale
         }
+      }),
+    ),
+  setEntityDisplayType: (id, display) =>
+    set(
+      produce((state: DisplayEntityState) => {
+        const entity = state.entities.find((e) => e.id === id)
+        if (entity == null) {
+          console.error(
+            `Attempted to set display type for unknown display entity: ${id}`,
+          )
+          return
+        } else if (entity.kind !== 'item') {
+          console.error(
+            `Attempted to set display type for non-item display entity: ${id}, kind: ${entity.kind}`,
+          )
+          return
+        }
+
+        entity.display = display
       }),
     ),
   setBDEntityBlockstates: (id, blockstates) =>
@@ -215,7 +241,14 @@ export const useEntityRefStore = create<EntityRefStoreState>((set) => ({
 
 type ModelData = {
   textures: Record<string, string>
-  display: Record<string, unknown> // TODO
+  display: Record<
+    ModelDisplayPositionKey,
+    {
+      rotation?: [number, number, number]
+      translation?: [number, number, number]
+      scale?: [number, number, number]
+    }
+  >
   elements: ModelElement[]
 }
 type ModelDataStoreState = {

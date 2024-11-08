@@ -21,7 +21,7 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
   rotation,
   object3DRef: ref,
 }) => {
-  const { selectedEntity, setSelected } = useDisplayEntityStore(
+  const { thisEntity, selectedEntity, setSelected } = useDisplayEntityStore(
     useShallow((state) => ({
       thisEntity: state.entities.find((e) => e.id === id),
       selectedEntity: state.getSelectedEntity(),
@@ -46,8 +46,11 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
         // position={[0.5, 0.5, 0.5]}
       />
 
-      <group onClick={() => setSelected(id)} position={[-0.5, -0.5, -0.5]}>
-        <Model initialResourceLocation={`item/${type}`} />
+      <group onClick={() => setSelected(id)}>
+        <Model
+          initialResourceLocation={`item/${type}`}
+          displayType={thisEntity?.display ?? undefined}
+        />
       </group>
     </object3D>
   )
