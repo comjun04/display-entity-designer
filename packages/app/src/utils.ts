@@ -12,7 +12,10 @@ export function stripMinecraftPrefix(input: string) {
 
 export async function generateBuiltinItemModel(
   textureResourceLocation: string,
+  layerNumber: number,
 ) {
+  const layerId = `#layer${layerNumber}`
+
   const modelJson: {
     elements: ModelElement[]
   } = {
@@ -21,8 +24,8 @@ export async function generateBuiltinItemModel(
         from: [-8, -8, -0.5],
         to: [8, 8, 0.5],
         faces: {
-          north: { uv: [16, 0, 0, 16], texture: '#layer0' },
-          south: { uv: [0, 0, 16, 16], texture: '#layer0' },
+          north: { uv: [16, 0, 0, 16], texture: layerId },
+          south: { uv: [0, 0, 16, 16], texture: layerId },
         },
       },
     ],
@@ -80,7 +83,7 @@ export async function generateBuiltinItemModel(
           shouldAddElement = true
           elementTemplate.faces[faceName as ModelFaceKey] = {
             uv: [x, y, x + 1, y + 1],
-            texture: '#layer0',
+            texture: layerId,
           }
         }
       }

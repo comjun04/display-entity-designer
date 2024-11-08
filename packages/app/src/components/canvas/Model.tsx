@@ -71,10 +71,24 @@ const Model: FC<ModelProps> = ({
     if (data.parent != null) {
       if (data.parent === 'builtin/generated' && elements.length < 1) {
         // item display model 파일에 parent가 builtin/generated인 경우
-        // layer0 텍스쳐 이미지에서 모델 구조를 직접 생성
-        generateBuiltinItemModel(stripMinecraftPrefix(textures['layer0']))
-          .then((modelJson) => {
-            setElements(modelJson.elements)
+        // layer{n} 텍스쳐 이미지에서 모델 구조를 직접 생성
+        const textureLayerPromises = Object.keys(textures)
+          .filter((key) => /^layer\d{1,}$/.test(key))
+          .sort((a, b) => parseInt(a.slice(5)) - parseInt(b.slice(5)))
+          .map((key) =>
+            generateBuiltinItemModel(
+              stripMinecraftPrefix(textures[key]),
+              parseInt(key.slice(5)),
+            ),
+          )
+        Promise.all(textureLayerPromises)
+          .then((modelJsonList) => {
+            setElements(
+              modelJsonList.reduce<ModelElement[]>(
+                (acc, cur) => [...acc, ...cur.elements],
+                [],
+              ),
+            )
           })
           .catch(console.error)
       } else {
