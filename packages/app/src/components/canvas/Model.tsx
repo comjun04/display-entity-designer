@@ -36,6 +36,7 @@ const Model: FC<ModelProps> = ({
   const isItemModel = stripMinecraftPrefix(initialResourceLocation).startsWith(
     'item/',
   )
+  const [isBlockItemModel, setIsBlockItemModel] = useState(false)
   const [currentResourceLocation, setCurrentResourceLocation] = useState(
     initialResourceLocation,
   )
@@ -77,6 +78,9 @@ const Model: FC<ModelProps> = ({
           })
           .catch(console.error)
       } else {
+        if (isItemModel && data.parent.startsWith('block/')) {
+          setIsBlockItemModel(true)
+        }
         setCurrentResourceLocation(stripMinecraftPrefix(data.parent))
       }
     }
@@ -88,7 +92,7 @@ const Model: FC<ModelProps> = ({
     ) {
       setElements(data.elements)
     }
-  }, [data, elements, textures, cachedModelData])
+  }, [data, elements, textures, cachedModelData, isItemModel])
 
   // elements 데이터가 있고, data.parent 값이 null일 경우(=최상위 model 파일에 도달한 경우)
   // 다음에 로드 시 모델 데이터를 다시 계산할 필요가 없도록 캐싱
@@ -229,6 +233,9 @@ const Model: FC<ModelProps> = ({
               ).divideScalar(16)
 
               const vec1 = centerVec.clone().sub(rotationOriginVec)
+              const vec2 = rotationOriginVec
+                .clone()
+                .subScalar(isBlockItemModel ? 0.5 : 0)
 
               // rotation origin 적용할 때
               // 1. centerVec - rotationOriginVec 위치로 이동 => 회전 중심위치가 (0,0,0)에 위치하도록 함
@@ -237,7 +244,7 @@ const Model: FC<ModelProps> = ({
                 <group
                   key={idx}
                   rotation={rotation}
-                  position={rotationOriginVec}
+                  position={vec2}
                   scale={groupScale}
                 >
                   <group position={vec1}>
