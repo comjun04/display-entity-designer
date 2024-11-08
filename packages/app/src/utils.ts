@@ -101,58 +101,62 @@ export async function generateBuiltinItemModel(
 // ==========
 
 const blocksUsingDefaultGrassColors = [
-  'block/grass_block',
-  'block/short_grass',
-  'block/tall_grass',
-  'block/fern',
-  'block/large_fern_top',
-  'block/large_fern_bottom',
-  'block/potted_fern',
+  'grass_block',
+  'short_grass',
+  'tall_grass',
+  'fern',
+  'large_fern_top',
+  'large_fern_bottom',
+  'potted_fern',
 ]
 const blocksUsingDefaultFoliageColors = [
-  'block/oak_leaves',
-  'block/jungle_leaves',
-  'block/acacia_leaves',
-  'block/dark_oak_leaves',
-  'block/vine',
-  'block/mangrove_leaves',
+  'oak_leaves',
+  'jungle_leaves',
+  'acacia_leaves',
+  'dark_oak_leaves',
+  'vine',
+  'mangrove_leaves',
 ]
 export function getTextureColor(
   modelResourceLocation: string,
   textureLayer?: string,
   tintindex?: number,
 ) {
+  const isBlockModel = modelResourceLocation.startsWith('block/')
+  const modelName = modelResourceLocation.split('/').slice(1).join('/')
+
   if (textureLayer == null && tintindex == null) {
     return 0xffffff
   }
 
   // 잔디 색
+  // item display의 경우 tintindex가 없어도 항상 색상 적용됨
   if (
-    blocksUsingDefaultGrassColors.includes(modelResourceLocation) &&
-    tintindex === 0
+    blocksUsingDefaultGrassColors.includes(modelName) &&
+    (!isBlockModel || tintindex === 0)
   ) {
     // https://minecraft.fandom.com/wiki/Grass_Block#Item
     return 0x7cbd6b
   }
 
   if (
-    blocksUsingDefaultFoliageColors.includes(modelResourceLocation) &&
-    tintindex === 0
+    blocksUsingDefaultFoliageColors.includes(modelName) &&
+    (!isBlockModel || tintindex === 0)
   ) {
     // net.minecraft.world.biome.FoliageColors.getDefaultColor()
     return 0x48b518
   }
-  if (modelResourceLocation === 'block/birch_leaves' && tintindex === 0) {
+  if (modelName === 'birch_leaves' && (!isBlockModel || tintindex === 0)) {
     // net.minecraft.world.biome.FoliageColors.getBirchColor()
     return 0x80a755
   }
-  if (modelResourceLocation === 'block/spruce_leaves' && tintindex === 0) {
+  if (modelName === 'spruce_leaves' && (!isBlockModel || tintindex === 0)) {
     // net.minecraft.world.biome.FoliageColors.getSpruceColor()
     return 0x619961
   }
 
   // lily_pad
-  if (modelResourceLocation === 'block/lily_pad') {
+  if (modelName === 'lily_pad') {
     // minecraft wiki에 0x208030이라고 적혀 있지만, 블록 디스플레이로 렌더링할 때는 다른 색을 사용
     // net.minecraft.world.biome.FoliageColors class 코드에서 확인 가능
     return 0x71c35c
