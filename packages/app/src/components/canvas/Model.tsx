@@ -51,6 +51,8 @@ const Model: FC<ModelProps> = ({
     cachedModelData?.elements ?? [],
   )
 
+  const [modelDataLoadFinished, setModelDataLoadFinished] = useState(false)
+
   const { data } = useSWRImmutable<CDNModelResponse>(
     currentResourceLocation.length > 0
       ? `/assets/minecraft/models/${currentResourceLocation}.json`
@@ -60,16 +62,35 @@ const Model: FC<ModelProps> = ({
 
   useEffect(() => {
     // 모델 파일 데이터가 없거나, 캐싱된 데이터가 있다면 모델 데이터 계산을 수행하지 않음
-    if (data == null || cachedModelData != null) return
+    if (data == null || cachedModelData != null || modelDataLoadFinished) return
 
     // 불러온 model 데이터들을 합쳐서 state로 저장
     setTextures((textures) => ({ ...data.textures, ...textures }))
     setDisplay((display) => ({ ...data.display, ...display }))
 
+    if (
+      elements.length < 1 &&
+      data.elements != null &&
+      data.elements.length > 0
+    ) {
+      setElements(data.elements)
+    }
+
+    // parent가 없으면 최상위 모델 파일이므로 로딩 완료 flag를 설정
+    if (data.parent == null) {
+      setModelDataLoadFinished(true)
+      return
+    }
+
     // parent 값이 있다면 state에다 설정해서
     // 다음 render할 떄 parent의 model 데이터를 불러오도록 처리
-    if (data.parent != null) {
-      if (data.parent === 'builtin/generated' && elements.length < 1) {
+
+    if (data.parent === 'builtin/generated') {
+      // elements가 따로 정의되어 있지 않다면 아이템 모델 generate 수행
+      if (
+        elements.length < 1 &&
+        (data.elements == null || data.elements.length < 1)
+      ) {
         // item display model 파일에 parent가 builtin/generated인 경우
         // layer{n} 텍스쳐 이미지에서 모델 구조를 직접 생성
         const textureLayerPromises = Object.keys(textures)
@@ -91,42 +112,42 @@ const Model: FC<ModelProps> = ({
             )
           })
           .catch(console.error)
-      } else {
-        if (isItemModel && data.parent.startsWith('block/')) {
-          setIsBlockItemModel(true)
-        }
-        setCurrentResourceLocation(stripMinecraftPrefix(data.parent))
       }
-    }
 
-    if (
-      elements.length < 1 &&
-      data.elements != null &&
-      data.elements.length > 0
-    ) {
-      setElements(data.elements)
-    }
-  }, [data, elements, textures, cachedModelData, isItemModel])
-
-  // elements 데이터가 있고, data.parent 값이 null일 경우(=최상위 model 파일에 도달한 경우)
-  // 다음에 로드 시 모델 데이터를 다시 계산할 필요가 없도록 캐싱
-  useEffect(() => {
-    if (data == null || elements.length < 1) return
-
-    if (data.parent == null) {
-      setCachedModelData(initialResourceLocation, {
-        elements,
-        textures,
-        display,
-      })
+      // parent가 builtin/generated이면 최상위 모델 파일과 다름없으므로 여기서 로딩 완료 flag를 설정
+      setModelDataLoadFinished(true)
+    } else {
+      if (isItemModel && data.parent.startsWith('block/')) {
+        setIsBlockItemModel(true)
+      }
+      setCurrentResourceLocation(stripMinecraftPrefix(data.parent))
     }
   }, [
     data,
+    elements,
+    textures,
+    cachedModelData,
+    isItemModel,
+    modelDataLoadFinished,
+  ])
+
+  // 모델 데이터 로딩 및 계산이 완료되었고 elements 데이터가 있다면
+  // 다음에 로드 시 모델 데이터를 다시 계산할 필요가 없도록 캐싱
+  useEffect(() => {
+    if (!modelDataLoadFinished || elements.length < 1) return
+
+    setCachedModelData(initialResourceLocation, {
+      elements,
+      textures,
+      display,
+    })
+  }, [
     display,
     elements,
     textures,
     initialResourceLocation,
     setCachedModelData,
+    modelDataLoadFinished,
   ])
 
   // ==========
