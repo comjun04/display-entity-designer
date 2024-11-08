@@ -22,7 +22,7 @@ type ModelProps = {
 
 const Model: FC<ModelProps> = ({
   initialResourceLocation,
-  displayType = 'fixed',
+  displayType,
   xRotation = 0,
   yRotation = 0,
 }) => {
@@ -139,7 +139,7 @@ const Model: FC<ModelProps> = ({
 
   // display rotat
 
-  const displayInfo = display[displayType] ?? display['fixed'] ?? {}
+  const displayInfo = displayType != null ? display[displayType] : {}
   const displayRotation = (displayInfo.rotation ?? [0, 0, 0]).map((d) =>
     MathUtils.degToRad(d),
   ) as [number, number, number]
