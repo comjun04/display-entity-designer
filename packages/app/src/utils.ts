@@ -39,7 +39,8 @@ export async function generateBuiltinItemModel(
   })
 
   const canvas = document.createElement('canvas')
-  const ctx = canvas.getContext('2d')!
+  // willReadFrequently: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently
+  const ctx = canvas.getContext('2d', { willReadFrequently: true })!
 
   const width = 16
   const height = 16
