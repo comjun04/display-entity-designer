@@ -1,3 +1,4 @@
+import { getTextureColor } from '@/utils'
 import { useTexture } from '@react-three/drei'
 import { FC, useEffect, useState } from 'react'
 import { MathUtils, NearestFilter } from 'three'
@@ -12,106 +13,6 @@ type BlockFaceProps = {
   uv?: [number, number, number, number]
   rotation?: 0 | 90 | 180 | 270
   tintindex?: number
-}
-
-const blocksUsingDefaultGrassColors = [
-  'block/grass_block',
-  'block/short_grass',
-  'block/tall_grass',
-  'block/fern',
-  'block/large_fern_top',
-  'block/large_fern_bottom',
-  'block/potted_fern',
-]
-const blocksUsingDefaultFoliageColors = [
-  'block/oak_leaves',
-  'block/jungle_leaves',
-  'block/acacia_leaves',
-  'block/dark_oak_leaves',
-  'block/vine',
-  'block/mangrove_leaves',
-]
-function getTextureColor(modelResourceLocation: string, tintindex?: number) {
-  if (tintindex == null) {
-    return 0xffffff
-  }
-
-  // 잔디 색
-  if (
-    blocksUsingDefaultGrassColors.includes(modelResourceLocation) &&
-    tintindex === 0
-  ) {
-    // https://minecraft.fandom.com/wiki/Grass_Block#Item
-    return 0x7cbd6b
-  }
-
-  if (
-    blocksUsingDefaultFoliageColors.includes(modelResourceLocation) &&
-    tintindex === 0
-  ) {
-    // net.minecraft.world.biome.FoliageColors.getDefaultColor()
-    return 0x48b518
-  }
-  if (modelResourceLocation === 'block/birch_leaves' && tintindex === 0) {
-    // net.minecraft.world.biome.FoliageColors.getBirchColor()
-    return 0x80a755
-  }
-  if (modelResourceLocation === 'block/spruce_leaves' && tintindex === 0) {
-    // net.minecraft.world.biome.FoliageColors.getSpruceColor()
-    return 0x619961
-  }
-
-  // lily_pad
-  if (modelResourceLocation === 'block/lily_pad') {
-    // minecraft wiki에 0x208030이라고 적혀 있지만, 블록 디스플레이로 렌더링할 때는 다른 색을 사용
-    // net.minecraft.world.biome.FoliageColors class 코드에서 확인 가능
-    return 0x71c35c
-  }
-
-  // 수박, 호박 줄기
-  // minecraft:block/melon_stem_stage{n} (0 <= n <= 7)
-  // minecraft:block/pumpkin_stem_stage{n}
-  if (/^block\/(melon|pumpkin)_stem_stage[0-7]$/.test(modelResourceLocation)) {
-    const age = modelResourceLocation.slice(-1)
-    switch (age) {
-      case '0':
-        return 0x00ff00
-      case '1':
-        return 0x20f704
-      case '2':
-        return 0x40ef08
-      case '3':
-        return 0x60e70c
-      case '4':
-        return 0x80df10
-      case '5':
-        return 0xa0d714
-      case '6':
-        return 0xc0cf18
-      case '7':
-        return 0xe0c71c
-    }
-  }
-
-  // 다 자란 수박/호박 줄기
-  if (
-    ['block/attached_melon_stem', 'block/attached_pumpkin_stem'].includes(
-      modelResourceLocation,
-    )
-  ) {
-    return 0xe0c71c
-  }
-
-  // redstone_wire
-  if (
-    modelResourceLocation.startsWith('block/redstone_dust_') &&
-    tintindex === 0
-  ) {
-    // 항상 꺼진 상태
-    return 0x4b0000
-  }
-
-  return 0xffffff
 }
 
 const BlockFace: FC<BlockFaceProps> = ({
