@@ -45,6 +45,11 @@ const ObjectsPanel: FC = () => {
                 [{blockstateArr.join(',')}]
               </span>
             )}
+            {entity.kind === 'item' && entity.display != null && (
+              <span className="truncate opacity-50">
+                [display={entity.display}]
+              </span>
+            )}
           </div>
         )
       })}
