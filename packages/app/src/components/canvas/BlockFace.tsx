@@ -12,6 +12,7 @@ type BlockFaceProps = {
   parentElementTo: [number, number, number]
   uv?: [number, number, number, number]
   rotation?: 0 | 90 | 180 | 270
+  textureLayer?: string
   tintindex?: number
 }
 
@@ -24,6 +25,7 @@ const BlockFace: FC<BlockFaceProps> = ({
   uv,
   rotation = 0,
   faceName,
+  textureLayer,
   tintindex,
 }) => {
   const [processedImageDataUrl, setProcessedImageDataUrl] = useState<string>()
@@ -166,7 +168,11 @@ const BlockFace: FC<BlockFaceProps> = ({
   // const f = new Float32Array([0, 1, 1, 1, 0, 0, 1, 0])
   const vertexUVArr = new Float32Array(vertexUV)
 
-  const textureColor = getTextureColor(modelResourceLocation, tintindex)
+  const textureColor = getTextureColor(
+    modelResourceLocation,
+    textureLayer,
+    tintindex,
+  )
 
   return (
     <mesh position={meshPosition} rotation={meshRotation}>

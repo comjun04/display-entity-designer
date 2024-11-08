@@ -118,9 +118,10 @@ const blocksUsingDefaultFoliageColors = [
 ]
 export function getTextureColor(
   modelResourceLocation: string,
+  textureLayer?: string,
   tintindex?: number,
 ) {
-  if (tintindex == null) {
+  if (textureLayer == null && tintindex == null) {
     return 0xffffff
   }
 
@@ -197,6 +198,177 @@ export function getTextureColor(
   ) {
     // 항상 꺼진 상태
     return 0x4b0000
+  }
+
+  // 스폰알 아이템
+  if (
+    modelResourceLocation.startsWith('item/') &&
+    modelResourceLocation.endsWith('_spawn_egg')
+  ) {
+    const spawnEggType = modelResourceLocation.slice(5, -10)
+    const isOverlay = textureLayer === '1'
+    switch (spawnEggType) {
+      case 'allay':
+        return isOverlay ? 0x00adff : 0x00daff
+      case 'armadillo':
+        return isOverlay ? 0x824848 : 0xad716d
+      case 'axolotl':
+        return isOverlay ? 0xa62d74 : 0xfbc1e3
+      case 'bat':
+        return isOverlay ? 0x0f0f0f : 0x4c3e30
+      case 'bee':
+        return isOverlay ? 0x43241b : 0xedc343
+      case 'blaze':
+        return isOverlay ? 0xfff87e : 0xf6b201
+      case 'bogged':
+        return isOverlay ? 0x314d1b : 0x8a9c72
+      case 'breeze':
+        return isOverlay ? 0x9166df : 0xaf94df
+      case 'camel':
+        return isOverlay ? 0xcb9337 : 0xfcc369
+      case 'cat':
+        return isOverlay ? 0x957256 : 0xefc88e
+      case 'cave_spider':
+        return isOverlay ? 0xa80e0e : 0x0c424e
+      case 'chicken':
+        return isOverlay ? 0xff0000 : 0xa1a1a1
+      case 'cod':
+        return isOverlay ? 0xe5c48b : 0xc1a76a
+      case 'cow':
+        return isOverlay ? 0xa1a1a1 : 0x443626
+      case 'creeper':
+        return isOverlay ? 0x000000 : 0x0da70b
+      case 'dolphin':
+        return isOverlay ? 0xf9f9f9 : 0x223b4d
+      case 'donkey':
+        return isOverlay ? 0x867566 : 0x534539
+      case 'drowned':
+        return isOverlay ? 0x799c65 : 0x8ff1d7
+      case 'elder_guardian':
+        return isOverlay ? 0x747693 : 0xceccba
+      case 'ender_dragon':
+        return isOverlay ? 0xe079fa : 0x1c1c1c
+      case 'enderman':
+        return isOverlay ? 0x000000 : 0x161616
+      case 'endermite':
+        return isOverlay ? 0x6e6e6e : 0x161616
+      case 'evoker':
+        return isOverlay ? 0x1e1c1a : 0x959b9b
+      case 'fox':
+        return isOverlay ? 0xcc6920 : 0xd5b69f
+      case 'frog':
+        return isOverlay ? 0xffc77c : 0xd07444
+      case 'ghast':
+        return isOverlay ? 0xbcbcbc : 0xf9f9f9
+      case 'glow_squid':
+        return isOverlay ? 0x85f1bc : 0x095656
+      case 'goat':
+        return isOverlay ? 0x55493e : 0xa5947c
+      case 'guardian':
+        return isOverlay ? 0xf17d30 : 0x5a8272
+      case 'hoglin':
+        return isOverlay ? 0x5f6464 : 0xc66e55
+      case 'horse':
+        return isOverlay ? 0xeee500 : 0xc09e7d
+      case 'husk':
+        return isOverlay ? 0xe6cc94 : 0x797061
+      case 'iron_golem':
+        return isOverlay ? 0x74a332 : 0xdbcdc2
+      case 'llama':
+        return isOverlay ? 0x995f40 : 0xc09e7d
+      case 'magma_cube':
+        return isOverlay ? 0xfcfc00 : 0x340000
+      case 'mooshroom':
+        return isOverlay ? 0xb7b7b7 : 0xa00f10
+      case 'mule':
+        return isOverlay ? 0x51331d : 0x1b0200
+      case 'ocelot':
+        return isOverlay ? 0x564434 : 0xefde7d
+      case 'panda':
+        return isOverlay ? 0x1b1b22 : 0xe7e7e7
+      case 'parrot':
+        return isOverlay ? 0xff0000 : 0x0da70b
+      case 'phantom':
+        return isOverlay ? 0x88ff00 : 0x43518a
+      case 'pig':
+        return isOverlay ? 0xdb635f : 0xf0a5a2
+      case 'piglin':
+        return isOverlay ? 0xf9f3a4 : 0x995f40
+      case 'piglin_brute':
+        return isOverlay ? 0xf9f3a4 : 0x592a10
+      case 'pillager':
+        return isOverlay ? 0x959b9b : 0x532f36
+      case 'polar_bear':
+        return isOverlay ? 0xd5d6cd : 0xeeeede
+      case 'pufferfish':
+        return isOverlay ? 0x37c3f2 : 0xf6b201
+      case 'rabbit':
+        return isOverlay ? 0x734831 : 0x995f40
+      case 'ravager':
+        return isOverlay ? 0x5b5049 : 0x757470
+      case 'salmon':
+        return isOverlay ? 0x0e8474 : 0xa00f10
+      case 'sheep':
+        return isOverlay ? 0xffb5b5 : 0xe7e7e7
+      case 'shulker':
+        return isOverlay ? 0x4d3852 : 0x946794
+      case 'silverfish':
+        return isOverlay ? 0x303030 : 0x6e6e6e
+      case 'skeleton':
+        return isOverlay ? 0x494949 : 0xc1c1c1
+      case 'skeleton_horse':
+        return isOverlay ? 0xe5e5d8 : 0x68684f
+      case 'slime':
+        return isOverlay ? 0x7ebf6e : 0x51a03e
+      case 'sniffer':
+        return isOverlay ? 0x25ab70 : 0x871e09
+      case 'snow_golem':
+        return isOverlay ? 0x81a4a4 : 0xd9f2f2
+      case 'spider':
+        return isOverlay ? 0xa80e0e : 0x342d27
+      case 'squid':
+        return isOverlay ? 0x708899 : 0x223b4d
+      case 'stray':
+        return isOverlay ? 0xddeaea : 0x617677
+      case 'strider':
+        return isOverlay ? 0x4d494d : 0x9c3436
+      case 'tadpole':
+        return isOverlay ? 0x160a00 : 0x6d533d
+      case 'trader_llama':
+        return isOverlay ? 0x456296 : 0xeaa430
+      case 'tropical_fish':
+        return isOverlay ? 0xfff9ef : 0xef6915
+      case 'turtle':
+        return isOverlay ? 0x00afaf : 0xe7e7e7
+      case 'vex':
+        return isOverlay ? 0xe8edf1 : 0x7a90a4
+      case 'villager':
+        return isOverlay ? 0xbd8b72 : 0x563c33
+      case 'vindicator':
+        return isOverlay ? 0x275e61 : 0x959b9b
+      case 'wandering_trader':
+        return isOverlay ? 0xeaa430 : 0x456296
+      case 'warden':
+        return isOverlay ? 0x39d6e0 : 0x0f4649
+      case 'witch':
+        return isOverlay ? 0x51a03e : 0x340000
+      case 'wither':
+        return isOverlay ? 0x4d72a0 : 0x141414
+      case 'wither_skeleton':
+        return isOverlay ? 0x474d4d : 0x141414
+      case 'wolf':
+        return isOverlay ? 0xceaf96 : 0xd7d3d3
+      case 'zoglin':
+        return isOverlay ? 0xe6e6e6 : 0xc66e55
+      case 'zombie':
+        return isOverlay ? 0x799c65 : 0x00afaf
+      case 'zombie_horse':
+        return isOverlay ? 0x97c284 : 0x315234
+      case 'zombie_villager':
+        return isOverlay ? 0x799c65 : 0x563c33
+      case 'zombified_piglin':
+        return isOverlay ? 0x4c7129 : 0xea9393
+    }
   }
 
   return 0xffffff

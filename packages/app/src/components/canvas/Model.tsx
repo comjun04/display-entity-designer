@@ -191,6 +191,11 @@ const Model: FC<ModelProps> = ({
                 const texture = getTexture(faceData.texture)
                 if (texture == null) continue
 
+                const textureLayer =
+                  isItemModel && /^#layer\d{1,}$/.test(faceData.texture)
+                    ? faceData.texture.slice(6)
+                    : undefined
+
                 faces.push(
                   <BlockFace
                     key={face}
@@ -198,6 +203,7 @@ const Model: FC<ModelProps> = ({
                     textureResourceLocation={texture}
                     faceName={face}
                     uv={faceData.uv}
+                    textureLayer={textureLayer}
                     rotation={faceData.rotation}
                     tintindex={faceData.tintindex}
                     parentElementSize={sizeVec.toArray()}
