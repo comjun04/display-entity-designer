@@ -36,7 +36,7 @@ const Model: FC<ModelProps> = ({
   const isItemModel = stripMinecraftPrefix(initialResourceLocation).startsWith(
     'item/',
   )
-  const [isBlockItemModel, setIsBlockItemModel] = useState(false)
+  const [isBlockShapedItemModel, setIsBlockShapedItemModel] = useState(false)
   const [currentResourceLocation, setCurrentResourceLocation] = useState(
     initialResourceLocation,
   )
@@ -44,11 +44,11 @@ const Model: FC<ModelProps> = ({
   // textures, display, elements들은 캐싱된 데이터가 있을 경우 받아오고,
   // 없을 경우 밑에서 연산하면서 데이터를 저장함
   const [textures, setTextures] = useState<Record<string, string>>(
-    cachedModelData?.textures ?? {},
+    cachedModelData?.data.textures ?? {},
   )
-  const [display, setDisplay] = useState(cachedModelData?.display ?? {})
+  const [display, setDisplay] = useState(cachedModelData?.data.display ?? {})
   const [elements, setElements] = useState<ModelElement[]>(
-    cachedModelData?.elements ?? [],
+    cachedModelData?.data.elements ?? [],
   )
 
   const [modelDataLoadFinished, setModelDataLoadFinished] = useState(false)
@@ -118,7 +118,7 @@ const Model: FC<ModelProps> = ({
       setModelDataLoadFinished(true)
     } else {
       if (isItemModel && data.parent.startsWith('block/')) {
-        setIsBlockItemModel(true)
+        setIsBlockShapedItemModel(true)
       }
       setCurrentResourceLocation(stripMinecraftPrefix(data.parent))
     }
@@ -136,19 +136,30 @@ const Model: FC<ModelProps> = ({
   useEffect(() => {
     if (!modelDataLoadFinished || elements.length < 1) return
 
-    setCachedModelData(initialResourceLocation, {
-      elements,
-      textures,
-      display,
-    })
+    setCachedModelData(
+      initialResourceLocation,
+      {
+        elements,
+        textures,
+        display,
+      },
+      isBlockShapedItemModel,
+    )
   }, [
     display,
     elements,
     textures,
     initialResourceLocation,
     setCachedModelData,
+    isBlockShapedItemModel,
     modelDataLoadFinished,
   ])
+
+  useEffect(() => {
+    if (cachedModelData?.isBlockShapedItemModel) {
+      setIsBlockShapedItemModel(true)
+    }
+  }, [cachedModelData, isBlockShapedItemModel])
 
   // ==========
 
@@ -276,7 +287,7 @@ const Model: FC<ModelProps> = ({
               const vec1 = centerVec.clone().sub(rotationOriginVec)
               const vec2 = rotationOriginVec
                 .clone()
-                .subScalar(isBlockItemModel ? 0.5 : 0)
+                .subScalar(isBlockShapedItemModel ? 0.5 : 0)
 
               // rotation origin 적용할 때
               // 1. centerVec - rotationOriginVec 위치로 이동 => 회전 중심위치가 (0,0,0)에 위치하도록 함

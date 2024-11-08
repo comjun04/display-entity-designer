@@ -252,20 +252,30 @@ type ModelData = {
   elements: ModelElement[]
 }
 type ModelDataStoreState = {
-  modelData: Record<string, ModelData>
-  setModelData: (resourceLocation: string, data: ModelData) => void
+  modelData: Record<
+    string,
+    {
+      data: ModelData
+      isBlockShapedItemModel: boolean
+    }
+  >
+  setModelData: (
+    resourceLocation: string,
+    data: ModelData,
+    isBlockShapedItemModel: boolean,
+  ) => void
 }
 
 // 모델 데이터 캐시 저장소
 export const useModelDataStore = create(
   immer<ModelDataStoreState>((set) => ({
     modelData: {},
-    setModelData: (resourceLocation, data) =>
+    setModelData: (resourceLocation, data, isBlockShapedItemModel) =>
       set((state) => {
         const modelData = state.modelData[resourceLocation]
 
         if (modelData == null) {
-          state.modelData[resourceLocation] = data
+          state.modelData[resourceLocation] = { data, isBlockShapedItemModel }
         }
       }),
   })),
