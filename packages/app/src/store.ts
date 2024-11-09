@@ -2,7 +2,6 @@ import { nanoid } from 'nanoid'
 import { createRef, MutableRefObject } from 'react'
 import { Object3D } from 'three'
 import { create } from 'zustand'
-import { produce } from 'immer'
 import { immer } from 'zustand/middleware/immer'
 import { ModelDisplayPositionKey, ModelElement } from './types'
 
@@ -46,58 +45,45 @@ type DisplayEntityState = {
   deleteEntity: (id: string) => void
 }
 
-export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
-  entities: [],
-  selectedEntityId: null,
+export const useDisplayEntityStore = create(
+  immer<DisplayEntityState>((set, get) => ({
+    entities: [],
+    selectedEntityId: null,
 
-  // immer를 사용하면 안 되는 데이터 (ref)들을 수정해야 하는 경우 다른 데이터들도 immer를 사용하지 않고 변경할 것
-  createNew: (kind, type) => {
-    const id = nanoid(16)
+    createNew: (kind, type) => {
+      const id = nanoid(16)
 
-    return set((state: DisplayEntityState) => {
-      useEntityRefStore
-        .getState()
-        .setEntityRef(id, createRef() as MutableRefObject<Object3D>)
+      return set((state) => {
+        useEntityRefStore
+          .getState()
+          .setEntityRef(id, createRef() as MutableRefObject<Object3D>)
 
-      if (kind === 'block') {
-        return {
-          entities: [
-            ...state.entities,
-            {
-              kind: 'block',
-              id,
-              type,
-              size: [1, 1, 1],
-              position: [0, 0, 0],
-              rotation: [0, 0, 0],
-              display: null,
-              blockstates: {},
-            },
-          ],
+        if (kind === 'block') {
+          state.entities.push({
+            kind: 'block',
+            id,
+            type,
+            size: [1, 1, 1],
+            position: [0, 0, 0],
+            rotation: [0, 0, 0],
+            display: null,
+            blockstates: {},
+          })
+        } else if (kind === 'item') {
+          state.entities.push({
+            kind: 'item',
+            id,
+            type,
+            size: [1, 1, 1],
+            position: [0, 0, 0],
+            rotation: [0, 0, 0],
+            display: null,
+          })
         }
-      } else if (kind === 'item') {
-        return {
-          entities: [
-            ...state.entities,
-            {
-              kind: 'item',
-              id,
-              type,
-              size: [1, 1, 1],
-              position: [0, 0, 0],
-              rotation: [0, 0, 0],
-              display: null,
-            },
-          ],
-        }
-      }
-
-      return {}
-    })
-  },
-  setSelected: (id) =>
-    set(
-      produce((state: DisplayEntityState) => {
+      })
+    },
+    setSelected: (id) =>
+      set((state) => {
         // selectedEntityId 삭제
         if (id == null) {
           state.selectedEntityId = null
@@ -109,41 +95,33 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
           state.selectedEntityId = entity.id
         }
       }),
-    ),
-  getSelectedEntity: () => {
-    const { entities, selectedEntityId } = get()
-    return entities.find((e) => e.id === selectedEntityId) ?? null
-  },
-  setEntityTranslation: (id, translation) =>
-    set(
-      produce((state: DisplayEntityState) => {
+    getSelectedEntity: () => {
+      const { entities, selectedEntityId } = get()
+      return entities.find((e) => e.id === selectedEntityId) ?? null
+    },
+    setEntityTranslation: (id, translation) =>
+      set((state) => {
         const entity = state.entities.find((e) => e.id === id)
         if (entity != null) {
           entity.position = translation
         }
       }),
-    ),
-  setEntityRotation: (id, rotation) =>
-    set(
-      produce((state: DisplayEntityState) => {
+    setEntityRotation: (id, rotation) =>
+      set((state) => {
         const entity = state.entities.find((e) => e.id === id)
         if (entity != null) {
           entity.rotation = rotation
         }
       }),
-    ),
-  setEntityScale: (id, scale) =>
-    set(
-      produce((state: DisplayEntityState) => {
+    setEntityScale: (id, scale) =>
+      set((state) => {
         const entity = state.entities.find((e) => e.id === id)
         if (entity != null) {
           entity.size = scale
         }
       }),
-    ),
-  setEntityDisplayType: (id, display) =>
-    set(
-      produce((state: DisplayEntityState) => {
+    setEntityDisplayType: (id, display) =>
+      set((state) => {
         const entity = state.entities.find((e) => e.id === id)
         if (entity == null) {
           console.error(
@@ -159,10 +137,8 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
 
         entity.display = display
       }),
-    ),
-  setBDEntityBlockstates: (id, blockstates) =>
-    set(
-      produce((state: DisplayEntityState) => {
+    setBDEntityBlockstates: (id, blockstates) =>
+      set((state) => {
         const entity = state.entities.find((e) => e.id === id)
         if (entity == null) {
           console.error(
@@ -178,18 +154,16 @@ export const useDisplayEntityStore = create<DisplayEntityState>((set, get) => ({
 
         entity.blockstates = { ...entity.blockstates, ...blockstates }
       }),
-    ),
-  deleteEntity: (id) =>
-    set((state: DisplayEntityState) => {
-      const entityIdx = state.entities.findIndex((e) => e.id === id)
-      if (entityIdx >= 0) {
-        useEntityRefStore.getState().deleteEntityRef(id)
-        return { entities: state.entities.toSpliced(entityIdx, 1) }
-      } else {
-        return {}
-      }
-    }),
-}))
+    deleteEntity: (id) =>
+      set((state) => {
+        const entityIdx = state.entities.findIndex((e) => e.id === id)
+        if (entityIdx >= 0) {
+          useEntityRefStore.getState().deleteEntityRef(id)
+          state.entities.splice(entityIdx, 1)
+        }
+      }),
+  })),
+)
 
 // ==========
 
