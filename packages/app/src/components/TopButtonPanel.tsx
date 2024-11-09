@@ -20,7 +20,7 @@ const TopButtonPanel: FC = () => {
   )
 
   return (
-    <div className="absolute left-0 top-0 z-[5] mt-4 flex w-full justify-center">
+    <div className="absolute left-1/2 top-4 z-[5] -translate-x-1/2">
       <div className="flex flex-row rounded-lg bg-black">
         <FloatingButton
           onClick={() => {
