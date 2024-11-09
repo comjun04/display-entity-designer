@@ -86,14 +86,20 @@ const ExportToMinecraftDialog: FC = () => {
           className="flex w-full max-w-screen-md select-none flex-col gap-2 rounded-xl bg-neutral-800 p-4 duration-200 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
         >
           <DialogTitle className="text-2xl font-bold">
-            Export To Minecraft
+            Export to Minecraft
           </DialogTitle>
 
-          <textarea
-            className="h-24 resize-none rounded-lg p-2 outline-none"
-            readOnly
-            value={`/summon block_display ~ ~ ~ ${nbt}`}
-          />
+          <div>
+            <div>Summon command</div>
+            <textarea
+              className="h-24 w-full resize-none break-all rounded-lg p-2 outline-none"
+              readOnly
+              value={`/summon block_display ~ ~ ~ ${nbt}`}
+              onFocus={(evt) => {
+                evt.target.select()
+              }}
+            />
+          </div>
         </DialogPanel>
       </div>
     </Dialog>
