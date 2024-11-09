@@ -4,7 +4,6 @@ import { IoCubeOutline } from 'react-icons/io5'
 import { useShallow } from 'zustand/shallow'
 import FloatingButton from './FloatingButton'
 import { IoMdTrash } from 'react-icons/io'
-import { LuInfo } from 'react-icons/lu'
 import { TbDiamondFilled } from 'react-icons/tb'
 
 const TopButtonPanel: FC = () => {
@@ -48,16 +47,6 @@ const TopButtonPanel: FC = () => {
           }}
         >
           <IoMdTrash size={24} />
-        </FloatingButton>
-
-        <div className="my-2 border-l border-gray-700" />
-
-        <FloatingButton
-          onClick={() => {
-            setOpenedDialog('appInfo')
-          }}
-        >
-          <LuInfo size={24} />
         </FloatingButton>
       </div>
     </div>
