@@ -1,28 +1,26 @@
 import { cn } from '@/utils'
-import { FC, ReactNode } from 'react'
+import { ButtonHTMLAttributes, forwardRef } from 'react'
 
-type FloatingButtonProps = {
-  children: ReactNode
+interface FloatingButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   active?: boolean
-  onClick?: () => void
 }
 
-const FloatingButton: FC<FloatingButtonProps> = ({
-  children,
-  active = false,
-  onClick,
-}) => {
-  return (
-    <button
-      className={cn(
-        'rounded-lg p-2 outline-none',
-        active ? 'bg-neutral-300 text-black' : 'bg-black text-neutral-300',
-      )}
-      onClick={onClick}
-    >
-      {children}
-    </button>
-  )
-}
+const FloatingButton = forwardRef<HTMLButtonElement, FloatingButtonProps>(
+  ({ children, active = false, onClick }, ref) => {
+    return (
+      <button
+        className={cn(
+          'rounded-lg p-2 outline-none',
+          active ? 'bg-neutral-300 text-black' : 'bg-black text-neutral-300',
+        )}
+        onClick={onClick}
+        ref={ref}
+      >
+        {children}
+      </button>
+    )
+  },
+)
+FloatingButton.displayName = 'FloatingButton'
 
 export default FloatingButton
