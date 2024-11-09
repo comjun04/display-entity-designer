@@ -216,6 +216,8 @@ const Scene: FC = () => {
       />
 
       <ambientLight intensity={1.7} color={0xffffff} />
+      <directionalLight position={[0, 10, 6]} />
+      <directionalLight position={[0, 10, -6]} />
 
       <PerspectiveCamera makeDefault position={[3, 3, 3]}>
         <CustomCameraControls />
