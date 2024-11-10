@@ -13,6 +13,9 @@ importers:
       '@headlessui/react':
         specifier: ^2.1.10
         version: 2.1.10(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@react-hookz/web':
+        specifier: ^24.0.4
+        version: 24.0.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@react-three/drei':
         specifier: ^9.114.3
         version: 9.114.3(@react-three/fiber@8.17.10(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.169.0))(@types/react@18.3.11)(@types/three@0.169.0)(immer@10.1.1)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)(three@0.169.0)
@@ -569,6 +572,20 @@ packages:
     resolution: {integrity: sha512-PR5H/2vaD8fSq0H/UB9inNbc8KDcVmW6fYAfSWkkn+OAdhTTMVKqXXrZuZBWyFfSD5Ze7VN6acr4hrOQm2bmrA==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0-rc.1 || ^18.0.0 || ^19.0.0
+
+  '@react-hookz/deep-equal@1.0.4':
+    resolution: {integrity: sha512-N56fTrAPUDz/R423pag+n6TXWbvlBZDtTehaGFjK0InmN+V2OFWLE/WmORhmn6Ce7dlwH5+tQN1LJFw3ngTJVg==}
+
+  '@react-hookz/web@24.0.4':
+    resolution: {integrity: sha512-DcIM6JiZklDyHF6CRD1FTXzuggAkQ+3Ncq2Wln7Kdih8GV6ZIeN9JfS6ZaQxpQUxan8/4n0J2V/R7nMeiSrb2Q==}
+    engines: {node: '>=18.0.0'}
+    peerDependencies:
+      js-cookie: ^3.0.5
+      react: ^16.8 || ^17 || ^18
+      react-dom: ^16.8 || ^17 || ^18
+    peerDependenciesMeta:
+      js-cookie:
+        optional: true
 
   '@react-spring/animated@9.6.1':
     resolution: {integrity: sha512-ls/rJBrAqiAYozjLo5EPPLLOb1LM0lNVQcXODTC1SMtS6DbuBCPaKco5svFUQFMP2dso3O+qcC4k9FsKc0KxMQ==}
@@ -2951,6 +2968,14 @@ snapshots:
       '@swc/helpers': 0.5.13
       clsx: 2.1.1
       react: 18.3.1
+
+  '@react-hookz/deep-equal@1.0.4': {}
+
+  '@react-hookz/web@24.0.4(react-dom@18.3.1(react@18.3.1))(react@18.3.1)':
+    dependencies:
+      '@react-hookz/deep-equal': 1.0.4
+      react: 18.3.1
+      react-dom: 18.3.1(react@18.3.1)
 
   '@react-spring/animated@9.6.1(react@18.3.1)':
     dependencies:

@@ -3,14 +3,73 @@ import {
   useDisplayEntityStore,
   useEntityRefStore,
 } from '@/store'
+import { cn } from '@/utils'
 import {
   Dialog,
   DialogBackdrop,
   DialogPanel,
   DialogTitle,
 } from '@headlessui/react'
-import { FC } from 'react'
+import { useDebouncedEffect } from '@react-hookz/web'
+import { FC, JSX, useEffect, useState } from 'react'
+import { LuCopy, LuCopyCheck } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
+
+type CopyButtonProps = JSX.IntrinsicElements['button'] & {
+  valueToCopy: string
+}
+
+const CopyButton: FC<CopyButtonProps> = ({
+  className,
+  valueToCopy,
+  onClick,
+  ...props
+}) => {
+  const [clicked, setClicked] = useState(false)
+  const [showCopiedState, setShowCopiedState] = useState(false)
+
+  useDebouncedEffect(
+    () => {
+      setShowCopiedState(false)
+    },
+    [clicked, showCopiedState],
+    1500,
+  )
+
+  useEffect(() => {
+    if (clicked) {
+      setShowCopiedState(true)
+      setClicked(false)
+    }
+  }, [clicked])
+
+  return (
+    <button
+      className={cn(
+        'flex flex-row items-center gap-2 rounded-lg bg-white/10 px-3 py-1 transition hover:bg-white/5',
+        className,
+      )}
+      onClick={(evt) => {
+        onClick?.(evt)
+        void navigator.clipboard.writeText(valueToCopy)
+        setClicked(true)
+      }}
+      {...props}
+    >
+      {showCopiedState ? (
+        <>
+          <LuCopyCheck />
+          Copied!
+        </>
+      ) : (
+        <>
+          <LuCopy />
+          Copy
+        </>
+      )}
+    </button>
+  )
+}
 
 const ExportToMinecraftDialog: FC = () => {
   const { isOpen, setOpenedDialog } = useDialogStore(
@@ -68,6 +127,7 @@ const ExportToMinecraftDialog: FC = () => {
     .filter((d) => d != null)
 
   const nbt = `{Passengers:[${passengersString.join(',')}]}`
+  const summonCommand = `/summon block_display ~ ~ ~ ${nbt}`
 
   return (
     <Dialog
@@ -90,11 +150,14 @@ const ExportToMinecraftDialog: FC = () => {
           </DialogTitle>
 
           <div>
-            <div>Summon command</div>
+            <div className="flex flex-row items-center">
+              <span className="grow">Summon command</span>
+              <CopyButton valueToCopy={summonCommand} />
+            </div>
             <textarea
               className="h-24 w-full resize-none break-all rounded-lg p-2 outline-none"
               readOnly
-              value={`/summon block_display ~ ~ ~ ${nbt}`}
+              value={summonCommand}
               onFocus={(evt) => {
                 evt.target.select()
               }}
