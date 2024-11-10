@@ -71,6 +71,43 @@ const CopyButton: FC<CopyButtonProps> = ({
   )
 }
 
+type TagValidatorInputProps = {
+  onChange?: (text: string) => void
+}
+
+const TagValidatorInput: FC<TagValidatorInputProps> = ({ onChange }) => {
+  const [hasValidationErrors, setHasValidationErrors] = useState(false)
+
+  return (
+    <div className="flex flex-row items-center gap-2">
+      <span>Base Tag</span>
+      <input
+        className="rounded p-1 text-sm outline-none"
+        onChange={(evt) => {
+          const i = evt.target.value
+
+          if (/^[a-z0-9_\-.+]*$/gi.test(i)) {
+            setHasValidationErrors(false)
+            onChange?.(i)
+          } else {
+            setHasValidationErrors(true)
+          }
+        }}
+      />
+      {hasValidationErrors && (
+        <span className="text-sm text-red-500">
+          Tag must contain only alphabets, numbers,{' '}
+          <code className="rounded bg-neutral-800 p-1 font-mono">_</code>,{' '}
+          <code className="rounded bg-neutral-800 p-1 font-mono">-</code>,{' '}
+          <code className="rounded bg-neutral-800 p-1 font-mono">.</code>, and{' '}
+          <code className="rounded bg-neutral-800 p-1 font-mono">+</code>{' '}
+          characters.
+        </span>
+      )}
+    </div>
+  )
+}
+
 const ExportToMinecraftDialog: FC = () => {
   const { isOpen, setOpenedDialog } = useDialogStore(
     useShallow((state) => ({
@@ -89,6 +126,9 @@ const ExportToMinecraftDialog: FC = () => {
     })),
   )
 
+  const [baseTag, setBaseTag] = useState('')
+
+  const tagString = baseTag.length > 0 ? `Tags:["${baseTag}"],` : ''
   const passengersString = entities
     .map((entity) => {
       const refData = entityRefs.find((e) => e.id === entity.id)
@@ -122,13 +162,13 @@ const ExportToMinecraftDialog: FC = () => {
         }
       }
 
-      return `{id:"${idText}",${specificData},transformation:[${transformationString}]}`
+      return `{id:"${idText}",${tagString}${specificData},transformation:[${transformationString}]}`
     })
     .filter((d) => d != null)
 
-  const nbt = `{Passengers:[${passengersString.join(',')}]}`
+  const nbt = `{${tagString}Passengers:[${passengersString.join(',')}]}`
   const summonCommand = `/summon block_display ~ ~ ~ ${nbt}`
-  const removeCommand = '/kill @e[type=block_display,distance=..2]'
+  const removeCommand = `/kill @e[${baseTag.length > 0 ? `tag=${baseTag}` : 'type=block_display'},distance=..2]`
 
   return (
     <Dialog
@@ -149,6 +189,12 @@ const ExportToMinecraftDialog: FC = () => {
           <DialogTitle className="text-2xl font-bold">
             Export to Minecraft
           </DialogTitle>
+
+          <div className="mt-2 rounded-lg bg-neutral-700 p-2">
+            <TagValidatorInput onChange={setBaseTag} />
+          </div>
+
+          <hr className="my-2 border-gray-600" />
 
           <div>
             <div className="flex flex-row items-center">
