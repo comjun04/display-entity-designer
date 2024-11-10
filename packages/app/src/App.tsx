@@ -5,6 +5,7 @@ import LeftButtonPanel from './components/LeftButtonPanel'
 import BlockDisplaySelectDialog from './components/dialog/BlockDisplaySelectDialog'
 import AppInfoDialog from './components/dialog/AppInfoDialog'
 import ItemDisplaySelectDialog from './components/dialog/ItemDisplaySelectDialog'
+import ExportToMinecraftDialog from './components/dialog/ExportToMinecraftDialog'
 
 function App() {
   return (
@@ -22,6 +23,7 @@ function App() {
       <AppInfoDialog />
       <BlockDisplaySelectDialog />
       <ItemDisplaySelectDialog />
+      <ExportToMinecraftDialog />
     </div>
   )
 }

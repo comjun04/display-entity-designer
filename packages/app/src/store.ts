@@ -276,7 +276,12 @@ export const useEditorStore = create(
 
 // ==========
 
-type DialogType = 'appInfo' | 'blockDisplaySelect' | 'itemDisplaySelect' | null
+type DialogType =
+  | 'appInfo'
+  | 'blockDisplaySelect'
+  | 'itemDisplaySelect'
+  | 'exportToMinecraft'
+  | null
 
 type DialogState = {
   openedDialog: DialogType
