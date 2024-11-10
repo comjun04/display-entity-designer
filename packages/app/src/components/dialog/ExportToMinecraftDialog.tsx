@@ -76,6 +76,7 @@ type TagValidatorInputProps = {
 }
 
 const TagValidatorInput: FC<TagValidatorInputProps> = ({ onChange }) => {
+  const [input, setInput] = useState('')
   const [hasValidationErrors, setHasValidationErrors] = useState(false)
 
   return (
@@ -83,12 +84,14 @@ const TagValidatorInput: FC<TagValidatorInputProps> = ({ onChange }) => {
       <span>Base Tag</span>
       <input
         className="rounded p-1 text-sm outline-none"
+        value={input}
         onChange={(evt) => {
-          const i = evt.target.value
+          const text = evt.target.value
+          setInput(text)
 
-          if (/^[a-z0-9_\-.+]*$/gi.test(i)) {
+          if (/^[a-z0-9_\-.+]*$/gi.test(text)) {
             setHasValidationErrors(false)
-            onChange?.(i)
+            onChange?.(text)
           } else {
             setHasValidationErrors(true)
           }
@@ -127,6 +130,12 @@ const ExportToMinecraftDialog: FC = () => {
   )
 
   const [baseTag, setBaseTag] = useState('')
+
+  useEffect(() => {
+    if (isOpen) {
+      setBaseTag('')
+    }
+  }, [isOpen])
 
   const tagString = baseTag.length > 0 ? `Tags:["${baseTag}"],` : ''
   const passengersString = entities
