@@ -138,7 +138,7 @@ const ExportToMinecraftDialog: FC = () => {
   }, [isOpen])
 
   const tagString = baseTag.length > 0 ? `Tags:["${baseTag}"],` : ''
-  const passengersString = entities
+  const passengersStrings = entities
     .map((entity) => {
       const refData = entityRefs.find((e) => e.id === entity.id)
       if (refData == null || refData.objectRef.current == null) {
@@ -175,8 +175,23 @@ const ExportToMinecraftDialog: FC = () => {
     })
     .filter((d) => d != null)
 
-  const nbt = `{${tagString}Passengers:[${passengersString.join(',')}]}`
-  const summonCommand = `/summon block_display ~ ~ ~ ${nbt}`
+  let le = Infinity
+  const groupedPassengersStrings: string[] = []
+  for (const passengersStr of passengersStrings) {
+    // 32500 (max command length in command block) - 60 (length of `/summon block_display ~ ~ ~ {Tags:[""],Passengers:[]}` + alpha) - baseTag length
+    if (le + passengersStr.length > 32440 - baseTag.length) {
+      groupedPassengersStrings.push(passengersStr)
+      le = passengersStr.length + 1
+    } else {
+      groupedPassengersStrings[groupedPassengersStrings.length - 1] +=
+        ',' + passengersStr
+      le += passengersStr.length + 1
+    }
+  }
+
+  const nbts = groupedPassengersStrings.map(
+    (str) => `{${tagString}Passengers:[${str}]}`,
+  )
   const removeCommand = `/kill @e[${baseTag.length > 0 ? `tag=${baseTag}` : 'type=block_display'},distance=..2]`
 
   return (
@@ -193,7 +208,7 @@ const ExportToMinecraftDialog: FC = () => {
       <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
         <DialogPanel
           transition
-          className="flex w-full max-w-screen-md select-none flex-col rounded-xl bg-neutral-800 p-4 duration-200 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
+          className="flex max-h-[90vh] w-full max-w-screen-md select-none flex-col rounded-xl bg-neutral-800 p-4 duration-200 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
         >
           <DialogTitle className="text-2xl font-bold">
             Export to Minecraft
@@ -205,33 +220,41 @@ const ExportToMinecraftDialog: FC = () => {
 
           <hr className="my-2 border-gray-600" />
 
-          <div>
-            <div className="flex flex-row items-center">
-              <span className="grow">Summon command</span>
-              <CopyButton valueToCopy={summonCommand} />
+          <div className="overflow-y-auto">
+            {nbts.map((nbt, idx) => {
+              const summonCommand = `/summon block_display ~ ~ ~ ${nbt}`
+              return (
+                <div key={idx}>
+                  <div className="flex flex-row items-center">
+                    <span className="grow">Summon command {idx + 1}</span>
+                    <CopyButton valueToCopy={summonCommand} />
+                  </div>
+                  <textarea
+                    className="h-24 w-full resize-none break-all rounded-lg p-2 outline-none"
+                    readOnly
+                    value={summonCommand}
+                    onFocus={(evt) => {
+                      evt.target.select()
+                    }}
+                  />
+                </div>
+              )
+            })}
+
+            <div>
+              <div className="flex flex-row items-center">
+                <span className="grow">Remove command</span>
+                <CopyButton valueToCopy={removeCommand} />
+              </div>
+              <textarea
+                className="h-10 w-full resize-none break-all rounded-lg p-2 outline-none"
+                readOnly
+                value={removeCommand}
+                onFocus={(evt) => {
+                  evt.target.select()
+                }}
+              />
             </div>
-            <textarea
-              className="h-24 w-full resize-none break-all rounded-lg p-2 outline-none"
-              readOnly
-              value={summonCommand}
-              onFocus={(evt) => {
-                evt.target.select()
-              }}
-            />
-          </div>
-          <div>
-            <div className="flex flex-row items-center">
-              <span className="grow">Remove command</span>
-              <CopyButton valueToCopy={removeCommand} />
-            </div>
-            <textarea
-              className="h-10 w-full resize-none break-all rounded-lg p-2 outline-none"
-              readOnly
-              value={removeCommand}
-              onFocus={(evt) => {
-                evt.target.select()
-              }}
-            />
           </div>
         </DialogPanel>
       </div>
