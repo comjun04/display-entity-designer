@@ -128,6 +128,7 @@ const ExportToMinecraftDialog: FC = () => {
 
   const nbt = `{Passengers:[${passengersString.join(',')}]}`
   const summonCommand = `/summon block_display ~ ~ ~ ${nbt}`
+  const removeCommand = '/kill @e[type=block_display,distance=..2]'
 
   return (
     <Dialog
@@ -143,7 +144,7 @@ const ExportToMinecraftDialog: FC = () => {
       <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
         <DialogPanel
           transition
-          className="flex w-full max-w-screen-md select-none flex-col gap-2 rounded-xl bg-neutral-800 p-4 duration-200 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
+          className="flex w-full max-w-screen-md select-none flex-col rounded-xl bg-neutral-800 p-4 duration-200 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
         >
           <DialogTitle className="text-2xl font-bold">
             Export to Minecraft
@@ -158,6 +159,20 @@ const ExportToMinecraftDialog: FC = () => {
               className="h-24 w-full resize-none break-all rounded-lg p-2 outline-none"
               readOnly
               value={summonCommand}
+              onFocus={(evt) => {
+                evt.target.select()
+              }}
+            />
+          </div>
+          <div>
+            <div className="flex flex-row items-center">
+              <span className="grow">Remove command</span>
+              <CopyButton valueToCopy={removeCommand} />
+            </div>
+            <textarea
+              className="h-10 w-full resize-none break-all rounded-lg p-2 outline-none"
+              readOnly
+              value={removeCommand}
               onFocus={(evt) => {
                 evt.target.select()
               }}
