@@ -2,7 +2,7 @@ import { Grid, PerspectiveCamera, TransformControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { FC, useEffect, useState } from 'react'
 import { Color, Event } from 'three'
-import Box from './components/canvas/Box'
+import Box from './components/canvas/BlockDisplay'
 import {
   useDialogStore,
   useDisplayEntityStore,
