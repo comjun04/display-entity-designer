@@ -1,8 +1,9 @@
 import { useDisplayEntityStore } from '@/store'
-import { FC, Ref, useMemo } from 'react'
-import { BoxGeometry, EdgesGeometry, LineBasicMaterial, Object3D } from 'three'
+import { FC, Ref } from 'react'
+import { BoxHelper, Object3D } from 'three'
 import { useShallow } from 'zustand/shallow'
 import Model from './Model'
+import { Helper } from '@react-three/drei'
 
 type ItemDisplayProps = {
   id: string
@@ -29,22 +30,9 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
     })),
   )
 
-  const geometry = useMemo(() => new BoxGeometry(1, 1, 1), [])
-
-  const edgesGeometry = useMemo(() => new EdgesGeometry(geometry), [geometry])
-  const lineMaterial = useMemo(
-    () => new LineBasicMaterial({ color: 'gold' }),
-    [],
-  )
-
   return (
     <object3D position={position} scale={size} rotation={rotation} ref={ref}>
-      <lineSegments
-        visible={selectedEntity?.id === id}
-        geometry={edgesGeometry}
-        material={lineMaterial}
-        // position={[0.5, 0.5, 0.5]}
-      />
+      {selectedEntity?.id === id && <Helper type={BoxHelper} args={['gold']} />}
 
       <group onClick={() => setSelected(id)}>
         <Model

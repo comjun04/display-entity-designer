@@ -1,9 +1,10 @@
 import useBlockStates from '@/hooks/useBlockStates'
 import { useDisplayEntityStore } from '@/store'
-import { FC, Ref, useEffect, useMemo } from 'react'
-import { BoxGeometry, EdgesGeometry, LineBasicMaterial, Object3D } from 'three'
+import { FC, Ref, useEffect } from 'react'
+import { BoxHelper, Object3D } from 'three'
 import { useShallow } from 'zustand/shallow'
 import Model from './Model'
+import { Helper } from '@react-three/drei'
 
 type BoxProps = {
   id: string
@@ -32,14 +33,6 @@ const Box: FC<BoxProps> = ({
         setBDEntityBlockstates: state.setBDEntityBlockstates,
       })),
     )
-
-  const geometry = useMemo(() => new BoxGeometry(1, 1, 1), [])
-
-  const edgesGeometry = useMemo(() => new EdgesGeometry(geometry), [geometry])
-  const lineMaterial = useMemo(
-    () => new LineBasicMaterial({ color: 'gold' }),
-    [],
-  )
 
   // =====
 
@@ -74,12 +67,7 @@ const Box: FC<BoxProps> = ({
 
   return (
     <object3D position={position} ref={ref} scale={size} rotation={rotation}>
-      <lineSegments
-        visible={selectedEntity?.id === id}
-        geometry={edgesGeometry}
-        material={lineMaterial}
-        position={[0.5, 0.5, 0.5]}
-      />
+      {selectedEntity?.id === id && <Helper type={BoxHelper} args={['gold']} />}
 
       <group onClick={() => setSelected(id)}>
         {(blockstatesData?.models ?? []).map((model, idx) => {
