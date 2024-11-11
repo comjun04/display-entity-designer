@@ -1,8 +1,6 @@
-import {
-  useDialogStore,
-  useDisplayEntityStore,
-  useEntityRefStore,
-} from '@/store'
+import { useDialogStore } from '@/stores/dialogStore'
+import { useEntityRefStore } from '@/stores/entityRefStore'
+import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { cn } from '@/utils'
 import {
   Dialog,

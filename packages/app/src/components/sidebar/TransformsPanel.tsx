@@ -1,6 +1,6 @@
 import { FC, useMemo } from 'react'
 import XYZInput from './XYZInput'
-import { useDisplayEntityStore } from '@/store'
+import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useShallow } from 'zustand/shallow'
 
 const TransformsPanel: FC = () => {

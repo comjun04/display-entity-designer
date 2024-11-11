@@ -1,4 +1,5 @@
-import { useDialogStore, useDisplayEntityStore } from '@/store'
+import { useDialogStore } from '@/stores/dialogStore'
+import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { FC } from 'react'
 import { IoCubeOutline } from 'react-icons/io5'
 import { useShallow } from 'zustand/shallow'

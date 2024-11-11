@@ -76,3 +76,20 @@ export type CDNModelResponse = {
 export type CDNItemsListResponse = {
   items: string[]
 }
+
+export type DisplayEntity = {
+  id: string
+  type: string
+  size: [number, number, number]
+  position: [number, number, number]
+  rotation: [number, number, number]
+  display: ModelDisplayPositionKey | null
+} & (
+  | {
+      kind: 'block'
+      blockstates: Record<string, string>
+    }
+  | {
+      kind: 'item'
+    }
+)

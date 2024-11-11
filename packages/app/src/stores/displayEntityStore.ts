@@ -1,28 +1,12 @@
+import { useEntityRefStore } from '@/stores/entityRefStore'
+import { DisplayEntity, ModelDisplayPositionKey } from '@/types'
 import { nanoid } from 'nanoid'
 import { createRef, MutableRefObject } from 'react'
 import { Object3D } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
-import { ModelDisplayPositionKey, ModelElement } from './types'
 
-type DisplayEntity = {
-  id: string
-  type: string
-  size: [number, number, number]
-  position: [number, number, number]
-  rotation: [number, number, number]
-  display: ModelDisplayPositionKey | null
-} & (
-  | {
-      kind: 'block'
-      blockstates: Record<string, string>
-    }
-  | {
-      kind: 'item'
-    }
-)
-
-type DisplayEntityState = {
+export type DisplayEntityState = {
   entities: DisplayEntity[]
   selectedEntityId: string | null
   createNew: (kind: DisplayEntity['kind'], type: string) => void
@@ -161,139 +145,6 @@ export const useDisplayEntityStore = create(
           useEntityRefStore.getState().deleteEntityRef(id)
           state.entities.splice(entityIdx, 1)
         }
-      }),
-  })),
-)
-
-// ==========
-
-type EntityRefStoreState = {
-  entityRefs: { id: string; objectRef: MutableRefObject<Object3D> }[]
-  setEntityRef: (id: string, ref: MutableRefObject<Object3D>) => void
-  deleteEntityRef: (id: string) => void
-}
-
-// DisplayEntity#objectRef는 mutable해야 하므로(object 내부 property를 수정할 수 있어야 하므로)
-// immer middleware로 전체 적용하지 않고 필요한 부분만 produce로 따로 적용
-// DO NOT USE IMMER ON THIS STORE
-export const useEntityRefStore = create<EntityRefStoreState>((set) => ({
-  entityRefs: [],
-  setEntityRef: (id, ref) =>
-    set((state) => {
-      const entityIdx = state.entityRefs.findIndex((e) => e.id === id)
-      if (entityIdx >= 0) {
-        return {
-          entityRefs: state.entityRefs.toSpliced(entityIdx, 1, {
-            id,
-            objectRef: ref,
-          }),
-        }
-      } else {
-        return {
-          entityRefs: [
-            ...state.entityRefs,
-            {
-              id,
-              objectRef: ref,
-            },
-          ],
-        }
-      }
-    }),
-  deleteEntityRef: (id) =>
-    set((state) => {
-      const entityIdx = state.entityRefs.findIndex((e) => e.id === id)
-      if (entityIdx >= 0) {
-        return { entityRefs: state.entityRefs.toSpliced(entityIdx, 1) }
-      }
-
-      return {}
-    }),
-}))
-
-// ==========
-
-type ModelData = {
-  textures: Record<string, string>
-  display: Record<
-    ModelDisplayPositionKey,
-    {
-      rotation?: [number, number, number]
-      translation?: [number, number, number]
-      scale?: [number, number, number]
-    }
-  >
-  elements: ModelElement[]
-}
-type ModelDataStoreState = {
-  modelData: Record<
-    string,
-    {
-      data: ModelData
-      isBlockShapedItemModel: boolean
-    }
-  >
-  setModelData: (
-    resourceLocation: string,
-    data: ModelData,
-    isBlockShapedItemModel: boolean,
-  ) => void
-}
-
-// 모델 데이터 캐시 저장소
-export const useModelDataStore = create(
-  immer<ModelDataStoreState>((set) => ({
-    modelData: {},
-    setModelData: (resourceLocation, data, isBlockShapedItemModel) =>
-      set((state) => {
-        const modelData = state.modelData[resourceLocation]
-
-        if (modelData == null) {
-          state.modelData[resourceLocation] = { data, isBlockShapedItemModel }
-        }
-      }),
-  })),
-)
-
-// ==========
-
-type EditorMode = 'translate' | 'rotate' | 'scale'
-
-type EditorState = {
-  mode: EditorMode
-  setMode: (newMode: EditorMode) => void
-}
-
-export const useEditorStore = create(
-  immer<EditorState>((set) => ({
-    mode: 'translate',
-    setMode: (newMode) =>
-      set((state) => {
-        state.mode = newMode
-      }),
-  })),
-)
-
-// ==========
-
-type DialogType =
-  | 'appInfo'
-  | 'blockDisplaySelect'
-  | 'itemDisplaySelect'
-  | 'exportToMinecraft'
-  | null
-
-type DialogState = {
-  openedDialog: DialogType
-  setOpenedDialog: (dialog: DialogType) => void
-}
-
-export const useDialogStore = create(
-  immer<DialogState>((set) => ({
-    openedDialog: null,
-    setOpenedDialog: (dialog) =>
-      set((state) => {
-        state.openedDialog = dialog
       }),
   })),
 )

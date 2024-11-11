@@ -10,7 +10,7 @@ import { FC, ReactNode, Suspense, useEffect, useState } from 'react'
 import useSWRImmutable from 'swr/immutable'
 import BlockFace from './BlockFace'
 import { MathUtils, Vector3 } from 'three'
-import { useModelDataStore } from '@/store'
+import { useModelDataStore } from '@/stores/modelDataStore'
 import { useShallow } from 'zustand/shallow'
 
 type ModelProps = {

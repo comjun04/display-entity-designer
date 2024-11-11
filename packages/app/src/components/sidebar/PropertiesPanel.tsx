@@ -1,5 +1,5 @@
 import useBlockStates from '@/hooks/useBlockStates'
-import { useDisplayEntityStore } from '@/store'
+import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { ModelDisplayPositionKey } from '@/types'
 import { FC } from 'react'
 import { useShallow } from 'zustand/shallow'

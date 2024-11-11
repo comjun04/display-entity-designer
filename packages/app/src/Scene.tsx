@@ -3,12 +3,10 @@ import { Canvas } from '@react-three/fiber'
 import { FC, useEffect, useState } from 'react'
 import { Color, Event } from 'three'
 import Box from './components/canvas/BlockDisplay'
-import {
-  useDialogStore,
-  useDisplayEntityStore,
-  useEditorStore,
-  useEntityRefStore,
-} from './store'
+import { useDialogStore } from './stores/dialogStore'
+import { useEditorStore } from './stores/editorStore'
+import { useEntityRefStore } from './stores/entityRefStore'
+import { useDisplayEntityStore } from './stores/displayEntityStore'
 import { useShallow } from 'zustand/shallow'
 import CustomCameraControls from './CustomCameraControls'
 import { TransformControls as OriginalTransformControls } from 'three/examples/jsm/Addons.js'

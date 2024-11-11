@@ -1,5 +1,6 @@
 import fetcher from '@/fetcher'
-import { useDialogStore, useDisplayEntityStore } from '@/store'
+import { useDialogStore } from '@/stores/dialogStore'
+import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { CDNBlocksListResponse } from '@/types'
 import {
   Dialog,

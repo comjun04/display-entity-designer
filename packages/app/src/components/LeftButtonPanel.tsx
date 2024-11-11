@@ -1,4 +1,5 @@
-import { useDialogStore, useEditorStore } from '@/store'
+import { useDialogStore } from '@/stores/dialogStore'
+import { useEditorStore } from '@/stores/editorStore'
 import { FC } from 'react'
 import { IoMove } from 'react-icons/io5'
 import { LuMenu, LuMoveDiagonal, LuRotate3D } from 'react-icons/lu'

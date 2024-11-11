@@ -1,4 +1,4 @@
-import { useDisplayEntityStore } from '@/store'
+import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { FC, Ref } from 'react'
 import { BoxHelper, Object3D } from 'three'
 import { useShallow } from 'zustand/shallow'

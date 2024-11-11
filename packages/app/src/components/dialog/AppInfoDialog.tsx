@@ -1,4 +1,4 @@
-import { useDialogStore } from '@/store'
+import { useDialogStore } from '@/stores/dialogStore'
 import {
   Dialog,
   DialogBackdrop,

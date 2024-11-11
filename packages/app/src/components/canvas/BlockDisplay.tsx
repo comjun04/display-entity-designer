@@ -1,5 +1,5 @@
 import useBlockStates from '@/hooks/useBlockStates'
-import { useDisplayEntityStore } from '@/store'
+import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { FC, Ref, useEffect } from 'react'
 import { BoxHelper, Object3D } from 'three'
 import { useShallow } from 'zustand/shallow'
