@@ -5,12 +5,66 @@ import { IoCubeOutline } from 'react-icons/io5'
 import { TbDiamondFilled } from 'react-icons/tb'
 import { useShallow } from 'zustand/shallow'
 
+type ObjectItemProps = {
+  id: string
+}
+const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
+  const {
+    kind,
+    type,
+    display,
+    blockstates,
+    selectedEntityId,
+    setSelectedEntity,
+  } = useDisplayEntityStore(
+    useShallow((state) => {
+      const entity = state.entities.find((e) => e.id === id)!
+
+      return {
+        kind: entity.kind,
+        type: entity.type,
+        display: entity.display,
+        blockstates: entity.kind === 'block' ? entity.blockstates : undefined,
+        selectedEntityId: state.selectedEntityId,
+        setSelectedEntity: state.setSelected,
+      }
+    }),
+  )
+
+  const blockstateArr: string[] = []
+  if (kind === 'block') {
+    for (const key in blockstates!) {
+      blockstateArr.push(`${key}=${blockstates[key]}`)
+    }
+  }
+
+  return (
+    <div
+      className={cn(
+        'flex cursor-pointer flex-row items-center gap-1',
+        selectedEntityId === id && 'font-bold text-yellow-500',
+      )}
+      onClick={() => setSelectedEntity(id)}
+    >
+      <span className="flex-none">
+        {kind === 'block' && <IoCubeOutline size={16} />}
+        {kind === 'item' && <TbDiamondFilled size={16} />}
+      </span>
+      <span>{type}</span>
+      {blockstateArr.length > 0 && (
+        <span className="truncate opacity-50">[{blockstateArr.join(',')}]</span>
+      )}
+      {kind === 'item' && display != null && (
+        <span className="truncate opacity-50">[display={display}]</span>
+      )}
+    </div>
+  )
+}
+
 const ObjectsPanel: FC = () => {
-  const { entities, selectedEntity, setSelectedEntity } = useDisplayEntityStore(
+  const { entityIds } = useDisplayEntityStore(
     useShallow((state) => ({
-      entities: state.entities,
-      selectedEntity: state.getSelectedEntity(),
-      setSelectedEntity: state.setSelected,
+      entityIds: state.entityIds,
     })),
   )
 
@@ -18,41 +72,9 @@ const ObjectsPanel: FC = () => {
     <div className="flex select-none flex-col gap-[2px] rounded-lg bg-neutral-900 p-2 text-sm">
       <span className="font-bold">Objects</span>
 
-      {entities.map((entity, idx) => {
-        const blockstateArr: string[] = []
-        if (entity.kind === 'block') {
-          for (const key in entity.blockstates) {
-            blockstateArr.push(`${key}=${entity.blockstates[key]}`)
-          }
-        }
-
-        return (
-          <div
-            key={idx}
-            className={cn(
-              'flex cursor-pointer flex-row items-center gap-1',
-              selectedEntity?.id === entity.id && 'font-bold text-yellow-500',
-            )}
-            onClick={() => setSelectedEntity(entity.id)}
-          >
-            <span className="flex-none">
-              {entity.kind === 'block' && <IoCubeOutline size={16} />}
-              {entity.kind === 'item' && <TbDiamondFilled size={16} />}
-            </span>
-            <span>{entity.type}</span>
-            {blockstateArr.length > 0 && (
-              <span className="truncate opacity-50">
-                [{blockstateArr.join(',')}]
-              </span>
-            )}
-            {entity.kind === 'item' && entity.display != null && (
-              <span className="truncate opacity-50">
-                [display={entity.display}]
-              </span>
-            )}
-          </div>
-        )
-      })}
+      {entityIds.map((id) => (
+        <ObjectItem key={id} id={id} />
+      ))}
     </div>
   )
 }
