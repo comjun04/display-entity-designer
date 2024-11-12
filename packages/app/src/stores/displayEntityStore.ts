@@ -9,10 +9,12 @@ import { immer } from 'zustand/middleware/immer'
 export type DisplayEntityState = {
   entityIds: string[]
   entities: DisplayEntity[]
-  selectedEntityId: string | null
+  selectedEntityIds: string[]
+  selectedEntities: DisplayEntity[]
+
   createNew: (kind: DisplayEntity['kind'], type: string) => void
-  setSelected: (id: string | null) => void
-  getSelectedEntity: () => DisplayEntity | null
+  setSelected: (ids: string[]) => void
+  addToSelected: (id: string) => void
   setEntityTranslation: (
     id: string,
     translation: [number, number, number],
@@ -31,10 +33,11 @@ export type DisplayEntityState = {
 }
 
 export const useDisplayEntityStore = create(
-  immer<DisplayEntityState>((set, get) => ({
+  immer<DisplayEntityState>((set) => ({
     entityIds: [],
     entities: [],
-    selectedEntityId: null,
+    selectedEntityIds: [],
+    selectedEntities: [],
 
     createNew: (kind, type) => {
       const id = nanoid(16)
@@ -69,23 +72,24 @@ export const useDisplayEntityStore = create(
         }
       })
     },
-    setSelected: (id) =>
+    setSelected: (ids) =>
       set((state) => {
-        // selectedEntityId 삭제
-        if (id == null) {
-          state.selectedEntityId = null
-          return
-        }
-
-        const entity = state.entities.find((e) => e.id === id)
-        if (entity != null) {
-          state.selectedEntityId = entity.id
+        state.selectedEntityIds = ids
+        state.selectedEntities = state.entities
+          .filter((e) => ids.includes(e.id))
+          .sort((a, b) => {
+            const aIdx = ids.findIndex((i) => i === a.id)
+            const bIdx = ids.findIndex((i) => i === b.id)
+            return aIdx - bIdx
+          })
+      }),
+    addToSelected: (id) =>
+      set((state) => {
+        if (!state.selectedEntityIds.includes(id)) {
+          state.selectedEntityIds.push(id)
+          state.selectedEntities.push(state.entities.find((e) => e.id === id)!)
         }
       }),
-    getSelectedEntity: () => {
-      const { entities, selectedEntityId } = get()
-      return entities.find((e) => e.id === selectedEntityId) ?? null
-    },
     setEntityTranslation: (id, translation) =>
       set((state) => {
         const entity = state.entities.find((e) => e.id === id)
@@ -156,8 +160,18 @@ export const useDisplayEntityStore = create(
           state.entities.splice(entityIdx, 1)
         }
 
-        if (state.selectedEntityId === id) {
-          state.selectedEntityId = null
+        const selectedEntityIdIdx = state.selectedEntityIds.findIndex(
+          (entityId) => entityId === id,
+        )
+        if (selectedEntityIdIdx >= 0) {
+          state.selectedEntityIds.splice(selectedEntityIdIdx, 1)
+        }
+
+        const selectedEntityIdx = state.selectedEntities.findIndex(
+          (e) => e.id === id,
+        )
+        if (selectedEntityIdx >= 0) {
+          state.selectedEntities.splice(selectedEntityIdx, 1)
         }
       }),
   })),

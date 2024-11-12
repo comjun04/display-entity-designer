@@ -24,15 +24,19 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
   rotation,
   object3DRef: ref,
 }) => {
-  const { thisEntity, selectedEntityId, setSelected, setBDEntityBlockstates } =
-    useDisplayEntityStore(
-      useShallow((state) => ({
-        thisEntity: state.entities.find((e) => e.id === id),
-        selectedEntityId: state.selectedEntityId,
-        setSelected: state.setSelected,
-        setBDEntityBlockstates: state.setBDEntityBlockstates,
-      })),
-    )
+  const {
+    thisEntity,
+    selectedEntityIds,
+    addToSelected,
+    setBDEntityBlockstates,
+  } = useDisplayEntityStore(
+    useShallow((state) => ({
+      thisEntity: state.entities.find((e) => e.id === id),
+      selectedEntityIds: state.selectedEntityIds,
+      addToSelected: state.addToSelected,
+      setBDEntityBlockstates: state.setBDEntityBlockstates,
+    })),
+  )
 
   // =====
 
@@ -67,9 +71,11 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
 
   return (
     <object3D position={position} ref={ref} scale={size} rotation={rotation}>
-      {selectedEntityId === id && <Helper type={BoxHelper} args={['gold']} />}
+      {selectedEntityIds.includes(id) && (
+        <Helper type={BoxHelper} args={['gold']} />
+      )}
 
-      <group onClick={() => setSelected(id)}>
+      <group onClick={() => addToSelected(id)}>
         {(blockstatesData?.models ?? []).map((model, idx) => {
           let shouldRender = model.when.length < 1 // when 배열 안에 조건이 정의되어 있지 않다면 무조건 렌더링
           for (const conditionObject of model.when) {

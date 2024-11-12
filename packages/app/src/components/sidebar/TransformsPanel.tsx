@@ -5,40 +5,48 @@ import { useShallow } from 'zustand/shallow'
 
 const TransformsPanel: FC = () => {
   const {
-    selectedEntity,
     setEntityTranslation,
     setEntityRotation,
     setEntityScale,
+
+    firstSelectedEntity,
   } = useDisplayEntityStore(
     useShallow((state) => ({
-      selectedEntity: state.getSelectedEntity(),
+      selectedEntityIds: state.selectedEntityIds,
       setEntityTranslation: state.setEntityTranslation,
       setEntityRotation: state.setEntityRotation,
       setEntityScale: state.setEntityScale,
+
+      // temporary
+      firstSelectedEntity:
+        state.selectedEntityIds.length > 0
+          ? state.entities.find((e) => e.id === state.selectedEntityIds[0])!
+          : null,
     })),
   )
 
   const translation = useMemo(
-    () => selectedEntity?.position ?? ([0, 0, 0] as [number, number, number]),
-    [selectedEntity?.position],
+    () =>
+      firstSelectedEntity?.position ?? ([0, 0, 0] as [number, number, number]),
+    [firstSelectedEntity?.position],
   )
   const rotation = useMemo(
     () =>
-      (selectedEntity?.rotation ?? [0, 0, 0]).map((d) => {
+      (firstSelectedEntity?.rotation ?? [0, 0, 0]).map((d) => {
         const degree = (d / Math.PI) * 180
 
         // 소수점 7자리에서 반올림
         const rounded = Math.round(degree * 1000000) / 1000000
         return rounded
       }) as [number, number, number],
-    [selectedEntity?.rotation],
+    [firstSelectedEntity?.rotation],
   )
   const scale = useMemo(
-    () => selectedEntity?.size ?? ([1, 1, 1] as [number, number, number]),
-    [selectedEntity?.size],
+    () => firstSelectedEntity?.size ?? ([1, 1, 1] as [number, number, number]),
+    [firstSelectedEntity?.size],
   )
 
-  if (selectedEntity == null) return null
+  if (firstSelectedEntity == null) return null
 
   return (
     <div className="flex select-none flex-col gap-[2px] rounded-lg bg-neutral-900 p-2 text-sm">
@@ -52,7 +60,7 @@ const TransformsPanel: FC = () => {
         <XYZInput
           allowNegative
           value={translation}
-          onChange={(xyz) => setEntityTranslation(selectedEntity.id, xyz)}
+          onChange={(xyz) => setEntityTranslation(firstSelectedEntity.id, xyz)}
         />
       </div>
 
@@ -70,7 +78,7 @@ const TransformsPanel: FC = () => {
               number,
               number,
             ]
-            setEntityRotation(selectedEntity.id, radianRotation)
+            setEntityRotation(firstSelectedEntity.id, radianRotation)
           }}
         />
       </div>
@@ -82,7 +90,7 @@ const TransformsPanel: FC = () => {
         {/* temp */}
         <XYZInput
           value={scale}
-          onChange={(xyz) => setEntityScale(selectedEntity.id, xyz)}
+          onChange={(xyz) => setEntityScale(firstSelectedEntity.id, xyz)}
         />
       </div>
     </div>

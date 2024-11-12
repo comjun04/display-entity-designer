@@ -4,7 +4,7 @@ import { FC, useEffect, useState } from 'react'
 import { Color, Event } from 'three'
 import { useDialogStore } from './stores/dialogStore'
 import { useEditorStore } from './stores/editorStore'
-import { useEntityRefStore } from './stores/entityRefStore'
+// import { useEntityRefStore } from './stores/entityRefStore'
 import { useDisplayEntityStore } from './stores/displayEntityStore'
 import { useShallow } from 'zustand/shallow'
 import CustomCameraControls from './CustomCameraControls'
@@ -14,7 +14,7 @@ import DisplayEntity from './components/canvas/DisplayEntity'
 const Scene: FC = () => {
   const {
     entityIds,
-    selectedEntityId,
+    selectedEntityIds,
     setSelected,
     setEntityTranslation,
     setEntityRotation,
@@ -23,7 +23,7 @@ const Scene: FC = () => {
   } = useDisplayEntityStore(
     useShallow((state) => ({
       entityIds: state.entityIds,
-      selectedEntityId: state.selectedEntityId,
+      selectedEntityIds: state.selectedEntityIds,
       setSelected: state.setSelected,
       setEntityTranslation: state.setEntityTranslation,
       setEntityRotation: state.setEntityRotation,
@@ -31,11 +31,11 @@ const Scene: FC = () => {
       deleteEntity: state.deleteEntity,
     })),
   )
-  const { entityRefs } = useEntityRefStore(
-    useShallow((state) => ({
-      entityRefs: state.entityRefs,
-    })),
-  )
+  // const { entityRefs } = useEntityRefStore(
+  //   useShallow((state) => ({
+  //     entityRefs: state.entityRefs,
+  //   })),
+  // )
   const { mode, setMode } = useEditorStore(
     useShallow((state) => ({ mode: state.mode, setMode: state.setMode })),
   )
@@ -76,15 +76,13 @@ const Scene: FC = () => {
           setMode('scale')
           break
         case 'Delete':
-          if (selectedEntityId != null) {
-            deleteEntity(selectedEntityId)
-          }
+          selectedEntityIds.forEach(deleteEntity)
       }
     }
 
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [setMode, deleteEntity, selectedEntityId, openedDialog])
+  }, [setMode, deleteEntity, selectedEntityIds, openedDialog])
 
   useEffect(() => {
     const handler = (evt: KeyboardEvent) => {
@@ -98,6 +96,10 @@ const Scene: FC = () => {
       document.removeEventListener('keyup', handler)
     }
   }, [])
+
+  // temporary
+  const firstSelectedEntityId =
+    selectedEntityIds.length > 0 ? selectedEntityIds[0] : null
 
   return (
     <Canvas
@@ -146,7 +148,7 @@ const Scene: FC = () => {
 
       <TransformControls
         object={
-          entityRefs.find((d) => d.id === selectedEntityId)?.objectRef ??
+          // entityRefs.find((d) => d.id === selectedEntityId)?.objectRef ?? // TODO
           undefined
         }
         mode={mode}
@@ -154,14 +156,14 @@ const Scene: FC = () => {
         rotationSnap={Math.PI / 12} // 15도
         scaleSnap={0.0625}
         // visible={selectedEntity != null} // 왜인지 모르겠는데 작동 안함
-        showX={selectedEntityId != null}
-        showY={selectedEntityId != null}
-        showZ={selectedEntityId != null}
-        enabled={selectedEntityId != null}
+        showX={selectedEntityIds.length > 0}
+        showY={selectedEntityIds.length > 0}
+        showZ={selectedEntityIds.length > 0}
+        enabled={selectedEntityIds.length > 0}
         onObjectChange={(e) => {
           const target = (e as Event<string, OriginalTransformControls>).target
           setEntityTranslation(
-            selectedEntityId!,
+            firstSelectedEntityId!,
             target.object.position.toArray(),
           )
 
@@ -173,17 +175,17 @@ const Scene: FC = () => {
 
           // state를 건드리기 전에 object3d에 먼저 scale 값을 세팅해야 음수 값일 경우 음수 <-> 양수로 계속 바뀌면서 생기는 깜빡거림을 방지할 수 있음
           target.object.scale.fromArray(scale)
-          setEntityScale(selectedEntityId!, scale) // 그 이후에 state 조작
+          setEntityScale(firstSelectedEntityId!, scale) // 그 이후에 state 조작
 
           const rotation = target.object.rotation
-          setEntityRotation(selectedEntityId!, [
+          setEntityRotation(firstSelectedEntityId!, [
             rotation.x,
             rotation.y,
             rotation.z,
           ])
         }}
         onPointerMissed={() => {
-          setSelected(null)
+          setSelected([])
         }}
       />
 

@@ -13,9 +13,9 @@ const TopButtonPanel: FC = () => {
       setOpenedDialog: state.setOpenedDialog,
     })),
   )
-  const { selectedEntityId, deleteEntity } = useDisplayEntityStore(
+  const { selectedEntityIds, deleteEntity } = useDisplayEntityStore(
     useShallow((state) => ({
-      selectedEntityId: state.selectedEntityId,
+      selectedEntityIds: state.selectedEntityIds,
       deleteEntity: state.deleteEntity,
     })),
   )
@@ -42,8 +42,8 @@ const TopButtonPanel: FC = () => {
 
         <FloatingButton
           onClick={() => {
-            if (selectedEntityId != null) {
-              deleteEntity(selectedEntityId)
+            if (selectedEntityIds.length > 0) {
+              selectedEntityIds.forEach(deleteEntity)
             }
           }}
         >
