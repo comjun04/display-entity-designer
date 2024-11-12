@@ -155,6 +155,10 @@ export const useDisplayEntityStore = create(
           useEntityRefStore.getState().deleteEntityRef(id)
           state.entities.splice(entityIdx, 1)
         }
+
+        if (state.selectedEntityId === id) {
+          state.selectedEntityId = null
+        }
       }),
   })),
 )
