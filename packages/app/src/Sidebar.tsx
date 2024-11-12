@@ -5,7 +5,7 @@ import TransformsPanel from './components/sidebar/TransformsPanel'
 
 const Sidebar: FC = () => {
   return (
-    <div className="flex w-[400px] flex-col gap-2 p-2">
+    <div className="flex w-[400px] flex-col gap-2 overflow-y-auto p-2">
       <ObjectsPanel />
       <TransformsPanel />
       <PropertiesPanel />
