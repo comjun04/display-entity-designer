@@ -31,7 +31,7 @@ type ModelDataStoreState = {
 }
 // 모델 데이터 캐시 저장소
 
-export const useModelDataStore = create(
+export const useCacheStore = create(
   immer<ModelDataStoreState>((set) => ({
     modelData: {},
     setModelData: (resourceLocation, data, isBlockShapedItemModel) =>
