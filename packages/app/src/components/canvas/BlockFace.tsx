@@ -1,7 +1,9 @@
+import { useCacheStore } from '@/stores/cacheStore'
 import { getTextureColor } from '@/utils'
 import { useTexture } from '@react-three/drei'
-import { FC, useEffect, useState } from 'react'
+import { FC, useEffect } from 'react'
 import { MathUtils, NearestFilter } from 'three'
+import { useShallow } from 'zustand/shallow'
 
 type BlockFaceProps = {
   faceName: 'up' | 'down' | 'north' | 'south' | 'west' | 'east'
@@ -28,7 +30,14 @@ const BlockFace: FC<BlockFaceProps> = ({
   textureLayer,
   tintindex,
 }) => {
-  const [processedImageDataUrl, setProcessedImageDataUrl] = useState<string>()
+  const { processedImageDataUrl, setProcessedImageDataUrl } = useCacheStore(
+    useShallow((state) => ({
+      processedImageDataUrl:
+        state.croppedTextureDataUrls[textureResourceLocation],
+      setProcessedImageDataUrl: state.setCroppedTextureDataUrl,
+    })),
+  )
+
   const texture = useTexture(
     processedImageDataUrl ??
       `${import.meta.env.VITE_CDN_BASE_URL}/assets/minecraft/textures/${textureResourceLocation}.png`,
@@ -50,8 +59,13 @@ const BlockFace: FC<BlockFaceProps> = ({
     ctx.drawImage(img, 0, 0, 16, 16, 0, 0, 16, 16)
 
     const croppedTextureDataUrl = canvas.toDataURL()
-    setProcessedImageDataUrl(croppedTextureDataUrl)
-  }, [processedImageDataUrl, texture])
+    setProcessedImageDataUrl(textureResourceLocation, croppedTextureDataUrl)
+  }, [
+    processedImageDataUrl,
+    setProcessedImageDataUrl,
+    texture,
+    textureResourceLocation,
+  ])
 
   // 텍스쳐 픽셀끼리 뭉쳐져서 blur되어 보이지 않게 설정
   // https://discourse.threejs.org/t/low-resolution-texture-is-very-blurry-how-can-i-get-around-this-issue/29948

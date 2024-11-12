@@ -28,10 +28,16 @@ type ModelDataStoreState = {
     data: ModelData,
     isBlockShapedItemModel: boolean,
   ) => void
+
+  croppedTextureDataUrls: Record<string, string>
+  setCroppedTextureDataUrl: (
+    resourceLocation: string,
+    imageDataUrl: string,
+  ) => void
 }
 // 모델 데이터 캐시 저장소
 
-export const useModelDataStore = create(
+export const useCacheStore = create(
   immer<ModelDataStoreState>((set) => ({
     modelData: {},
     setModelData: (resourceLocation, data, isBlockShapedItemModel) =>
@@ -41,6 +47,12 @@ export const useModelDataStore = create(
         if (modelData == null) {
           state.modelData[resourceLocation] = { data, isBlockShapedItemModel }
         }
+      }),
+
+    croppedTextureDataUrls: {},
+    setCroppedTextureDataUrl: (resourceLocation, imageDataUrl) =>
+      set((state) => {
+        state.croppedTextureDataUrls[resourceLocation] = imageDataUrl
       }),
   })),
 )

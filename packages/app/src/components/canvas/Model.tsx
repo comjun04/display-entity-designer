@@ -10,7 +10,7 @@ import { FC, ReactNode, Suspense, useEffect, useState } from 'react'
 import useSWRImmutable from 'swr/immutable'
 import BlockFace from './BlockFace'
 import { MathUtils, Vector3 } from 'three'
-import { useModelDataStore } from '@/stores/modelDataStore'
+import { useCacheStore } from '@/stores/cacheStore'
 import { useShallow } from 'zustand/shallow'
 
 type ModelProps = {
@@ -26,7 +26,7 @@ const Model: FC<ModelProps> = ({
   xRotation = 0,
   yRotation = 0,
 }) => {
-  const { cachedModelData, setCachedModelData } = useModelDataStore(
+  const { cachedModelData, setCachedModelData } = useCacheStore(
     useShallow((state) => ({
       cachedModelData: state.modelData[initialResourceLocation], // nullable
       setCachedModelData: state.setModelData,
