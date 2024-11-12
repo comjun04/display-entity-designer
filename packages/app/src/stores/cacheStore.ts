@@ -5,6 +5,7 @@ import { immer } from 'zustand/middleware/immer'
 // ==========
 type ModelData = {
   textures: Record<string, string>
+  textureSize?: [number, number]
   display: Record<
     ModelDisplayPositionKey,
     {

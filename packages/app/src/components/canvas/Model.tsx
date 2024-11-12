@@ -51,6 +51,8 @@ const Model: FC<ModelProps> = ({
     cachedModelData?.data.elements ?? [],
   )
 
+  const [textureSize, setTextureSize] = useState<[number, number]>()
+
   const [modelDataLoadFinished, setModelDataLoadFinished] = useState(false)
 
   const { data } = useSWRImmutable<CDNModelResponse>(
@@ -74,6 +76,10 @@ const Model: FC<ModelProps> = ({
       data.elements.length > 0
     ) {
       setElements(data.elements)
+    }
+
+    if (data.texture_size != null && textureSize == null) {
+      setTextureSize(data.texture_size)
     }
 
     // parent가 없으면 최상위 모델 파일이므로 로딩 완료 flag를 설정
@@ -126,6 +132,7 @@ const Model: FC<ModelProps> = ({
     data,
     elements,
     textures,
+    textureSize,
     cachedModelData,
     isItemModel,
     modelDataLoadFinished,
@@ -241,6 +248,7 @@ const Model: FC<ModelProps> = ({
                         faceName={face}
                         uv={faceData.uv}
                         textureLayer={textureLayer}
+                        textureSize={textureSize}
                         rotation={faceData.rotation}
                         tintindex={faceData.tintindex}
                         parentElementSize={sizeVec.toArray()}

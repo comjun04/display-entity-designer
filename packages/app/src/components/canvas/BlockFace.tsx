@@ -15,6 +15,7 @@ type BlockFaceProps = {
   uv?: [number, number, number, number]
   rotation?: 0 | 90 | 180 | 270
   textureLayer?: string
+  textureSize?: [number, number]
   tintindex?: number
 }
 
@@ -28,6 +29,7 @@ const BlockFace: FC<BlockFaceProps> = ({
   rotation = 0,
   faceName,
   textureLayer,
+  textureSize = [16, 16],
   tintindex,
 }) => {
   const { processedImageDataUrl, setProcessedImageDataUrl } = useCacheStore(
@@ -53,10 +55,12 @@ const BlockFace: FC<BlockFaceProps> = ({
 
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')!
-    canvas.width = 16
-    canvas.height = 16
 
-    ctx.drawImage(img, 0, 0, 16, 16, 0, 0, 16, 16)
+    const [width, height] = textureSize
+    canvas.width = width
+    canvas.height = height
+
+    ctx.drawImage(img, 0, 0, width, height, 0, 0, width, height)
 
     const croppedTextureDataUrl = canvas.toDataURL()
     setProcessedImageDataUrl(textureResourceLocation, croppedTextureDataUrl)
@@ -64,6 +68,7 @@ const BlockFace: FC<BlockFaceProps> = ({
     processedImageDataUrl,
     setProcessedImageDataUrl,
     texture,
+    textureSize,
     textureResourceLocation,
   ])
 

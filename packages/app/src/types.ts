@@ -71,6 +71,7 @@ export type CDNModelResponse = {
   }
   elements?: ModelElement[]
   textures?: Record<string, string>
+  texture_size?: [number, number]
 }
 
 export type CDNItemsListResponse = {
