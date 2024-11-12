@@ -10,7 +10,6 @@ export type DisplayEntityState = {
   entityIds: string[]
   entities: DisplayEntity[]
   selectedEntityIds: string[]
-  selectedEntities: DisplayEntity[]
 
   createNew: (kind: DisplayEntity['kind'], type: string) => void
   setSelected: (ids: string[]) => void
@@ -75,19 +74,11 @@ export const useDisplayEntityStore = create(
     setSelected: (ids) =>
       set((state) => {
         state.selectedEntityIds = ids
-        state.selectedEntities = state.entities
-          .filter((e) => ids.includes(e.id))
-          .sort((a, b) => {
-            const aIdx = ids.findIndex((i) => i === a.id)
-            const bIdx = ids.findIndex((i) => i === b.id)
-            return aIdx - bIdx
-          })
       }),
     addToSelected: (id) =>
       set((state) => {
         if (!state.selectedEntityIds.includes(id)) {
           state.selectedEntityIds.push(id)
-          state.selectedEntities.push(state.entities.find((e) => e.id === id)!)
         }
       }),
     setEntityTranslation: (id, translation) =>
@@ -165,13 +156,6 @@ export const useDisplayEntityStore = create(
         )
         if (selectedEntityIdIdx >= 0) {
           state.selectedEntityIds.splice(selectedEntityIdIdx, 1)
-        }
-
-        const selectedEntityIdx = state.selectedEntities.findIndex(
-          (e) => e.id === id,
-        )
-        if (selectedEntityIdx >= 0) {
-          state.selectedEntities.splice(selectedEntityIdx, 1)
         }
       }),
   })),

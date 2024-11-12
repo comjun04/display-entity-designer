@@ -17,25 +17,27 @@ const displayValue: (ModelDisplayPositionKey | null)[] = [
 ]
 
 const PropertiesPanel: FC = () => {
-  const { selectedEntities, setEntityDisplayType, setBDEntityBlockstates } =
+  const { singleSelectedEntity, setEntityDisplayType, setBDEntityBlockstates } =
     useDisplayEntityStore(
       useShallow((state) => {
         return {
-          selectedEntities: state.selectedEntities,
+          singleSelectedEntity:
+            state.selectedEntityIds.length === 1
+              ? state.entities.find((e) => e.id === state.selectedEntityIds[0])!
+              : null,
           setEntityDisplayType: state.setEntityDisplayType,
           setBDEntityBlockstates: state.setBDEntityBlockstates,
         }
       }),
     )
 
-  const singleSelectedEntity =
-    selectedEntities.length === 1 ? selectedEntities[0] : null
-
   const { data: blockstatesData } = useBlockStates(
     singleSelectedEntity?.kind === 'block'
       ? singleSelectedEntity.type
       : undefined,
   )
+
+  console.log(singleSelectedEntity)
 
   return (
     <div className="flex select-none flex-col gap-[2px] rounded-lg bg-neutral-900 p-2 text-sm">
