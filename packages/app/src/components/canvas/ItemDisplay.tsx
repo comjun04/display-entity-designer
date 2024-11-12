@@ -22,22 +22,27 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
   rotation,
   object3DRef: ref,
 }) => {
-  const { thisEntity, selectedEntity, setSelected } = useDisplayEntityStore(
-    useShallow((state) => ({
-      thisEntity: state.entities.find((e) => e.id === id),
-      selectedEntity: state.getSelectedEntity(),
-      setSelected: state.setSelected,
-    })),
-  )
+  const { thisEntityDisplay, selectedEntityId, setSelected } =
+    useDisplayEntityStore(
+      useShallow((state) => {
+        const thisEntity = state.entities.find((e) => e.id === id)
+
+        return {
+          thisEntityDisplay: thisEntity?.display,
+          selectedEntityId: state.selectedEntityId,
+          setSelected: state.setSelected,
+        }
+      }),
+    )
 
   return (
     <object3D position={position} scale={size} rotation={rotation} ref={ref}>
-      {selectedEntity?.id === id && <Helper type={BoxHelper} args={['gold']} />}
+      {selectedEntityId === id && <Helper type={BoxHelper} args={['gold']} />}
 
       <group onClick={() => setSelected(id)}>
         <Model
           initialResourceLocation={`item/${type}`}
-          displayType={thisEntity?.display ?? undefined}
+          displayType={thisEntityDisplay ?? undefined}
         />
       </group>
     </object3D>

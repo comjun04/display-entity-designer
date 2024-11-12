@@ -6,7 +6,7 @@ import { useShallow } from 'zustand/shallow'
 import Model from './Model'
 import { Helper } from '@react-three/drei'
 
-type BoxProps = {
+type BlockDisplayProps = {
   id: string
   type: string
   size: [number, number, number]
@@ -16,7 +16,7 @@ type BoxProps = {
   object3DRef?: Ref<Object3D>
 }
 
-const Box: FC<BoxProps> = ({
+const BlockDisplay: FC<BlockDisplayProps> = ({
   id,
   type,
   size,
@@ -24,11 +24,11 @@ const Box: FC<BoxProps> = ({
   rotation,
   object3DRef: ref,
 }) => {
-  const { thisEntity, selectedEntity, setSelected, setBDEntityBlockstates } =
+  const { thisEntity, selectedEntityId, setSelected, setBDEntityBlockstates } =
     useDisplayEntityStore(
       useShallow((state) => ({
         thisEntity: state.entities.find((e) => e.id === id),
-        selectedEntity: state.getSelectedEntity(),
+        selectedEntityId: state.selectedEntityId,
         setSelected: state.setSelected,
         setBDEntityBlockstates: state.setBDEntityBlockstates,
       })),
@@ -67,7 +67,7 @@ const Box: FC<BoxProps> = ({
 
   return (
     <object3D position={position} ref={ref} scale={size} rotation={rotation}>
-      {selectedEntity?.id === id && <Helper type={BoxHelper} args={['gold']} />}
+      {selectedEntityId === id && <Helper type={BoxHelper} args={['gold']} />}
 
       <group onClick={() => setSelected(id)}>
         {(blockstatesData?.models ?? []).map((model, idx) => {
@@ -110,4 +110,4 @@ const Box: FC<BoxProps> = ({
   )
 }
 
-export default Box
+export default BlockDisplay

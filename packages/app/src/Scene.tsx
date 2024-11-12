@@ -2,7 +2,6 @@ import { Grid, PerspectiveCamera, TransformControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { FC, useEffect, useState } from 'react'
 import { Color, Event } from 'three'
-import Box from './components/canvas/BlockDisplay'
 import { useDialogStore } from './stores/dialogStore'
 import { useEditorStore } from './stores/editorStore'
 import { useEntityRefStore } from './stores/entityRefStore'
@@ -10,12 +9,12 @@ import { useDisplayEntityStore } from './stores/displayEntityStore'
 import { useShallow } from 'zustand/shallow'
 import CustomCameraControls from './CustomCameraControls'
 import { TransformControls as OriginalTransformControls } from 'three/examples/jsm/Addons.js'
-import ItemDisplay from './components/canvas/ItemDisplay'
+import DisplayEntity from './components/canvas/DisplayEntity'
 
 const Scene: FC = () => {
   const {
-    entities,
-    selectedEntity,
+    entityIds,
+    selectedEntityId,
     setSelected,
     setEntityTranslation,
     setEntityRotation,
@@ -23,8 +22,8 @@ const Scene: FC = () => {
     deleteEntity,
   } = useDisplayEntityStore(
     useShallow((state) => ({
-      entities: state.entities,
-      selectedEntity: state.getSelectedEntity(),
+      entityIds: state.entityIds,
+      selectedEntityId: state.selectedEntityId,
       setSelected: state.setSelected,
       setEntityTranslation: state.setEntityTranslation,
       setEntityRotation: state.setEntityRotation,
@@ -77,15 +76,15 @@ const Scene: FC = () => {
           setMode('scale')
           break
         case 'Delete':
-          if (selectedEntity != null) {
-            deleteEntity(selectedEntity.id)
+          if (selectedEntityId != null) {
+            deleteEntity(selectedEntityId)
           }
       }
     }
 
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [setMode, deleteEntity, selectedEntity, openedDialog])
+  }, [setMode, deleteEntity, selectedEntityId, openedDialog])
 
   useEffect(() => {
     const handler = (evt: KeyboardEvent) => {
@@ -141,38 +140,13 @@ const Scene: FC = () => {
         <lineBasicMaterial color={0x0000ff} />
       </line>
 
-      {entities.map((entity) => {
-        const refData = entityRefs.find((d) => d.id === entity.id)!
-        if (entity.kind === 'block') {
-          return (
-            <Box
-              key={entity.id}
-              id={entity.id}
-              type={entity.type}
-              size={entity.size}
-              position={entity.position}
-              rotation={entity.rotation}
-              object3DRef={refData.objectRef}
-            />
-          )
-        } else if (entity.kind === 'item') {
-          return (
-            <ItemDisplay
-              key={entity.id}
-              id={entity.id}
-              type={entity.type}
-              size={entity.size}
-              position={entity.position}
-              rotation={entity.rotation}
-              object3DRef={refData.objectRef}
-            />
-          )
-        }
-      })}
+      {entityIds.map((id) => (
+        <DisplayEntity key={id} id={id} />
+      ))}
 
       <TransformControls
         object={
-          entityRefs.find((d) => d.id === selectedEntity?.id)?.objectRef ??
+          entityRefs.find((d) => d.id === selectedEntityId)?.objectRef ??
           undefined
         }
         mode={mode}
@@ -180,14 +154,14 @@ const Scene: FC = () => {
         rotationSnap={Math.PI / 12} // 15도
         scaleSnap={0.0625}
         // visible={selectedEntity != null} // 왜인지 모르겠는데 작동 안함
-        showX={selectedEntity != null}
-        showY={selectedEntity != null}
-        showZ={selectedEntity != null}
-        enabled={selectedEntity != null}
+        showX={selectedEntityId != null}
+        showY={selectedEntityId != null}
+        showZ={selectedEntityId != null}
+        enabled={selectedEntityId != null}
         onObjectChange={(e) => {
           const target = (e as Event<string, OriginalTransformControls>).target
           setEntityTranslation(
-            selectedEntity!.id,
+            selectedEntityId!,
             target.object.position.toArray(),
           )
 
@@ -199,10 +173,10 @@ const Scene: FC = () => {
 
           // state를 건드리기 전에 object3d에 먼저 scale 값을 세팅해야 음수 값일 경우 음수 <-> 양수로 계속 바뀌면서 생기는 깜빡거림을 방지할 수 있음
           target.object.scale.fromArray(scale)
-          setEntityScale(selectedEntity!.id, scale) // 그 이후에 state 조작
+          setEntityScale(selectedEntityId!, scale) // 그 이후에 state 조작
 
           const rotation = target.object.rotation
-          setEntityRotation(selectedEntity!.id, [
+          setEntityRotation(selectedEntityId!, [
             rotation.x,
             rotation.y,
             rotation.z,
