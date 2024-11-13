@@ -1,10 +1,9 @@
 import useBlockStates from '@/hooks/useBlockStates'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
-import { FC, Ref, useEffect } from 'react'
-import { BoxHelper, Object3D } from 'three'
+import { FC, MutableRefObject, useEffect } from 'react'
+import { Object3D } from 'three'
 import { useShallow } from 'zustand/shallow'
 import Model from './Model'
-import { Helper } from '@react-three/drei'
 
 type BlockDisplayProps = {
   id: string
@@ -13,7 +12,7 @@ type BlockDisplayProps = {
   position: [number, number, number]
   rotation: [number, number, number]
   color?: number | string
-  object3DRef?: Ref<Object3D>
+  object3DRef?: MutableRefObject<Object3D>
 }
 
 const BlockDisplay: FC<BlockDisplayProps> = ({
@@ -26,13 +25,16 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
 }) => {
   const {
     thisEntity,
-    selectedEntityIds,
+    thisEntitySelected,
+    firstSelectedEntityId,
     addToSelected,
     setBDEntityBlockstates,
   } = useDisplayEntityStore(
     useShallow((state) => ({
       thisEntity: state.entities.find((e) => e.id === id),
-      selectedEntityIds: state.selectedEntityIds,
+      thisEntitySelected: state.selectedEntityIds.includes(id),
+      firstSelectedEntityId:
+        state.selectedEntityIds.length > 0 ? state.selectedEntityIds[0] : null,
       addToSelected: state.addToSelected,
       setBDEntityBlockstates: state.setBDEntityBlockstates,
     })),
@@ -67,14 +69,47 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
     setBDEntityBlockstates(id, newBlockstateObject)
   }, [blockstatesData, id, setBDEntityBlockstates])
 
+  useEffect(() => {
+    if (!thisEntitySelected) {
+      ref?.current.position.set(...position)
+    } else if (firstSelectedEntityId === id) {
+      ref?.current.position.set(0, 0, 0)
+    } else {
+      if (thisEntity?.position == null) return
+
+      const firstSelectedEntity = useDisplayEntityStore
+        .getState()
+        .entities.find((e) => e.id === firstSelectedEntityId)!
+      const delta = [
+        thisEntity.position[0] - firstSelectedEntity.position[0],
+        thisEntity.position[1] - firstSelectedEntity.position[1],
+        thisEntity.position[2] - firstSelectedEntity.position[2],
+      ] satisfies [number, number, number]
+      ref?.current.position.set(...delta)
+    }
+  }, [
+    ref,
+    position,
+    thisEntity?.position,
+    thisEntitySelected,
+    id,
+    firstSelectedEntityId,
+  ])
+  useEffect(() => {
+    if (!thisEntitySelected) {
+      ref?.current.rotation.set(...rotation)
+    }
+  }, [ref, rotation, thisEntitySelected])
+  // useEffect(() => {
+  //   if (!thisEntitySelected) {
+  //     ref?.current.scale.set(...size)
+  //   }
+  // }, [ref, size, thisEntitySelected])
+
   if (thisEntity?.kind !== 'block') return null
 
   return (
-    <object3D position={position} ref={ref} scale={size} rotation={rotation}>
-      {selectedEntityIds.includes(id) && (
-        <Helper type={BoxHelper} args={['gold']} />
-      )}
-
+    <object3D ref={ref} scale={size}>
       <group onClick={() => addToSelected(id)}>
         {(blockstatesData?.models ?? []).map((model, idx) => {
           let shouldRender = model.when.length < 1 // when 배열 안에 조건이 정의되어 있지 않다면 무조건 렌더링

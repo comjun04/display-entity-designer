@@ -20,6 +20,14 @@ export type DisplayEntityState = {
   ) => void
   setEntityRotation: (id: string, rotation: [number, number, number]) => void
   setEntityScale: (id: string, scale: [number, number, number]) => void
+  batchSetEntityTransformation: (
+    data: {
+      id: string
+      translation?: [number, number, number]
+      rotation?: [number, number, number]
+      scale?: [number, number, number]
+    }[],
+  ) => void
   setEntityDisplayType: (
     id: string,
     display: ModelDisplayPositionKey | null,
@@ -101,6 +109,23 @@ export const useDisplayEntityStore = create(
         if (entity != null) {
           entity.size = scale
         }
+      }),
+    batchSetEntityTransformation: (data) =>
+      set((state) => {
+        data.forEach((item) => {
+          const entity = state.entities.find((e) => e.id === item.id)
+          if (entity == null) return
+
+          if (item.translation != null) {
+            entity.position = item.translation
+          }
+          if (item.rotation != null) {
+            entity.rotation = item.rotation
+          }
+          if (item.scale != null) {
+            entity.size = item.scale
+          }
+        })
       }),
     setEntityDisplayType: (id, display) =>
       set((state) => {
