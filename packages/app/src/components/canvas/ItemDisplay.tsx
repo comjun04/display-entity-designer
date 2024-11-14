@@ -4,6 +4,7 @@ import { BoxHelper, Object3D } from 'three'
 import { useShallow } from 'zustand/shallow'
 import Model from './Model'
 import { Helper } from '@react-three/drei'
+import { useEditorStore } from '@/stores/editorStore'
 
 type ItemDisplayProps = {
   id: string
@@ -28,7 +29,7 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
     thisEntitySelected,
     thisEntityDisplay,
     selectedEntityIds,
-    addToSelected,
+    setSelected,
   } = useDisplayEntityStore(
     useShallow((state) => {
       const thisEntity = state.entities.find((e) => e.id === id)
@@ -37,9 +38,14 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
         thisEntitySelected: state.selectedEntityIds.includes(id),
         thisEntityDisplay: thisEntity?.display,
         selectedEntityIds: state.selectedEntityIds,
-        addToSelected: state.addToSelected,
+        setSelected: state.setSelected,
       }
     }),
+  )
+  const { usingTransformControl } = useEditorStore(
+    useShallow((state) => ({
+      usingTransformControl: state.usingTransformControl,
+    })),
   )
 
   useEffect(() => {
@@ -64,6 +70,13 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
         <Helper type={BoxHelper} args={['gold']} />
       )}
 
+      <group
+        onClick={() => {
+          if (!usingTransformControl) {
+            setSelected([id])
+          }
+        }}
+      >
         <MemoizedModel
           initialResourceLocation={`item/${type}`}
           displayType={thisEntityDisplay ?? undefined}
