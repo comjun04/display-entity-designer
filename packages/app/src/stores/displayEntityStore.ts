@@ -16,10 +16,16 @@ export type DisplayEntityState = {
   addToSelected: (id: string) => void
   setEntityTranslation: (
     id: string,
-    translation: [number, number, number],
+    translation: [number | undefined, number | undefined, number | undefined],
   ) => void
-  setEntityRotation: (id: string, rotation: [number, number, number]) => void
-  setEntityScale: (id: string, scale: [number, number, number]) => void
+  setEntityRotation: (
+    id: string,
+    rotation: [number | undefined, number | undefined, number | undefined],
+  ) => void
+  setEntityScale: (
+    id: string,
+    scale: [number | undefined, number | undefined, number | undefined],
+  ) => void
   batchSetEntityTransformation: (
     data: {
       id: string
@@ -92,23 +98,64 @@ export const useDisplayEntityStore = create(
     setEntityTranslation: (id, translation) =>
       set((state) => {
         const entity = state.entities.find((e) => e.id === id)
-        if (entity != null) {
-          entity.position = translation
+        if (entity == null) {
+          console.error(
+            `displayEntityStore.setEntityTranslation(): unknown entity ${id}`,
+          )
+          return
         }
+
+        const positionDraft = entity.position.slice() as [
+          number,
+          number,
+          number,
+        ]
+        translation.forEach((d, idx) => {
+          if (d != null) {
+            positionDraft[idx] = d
+          }
+        })
+        entity.position = positionDraft
       }),
     setEntityRotation: (id, rotation) =>
       set((state) => {
         const entity = state.entities.find((e) => e.id === id)
-        if (entity != null) {
-          entity.rotation = rotation
+        if (entity == null) {
+          console.error(
+            `displayEntityStore.setEntityRotation(): unknown entity ${id}`,
+          )
+          return
         }
+
+        const rotationDraft = entity.rotation.slice() as [
+          number,
+          number,
+          number,
+        ]
+        rotation.forEach((d, idx) => {
+          if (d != null) {
+            rotationDraft[idx] = d
+          }
+        })
+        entity.rotation = rotationDraft
       }),
     setEntityScale: (id, scale) =>
       set((state) => {
         const entity = state.entities.find((e) => e.id === id)
-        if (entity != null) {
-          entity.size = scale
+        if (entity == null) {
+          console.error(
+            `displayEntityStore.setEntityScale(): unknown entity ${id}`,
+          )
+          return
         }
+
+        const scaleDraft = entity.size.slice() as [number, number, number]
+        scale.forEach((d, idx) => {
+          if (d != null) {
+            scaleDraft[idx] = d
+          }
+        })
+        entity.size = scaleDraft
       }),
     batchSetEntityTransformation: (data) =>
       set((state) => {
