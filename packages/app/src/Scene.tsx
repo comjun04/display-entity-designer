@@ -248,7 +248,7 @@ const Scene: FC = () => {
       </group>
 
       <group ref={selectedEntityGroupRef}>
-        {selectedEntityIds.length > 0 && (
+        {selectedEntityIds.length > 1 && (
           <Helper type={BoxHelper} args={['white']} />
         )}
       </group>
