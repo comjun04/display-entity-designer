@@ -6,7 +6,15 @@ import {
 } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { FC, MutableRefObject, useEffect, useRef, useState } from 'react'
-import { BoxHelper, Color, Event, Group } from 'three'
+import {
+  BoxHelper,
+  Color,
+  Euler,
+  Event,
+  Group,
+  Quaternion,
+  Vector3,
+} from 'three'
 import { useDialogStore } from './stores/dialogStore'
 import { useEditorStore } from './stores/editorStore'
 import { useEntityRefStore } from './stores/entityRefStore'
@@ -21,9 +29,6 @@ const Scene: FC = () => {
     entityIds,
     selectedEntityIds,
     setSelected,
-    // setEntityTranslation,
-    // setEntityRotation,
-    // setEntityScale,
     batchSetEntityTransformation,
     deleteEntity,
   } = useDisplayEntityStore(
@@ -31,9 +36,6 @@ const Scene: FC = () => {
       entityIds: state.entityIds,
       selectedEntityIds: state.selectedEntityIds,
       setSelected: state.setSelected,
-      // setEntityTranslation: state.setEntityTranslation,
-      // setEntityRotation: state.setEntityRotation,
-      // setEntityScale: state.setEntityScale,
       batchSetEntityTransformation: state.batchSetEntityTransformation,
       deleteEntity: state.deleteEntity,
     })),
@@ -51,8 +53,12 @@ const Scene: FC = () => {
           : undefined,
     })),
   )
-  const { mode, setMode } = useEditorStore(
-    useShallow((state) => ({ mode: state.mode, setMode: state.setMode })),
+  const { mode, setMode, setUsingTransformControl } = useEditorStore(
+    useShallow((state) => ({
+      mode: state.mode,
+      setMode: state.setMode,
+      setUsingTransformControl: state.setUsingTransformControl,
+    })),
   )
   const { openedDialog } = useDialogStore(
     useShallow((state) => ({
@@ -112,23 +118,92 @@ const Scene: FC = () => {
     }
   }, [])
 
+  const baseEntityGroupRef = useRef<Group>(null)
   const selectedEntityGroupRef = useRef<Group>(null)
+  const selectedEntityGroupPrevData = useRef({
+    position: new Vector3(0, 0, 0),
+    rotation: new Euler(0, 0, 0),
+    scale: new Vector3(1, 1, 1),
+  })
 
   useEffect(() => {
     if (firstSelectedEntityId != null && firstSelectedEntityRef != null) {
       selectedEntityGroupRef.current?.position.copy(
         firstSelectedEntityRef.objectRef.current.position,
       )
-      // selectedEntityGroupRef.current?.scale.copy(
-      //   firstSelectedEntityRef.objectRef.current.scale,
-      // )
+      selectedEntityGroupPrevData.current.position.copy(
+        firstSelectedEntityRef.objectRef.current.position,
+      )
+
+      selectedEntityGroupRef.current?.scale.set(1, 1, 1)
+      selectedEntityGroupPrevData.current.scale.set(1, 1, 1)
+
+      selectedEntityGroupRef.current?.rotation.set(0, 0, 0)
+      selectedEntityGroupPrevData.current.rotation.set(0, 0, 0)
     }
   }, [firstSelectedEntityId, firstSelectedEntityRef])
+
+  // re-parenting
+  useEffect(() => {
+    if (
+      baseEntityGroupRef.current == null ||
+      selectedEntityGroupRef.current == null
+    ) {
+      return
+    }
+
+    for (const entityId of entityIds) {
+      const refData = useEntityRefStore
+        .getState()
+        .entityRefs.find((d) => d.id === entityId)
+      if (refData == null || refData.objectRef.current == null) continue
+
+      if (selectedEntityIds.includes(entityId)) {
+        // 해당 엔티티가 selected되었으면 별도 group에 넣기
+        if (
+          refData.objectRef.current.parent?.id !==
+          selectedEntityGroupRef.current.id
+        ) {
+          console.warn(
+            'reparenting before',
+            refData.objectRef.current.scale,
+            selectedEntityGroupRef.current.scale,
+          )
+          selectedEntityGroupRef.current.attach(refData.objectRef.current)
+          console.warn(
+            'reparenting after',
+            refData.objectRef.current.scale,
+            selectedEntityGroupRef.current.scale,
+          )
+        }
+      } else {
+        // 해당 엔티티가 selected되어있지 않으면 원래 그룹으로 되돌리기
+        if (
+          refData.objectRef.current.parent?.id !== baseEntityGroupRef.current.id
+        ) {
+          console.warn(
+            'revert reparenting before',
+            refData.objectRef.current.scale,
+            selectedEntityGroupRef.current.scale,
+          )
+          baseEntityGroupRef.current.attach(refData.objectRef.current)
+          console.warn(
+            'revert reparenting after',
+            refData.objectRef.current.scale,
+            selectedEntityGroupRef.current.scale,
+          )
+        }
+      }
+    }
+  }, [entityIds, selectedEntityIds])
 
   return (
     <Canvas
       scene={{
         background: new Color(0x222222),
+      }}
+      onPointerMissed={() => {
+        setSelected([])
       }}
     >
       {/* Axis lines */}
@@ -166,19 +241,15 @@ const Scene: FC = () => {
         <lineBasicMaterial color={0x0000ff} />
       </line>
 
-      {entityIds
-        .filter((entityId) => !selectedEntityIds.includes(entityId))
-        .map((id) => (
+      <group ref={baseEntityGroupRef}>
+        {entityIds.map((id) => (
           <DisplayEntity key={id} id={id} />
         ))}
+      </group>
 
       <group ref={selectedEntityGroupRef}>
-        {selectedEntityIds.map((id) => (
-          <DisplayEntity key={id} id={id} />
-        ))}
-
         {selectedEntityIds.length > 0 && (
-          <Helper type={BoxHelper} args={['gold']} />
+          <Helper type={BoxHelper} args={['white']} />
         )}
       </group>
 
@@ -196,24 +267,28 @@ const Scene: FC = () => {
         showY={selectedEntityIds.length > 0}
         showZ={selectedEntityIds.length > 0}
         enabled={selectedEntityIds.length > 0}
-        onMouseUp={(e) => {
+        onMouseDown={() => {
+          setUsingTransformControl(true)
+        }}
+        onMouseUp={() => {
+          setUsingTransformControl(false)
+        }}
+        onObjectChange={(e) => {
           const target = (e as Event<string, OriginalTransformControls>).target
           const entities = useDisplayEntityStore.getState().entities
-          const firstSelectedEntity = entities.find(
-            (e) => e.id === firstSelectedEntityId,
-          )!
+
+          // console.log(performance.now(), target.object.position)
+
+          // ==========
 
           if (mode === 'translate') {
             const positionDelta = target.object.position
               .clone()
-              .setX(target.object.position.x - firstSelectedEntity.position[0])
-              .setY(target.object.position.y - firstSelectedEntity.position[1])
-              .setZ(target.object.position.z - firstSelectedEntity.position[2])
+              .sub(selectedEntityGroupPrevData.current.position)
             const batchUpdateData = entities
               .filter((e) => selectedEntityIds.includes(e.id))
               .map((entity) => {
-                const newPosition = positionDelta
-                  .clone()
+                const newPosition = new Vector3()
                   .setX(entity.position[0] + positionDelta.x)
                   .setY(entity.position[1] + positionDelta.y)
                   .setZ(entity.position[2] + positionDelta.z)
@@ -224,70 +299,95 @@ const Scene: FC = () => {
                 }
               })
             batchSetEntityTransformation(batchUpdateData)
+
+            selectedEntityGroupPrevData.current.position.copy(
+              target.object.position,
+            )
           } else if (mode === 'rotate') {
-            const rotationDelta = [
-              target.object.rotation.x - firstSelectedEntity.rotation[0],
-              target.object.rotation.y - firstSelectedEntity.rotation[1],
-              target.object.rotation.z - firstSelectedEntity.rotation[2],
-            ] satisfies [number, number, number]
             const batchUpdateData = entities
               .filter((e) => selectedEntityIds.includes(e.id))
               .map((entity) => {
-                const newRotation = [
-                  entity.rotation[0] + rotationDelta[0],
-                  entity.rotation[1] + rotationDelta[1],
-                  entity.rotation[2] + rotationDelta[2],
-                ] satisfies [number, number, number]
+                const refData = useEntityRefStore
+                  .getState()
+                  .entityRefs.find((d) => d.id === entity.id)!
+
+                const newTranslation = new Vector3()
+                refData.objectRef.current.getWorldPosition(newTranslation)
+
+                const newRotationQ = new Quaternion()
+                refData.objectRef.current.getWorldQuaternion(newRotationQ)
+                const newRotationE = new Euler()
+                  .setFromQuaternion(newRotationQ)
+                  .toArray()
+                  .slice(0, 3) as [number, number, number]
+
                 return {
                   id: entity.id,
-                  rotation: newRotation,
+                  rotation: newRotationE,
+                  translation: newTranslation.toArray(),
                 }
               })
+
             batchSetEntityTransformation(batchUpdateData)
+
+            selectedEntityGroupPrevData.current.rotation.copy(
+              target.object.rotation,
+            )
           } else if (mode === 'scale') {
+            const scale = target.object.scale.toArray().map(Math.abs) as [
+              number,
+              number,
+              number,
+            ]
+
+            // state를 건드리기 전에 object3d에 먼저 scale 값을 세팅해야 음수 값일 경우 음수 <-> 양수로 계속 바뀌면서 생기는 깜빡거림을 방지할 수 있음
+            target.object.scale.fromArray(scale)
+
             const batchUpdateData = entities
               .filter((e) => selectedEntityIds.includes(e.id))
               .map((entity) => {
-                const newScale = target.object.scale
-                  .clone()
-                  .setX(entity.size[0] * target.object.scale.x)
-                  .setY(entity.size[1] * target.object.scale.y)
-                  .setZ(entity.size[2] * target.object.scale.z)
+                const newScale = [
+                  (entity.size[0] /
+                    selectedEntityGroupPrevData.current.scale.x) *
+                    target.object.scale.x,
+                  (entity.size[1] /
+                    selectedEntityGroupPrevData.current.scale.y) *
+                    target.object.scale.y,
+                  (entity.size[2] /
+                    selectedEntityGroupPrevData.current.scale.z) *
+                    target.object.scale.z,
+                ] satisfies [number, number, number]
 
                 // group scale이 처음 크기로 돌아간 후 display entity의 scale이 변경될 경우 한 번 깜빡이는 현상이 발생함
                 // 이를 방지하기 위해 state로 설정하기 전에 scale을 여기서 먼저 조정
-                const entityRefData = useEntityRefStore
+                // const entityRefData = useEntityRefStore
+                //   .getState()
+                //   .entityRefs.find((d) => d.id === entity.id)
+                // entityRefData?.objectRef.current.scale.copy(newScale)
+
+                // 다중 선택되어 있을 경우 그룹 중심점과 떨어져 있는 object들은 scale 시 위치가 달라짐
+                // 따라서 world location을 별도로 계산하여 state에 반영
+                const refData = useEntityRefStore
                   .getState()
                   .entityRefs.find((d) => d.id === entity.id)
-                entityRefData?.objectRef.current.scale.copy(newScale)
+                const updatedPosition = refData!.objectRef.current.localToWorld(
+                  new Vector3(0, 0, 0),
+                )
 
                 return {
                   id: entity.id,
-                  scale: newScale.toArray(),
+                  scale: newScale,
+                  translation: updatedPosition.toArray(),
                 }
               })
             batchSetEntityTransformation(batchUpdateData)
 
+            selectedEntityGroupPrevData.current.scale.copy(target.object.scale)
+
             // 이동 후 group scale을 처음 크기로 다시 변경
             // 이렇게 해야 다음번 이동을 제대로 측정할 수 있음
-            target.object.scale.set(1, 1, 1)
+            // target.object.scale.set(1, 1, 1)
           }
-        }}
-        onObjectChange={(e) => {
-          const target = (e as Event<string, OriginalTransformControls>).target
-
-          const scale = target.object.scale.toArray().map(Math.abs) as [
-            number,
-            number,
-            number,
-          ]
-
-          // state를 건드리기 전에 object3d에 먼저 scale 값을 세팅해야 음수 값일 경우 음수 <-> 양수로 계속 바뀌면서 생기는 깜빡거림을 방지할 수 있음
-          target.object.scale.fromArray(scale)
-          // setEntityScale(firstSelectedEntityId!, scale) // 그 이후에 state 조작
-        }}
-        onPointerMissed={() => {
-          setSelected([])
         }}
       />
 

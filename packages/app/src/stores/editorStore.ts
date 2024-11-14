@@ -6,6 +6,9 @@ type EditorMode = 'translate' | 'rotate' | 'scale'
 type EditorState = {
   mode: EditorMode
   setMode: (newMode: EditorMode) => void
+
+  usingTransformControl: boolean
+  setUsingTransformControl: (value: boolean) => void
 }
 
 export const useEditorStore = create(
@@ -14,6 +17,12 @@ export const useEditorStore = create(
     setMode: (newMode) =>
       set((state) => {
         state.mode = newMode
+      }),
+
+    usingTransformControl: false,
+    setUsingTransformControl: (value) =>
+      set((state) => {
+        state.usingTransformControl = value
       }),
   })),
 )

@@ -1,5 +1,5 @@
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
-import { FC, Ref } from 'react'
+import { FC, MutableRefObject, useEffect } from 'react'
 import { BoxHelper, Object3D } from 'three'
 import { useShallow } from 'zustand/shallow'
 import Model from './Model'
@@ -11,7 +11,7 @@ type ItemDisplayProps = {
   size: [number, number, number]
   position: [number, number, number]
   rotation: [number, number, number]
-  object3DRef?: Ref<Object3D>
+  object3DRef?: MutableRefObject<Object3D>
 }
 
 const ItemDisplay: FC<ItemDisplayProps> = ({
@@ -22,21 +22,42 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
   rotation,
   object3DRef: ref,
 }) => {
-  const { thisEntityDisplay, selectedEntityIds, addToSelected } =
-    useDisplayEntityStore(
-      useShallow((state) => {
-        const thisEntity = state.entities.find((e) => e.id === id)
+  const {
+    thisEntitySelected,
+    thisEntityDisplay,
+    selectedEntityIds,
+    addToSelected,
+  } = useDisplayEntityStore(
+    useShallow((state) => {
+      const thisEntity = state.entities.find((e) => e.id === id)
 
-        return {
-          thisEntityDisplay: thisEntity?.display,
-          selectedEntityIds: state.selectedEntityIds,
-          addToSelected: state.addToSelected,
-        }
-      }),
-    )
+      return {
+        thisEntitySelected: state.selectedEntityIds.includes(id),
+        thisEntityDisplay: thisEntity?.display,
+        selectedEntityIds: state.selectedEntityIds,
+        addToSelected: state.addToSelected,
+      }
+    }),
+  )
+
+  useEffect(() => {
+    if (!thisEntitySelected) {
+      ref?.current.position.set(...position)
+    }
+  }, [ref, position, thisEntitySelected])
+  useEffect(() => {
+    if (!thisEntitySelected) {
+      ref?.current.rotation.set(...rotation)
+    }
+  }, [ref, rotation, thisEntitySelected])
+  useEffect(() => {
+    if (!thisEntitySelected) {
+      ref?.current.scale.set(...size)
+    }
+  }, [ref, size, thisEntitySelected])
 
   return (
-    <object3D position={position} scale={size} rotation={rotation} ref={ref}>
+    <object3D ref={ref}>
       {selectedEntityIds.includes(id) && (
         <Helper type={BoxHelper} args={['gold']} />
       )}
