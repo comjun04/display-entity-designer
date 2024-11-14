@@ -45,19 +45,26 @@ const Scene: FC = () => {
   const firstSelectedEntityId =
     selectedEntityIds.length > 0 ? selectedEntityIds[0] : null
 
-  const { firstSelectedEntityRef } = useEntityRefStore(
-    useShallow((state) => ({
-      firstSelectedEntityRef:
-        firstSelectedEntityId != null
-          ? state.entityRefs.find((d) => d.id === firstSelectedEntityId)
-          : undefined,
-    })),
-  )
-  const { mode, setMode, setUsingTransformControl } = useEditorStore(
+  const { firstSelectedEntityRefData: firstSelectedEntityRefData } =
+    useEntityRefStore(
+      useShallow((state) => ({
+        firstSelectedEntityRefData:
+          firstSelectedEntityId != null
+            ? state.entityRefs.find((d) => d.id === firstSelectedEntityId)
+            : undefined,
+      })),
+    )
+  const {
+    mode,
+    setMode,
+    setUsingTransformControl,
+    setSelectionBaseTransformation,
+  } = useEditorStore(
     useShallow((state) => ({
       mode: state.mode,
       setMode: state.setMode,
       setUsingTransformControl: state.setUsingTransformControl,
+      setSelectionBaseTransformation: state.setSelectionBaseTransformation,
     })),
   )
   const { openedDialog } = useDialogStore(
@@ -127,12 +134,12 @@ const Scene: FC = () => {
   })
 
   useEffect(() => {
-    if (firstSelectedEntityId != null && firstSelectedEntityRef != null) {
+    if (firstSelectedEntityId != null && firstSelectedEntityRefData != null) {
       selectedEntityGroupRef.current?.position.copy(
-        firstSelectedEntityRef.objectRef.current.position,
+        firstSelectedEntityRefData.objectRef.current.position,
       )
       selectedEntityGroupPrevData.current.position.copy(
-        firstSelectedEntityRef.objectRef.current.position,
+        firstSelectedEntityRefData.objectRef.current.position,
       )
 
       selectedEntityGroupRef.current?.scale.set(1, 1, 1)
@@ -141,7 +148,7 @@ const Scene: FC = () => {
       selectedEntityGroupRef.current?.rotation.set(0, 0, 0)
       selectedEntityGroupPrevData.current.rotation.set(0, 0, 0)
     }
-  }, [firstSelectedEntityId, firstSelectedEntityRef])
+  }, [firstSelectedEntityId, firstSelectedEntityRefData])
 
   // re-parenting
   useEffect(() => {
@@ -388,7 +395,32 @@ const Scene: FC = () => {
             // target.object.scale.set(1, 1, 1)
           }
         }}
-        onObjectChange={() => {}}
+        onObjectChange={() => {
+          const firstSelectedEntityRef =
+            firstSelectedEntityRefData?.objectRef.current
+          if (firstSelectedEntityRef == null) return
+
+          const worldPosition = firstSelectedEntityRef.localToWorld(
+            new Vector3(0, 0, 0),
+          )
+
+          const worldQuaternion = new Quaternion()
+          firstSelectedEntityRef.getWorldQuaternion(worldQuaternion)
+          const worldRotation = new Euler().setFromQuaternion(worldQuaternion)
+
+          const worldScale = new Vector3()
+          firstSelectedEntityRef.getWorldScale(worldScale)
+
+          setSelectionBaseTransformation({
+            position: worldPosition.toArray(),
+            rotation: worldRotation.toArray().slice(0, 3) as [
+              number,
+              number,
+              number,
+            ],
+            size: worldScale.toArray(),
+          })
+        }}
       />
 
       <ambientLight intensity={1.7} color={0xffffff} />

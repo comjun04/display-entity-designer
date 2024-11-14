@@ -3,6 +3,7 @@ import XYZInput from './XYZInput'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useShallow } from 'zustand/shallow'
 import { MathUtils } from 'three'
+import { useEditorStore } from '@/stores/editorStore'
 
 const TransformsPanel: FC = () => {
   const {
@@ -25,19 +26,28 @@ const TransformsPanel: FC = () => {
           : null,
     })),
   )
+  const { selectionBaseTransformation } = useEditorStore(
+    useShallow((state) => {
+      return {
+        selectionBaseTransformation: state.selectionBaseTransformation,
+      }
+    }),
+  )
 
   // 소수점 9자리에서 반올림
-  const translation = (firstSelectedEntity?.position ?? [0, 0, 0]).map(
+  const translation = (selectionBaseTransformation.position ?? [0, 0, 0]).map(
     (d) => Math.round(d * 1_0000_0000) / 1_0000_0000,
   ) as [number, number, number]
 
-  const rotation = (firstSelectedEntity?.rotation ?? [0, 0, 0]).map((d) => {
-    const degree = MathUtils.radToDeg(d)
-    const rounded = Math.round(degree * 1_0000_0000) / 1_0000_0000
-    return rounded
-  }) as [number, number, number]
+  const rotation = (selectionBaseTransformation.rotation ?? [0, 0, 0]).map(
+    (d) => {
+      const degree = MathUtils.radToDeg(d)
+      const rounded = Math.round(degree * 1_0000_0000) / 1_0000_0000
+      return rounded
+    },
+  ) as [number, number, number]
 
-  const scale = (firstSelectedEntity?.size ?? [1, 1, 1]).map(
+  const scale = (selectionBaseTransformation.size ?? [1, 1, 1]).map(
     (d) => Math.round(d * 1_0000_0000) / 1_0000_0000,
   ) as [number, number, number]
 
