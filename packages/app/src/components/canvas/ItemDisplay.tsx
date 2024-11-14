@@ -1,5 +1,5 @@
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
-import { FC, MutableRefObject, useEffect } from 'react'
+import { FC, memo, MutableRefObject, useEffect } from 'react'
 import { BoxHelper, Object3D } from 'three'
 import { useShallow } from 'zustand/shallow'
 import Model from './Model'
@@ -13,6 +13,8 @@ type ItemDisplayProps = {
   rotation: [number, number, number]
   object3DRef?: MutableRefObject<Object3D>
 }
+
+const MemoizedModel = memo(Model)
 
 const ItemDisplay: FC<ItemDisplayProps> = ({
   id,
@@ -62,8 +64,7 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
         <Helper type={BoxHelper} args={['gold']} />
       )}
 
-      <group onClick={() => addToSelected(id)}>
-        <Model
+        <MemoizedModel
           initialResourceLocation={`item/${type}`}
           displayType={thisEntityDisplay ?? undefined}
         />

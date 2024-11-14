@@ -1,6 +1,6 @@
 import useBlockStates from '@/hooks/useBlockStates'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
-import { FC, MutableRefObject, useEffect } from 'react'
+import { FC, memo, MutableRefObject, useEffect } from 'react'
 import { BoxHelper, Object3D } from 'three'
 import { useShallow } from 'zustand/shallow'
 import Model from './Model'
@@ -16,6 +16,8 @@ type BlockDisplayProps = {
   color?: number | string
   object3DRef?: MutableRefObject<Object3D>
 }
+
+const MemoizedModel = memo(Model)
 
 const BlockDisplay: FC<BlockDisplayProps> = ({
   id,
@@ -154,7 +156,7 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
           // apply가 여러 개 있는 경우(랜덤), 맨 처음 것만 고정으로 사용
           const modelToApply = model.apply[0]
           return (
-            <Model
+            <MemoizedModel
               key={idx}
               initialResourceLocation={modelToApply.model}
               xRotation={modelToApply.x}
