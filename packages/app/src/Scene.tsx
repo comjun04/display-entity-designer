@@ -270,10 +270,9 @@ const Scene: FC = () => {
         onMouseDown={() => {
           setUsingTransformControl(true)
         }}
-        onMouseUp={() => {
+        onMouseUp={(e) => {
           setUsingTransformControl(false)
-        }}
-        onObjectChange={(e) => {
+
           const target = (e as Event<string, OriginalTransformControls>).target
           const entities = useDisplayEntityStore.getState().entities
 
@@ -389,6 +388,7 @@ const Scene: FC = () => {
             // target.object.scale.set(1, 1, 1)
           }
         }}
+        onObjectChange={() => {}}
       />
 
       <ambientLight intensity={1.7} color={0xffffff} />
