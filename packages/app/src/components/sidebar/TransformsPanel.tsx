@@ -1,7 +1,8 @@
-import { FC, useMemo } from 'react'
+import { FC } from 'react'
 import XYZInput from './XYZInput'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useShallow } from 'zustand/shallow'
+import { MathUtils } from 'three'
 
 const TransformsPanel: FC = () => {
   const {
@@ -25,26 +26,20 @@ const TransformsPanel: FC = () => {
     })),
   )
 
-  const translation = useMemo(
-    () =>
-      firstSelectedEntity?.position ?? ([0, 0, 0] as [number, number, number]),
-    [firstSelectedEntity?.position],
-  )
-  const rotation = useMemo(
-    () =>
-      (firstSelectedEntity?.rotation ?? [0, 0, 0]).map((d) => {
-        const degree = (d / Math.PI) * 180
+  // 소수점 9자리에서 반올림
+  const translation = (firstSelectedEntity?.position ?? [0, 0, 0]).map(
+    (d) => Math.round(d * 1_0000_0000) / 1_0000_0000,
+  ) as [number, number, number]
 
-        // 소수점 7자리에서 반올림
-        const rounded = Math.round(degree * 1000000) / 1000000
-        return rounded
-      }) as [number, number, number],
-    [firstSelectedEntity?.rotation],
-  )
-  const scale = useMemo(
-    () => firstSelectedEntity?.size ?? ([1, 1, 1] as [number, number, number]),
-    [firstSelectedEntity?.size],
-  )
+  const rotation = (firstSelectedEntity?.rotation ?? [0, 0, 0]).map((d) => {
+    const degree = MathUtils.radToDeg(d)
+    const rounded = Math.round(degree * 1_0000_0000) / 1_0000_0000
+    return rounded
+  }) as [number, number, number]
+
+  const scale = (firstSelectedEntity?.size ?? [1, 1, 1]).map(
+    (d) => Math.round(d * 1_0000_0000) / 1_0000_0000,
+  ) as [number, number, number]
 
   if (firstSelectedEntity == null) return null
 
