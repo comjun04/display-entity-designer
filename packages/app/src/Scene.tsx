@@ -133,24 +133,7 @@ const Scene: FC = () => {
     scale: new Vector3(1, 1, 1),
   })
 
-  useEffect(() => {
-    if (firstSelectedEntityId != null && firstSelectedEntityRefData != null) {
-      selectedEntityGroupRef.current?.position.copy(
-        firstSelectedEntityRefData.objectRef.current.position,
-      )
-      selectedEntityGroupPrevData.current.position.copy(
-        firstSelectedEntityRefData.objectRef.current.position,
-      )
-
-      selectedEntityGroupRef.current?.scale.set(1, 1, 1)
-      selectedEntityGroupPrevData.current.scale.set(1, 1, 1)
-
-      selectedEntityGroupRef.current?.rotation.set(0, 0, 0)
-      selectedEntityGroupPrevData.current.rotation.set(0, 0, 0)
-    }
-  }, [firstSelectedEntityId, firstSelectedEntityRefData])
-
-  // re-parenting
+  // 선택 해제된 object를 다중선택 그룹에서 빼냄 (world transformation 보존)
   useEffect(() => {
     if (
       baseEntityGroupRef.current == null ||
@@ -160,46 +143,94 @@ const Scene: FC = () => {
     }
 
     for (const entityId of entityIds) {
+      if (selectedEntityIds.includes(entityId)) continue
+
+      const refData = useEntityRefStore
+        .getState()
+        .entityRefs.find((d) => d.id === entityId)
+      if (refData == null || refData.objectRef.current == null) return
+
+      if (
+        refData.objectRef.current.parent?.id !== baseEntityGroupRef.current.id
+      ) {
+        console.warn(
+          'revert reparenting before',
+          refData.objectRef.current.scale,
+          selectedEntityGroupRef.current.scale,
+        )
+        baseEntityGroupRef.current.attach(refData.objectRef.current)
+        console.warn(
+          'revert reparenting after',
+          refData.objectRef.current.scale,
+          selectedEntityGroupRef.current.scale,
+        )
+      }
+    }
+  }, [entityIds, selectedEntityIds])
+
+  // 다중선택 그룹 위치 이동
+  useEffect(() => {
+    if (
+      firstSelectedEntityId == null ||
+      firstSelectedEntityRefData == null ||
+      selectedEntityGroupRef.current == null
+    )
+      return
+
+    // 다중선택 그룹 base position, rotation은 첫 번째 선택한 object를 따라감
+    selectedEntityGroupRef.current.position.copy(
+      firstSelectedEntityRefData.objectRef.current.position,
+    )
+    selectedEntityGroupPrevData.current.position.copy(
+      firstSelectedEntityRefData.objectRef.current.position,
+    )
+
+    selectedEntityGroupRef.current.rotation.copy(
+      firstSelectedEntityRefData.objectRef.current.rotation,
+    )
+    selectedEntityGroupPrevData.current.rotation.copy(
+      firstSelectedEntityRefData.objectRef.current.rotation,
+    )
+
+    // 다만 scale은 항상 초기화
+    selectedEntityGroupRef.current.scale.set(1, 1, 1)
+    selectedEntityGroupPrevData.current.scale.set(1, 1, 1)
+  }, [firstSelectedEntityId, firstSelectedEntityRefData])
+
+  // re-parenting
+  // 선택된 object를 다중선택 그룹에 넣기 (world transformation 보존)
+  useEffect(() => {
+    if (
+      baseEntityGroupRef.current == null ||
+      selectedEntityGroupRef.current == null
+    ) {
+      return
+    }
+
+    for (const entityId of entityIds) {
+      if (!selectedEntityIds.includes(entityId)) continue
+
       const refData = useEntityRefStore
         .getState()
         .entityRefs.find((d) => d.id === entityId)
       if (refData == null || refData.objectRef.current == null) continue
 
-      if (selectedEntityIds.includes(entityId)) {
-        // 해당 엔티티가 selected되었으면 별도 group에 넣기
-        if (
-          refData.objectRef.current.parent?.id !==
-          selectedEntityGroupRef.current.id
-        ) {
-          console.warn(
-            'reparenting before',
-            refData.objectRef.current.scale,
-            selectedEntityGroupRef.current.scale,
-          )
-          selectedEntityGroupRef.current.attach(refData.objectRef.current)
-          console.warn(
-            'reparenting after',
-            refData.objectRef.current.scale,
-            selectedEntityGroupRef.current.scale,
-          )
-        }
-      } else {
-        // 해당 엔티티가 selected되어있지 않으면 원래 그룹으로 되돌리기
-        if (
-          refData.objectRef.current.parent?.id !== baseEntityGroupRef.current.id
-        ) {
-          console.warn(
-            'revert reparenting before',
-            refData.objectRef.current.scale,
-            selectedEntityGroupRef.current.scale,
-          )
-          baseEntityGroupRef.current.attach(refData.objectRef.current)
-          console.warn(
-            'revert reparenting after',
-            refData.objectRef.current.scale,
-            selectedEntityGroupRef.current.scale,
-          )
-        }
+      // 해당 엔티티가 selected되었으면 별도 group에 넣기
+      if (
+        refData.objectRef.current.parent?.id !==
+        selectedEntityGroupRef.current.id
+      ) {
+        console.warn(
+          'reparenting before',
+          refData.objectRef.current.scale,
+          selectedEntityGroupRef.current.scale,
+        )
+        selectedEntityGroupRef.current.attach(refData.objectRef.current)
+        console.warn(
+          'reparenting after',
+          refData.objectRef.current.scale,
+          selectedEntityGroupRef.current.scale,
+        )
       }
     }
   }, [entityIds, selectedEntityIds])
