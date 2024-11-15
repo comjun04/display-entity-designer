@@ -371,14 +371,12 @@ const Scene: FC = () => {
               target.object.rotation,
             )
           } else if (mode === 'scale') {
-            const scale = target.object.scale.toArray().map(Math.abs) as [
-              number,
-              number,
-              number,
-            ]
+            const absoluteScale = target.object.scale
+              .toArray()
+              .map(Math.abs) as [number, number, number]
 
             // state를 건드리기 전에 object3d에 먼저 scale 값을 세팅해야 음수 값일 경우 음수 <-> 양수로 계속 바뀌면서 생기는 깜빡거림을 방지할 수 있음
-            target.object.scale.fromArray(scale)
+            target.object.scale.fromArray(absoluteScale)
 
             const batchUpdateData = entities
               .filter((e) => selectedEntityIds.includes(e.id))
@@ -386,13 +384,13 @@ const Scene: FC = () => {
                 const newScale = [
                   (entity.size[0] /
                     selectedEntityGroupPrevData.current.scale.x) *
-                    target.object.scale.x,
+                    absoluteScale[0],
                   (entity.size[1] /
                     selectedEntityGroupPrevData.current.scale.y) *
-                    target.object.scale.y,
+                    absoluteScale[1],
                   (entity.size[2] /
                     selectedEntityGroupPrevData.current.scale.z) *
-                    target.object.scale.z,
+                    absoluteScale[2],
                 ] satisfies [number, number, number]
 
                 // group scale이 처음 크기로 돌아간 후 display entity의 scale이 변경될 경우 한 번 깜빡이는 현상이 발생함
@@ -419,14 +417,24 @@ const Scene: FC = () => {
               })
             batchSetEntityTransformation(batchUpdateData)
 
-            selectedEntityGroupPrevData.current.scale.copy(target.object.scale)
+            selectedEntityGroupPrevData.current.scale.fromArray(absoluteScale)
 
             // 이동 후 group scale을 처음 크기로 다시 변경
             // 이렇게 해야 다음번 이동을 제대로 측정할 수 있음
             // target.object.scale.set(1, 1, 1)
           }
         }}
-        onObjectChange={() => {
+        onObjectChange={(e) => {
+          const target = (e as Event<string, OriginalTransformControls>).target
+          // scale은 양수 값만 가질 수 있음
+          const absoluteScale = target.object.scale.toArray().map(Math.abs) as [
+            number,
+            number,
+            number,
+          ]
+          // state를 건드리기 전에 object3d에 먼저 scale 값을 세팅해야 음수 값일 경우 음수 <-> 양수로 계속 바뀌면서 생기는 깜빡거림을 방지할 수 있음
+          target.object.scale.fromArray(absoluteScale)
+
           const firstSelectedEntityRef =
             firstSelectedEntityRefData?.objectRef.current
           if (firstSelectedEntityRef == null) return
