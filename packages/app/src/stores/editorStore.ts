@@ -20,7 +20,11 @@ type EditorState = {
    * 선택된 display entity transformation 실시간 업데이트용
    */
   selectionBaseTransformation: TransformationData
-  setSelectionBaseTransformation: (data: Partial<TransformationData>) => void
+  setSelectionBaseTransformation: (data: {
+    position?: [number | undefined, number | undefined, number | undefined]
+    rotation?: [number | undefined, number | undefined, number | undefined]
+    size?: [number | undefined, number | undefined, number | undefined]
+  }) => void
 }
 
 export const useEditorStore = create(
@@ -45,13 +49,34 @@ export const useEditorStore = create(
     setSelectionBaseTransformation: (data) =>
       set((state) => {
         if (data?.position != null) {
-          state.selectionBaseTransformation.position = data.position
+          const positionDraft =
+            state.selectionBaseTransformation.position.slice() as Number3Tuple
+          data.position.forEach((d, idx) => {
+            if (d != null) {
+              positionDraft[idx] = d
+            }
+          })
+          state.selectionBaseTransformation.position = positionDraft
         }
         if (data?.rotation != null) {
-          state.selectionBaseTransformation.rotation = data.rotation
+          const rotationDraft =
+            state.selectionBaseTransformation.rotation.slice() as Number3Tuple
+          data.rotation.forEach((d, idx) => {
+            if (d != null) {
+              rotationDraft[idx] = d
+            }
+          })
+          state.selectionBaseTransformation.rotation = rotationDraft
         }
         if (data?.size != null) {
-          state.selectionBaseTransformation.size = data.size
+          const scaleDraft =
+            state.selectionBaseTransformation.size.slice() as Number3Tuple
+          data.size.forEach((d, idx) => {
+            if (d != null) {
+              scaleDraft[idx] = d
+            }
+          })
+          state.selectionBaseTransformation.size = scaleDraft
         }
       }),
   })),
