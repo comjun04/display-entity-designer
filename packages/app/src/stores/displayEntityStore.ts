@@ -1,5 +1,5 @@
 import { useEntityRefStore } from '@/stores/entityRefStore'
-import { DisplayEntity, ModelDisplayPositionKey } from '@/types'
+import { DisplayEntity, ModelDisplayPositionKey, Number3Tuple } from '@/types'
 import { nanoid } from 'nanoid'
 import { createRef, MutableRefObject } from 'react'
 import { Object3D } from 'three'
@@ -29,9 +29,9 @@ export type DisplayEntityState = {
   batchSetEntityTransformation: (
     data: {
       id: string
-      translation?: [number, number, number]
-      rotation?: [number, number, number]
-      scale?: [number, number, number]
+      translation?: Number3Tuple
+      rotation?: Number3Tuple
+      scale?: Number3Tuple
     }[],
   ) => void
   setEntityDisplayType: (
@@ -105,11 +105,7 @@ export const useDisplayEntityStore = create(
           return
         }
 
-        const positionDraft = entity.position.slice() as [
-          number,
-          number,
-          number,
-        ]
+        const positionDraft = entity.position.slice() as Number3Tuple
         translation.forEach((d, idx) => {
           if (d != null) {
             positionDraft[idx] = d
@@ -127,11 +123,7 @@ export const useDisplayEntityStore = create(
           return
         }
 
-        const rotationDraft = entity.rotation.slice() as [
-          number,
-          number,
-          number,
-        ]
+        const rotationDraft = entity.rotation.slice() as Number3Tuple
         rotation.forEach((d, idx) => {
           if (d != null) {
             rotationDraft[idx] = d
@@ -149,7 +141,7 @@ export const useDisplayEntityStore = create(
           return
         }
 
-        const scaleDraft = entity.size.slice() as [number, number, number]
+        const scaleDraft = entity.size.slice() as Number3Tuple
         scale.forEach((d, idx) => {
           if (d != null) {
             scaleDraft[idx] = d

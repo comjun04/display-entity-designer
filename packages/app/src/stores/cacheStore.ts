@@ -1,4 +1,4 @@
-import { ModelDisplayPositionKey, ModelElement } from '@/types'
+import { ModelDisplayPositionKey, ModelElement, Number3Tuple } from '@/types'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
@@ -9,9 +9,9 @@ type ModelData = {
   display: Record<
     ModelDisplayPositionKey,
     {
-      rotation?: [number, number, number]
-      translation?: [number, number, number]
-      scale?: [number, number, number]
+      rotation?: Number3Tuple
+      translation?: Number3Tuple
+      scale?: Number3Tuple
     }
   >
   elements: ModelElement[]

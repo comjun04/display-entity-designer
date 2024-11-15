@@ -23,6 +23,7 @@ import { useShallow } from 'zustand/shallow'
 import CustomCameraControls from './CustomCameraControls'
 import { TransformControls as OriginalTransformControls } from 'three/examples/jsm/Addons.js'
 import DisplayEntity from './components/canvas/DisplayEntity'
+import { Number3Tuple } from './types'
 
 const Scene: FC = () => {
   const {
@@ -356,7 +357,7 @@ const Scene: FC = () => {
                 const newRotationE = new Euler()
                   .setFromQuaternion(newRotationQ)
                   .toArray()
-                  .slice(0, 3) as [number, number, number]
+                  .slice(0, 3) as Number3Tuple
 
                 return {
                   id: entity.id,
@@ -373,7 +374,7 @@ const Scene: FC = () => {
           } else if (mode === 'scale') {
             const absoluteScale = target.object.scale
               .toArray()
-              .map(Math.abs) as [number, number, number]
+              .map(Math.abs) as Number3Tuple
 
             // state를 건드리기 전에 object3d에 먼저 scale 값을 세팅해야 음수 값일 경우 음수 <-> 양수로 계속 바뀌면서 생기는 깜빡거림을 방지할 수 있음
             target.object.scale.fromArray(absoluteScale)
@@ -391,7 +392,7 @@ const Scene: FC = () => {
                   (entity.size[2] /
                     selectedEntityGroupPrevData.current.scale.z) *
                     absoluteScale[2],
-                ] satisfies [number, number, number]
+                ] satisfies Number3Tuple
 
                 // group scale이 처음 크기로 돌아간 후 display entity의 scale이 변경될 경우 한 번 깜빡이는 현상이 발생함
                 // 이를 방지하기 위해 state로 설정하기 전에 scale을 여기서 먼저 조정
@@ -427,11 +428,9 @@ const Scene: FC = () => {
         onObjectChange={(e) => {
           const target = (e as Event<string, OriginalTransformControls>).target
           // scale은 양수 값만 가질 수 있음
-          const absoluteScale = target.object.scale.toArray().map(Math.abs) as [
-            number,
-            number,
-            number,
-          ]
+          const absoluteScale = target.object.scale
+            .toArray()
+            .map(Math.abs) as Number3Tuple
           // state를 건드리기 전에 object3d에 먼저 scale 값을 세팅해야 음수 값일 경우 음수 <-> 양수로 계속 바뀌면서 생기는 깜빡거림을 방지할 수 있음
           target.object.scale.fromArray(absoluteScale)
 
@@ -452,11 +451,7 @@ const Scene: FC = () => {
 
           setSelectionBaseTransformation({
             position: worldPosition.toArray(),
-            rotation: worldRotation.toArray().slice(0, 3) as [
-              number,
-              number,
-              number,
-            ],
+            rotation: worldRotation.toArray().slice(0, 3) as Number3Tuple,
             size: worldScale.toArray(),
           })
         }}

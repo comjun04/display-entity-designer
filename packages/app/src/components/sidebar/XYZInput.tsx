@@ -1,3 +1,4 @@
+import { Number3Tuple } from '@/types'
 import { FC, useState } from 'react'
 
 type NumberInputProps = {
@@ -8,9 +9,9 @@ type NumberInputProps = {
 }
 
 type XYZInputProps = {
-  value: [number, number, number]
+  value: Number3Tuple
   allowNegative?: boolean
-  onChange?: (xyz: [number, number, number]) => void
+  onChange?: (xyz: Number3Tuple) => void
 }
 
 const NumberInput: FC<NumberInputProps> = ({

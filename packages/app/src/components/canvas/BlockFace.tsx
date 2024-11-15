@@ -1,4 +1,5 @@
 import { useCacheStore } from '@/stores/cacheStore'
+import { Number3Tuple } from '@/types'
 import { getTextureColor } from '@/utils'
 import { useTexture } from '@react-three/drei'
 import { FC, useEffect } from 'react'
@@ -9,9 +10,9 @@ type BlockFaceProps = {
   faceName: 'up' | 'down' | 'north' | 'south' | 'west' | 'east'
   modelResourceLocation: string
   textureResourceLocation: string
-  parentElementSize: [number, number, number]
-  parentElementFrom: [number, number, number]
-  parentElementTo: [number, number, number]
+  parentElementSize: Number3Tuple
+  parentElementFrom: Number3Tuple
+  parentElementTo: Number3Tuple
   uv?: [number, number, number, number]
   rotation?: 0 | 90 | 180 | 270
   textureLayer?: string
@@ -79,8 +80,8 @@ const BlockFace: FC<BlockFaceProps> = ({
 
   let width = 1
   let height = 1
-  let meshPosition: [number, number, number] = [0, 0, 0]
-  let meshRotation: [number, number, number] = [0, 0, 0]
+  let meshPosition: Number3Tuple = [0, 0, 0]
+  let meshRotation: Number3Tuple = [0, 0, 0]
   const deg90 = MathUtils.degToRad(90)
 
   switch (faceName) {

@@ -1,12 +1,13 @@
+import { Number3Tuple } from '@/types'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
 // ==========
 type EditorMode = 'translate' | 'rotate' | 'scale'
 type TransformationData = {
-  position: [number, number, number]
-  rotation: [number, number, number]
-  size: [number, number, number]
+  position: Number3Tuple
+  rotation: Number3Tuple
+  size: Number3Tuple
 }
 type EditorState = {
   mode: EditorMode

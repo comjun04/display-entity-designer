@@ -1,3 +1,5 @@
+export type Number3Tuple = [number, number, number]
+
 export type CDNBlocksListResponse = {
   blocks: string[]
 }
@@ -42,8 +44,8 @@ export type ModelFaceKey = 'up' | 'down' | 'north' | 'south' | 'west' | 'east'
 
 export type ModelElement = {
   __comment?: string
-  from: [number, number, number]
-  to: [number, number, number]
+  from: Number3Tuple
+  to: Number3Tuple
   faces: {
     [x in ModelFaceKey]?: {
       uv?: [number, number, number, number]
@@ -53,7 +55,7 @@ export type ModelElement = {
     }
   }
   rotation?: {
-    origin: [number, number, number]
+    origin: Number3Tuple
     axis: 'x' | 'y' | 'z'
     angle: number
     rescale?: boolean
@@ -64,9 +66,9 @@ export type CDNModelResponse = {
   parent?: string
   display?: {
     [x in ModelDisplayPositionKey]?: {
-      rotation: [number, number, number]
-      translation: [number, number, number]
-      scale: [number, number, number]
+      rotation: Number3Tuple
+      translation: Number3Tuple
+      scale: Number3Tuple
     }
   }
   elements?: ModelElement[]
@@ -81,9 +83,9 @@ export type CDNItemsListResponse = {
 export type DisplayEntity = {
   id: string
   type: string
-  size: [number, number, number]
-  position: [number, number, number]
-  rotation: [number, number, number]
+  size: Number3Tuple
+  position: Number3Tuple
+  rotation: Number3Tuple
   display: ModelDisplayPositionKey | null
 } & (
   | {

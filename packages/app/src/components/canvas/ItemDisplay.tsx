@@ -5,13 +5,14 @@ import { useShallow } from 'zustand/shallow'
 import Model from './Model'
 import { Helper } from '@react-three/drei'
 import { useEditorStore } from '@/stores/editorStore'
+import { Number3Tuple } from '@/types'
 
 type ItemDisplayProps = {
   id: string
   type: string
-  size: [number, number, number]
-  position: [number, number, number]
-  rotation: [number, number, number]
+  size: Number3Tuple
+  position: Number3Tuple
+  rotation: Number3Tuple
   object3DRef?: MutableRefObject<Object3D>
 }
 
