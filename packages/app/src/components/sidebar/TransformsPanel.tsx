@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useCallback } from 'react'
 import XYZInput from './XYZInput'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useShallow } from 'zustand/shallow'
@@ -27,13 +27,15 @@ const TransformsPanel: FC = () => {
           : null,
     })),
   )
-  const { selectionBaseTransformation } = useEditorStore(
-    useShallow((state) => {
-      return {
-        selectionBaseTransformation: state.selectionBaseTransformation,
-      }
-    }),
-  )
+  const { selectionBaseTransformation, setSelectionBaseTransformation } =
+    useEditorStore(
+      useShallow((state) => {
+        return {
+          selectionBaseTransformation: state.selectionBaseTransformation,
+          setSelectionBaseTransformation: state.setSelectionBaseTransformation,
+        }
+      }),
+    )
 
   // 소수점 9자리에서 반올림
   const translation = (selectionBaseTransformation.position ?? [0, 0, 0]).map(
@@ -52,6 +54,52 @@ const TransformsPanel: FC = () => {
     (d) => Math.round(d * 1_0000_0000) / 1_0000_0000,
   ) as Number3Tuple
 
+  const translationUpdateFn = useCallback(
+    (xyz: [number | undefined, number | undefined, number | undefined]) => {
+      if (firstSelectedEntity?.id != null) {
+        setEntityTranslation(firstSelectedEntity.id, xyz)
+        setSelectionBaseTransformation({
+          position: xyz,
+        })
+      }
+    },
+    [
+      firstSelectedEntity?.id,
+      setEntityTranslation,
+      setSelectionBaseTransformation,
+    ],
+  )
+  const rotationUpdateFn = useCallback(
+    (xyz: [number | undefined, number | undefined, number | undefined]) => {
+      if (firstSelectedEntity?.id != null) {
+        const radianRotation = xyz.map((d) =>
+          d != null ? MathUtils.degToRad(d) : d,
+        ) as [number | undefined, number | undefined, number | undefined]
+
+        setEntityRotation(firstSelectedEntity.id, radianRotation)
+        setSelectionBaseTransformation({
+          rotation: radianRotation,
+        })
+      }
+    },
+    [
+      firstSelectedEntity?.id,
+      setEntityRotation,
+      setSelectionBaseTransformation,
+    ],
+  )
+  const scaleUpdateFn = useCallback(
+    (xyz: [number | undefined, number | undefined, number | undefined]) => {
+      if (firstSelectedEntity?.id != null) {
+        setEntityScale(firstSelectedEntity.id, xyz)
+        setSelectionBaseTransformation({
+          size: xyz,
+        })
+      }
+    },
+    [firstSelectedEntity?.id, setEntityScale, setSelectionBaseTransformation],
+  )
+
   if (firstSelectedEntity == null) return null
 
   return (
@@ -66,7 +114,7 @@ const TransformsPanel: FC = () => {
         <XYZInput
           allowNegative
           value={translation}
-          onChange={(xyz) => setEntityTranslation(firstSelectedEntity.id, xyz)}
+          onChange={translationUpdateFn}
         />
       </div>
 
@@ -75,16 +123,7 @@ const TransformsPanel: FC = () => {
           Rotation
         </div>
         {/* temp */}
-        <XYZInput
-          allowNegative
-          value={rotation}
-          onChange={(xyz) => {
-            const radianRotation = xyz.map(
-              (d) => (d * Math.PI) / 180,
-            ) as Number3Tuple
-            setEntityRotation(firstSelectedEntity.id, radianRotation)
-          }}
-        />
+        <XYZInput allowNegative value={rotation} onChange={rotationUpdateFn} />
       </div>
 
       <div className="mt-2">
@@ -92,10 +131,7 @@ const TransformsPanel: FC = () => {
           Scale
         </div>
         {/* temp */}
-        <XYZInput
-          value={scale}
-          onChange={(xyz) => setEntityScale(firstSelectedEntity.id, xyz)}
-        />
+        <XYZInput value={scale} onChange={scaleUpdateFn} />
       </div>
     </div>
   )
