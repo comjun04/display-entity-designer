@@ -168,10 +168,10 @@ const TransformsPanel: FC = () => {
           entityRefData.objectRef.current.scale.setX(xyz[0])
         }
         if (xyz[1] != null) {
-          entityRefData.objectRef.current.scale.setX(xyz[1])
+          entityRefData.objectRef.current.scale.setY(xyz[1])
         }
         if (xyz[2] != null) {
-          entityRefData.objectRef.current.scale.setX(xyz[2])
+          entityRefData.objectRef.current.scale.setZ(xyz[2])
         }
 
         return {
