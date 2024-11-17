@@ -1,5 +1,10 @@
 import { useEntityRefStore } from '@/stores/entityRefStore'
-import { DisplayEntity, ModelDisplayPositionKey, Number3Tuple } from '@/types'
+import {
+  DisplayEntity,
+  ModelDisplayPositionKey,
+  Number3Tuple,
+  PartialNumber3Tuple,
+} from '@/types'
 import { nanoid } from 'nanoid'
 import { createRef, MutableRefObject } from 'react'
 import { Object3D } from 'three'
@@ -14,24 +19,15 @@ export type DisplayEntityState = {
   createNew: (kind: DisplayEntity['kind'], type: string) => void
   setSelected: (ids: string[]) => void
   addToSelected: (id: string) => void
-  setEntityTranslation: (
-    id: string,
-    translation: [number | undefined, number | undefined, number | undefined],
-  ) => void
-  setEntityRotation: (
-    id: string,
-    rotation: [number | undefined, number | undefined, number | undefined],
-  ) => void
-  setEntityScale: (
-    id: string,
-    scale: [number | undefined, number | undefined, number | undefined],
-  ) => void
+  setEntityTranslation: (id: string, translation: PartialNumber3Tuple) => void
+  setEntityRotation: (id: string, rotation: PartialNumber3Tuple) => void
+  setEntityScale: (id: string, scale: PartialNumber3Tuple) => void
   batchSetEntityTransformation: (
     data: {
       id: string
-      translation?: [number | undefined, number | undefined, number | undefined]
-      rotation?: [number | undefined, number | undefined, number | undefined]
-      scale?: [number | undefined, number | undefined, number | undefined]
+      translation?: PartialNumber3Tuple
+      rotation?: PartialNumber3Tuple
+      scale?: PartialNumber3Tuple
     }[],
   ) => void
   setEntityDisplayType: (

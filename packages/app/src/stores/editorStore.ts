@@ -1,4 +1,4 @@
-import { Number3Tuple } from '@/types'
+import { Number3Tuple, PartialNumber3Tuple } from '@/types'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
@@ -21,9 +21,9 @@ type EditorState = {
    */
   selectionBaseTransformation: TransformationData
   setSelectionBaseTransformation: (data: {
-    position?: [number | undefined, number | undefined, number | undefined]
-    rotation?: [number | undefined, number | undefined, number | undefined]
-    size?: [number | undefined, number | undefined, number | undefined]
+    position?: PartialNumber3Tuple
+    rotation?: PartialNumber3Tuple
+    size?: PartialNumber3Tuple
   }) => void
 }
 

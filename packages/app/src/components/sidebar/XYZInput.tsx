@@ -1,3 +1,4 @@
+import { PartialNumber3Tuple } from '@/types'
 import { FC, useCallback, useEffect, useState } from 'react'
 
 type NumberInputProps = {
@@ -9,11 +10,9 @@ type NumberInputProps = {
 
 type XYZInputProps = {
   // value가 undefined = 비어 있는 칸
-  value: [number | undefined, number | undefined, number | undefined]
+  value: PartialNumber3Tuple
   allowNegative?: boolean
-  onChange?: (
-    xyz: [number | undefined, number | undefined, number | undefined],
-  ) => void
+  onChange?: (xyz: PartialNumber3Tuple) => void
 }
 
 const NumberInput: FC<NumberInputProps> = ({

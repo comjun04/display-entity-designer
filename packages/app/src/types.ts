@@ -1,4 +1,9 @@
 export type Number3Tuple = [number, number, number]
+export type PartialNumber3Tuple = [
+  number | undefined,
+  number | undefined,
+  number | undefined,
+]
 
 export type CDNBlocksListResponse = {
   blocks: string[]

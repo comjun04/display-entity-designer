@@ -4,7 +4,7 @@ import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useShallow } from 'zustand/shallow'
 import { MathUtils } from 'three'
 import { useEditorStore } from '@/stores/editorStore'
-import { Number3Tuple } from '@/types'
+import { Number3Tuple, PartialNumber3Tuple } from '@/types'
 import { useEntityRefStore } from '@/stores/entityRefStore'
 
 const TransformsPanel: FC = () => {
@@ -53,7 +53,7 @@ const TransformsPanel: FC = () => {
           (d) => Math.round(d * 1_0000_0000) / 1_0000_0000, // 소수점 9자리에서 반올림
         )
       : [undefined, undefined, undefined]
-  ) as [number | undefined, number | undefined, number | undefined]
+  ) as PartialNumber3Tuple
 
   const rotation = (selectionBaseTransformation.rotation ?? [0, 0, 0]).map(
     (d) => {
@@ -81,10 +81,10 @@ const TransformsPanel: FC = () => {
           (d) => Math.round(d * 1_0000_0000) / 1_0000_0000,
         )
       : [undefined, undefined, undefined]
-  ) as [number | undefined, number | undefined, number | undefined]
+  ) as PartialNumber3Tuple
 
   const translationUpdateFn = useCallback(
-    (xyz: [number | undefined, number | undefined, number | undefined]) => {
+    (xyz: PartialNumber3Tuple) => {
       console.debug('TransformsPanel translateUpdateFn', xyz)
 
       setSelectionBaseTransformation({
@@ -129,12 +129,12 @@ const TransformsPanel: FC = () => {
     ],
   )
   const rotationUpdateFn = useCallback(
-    (xyz: [number | undefined, number | undefined, number | undefined]) => {
+    (xyz: PartialNumber3Tuple) => {
       console.debug('TransformsPanel rotateUpdateFn', xyz)
 
       const radianRotation = xyz.map((d) =>
         d != null ? MathUtils.degToRad(d) : d,
-      ) as [number | undefined, number | undefined, number | undefined]
+      ) as PartialNumber3Tuple
 
       setSelectionBaseTransformation({
         rotation: radianRotation,
@@ -153,7 +153,7 @@ const TransformsPanel: FC = () => {
     ],
   )
   const scaleUpdateFn = useCallback(
-    (xyz: [number | undefined, number | undefined, number | undefined]) => {
+    (xyz: PartialNumber3Tuple) => {
       console.debug('TransformsPanel scaleUpdateFn', xyz)
 
       // setSelectionBaseTransformation({
