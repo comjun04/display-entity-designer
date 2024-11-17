@@ -77,7 +77,7 @@ const TransformsPanel: FC = () => {
     })
   const scale = (
     allSelectedEntityScaleEqual
-      ? firstSelectedEntity.size.map(
+      ? selectionBaseTransformation.size.map(
           (d) => Math.round(d * 1_0000_0000) / 1_0000_0000,
         )
       : [undefined, undefined, undefined]

@@ -171,14 +171,18 @@ const Scene: FC = () => {
     )
 
     // 다만 scale은 항상 초기화
-    selectedEntityGroupRef.current.scale.set(1, 1, 1)
+    // selectedEntityGroupRef.current.scale.set(1, 1, 1)
+
+    selectedEntityGroupRef.current.scale.copy(
+      firstSelectedEntityRefData.objectRef.current.scale,
+    )
 
     setSelectionBaseTransformation({
       position: firstSelectedEntityRefData.objectRef.current.position.toArray(),
       rotation: firstSelectedEntityRefData.objectRef.current.rotation
         .toArray()
         .slice(0, 3) as Number3Tuple,
-      size: [1, 1, 1],
+      size: firstSelectedEntityRefData.objectRef.current.scale.toArray(),
     })
   }, [
     firstSelectedEntityId,
