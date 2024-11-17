@@ -55,13 +55,27 @@ const TransformsPanel: FC = () => {
       : [undefined, undefined, undefined]
   ) as PartialNumber3Tuple
 
-  const rotation = (selectionBaseTransformation.rotation ?? [0, 0, 0]).map(
-    (d) => {
-      const degree = MathUtils.radToDeg(d)
-      const rounded = Math.round(degree * 1_0000_0000) / 1_0000_0000
-      return rounded
-    },
-  ) as Number3Tuple
+  const allSelectedEntityRotationEqual =
+    firstSelectedEntity != null &&
+    selectedEntityIds.every((entityId) => {
+      const entity = useDisplayEntityStore
+        .getState()
+        .entities.find((e) => e.id === entityId)!
+      return (
+        entity.rotation[0] === firstSelectedEntity.rotation[0] &&
+        entity.rotation[1] === firstSelectedEntity.rotation[1] &&
+        entity.rotation[2] === firstSelectedEntity.rotation[2]
+      )
+    })
+  const rotation = (
+    allSelectedEntityRotationEqual
+      ? selectionBaseTransformation.rotation.map((d) => {
+          const degree = MathUtils.radToDeg(d)
+          const rounded = Math.round(degree * 1_0000_0000) / 1_0000_0000
+          return rounded
+        })
+      : [undefined, undefined, undefined]
+  ) as PartialNumber3Tuple
 
   const allSelectedEntityScaleEqual =
     firstSelectedEntity != null &&
