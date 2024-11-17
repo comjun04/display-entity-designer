@@ -143,13 +143,13 @@ const Scene: FC = () => {
         firstSelectedEntityIdChanged ||
         refData.objectRef.current.parent?.id !== baseEntityGroupRef.current.id
       ) {
-        console.warn(
+        console.debug(
           'revert reparenting before',
           refData.objectRef.current.scale,
           selectedEntityGroupRef.current.scale,
         )
         baseEntityGroupRef.current.attach(refData.objectRef.current)
-        console.warn(
+        console.debug(
           'revert reparenting after',
           refData.objectRef.current.scale,
           selectedEntityGroupRef.current.scale,
@@ -224,13 +224,13 @@ const Scene: FC = () => {
         refData.objectRef.current.parent?.id !==
           selectedEntityGroupRef.current.id
       ) {
-        console.warn(
+        console.debug(
           'reparenting before',
           refData.objectRef.current.scale,
           selectedEntityGroupRef.current.scale,
         )
         selectedEntityGroupRef.current.attach(refData.objectRef.current)
-        console.warn(
+        console.debug(
           'reparenting after',
           refData.objectRef.current.scale,
           selectedEntityGroupRef.current.scale,

@@ -58,7 +58,9 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
   useEffect(() => {
     if (blockstatesData == null) return
 
-    console.log('trigger')
+    // console.log(
+    //   'BlockDisplay: blockstates data changed maybe, resetting blockstates default values',
+    // )
 
     const newBlockstateObject: Record<string, string> = {}
     for (const [
@@ -75,32 +77,6 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
     setBDEntityBlockstates(id, newBlockstateObject)
   }, [blockstatesData, id, setBDEntityBlockstates])
 
-  // useEffect(() => {
-  //   if (!thisEntitySelected) {
-  //     ref?.current.position.set(...position)
-  //   } else if (firstSelectedEntityId === id) {
-  //     ref?.current.position.set(0, 0, 0)
-  //   } else {
-  //     if (thisEntity?.position == null) return
-
-  //     const firstSelectedEntity = useDisplayEntityStore
-  //       .getState()
-  //       .entities.find((e) => e.id === firstSelectedEntityId)!
-  //     const delta = [
-  //       thisEntity.position[0] - firstSelectedEntity.position[0],
-  //       thisEntity.position[1] - firstSelectedEntity.position[1],
-  //       thisEntity.position[2] - firstSelectedEntity.position[2],
-  //     ] satisfies [number, number, number]
-  //     ref?.current.position.set(...delta)
-  //   }
-  // }, [
-  //   ref,
-  //   position,
-  //   thisEntity?.position,
-  //   thisEntitySelected,
-  //   id,
-  //   firstSelectedEntityId,
-  // ])
   useEffect(() => {
     if (!thisEntitySelected) {
       ref?.current.position.set(...position)

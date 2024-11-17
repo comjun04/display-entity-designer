@@ -49,7 +49,6 @@ const NumberInput: FC<NumberInputProps> = ({
     <input
       type="number"
       min={allowNegative ? undefined : 0}
-      // value={focused ? undefined : value}
       value={localValue}
       onChange={(evt) => {
         setDirectChange(true)

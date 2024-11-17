@@ -18,7 +18,6 @@ const TransformsPanel: FC = () => {
       selectedEntityIds: state.selectedEntityIds,
       batchSetEntityTransformation: state.batchSetEntityTransformation,
 
-      // temporary
       firstSelectedEntity:
         state.selectedEntityIds.length > 0
           ? state.entities.find((e) => e.id === state.selectedEntityIds[0])!
@@ -110,6 +109,9 @@ const TransformsPanel: FC = () => {
         const entityRefData = useEntityRefStore
           .getState()
           .entityRefs.find((d) => d.id === id)!
+
+        // 모든 선택된 object를 해당 위치로 이동 = 다중선택 그룹의 위치도 이동
+        // 모든 선택된 object의 이동된 축 위치가 동일해지므로 해당 축의 상대좌표를 0으로 지정
         if (xyz[0] != null) {
           entityRefData.objectRef.current.position.setX(0)
         }
@@ -122,17 +124,11 @@ const TransformsPanel: FC = () => {
 
         return {
           id,
-          // 모든 선택된 object를 해당 위치로 이동 = 다중선택 그룹의 위치도 이동
-          // 모든 선택된 object의 이동된 축 위치가 동일해지므로 해당 축의 상대좌표를 0으로 지정
           translation: [
             xyz[0] ?? undefined,
             xyz[1] ?? undefined,
             xyz[2] ?? undefined,
-          ] satisfies [
-            number | undefined,
-            number | undefined,
-            number | undefined,
-          ],
+          ] satisfies PartialNumber3Tuple,
         }
       })
       batchSetEntityTransformation(d)
@@ -181,17 +177,15 @@ const TransformsPanel: FC = () => {
       )
 
       // update group rotation manually
-      const newGroupRotation = groupRef.current.rotation.toArray()
       if (radianRotation[0] != null) {
-        newGroupRotation[0] = radianRotation[0]
+        groupRef.current.rotation.x = radianRotation[0]
       }
       if (radianRotation[1] != null) {
-        newGroupRotation[1] = radianRotation[1]
+        groupRef.current.rotation.y = radianRotation[1]
       }
       if (radianRotation[2] != null) {
-        newGroupRotation[2] = radianRotation[2]
+        groupRef.current.rotation.z = radianRotation[2]
       }
-      groupRef.current.rotation.fromArray(newGroupRotation)
 
       // 저장해뒀던 entity들의 world position들을 group의 local space 상의 position으로 변환해서 각 object에 적용
       selectedEntityRefDataList.forEach((data, idx) => {
