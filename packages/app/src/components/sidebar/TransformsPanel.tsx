@@ -199,6 +199,18 @@ const TransformsPanel: FC = () => {
           selectedEntityWorldPositions[idx],
         )
         data.objectRef.current.position.copy(localPosition)
+
+        // 모든 선택된 object를 주어진 각도로 회전 = 다중선택 그룹의 rotation도 회전
+        // 모든 선택된 object의 지정된 회전 축에서의 rotation이 동일해지므로 해당 축의 rotation을 0으로 지정
+        if (radianRotation[0] != null) {
+          data.objectRef.current.rotation.x = 0
+        }
+        if (radianRotation[1] != null) {
+          data.objectRef.current.rotation.y = 0
+        }
+        if (radianRotation[2] != null) {
+          data.objectRef.current.rotation.z = 0
+        }
       })
 
       const d = selectedEntityIds.map((id) => ({
