@@ -29,9 +29,9 @@ export type DisplayEntityState = {
   batchSetEntityTransformation: (
     data: {
       id: string
-      translation?: Number3Tuple
-      rotation?: Number3Tuple
-      scale?: Number3Tuple
+      translation?: [number | undefined, number | undefined, number | undefined]
+      rotation?: [number | undefined, number | undefined, number | undefined]
+      scale?: [number | undefined, number | undefined, number | undefined]
     }[],
   ) => void
   setEntityDisplayType: (
@@ -97,6 +97,13 @@ export const useDisplayEntityStore = create(
       }),
     setEntityTranslation: (id, translation) =>
       set((state) => {
+        console.debug(
+          'displayEntityStore setEntityTranslation',
+          id,
+          translation,
+        )
+        console.trace()
+
         const entity = state.entities.find((e) => e.id === id)
         if (entity == null) {
           console.error(
@@ -133,6 +140,8 @@ export const useDisplayEntityStore = create(
       }),
     setEntityScale: (id, scale) =>
       set((state) => {
+        console.debug('displayEntityStore setEntityScale', id, scale)
+
         const entity = state.entities.find((e) => e.id === id)
         if (entity == null) {
           console.error(
@@ -151,18 +160,39 @@ export const useDisplayEntityStore = create(
       }),
     batchSetEntityTransformation: (data) =>
       set((state) => {
+        console.debug('displayEntityStore batchSetEntityTransformation', data)
+        console.trace()
+
         data.forEach((item) => {
           const entity = state.entities.find((e) => e.id === item.id)
           if (entity == null) return
 
           if (item.translation != null) {
-            entity.position = item.translation
+            const positionDraft = entity.position.slice() as Number3Tuple
+            item.translation.forEach((d, idx) => {
+              if (d != null) {
+                positionDraft[idx] = d
+              }
+            })
+            entity.position = positionDraft
           }
           if (item.rotation != null) {
-            entity.rotation = item.rotation
+            const rotationDraft = entity.rotation.slice() as Number3Tuple
+            item.rotation.forEach((d, idx) => {
+              if (d != null) {
+                rotationDraft[idx] = d
+              }
+            })
+            entity.rotation = rotationDraft
           }
           if (item.scale != null) {
-            entity.size = item.scale
+            const scaleDraft = entity.size.slice() as Number3Tuple
+            item.scale.forEach((d, idx) => {
+              if (d != null) {
+                scaleDraft[idx] = d
+              }
+            })
+            entity.size = scaleDraft
           }
         })
       }),

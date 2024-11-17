@@ -1,4 +1,3 @@
-import { Number3Tuple } from '@/types'
 import { FC, useCallback, useEffect, useState } from 'react'
 
 type NumberInputProps = {
@@ -9,7 +8,8 @@ type NumberInputProps = {
 }
 
 type XYZInputProps = {
-  value: Number3Tuple
+  // value가 undefined = 비어 있는 칸
+  value: [number | undefined, number | undefined, number | undefined]
   allowNegative?: boolean
   onChange?: (
     xyz: [number | undefined, number | undefined, number | undefined],
@@ -23,20 +23,25 @@ const NumberInput: FC<NumberInputProps> = ({
   className,
 }) => {
   const [localValue, setLocalValue] = useState('')
+  const [directChange, setDirectChange] = useState(false)
 
   useEffect(() => {
     if (localValue.length < 1) return
 
     const num = Number(localValue)
-    if (!isNaN(num) && isFinite(num) && (allowNegative || num > 0)) {
+    if (
+      directChange &&
+      !isNaN(num) &&
+      isFinite(num) &&
+      (allowNegative || num > 0)
+    ) {
       onChange?.(num)
     }
-  }, [localValue, allowNegative, onChange])
+  }, [directChange, localValue, allowNegative, onChange])
 
   useEffect(() => {
-    if (value != null) {
-      setLocalValue(value.toString())
-    }
+    setDirectChange(false)
+    setLocalValue(value?.toString() ?? '')
   }, [value])
 
   return (
@@ -45,7 +50,10 @@ const NumberInput: FC<NumberInputProps> = ({
       min={allowNegative ? undefined : 0}
       // value={focused ? undefined : value}
       value={localValue}
-      onChange={(evt) => setLocalValue(evt.target.value)}
+      onChange={(evt) => {
+        setDirectChange(true)
+        setLocalValue(evt.target.value)
+      }}
       className={className}
     />
   )

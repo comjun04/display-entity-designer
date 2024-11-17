@@ -1,20 +1,7 @@
-import {
-  Grid,
-  Helper,
-  PerspectiveCamera,
-  TransformControls,
-} from '@react-three/drei'
+import { Grid, PerspectiveCamera, TransformControls } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { FC, MutableRefObject, useEffect, useRef, useState } from 'react'
-import {
-  BoxHelper,
-  Color,
-  Euler,
-  Event,
-  Group,
-  Quaternion,
-  Vector3,
-} from 'three'
+import { Color, Euler, Event, Group, Quaternion, Vector3 } from 'three'
 import { useDialogStore } from './stores/dialogStore'
 import { useEditorStore } from './stores/editorStore'
 import { useEntityRefStore } from './stores/entityRefStore'
@@ -24,6 +11,7 @@ import CustomCameraControls from './CustomCameraControls'
 import { TransformControls as OriginalTransformControls } from 'three/examples/jsm/Addons.js'
 import DisplayEntity from './components/canvas/DisplayEntity'
 import { Number3Tuple } from './types'
+import SelectedEntityGroup from './components/SelectedEntityGroup'
 
 const Scene: FC = () => {
   const {
@@ -128,11 +116,6 @@ const Scene: FC = () => {
 
   const baseEntityGroupRef = useRef<Group>(null)
   const selectedEntityGroupRef = useRef<Group>(null)
-  const selectedEntityGroupPrevData = useRef({
-    position: new Vector3(0, 0, 0),
-    rotation: new Euler(0, 0, 0),
-    scale: new Vector3(1, 1, 1),
-  })
 
   // 선택 해제된 object를 다중선택 그룹에서 빼냄 (world transformation 보존)
   useEffect(() => {
@@ -182,21 +165,26 @@ const Scene: FC = () => {
     selectedEntityGroupRef.current.position.copy(
       firstSelectedEntityRefData.objectRef.current.position,
     )
-    selectedEntityGroupPrevData.current.position.copy(
-      firstSelectedEntityRefData.objectRef.current.position,
-    )
 
     selectedEntityGroupRef.current.rotation.copy(
-      firstSelectedEntityRefData.objectRef.current.rotation,
-    )
-    selectedEntityGroupPrevData.current.rotation.copy(
       firstSelectedEntityRefData.objectRef.current.rotation,
     )
 
     // 다만 scale은 항상 초기화
     selectedEntityGroupRef.current.scale.set(1, 1, 1)
-    selectedEntityGroupPrevData.current.scale.set(1, 1, 1)
-  }, [firstSelectedEntityId, firstSelectedEntityRefData])
+
+    setSelectionBaseTransformation({
+      position: firstSelectedEntityRefData.objectRef.current.position.toArray(),
+      rotation: firstSelectedEntityRefData.objectRef.current.rotation
+        .toArray()
+        .slice(0, 3) as Number3Tuple,
+      size: [1, 1, 1],
+    })
+  }, [
+    firstSelectedEntityId,
+    firstSelectedEntityRefData,
+    setSelectionBaseTransformation,
+  ])
 
   // re-parenting
   // 선택된 object를 다중선택 그룹에 넣기 (world transformation 보존)
@@ -286,11 +274,7 @@ const Scene: FC = () => {
         ))}
       </group>
 
-      <group ref={selectedEntityGroupRef}>
-        {selectedEntityIds.length > 1 && (
-          <Helper type={BoxHelper} args={['white']} />
-        )}
-      </group>
+      <SelectedEntityGroup groupRef={selectedEntityGroupRef} />
 
       <TransformControls
         object={
@@ -320,16 +304,14 @@ const Scene: FC = () => {
           // ==========
 
           if (mode === 'translate') {
-            const positionDelta = target.object.position
-              .clone()
-              .sub(selectedEntityGroupPrevData.current.position)
             const batchUpdateData = entities
               .filter((e) => selectedEntityIds.includes(e.id))
               .map((entity) => {
+                const entityRefData = useEntityRefStore
+                  .getState()
+                  .entityRefs.find((d) => d.id === entity.id)!
                 const newPosition = new Vector3()
-                  .setX(entity.position[0] + positionDelta.x)
-                  .setY(entity.position[1] + positionDelta.y)
-                  .setZ(entity.position[2] + positionDelta.z)
+                entityRefData.objectRef.current.getWorldPosition(newPosition)
 
                 return {
                   id: entity.id,
@@ -337,10 +319,6 @@ const Scene: FC = () => {
                 }
               })
             batchSetEntityTransformation(batchUpdateData)
-
-            selectedEntityGroupPrevData.current.position.copy(
-              target.object.position,
-            )
           } else if (mode === 'rotate') {
             const batchUpdateData = entities
               .filter((e) => selectedEntityIds.includes(e.id))
@@ -367,10 +345,6 @@ const Scene: FC = () => {
               })
 
             batchSetEntityTransformation(batchUpdateData)
-
-            selectedEntityGroupPrevData.current.rotation.copy(
-              target.object.rotation,
-            )
           } else if (mode === 'scale') {
             const absoluteScale = target.object.scale
               .toArray()
@@ -382,17 +356,11 @@ const Scene: FC = () => {
             const batchUpdateData = entities
               .filter((e) => selectedEntityIds.includes(e.id))
               .map((entity) => {
-                const newScale = [
-                  (entity.size[0] /
-                    selectedEntityGroupPrevData.current.scale.x) *
-                    absoluteScale[0],
-                  (entity.size[1] /
-                    selectedEntityGroupPrevData.current.scale.y) *
-                    absoluteScale[1],
-                  (entity.size[2] /
-                    selectedEntityGroupPrevData.current.scale.z) *
-                    absoluteScale[2],
-                ] satisfies Number3Tuple
+                const entityRefData = useEntityRefStore
+                  .getState()
+                  .entityRefs.find((d) => d.id === entity.id)!
+                const newScale = new Vector3()
+                entityRefData.objectRef.current.getWorldScale(newScale)
 
                 // group scale이 처음 크기로 돌아간 후 display entity의 scale이 변경될 경우 한 번 깜빡이는 현상이 발생함
                 // 이를 방지하기 위해 state로 설정하기 전에 scale을 여기서 먼저 조정
@@ -412,13 +380,11 @@ const Scene: FC = () => {
 
                 return {
                   id: entity.id,
-                  scale: newScale,
+                  scale: newScale.toArray(),
                   translation: updatedPosition.toArray(),
                 }
               })
             batchSetEntityTransformation(batchUpdateData)
-
-            selectedEntityGroupPrevData.current.scale.fromArray(absoluteScale)
 
             // 이동 후 group scale을 처음 크기로 다시 변경
             // 이렇게 해야 다음번 이동을 제대로 측정할 수 있음
@@ -454,6 +420,12 @@ const Scene: FC = () => {
             rotation: worldRotation.toArray().slice(0, 3) as Number3Tuple,
             size: worldScale.toArray(),
           })
+
+          console.log(
+            'TransformControl onObjectChange',
+            absoluteScale,
+            worldScale.toArray(),
+          )
         }}
       />
 
