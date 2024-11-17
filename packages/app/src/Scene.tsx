@@ -33,6 +33,7 @@ const Scene: FC = () => {
   // temporary
   const firstSelectedEntityId =
     selectedEntityIds.length > 0 ? selectedEntityIds[0] : null
+  const prevFirstSelectedEntityId = useRef<string | null>(null)
 
   const { firstSelectedEntityRefData: firstSelectedEntityRefData } =
     useEntityRefStore(
@@ -126,15 +127,20 @@ const Scene: FC = () => {
       return
     }
 
+    const firstSelectedEntityIdChanged =
+      firstSelectedEntityId !== prevFirstSelectedEntityId.current
+
     for (const entityId of entityIds) {
-      if (selectedEntityIds.includes(entityId)) continue
+      if (!firstSelectedEntityIdChanged && selectedEntityIds.includes(entityId))
+        continue
 
       const refData = useEntityRefStore
         .getState()
         .entityRefs.find((d) => d.id === entityId)
-      if (refData == null || refData.objectRef.current == null) return
+      if (refData == null || refData.objectRef.current == null) continue
 
       if (
+        firstSelectedEntityIdChanged ||
         refData.objectRef.current.parent?.id !== baseEntityGroupRef.current.id
       ) {
         console.warn(
@@ -150,7 +156,7 @@ const Scene: FC = () => {
         )
       }
     }
-  }, [entityIds, selectedEntityIds])
+  }, [entityIds, selectedEntityIds, firstSelectedEntityId])
 
   // 다중선택 그룹 위치 이동
   useEffect(() => {
@@ -200,8 +206,15 @@ const Scene: FC = () => {
       return
     }
 
+    const firstSelectedEntityIdChanged =
+      firstSelectedEntityId !== prevFirstSelectedEntityId.current
+
     for (const entityId of entityIds) {
-      if (!selectedEntityIds.includes(entityId)) continue
+      if (
+        // !firstSelectedEntityIdChanged &&
+        !selectedEntityIds.includes(entityId)
+      )
+        continue
 
       const refData = useEntityRefStore
         .getState()
@@ -210,8 +223,9 @@ const Scene: FC = () => {
 
       // 해당 엔티티가 selected되었으면 별도 group에 넣기
       if (
+        firstSelectedEntityIdChanged ||
         refData.objectRef.current.parent?.id !==
-        selectedEntityGroupRef.current.id
+          selectedEntityGroupRef.current.id
       ) {
         console.warn(
           'reparenting before',
@@ -226,7 +240,12 @@ const Scene: FC = () => {
         )
       }
     }
-  }, [entityIds, selectedEntityIds])
+  }, [entityIds, selectedEntityIds, firstSelectedEntityId])
+
+  // last
+  useEffect(() => {
+    prevFirstSelectedEntityId.current = firstSelectedEntityId
+  }, [firstSelectedEntityId])
 
   return (
     <Canvas
