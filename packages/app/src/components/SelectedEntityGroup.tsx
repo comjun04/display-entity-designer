@@ -1,5 +1,6 @@
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
+import { useEntityRefStore } from '@/stores/entityRefStore'
 import { Helper } from '@react-three/drei'
 import { FC, RefObject, useEffect } from 'react'
 import { BoxHelper, Group } from 'three'
@@ -20,6 +21,15 @@ const SelectedEntityGroup: FC<SelectedEntityGroupProps> = ({ groupRef }) => {
       selectionBaseTransformation: state.selectionBaseTransformation,
     })),
   )
+  const { setSelectedEntityGroupRef } = useEntityRefStore(
+    useShallow((state) => ({
+      setSelectedEntityGroupRef: state.setSelectedEntityGroupRef,
+    })),
+  )
+
+  useEffect(() => {
+    setSelectedEntityGroupRef(groupRef)
+  }, [groupRef, setSelectedEntityGroupRef])
 
   useEffect(() => {
     if (groupRef.current == null) return

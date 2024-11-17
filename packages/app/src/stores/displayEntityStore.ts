@@ -98,7 +98,6 @@ export const useDisplayEntityStore = create(
           id,
           translation,
         )
-        console.trace()
 
         const entity = state.entities.find((e) => e.id === id)
         if (entity == null) {
@@ -157,7 +156,6 @@ export const useDisplayEntityStore = create(
     batchSetEntityTransformation: (data) =>
       set((state) => {
         console.debug('displayEntityStore batchSetEntityTransformation', data)
-        console.trace()
 
         data.forEach((item) => {
           const entity = state.entities.find((e) => e.id === item.id)

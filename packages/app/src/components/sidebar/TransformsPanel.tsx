@@ -2,7 +2,7 @@ import { FC, useCallback } from 'react'
 import XYZInput from './XYZInput'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useShallow } from 'zustand/shallow'
-import { MathUtils } from 'three'
+import { MathUtils, Vector3 } from 'three'
 import { useEditorStore } from '@/stores/editorStore'
 import { Number3Tuple, PartialNumber3Tuple } from '@/types'
 import { useEntityRefStore } from '@/stores/entityRefStore'
@@ -87,6 +87,7 @@ const TransformsPanel: FC = () => {
     (xyz: PartialNumber3Tuple) => {
       console.debug('TransformsPanel translateUpdateFn', xyz)
 
+      // TODO: remove this
       setSelectionBaseTransformation({
         position: xyz,
       })
@@ -136,8 +137,54 @@ const TransformsPanel: FC = () => {
         d != null ? MathUtils.degToRad(d) : d,
       ) as PartialNumber3Tuple
 
+      // TODO: remove this
       setSelectionBaseTransformation({
         rotation: radianRotation,
+      })
+
+      const groupRef = useEntityRefStore.getState().selectedEntityGroupRef
+      if (groupRef == null) {
+        console.error('TransformsPanel.scaleUpdateFn: groupRef is undefined')
+        return
+      } else if (groupRef.current == null) {
+        console.error(
+          'TransformsPanel.scaleUpdateFn: groupRef.current is undefined, ref not bound',
+        )
+        return
+      }
+
+      const selectedEntityRefDataList = selectedEntityIds.map(
+        (id) =>
+          useEntityRefStore.getState().entityRefs.find((d) => d.id === id)!,
+      )
+      // group 이동 전 entity들의 world position을 저장
+      const selectedEntityWorldPositions = selectedEntityRefDataList.map(
+        (data) => {
+          const vec = new Vector3()
+          data.objectRef.current.getWorldPosition(vec)
+          return vec
+        },
+      )
+
+      // update group rotation manually
+      const newGroupRotation = groupRef.current.rotation.toArray()
+      if (radianRotation[0] != null) {
+        newGroupRotation[0] = radianRotation[0]
+      }
+      if (radianRotation[1] != null) {
+        newGroupRotation[1] = radianRotation[1]
+      }
+      if (radianRotation[2] != null) {
+        newGroupRotation[2] = radianRotation[2]
+      }
+      groupRef.current.rotation.fromArray(newGroupRotation)
+
+      // 저장해뒀던 entity들의 world position들을 group의 local space 상의 position으로 변환해서 각 object에 적용
+      selectedEntityRefDataList.forEach((data, idx) => {
+        const localPosition = groupRef.current!.worldToLocal(
+          selectedEntityWorldPositions[idx],
+        )
+        data.objectRef.current.position.copy(localPosition)
       })
 
       const d = selectedEntityIds.map((id) => ({
@@ -156,24 +203,55 @@ const TransformsPanel: FC = () => {
     (xyz: PartialNumber3Tuple) => {
       console.debug('TransformsPanel scaleUpdateFn', xyz)
 
-      // setSelectionBaseTransformation({
-      //   size: xyz,
-      // })
+      // TODO: remove this
+      setSelectionBaseTransformation({
+        size: xyz,
+      })
 
-      const d = selectedEntityIds.map((id) => {
+      const groupRef = useEntityRefStore.getState().selectedEntityGroupRef
+      if (groupRef == null) {
+        console.error('TransformsPanel.scaleUpdateFn: groupRef is undefined')
+        return
+      } else if (groupRef.current == null) {
+        console.error(
+          'TransformsPanel.scaleUpdateFn: groupRef.current is undefined, ref not bound',
+        )
+        return
+      }
+
+      // group이 scale된 비율을 저장
+      // group을 scale한 이후 object 위치를 다시 잡을 때 사용됨
+      const rescaleRatio = [1, 1, 1] satisfies Number3Tuple
+
+      // update group scale manually
+      if (xyz[0] != null) {
+        rescaleRatio[0] = groupRef.current.scale.x / xyz[0]
+        groupRef.current.scale.setX(xyz[0])
+      }
+      if (xyz[1] != null) {
+        rescaleRatio[1] = groupRef.current.scale.y / xyz[1]
+        groupRef.current.scale.setY(xyz[1])
+      }
+      if (xyz[2] != null) {
+        rescaleRatio[2] = groupRef.current.scale.z / xyz[2]
+        groupRef.current.scale.setZ(xyz[2])
+      }
+
+      // group이 scale되면 안에 들어있는 object들의 위치도 같이 이동함
+      // TransformsPanel로 scale을 조정했을 경우 위치는 그대로, 각자의 scale만 변경해줘야 하기 때문에
+      // group scale 변경으로 인해 이동된 위치를 바로잡기
+      selectedEntityIds.forEach((id) => {
         const entityRefData = useEntityRefStore
           .getState()
           .entityRefs.find((d) => d.id === id)!
-        if (xyz[0] != null) {
-          entityRefData.objectRef.current.scale.setX(xyz[0])
-        }
-        if (xyz[1] != null) {
-          entityRefData.objectRef.current.scale.setY(xyz[1])
-        }
-        if (xyz[2] != null) {
-          entityRefData.objectRef.current.scale.setZ(xyz[2])
-        }
+        const positionVecInstance = entityRefData.objectRef.current.position
+        positionVecInstance
+          .setX(positionVecInstance.x * rescaleRatio[0])
+          .setY(positionVecInstance.y * rescaleRatio[1])
+          .setZ(positionVecInstance.z * rescaleRatio[2])
+      })
 
+      const d = selectedEntityIds.map((id) => {
         return {
           id,
           scale: xyz,
@@ -181,7 +259,11 @@ const TransformsPanel: FC = () => {
       })
       batchSetEntityTransformation(d)
     },
-    [batchSetEntityTransformation, selectedEntityIds],
+    [
+      batchSetEntityTransformation,
+      selectedEntityIds,
+      setSelectionBaseTransformation,
+    ],
   )
 
   if (firstSelectedEntity == null) return null

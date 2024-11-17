@@ -36,6 +36,8 @@ const NumberInput: FC<NumberInputProps> = ({
     ) {
       onChange?.(num)
     }
+
+    setDirectChange(false)
   }, [directChange, localValue, allowNegative, onChange])
 
   useEffect(() => {

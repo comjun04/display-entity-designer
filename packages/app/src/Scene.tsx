@@ -167,7 +167,7 @@ const Scene: FC = () => {
     )
       return
 
-    // 다중선택 그룹 base position, rotation은 첫 번째 선택한 object를 따라감
+    // 다중선택 그룹 base position, rotation, scale은 첫 번째 선택한 object를 따라감
     selectedEntityGroupRef.current.position.copy(
       firstSelectedEntityRefData.objectRef.current.position,
     )
@@ -175,9 +175,6 @@ const Scene: FC = () => {
     selectedEntityGroupRef.current.rotation.copy(
       firstSelectedEntityRefData.objectRef.current.rotation,
     )
-
-    // 다만 scale은 항상 초기화
-    // selectedEntityGroupRef.current.scale.set(1, 1, 1)
 
     selectedEntityGroupRef.current.scale.copy(
       firstSelectedEntityRefData.objectRef.current.scale,
@@ -322,8 +319,6 @@ const Scene: FC = () => {
           const target = (e as Event<string, OriginalTransformControls>).target
           const entities = useDisplayEntityStore.getState().entities
 
-          // console.log(performance.now(), target.object.position)
-
           // ==========
 
           if (mode === 'translate') {
@@ -385,13 +380,6 @@ const Scene: FC = () => {
                 const newScale = new Vector3()
                 entityRefData.objectRef.current.getWorldScale(newScale)
 
-                // group scale이 처음 크기로 돌아간 후 display entity의 scale이 변경될 경우 한 번 깜빡이는 현상이 발생함
-                // 이를 방지하기 위해 state로 설정하기 전에 scale을 여기서 먼저 조정
-                // const entityRefData = useEntityRefStore
-                //   .getState()
-                //   .entityRefs.find((d) => d.id === entity.id)
-                // entityRefData?.objectRef.current.scale.copy(newScale)
-
                 // 다중 선택되어 있을 경우 그룹 중심점과 떨어져 있는 object들은 scale 시 위치가 달라짐
                 // 따라서 world location을 별도로 계산하여 state에 반영
                 const refData = useEntityRefStore
@@ -408,10 +396,6 @@ const Scene: FC = () => {
                 }
               })
             batchSetEntityTransformation(batchUpdateData)
-
-            // 이동 후 group scale을 처음 크기로 다시 변경
-            // 이렇게 해야 다음번 이동을 제대로 측정할 수 있음
-            // target.object.scale.set(1, 1, 1)
           }
         }}
         onObjectChange={(e) => {
@@ -447,6 +431,7 @@ const Scene: FC = () => {
           console.log(
             'TransformControl onObjectChange',
             absoluteScale,
+            firstSelectedEntityRef.scale.toArray(),
             worldScale.toArray(),
           )
         }}
