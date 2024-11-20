@@ -41,10 +41,13 @@ const DragSelectControl: FC<DragSelectControlProps> = ({
     const pointTopLeft = new Vector2()
     const pointBottomRight = new Vector2()
 
-    const prepareRay = (evt: PointerEvent, vec: Vector3) => {
-      const { offsetX, offsetY } = evt
+    const prepareRay = (posVec: Vector2, targetVec: Vector3) => {
       const { width, height } = size
-      vec.set((offsetX / width) * 2 - 1, -(offsetY / height) * 2 + 1, 0.5)
+      targetVec.set(
+        (posVec.x / width) * 2 - 1,
+        -(posVec.y / height) * 2 + 1,
+        0.5, // unused
+      )
     }
 
     const updateSelectedList = () => {
@@ -73,8 +76,17 @@ const DragSelectControl: FC<DragSelectControlProps> = ({
     const pointerDown = (evt: PointerEvent) => {
       if (!evt.ctrlKey) return
 
+      // canvas 공간 밖에서 드래그를 시작했을 경우 처리하지 않음
+      const canvasElement = gl.domElement
+      if (
+        evt.clientX < canvasElement.clientLeft ||
+        evt.clientY < canvasElement.clientTop ||
+        evt.clientX > canvasElement.clientLeft + canvasElement.clientWidth ||
+        evt.clientY > canvasElement.clientTop + canvasElement.clientHeight
+      )
+        return
+
       isPointerDown = true
-      prepareRay(evt, selectionBox.startPoint)
       gl.domElement.parentElement?.appendChild(element)
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-explicit-any
@@ -88,7 +100,7 @@ const DragSelectControl: FC<DragSelectControlProps> = ({
       element.style.width = '0px'
       element.style.height = '0px'
     }
-    const pointerUp = (evt: PointerEvent) => {
+    const pointerUp = () => {
       if (!isPointerDown) return
 
       isPointerDown = false
@@ -99,16 +111,31 @@ const DragSelectControl: FC<DragSelectControlProps> = ({
         ;(controls as any).enabled = oldControlsEnabled
       }
 
-      prepareRay(evt, selectionBox.endPoint)
+      prepareRay(pointTopLeft, selectionBox.startPoint)
+      prepareRay(pointBottomRight, selectionBox.endPoint)
       updateSelectedList()
     }
     const pointerMove = (evt: PointerEvent) => {
       if (!isPointerDown) return
 
-      pointTopLeft.x = Math.min(evt.clientX, startPoint.x)
-      pointTopLeft.y = Math.min(evt.clientY, startPoint.y)
-      pointBottomRight.x = Math.max(evt.clientX, startPoint.x)
-      pointBottomRight.y = Math.max(evt.clientY, startPoint.y)
+      const canvasElement = gl.domElement
+
+      pointTopLeft.x = Math.max(
+        Math.min(evt.clientX, startPoint.x),
+        canvasElement.clientLeft,
+      )
+      pointTopLeft.y = Math.max(
+        Math.min(evt.clientY, startPoint.y),
+        canvasElement.clientTop,
+      )
+      pointBottomRight.x = Math.min(
+        Math.max(evt.clientX, startPoint.x),
+        canvasElement.clientLeft + canvasElement.clientWidth,
+      )
+      pointBottomRight.y = Math.min(
+        Math.max(evt.clientY, startPoint.y),
+        canvasElement.clientTop + canvasElement.clientHeight,
+      )
 
       element.style.left = `${pointTopLeft.x}px`
       element.style.top = `${pointTopLeft.y}px`
@@ -123,6 +150,8 @@ const DragSelectControl: FC<DragSelectControlProps> = ({
       document.removeEventListener('pointerdown', pointerDown)
       document.removeEventListener('pointermove', pointerMove)
       document.removeEventListener('pointerup', pointerUp)
+
+      element.parentElement?.removeChild(element)
     }
   }, [camera, controls, gl, scene, selectionBoxClassname, size])
 
