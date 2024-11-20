@@ -12,6 +12,7 @@ import { TransformControls as OriginalTransformControls } from 'three/examples/j
 import DisplayEntity from './components/canvas/DisplayEntity'
 import { Number3Tuple } from './types'
 import SelectedEntityGroup from './components/SelectedEntityGroup'
+import DragSelectControl from './components/DragSelectControl'
 
 const Scene: FC = () => {
   const {
@@ -436,6 +437,7 @@ const Scene: FC = () => {
           )
         }}
       />
+      <DragSelectControl />
 
       <ambientLight intensity={1.7} color={0xffffff} />
       <directionalLight position={[0, 10, 6]} />
