@@ -20,6 +20,7 @@ import { TransformControls as OriginalTransformControls } from 'three/examples/j
 import DisplayEntity from './components/canvas/DisplayEntity'
 import { Number3Tuple } from './types'
 import DragSelectControl from './components/DragSelectControl'
+import SelectionPivot from './components/SelectionPivot'
 
 const Scene: FC = () => {
   const {
@@ -214,7 +215,7 @@ const Scene: FC = () => {
         ))}
       </group>
 
-      <group name="pivot" ref={pivotRef} />
+      <SelectionPivot pivotRef={pivotRef} />
       <TransformControls
         object={pivotRef}
         mode={mode}
