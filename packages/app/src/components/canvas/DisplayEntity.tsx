@@ -1,9 +1,11 @@
-import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { FC } from 'react'
 import { useShallow } from 'zustand/shallow'
+
+import { useDisplayEntityStore } from '@/stores/displayEntityStore'
+import { useEntityRefStore } from '@/stores/entityRefStore'
+
 import BlockDisplay from './BlockDisplay'
 import ItemDisplay from './ItemDisplay'
-import { useEntityRefStore } from '@/stores/entityRefStore'
 
 type DisplayEntityProps = {
   id: string

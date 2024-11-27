@@ -1,4 +1,10 @@
+import { FC, ReactNode, Suspense, useEffect, useState } from 'react'
+import useSWRImmutable from 'swr/immutable'
+import { MathUtils, Vector3 } from 'three'
+import { useShallow } from 'zustand/shallow'
+
 import fetcher from '@/fetcher'
+import { useCacheStore } from '@/stores/cacheStore'
 import {
   CDNModelResponse,
   ModelDisplayPositionKey,
@@ -7,12 +13,8 @@ import {
   Number3Tuple,
 } from '@/types'
 import { generateBuiltinItemModel, stripMinecraftPrefix } from '@/utils'
-import { FC, ReactNode, Suspense, useEffect, useState } from 'react'
-import useSWRImmutable from 'swr/immutable'
+
 import BlockFace from './BlockFace'
-import { MathUtils, Vector3 } from 'three'
-import { useCacheStore } from '@/stores/cacheStore'
-import { useShallow } from 'zustand/shallow'
 
 type ModelProps = {
   initialResourceLocation: string

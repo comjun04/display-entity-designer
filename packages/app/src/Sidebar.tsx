@@ -1,4 +1,5 @@
 import { FC } from 'react'
+
 import ObjectsPanel from './components/sidebar/ObjectsPanel'
 import PropertiesPanel from './components/sidebar/PropertiesPanel'
 import TransformsPanel from './components/sidebar/TransformsPanel'

@@ -1,11 +1,13 @@
-import { useDisplayEntityStore } from '@/stores/displayEntityStore'
-import { FC, memo, MutableRefObject, useEffect } from 'react'
+import { Helper } from '@react-three/drei'
+import { FC, MutableRefObject, memo, useEffect } from 'react'
 import { BoxHelper, Object3D } from 'three'
 import { useShallow } from 'zustand/shallow'
-import Model from './Model'
-import { Helper } from '@react-three/drei'
+
+import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { Number3Tuple } from '@/types'
+
+import Model from './Model'
 
 type ItemDisplayProps = {
   id: string

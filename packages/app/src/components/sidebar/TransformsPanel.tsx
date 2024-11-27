@@ -1,11 +1,13 @@
 import { FC, useCallback } from 'react'
-import XYZInput from './XYZInput'
-import { useDisplayEntityStore } from '@/stores/displayEntityStore'
-import { useShallow } from 'zustand/shallow'
 import { MathUtils } from 'three'
+import { useShallow } from 'zustand/shallow'
+
+import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
-import { PartialNumber3Tuple } from '@/types'
 import { useEntityRefStore } from '@/stores/entityRefStore'
+import { PartialNumber3Tuple } from '@/types'
+
+import XYZInput from './XYZInput'
 
 const TransformsPanel: FC = () => {
   const {

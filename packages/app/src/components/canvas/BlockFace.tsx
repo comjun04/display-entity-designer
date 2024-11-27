@@ -1,10 +1,11 @@
-import { useCacheStore } from '@/stores/cacheStore'
-import { Number3Tuple } from '@/types'
-import { getTextureColor } from '@/utils'
 import { useTexture } from '@react-three/drei'
 import { FC, useEffect } from 'react'
 import { MathUtils, NearestFilter } from 'three'
 import { useShallow } from 'zustand/shallow'
+
+import { useCacheStore } from '@/stores/cacheStore'
+import { Number3Tuple } from '@/types'
+import { getTextureColor } from '@/utils'
 
 type BlockFaceProps = {
   faceName: 'up' | 'down' | 'north' | 'south' | 'west' | 'east'

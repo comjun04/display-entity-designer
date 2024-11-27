@@ -1,8 +1,9 @@
+import { useMemo } from 'react'
+import useSWRImmutable from 'swr/immutable'
+
 import fetcher from '@/fetcher'
 import { BlockStateApplyModelInfo, CDNBlockStatesResponse } from '@/types'
 import { stripMinecraftPrefix } from '@/utils'
-import { useMemo } from 'react'
-import useSWRImmutable from 'swr/immutable'
 
 const useBlockStates = (blockString?: string) => {
   const blockType = blockString != null ? blockString.split('[')[0] : null

@@ -1,6 +1,7 @@
-import { Number3Tuple, PartialNumber3Tuple } from '@/types'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
+
+import { Number3Tuple, PartialNumber3Tuple } from '@/types'
 
 // ==========
 type EditorMode = 'translate' | 'rotate' | 'scale'

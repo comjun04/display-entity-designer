@@ -2,14 +2,15 @@ import { Grid, PerspectiveCamera } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { FC, useEffect, useState } from 'react'
 import { Color } from 'three'
-import { useDialogStore } from './stores/dialogStore'
-import { useEditorStore } from './stores/editorStore'
-import { useDisplayEntityStore } from './stores/displayEntityStore'
 import { useShallow } from 'zustand/shallow'
+
 import CustomCameraControls from './CustomCameraControls'
-import DisplayEntity from './components/canvas/DisplayEntity'
 import DragSelectControl from './components/DragSelectControl'
 import TransformControls from './components/TransformControls'
+import DisplayEntity from './components/canvas/DisplayEntity'
+import { useDialogStore } from './stores/dialogStore'
+import { useDisplayEntityStore } from './stores/displayEntityStore'
+import { useEditorStore } from './stores/editorStore'
 
 const Scene: FC = () => {
   const { entityIds, selectedEntityIds, setSelected, deleteEntity } =

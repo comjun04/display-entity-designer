@@ -1,11 +1,13 @@
-import { useDialogStore } from '@/stores/dialogStore'
-import { useEditorStore } from '@/stores/editorStore'
+import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import { FC } from 'react'
 import { IoMove } from 'react-icons/io5'
 import { LuMenu, LuMoveDiagonal, LuRotate3D } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
+
+import { useDialogStore } from '@/stores/dialogStore'
+import { useEditorStore } from '@/stores/editorStore'
+
 import FloatingButton from './FloatingButton'
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 
 const LeftButtonPanel: FC = () => {
   const { mode, setMode } = useEditorStore(

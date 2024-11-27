@@ -1,7 +1,3 @@
-import fetcher from '@/fetcher'
-import { useDialogStore } from '@/stores/dialogStore'
-import { useDisplayEntityStore } from '@/stores/displayEntityStore'
-import { CDNBlocksListResponse } from '@/types'
 import {
   Dialog,
   DialogBackdrop,
@@ -11,6 +7,11 @@ import {
 import { FC, useEffect, useState } from 'react'
 import useSWRImmutable from 'swr/immutable'
 import { useShallow } from 'zustand/shallow'
+
+import fetcher from '@/fetcher'
+import { useDialogStore } from '@/stores/dialogStore'
+import { useDisplayEntityStore } from '@/stores/displayEntityStore'
+import { CDNBlocksListResponse } from '@/types'
 
 const BlockDisplaySelectDialog: FC = () => {
   const [firstOpened, setFirstOpened] = useState(false)

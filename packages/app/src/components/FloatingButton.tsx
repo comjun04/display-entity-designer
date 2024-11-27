@@ -1,5 +1,6 @@
-import { cn } from '@/utils'
 import { ButtonHTMLAttributes, forwardRef } from 'react'
+
+import { cn } from '@/utils'
 
 interface FloatingButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   active?: boolean

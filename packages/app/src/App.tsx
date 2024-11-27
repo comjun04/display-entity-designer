@@ -1,11 +1,11 @@
-import Sidebar from './Sidebar'
 import Scene from './Scene'
-import TopButtonPanel from './components/TopButtonPanel'
+import Sidebar from './Sidebar'
 import LeftButtonPanel from './components/LeftButtonPanel'
-import BlockDisplaySelectDialog from './components/dialog/BlockDisplaySelectDialog'
+import TopButtonPanel from './components/TopButtonPanel'
 import AppInfoDialog from './components/dialog/AppInfoDialog'
-import ItemDisplaySelectDialog from './components/dialog/ItemDisplaySelectDialog'
+import BlockDisplaySelectDialog from './components/dialog/BlockDisplaySelectDialog'
 import ExportToMinecraftDialog from './components/dialog/ExportToMinecraftDialog'
+import ItemDisplaySelectDialog from './components/dialog/ItemDisplaySelectDialog'
 
 function App() {
   return (

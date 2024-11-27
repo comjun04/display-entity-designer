@@ -1,7 +1,3 @@
-import { useDialogStore } from '@/stores/dialogStore'
-import { useEntityRefStore } from '@/stores/entityRefStore'
-import { useDisplayEntityStore } from '@/stores/displayEntityStore'
-import { cn } from '@/utils'
 import {
   Dialog,
   DialogBackdrop,
@@ -12,6 +8,11 @@ import { useDebouncedEffect } from '@react-hookz/web'
 import { FC, JSX, useEffect, useState } from 'react'
 import { LuCopy, LuCopyCheck } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
+
+import { useDialogStore } from '@/stores/dialogStore'
+import { useDisplayEntityStore } from '@/stores/displayEntityStore'
+import { useEntityRefStore } from '@/stores/entityRefStore'
+import { cn } from '@/utils'
 
 type CopyButtonProps = JSX.IntrinsicElements['button'] & {
   valueToCopy: string

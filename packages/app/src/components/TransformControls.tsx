@@ -1,5 +1,5 @@
-import { FC, MutableRefObject, useCallback, useEffect, useRef } from 'react'
 import { TransformControls as TransformControlsImpl } from '@react-three/drei'
+import { FC, MutableRefObject, useCallback, useEffect, useRef } from 'react'
 import {
   Box3,
   Box3Helper,
@@ -10,12 +10,13 @@ import {
   Quaternion,
   Vector3,
 } from 'three'
-import { useEntityRefStore } from '@/stores/entityRefStore'
+import { TransformControls as OriginalTransformControls } from 'three/examples/jsm/Addons.js'
 import { useShallow } from 'zustand/shallow'
+
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
+import { useEntityRefStore } from '@/stores/entityRefStore'
 import { Number3Tuple } from '@/types'
-import { TransformControls as OriginalTransformControls } from 'three/examples/jsm/Addons.js'
 
 const infinityVector = new Vector3(Infinity, Infinity, Infinity)
 const minusInfinityVector = new Vector3(-Infinity, -Infinity, -Infinity)

@@ -1,3 +1,9 @@
+import { nanoid } from 'nanoid'
+import { MutableRefObject, createRef } from 'react'
+import { Object3D } from 'three'
+import { create } from 'zustand'
+import { immer } from 'zustand/middleware/immer'
+
 import { useEntityRefStore } from '@/stores/entityRefStore'
 import {
   DisplayEntity,
@@ -5,11 +11,6 @@ import {
   Number3Tuple,
   PartialNumber3Tuple,
 } from '@/types'
-import { nanoid } from 'nanoid'
-import { createRef, MutableRefObject } from 'react'
-import { Object3D } from 'three'
-import { create } from 'zustand'
-import { immer } from 'zustand/middleware/immer'
 
 export type DisplayEntityState = {
   entityIds: string[]

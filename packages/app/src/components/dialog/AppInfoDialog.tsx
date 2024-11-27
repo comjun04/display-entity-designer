@@ -1,4 +1,3 @@
-import { useDialogStore } from '@/stores/dialogStore'
 import {
   Dialog,
   DialogBackdrop,
@@ -7,6 +6,8 @@ import {
 } from '@headlessui/react'
 import { FC } from 'react'
 import { useShallow } from 'zustand/shallow'
+
+import { useDialogStore } from '@/stores/dialogStore'
 
 const AppInfoDialog: FC = () => {
   const { isOpen, setOpenedDialog } = useDialogStore(

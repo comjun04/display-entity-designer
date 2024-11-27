@@ -1,9 +1,10 @@
-import { useDisplayEntityStore } from '@/stores/displayEntityStore'
-import { cn } from '@/utils'
 import { FC } from 'react'
 import { IoCubeOutline } from 'react-icons/io5'
 import { TbDiamondFilled } from 'react-icons/tb'
 import { useShallow } from 'zustand/shallow'
+
+import { useDisplayEntityStore } from '@/stores/displayEntityStore'
+import { cn } from '@/utils'
 
 type ObjectItemProps = {
   id: string

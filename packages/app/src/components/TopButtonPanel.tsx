@@ -1,11 +1,13 @@
+import { FC } from 'react'
+import { IoMdTrash } from 'react-icons/io'
+import { IoCubeOutline } from 'react-icons/io5'
+import { TbDiamondFilled } from 'react-icons/tb'
+import { useShallow } from 'zustand/shallow'
+
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
-import { FC } from 'react'
-import { IoCubeOutline } from 'react-icons/io5'
-import { useShallow } from 'zustand/shallow'
+
 import FloatingButton from './FloatingButton'
-import { IoMdTrash } from 'react-icons/io'
-import { TbDiamondFilled } from 'react-icons/tb'
 
 const TopButtonPanel: FC = () => {
   const { setOpenedDialog } = useDialogStore(

@@ -1,7 +1,5 @@
 // Base source from three-stdlib `SelectionBox.js`
 // https://github.com/pmndrs/three-stdlib/blob/6b51b6dfaa4af721616945c0b0f9787afdd0a3f8/src/interactive/SelectionBox.js
-
-import { useEntityRefStore } from '@/stores/entityRefStore'
 import {
   Box3,
   Frustum,
@@ -11,6 +9,8 @@ import {
   Scene,
   Vector3,
 } from 'three'
+
+import { useEntityRefStore } from '@/stores/entityRefStore'
 
 const frustum = new Frustum()
 const center = new Vector3()

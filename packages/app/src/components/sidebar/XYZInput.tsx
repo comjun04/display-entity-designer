@@ -1,5 +1,6 @@
-import { PartialNumber3Tuple } from '@/types'
 import { FC, useCallback, useEffect, useState } from 'react'
+
+import { PartialNumber3Tuple } from '@/types'
 
 type NumberInputProps = {
   value?: number
