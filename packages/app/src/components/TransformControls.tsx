@@ -26,9 +26,10 @@ type TransformControlsProps = {
 }
 
 const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
-  const { selectedEntityIds, batchSetEntityTransformation } =
+  const { entities, selectedEntityIds, batchSetEntityTransformation } =
     useDisplayEntityStore(
       useShallow((state) => ({
+        entities: state.entities,
         selectedEntityIds: state.selectedEntityIds,
         batchSetEntityTransformation: state.batchSetEntityTransformation,
       })),
@@ -45,12 +46,14 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
           : undefined,
     })),
   )
-  const { mode, setUsingTransformControl } = useEditorStore(
-    useShallow((state) => ({
-      mode: state.mode,
-      setUsingTransformControl: state.setUsingTransformControl,
-    })),
-  )
+  const { mode, setUsingTransformControl, setSelectionBaseTransformation } =
+    useEditorStore(
+      useShallow((state) => ({
+        mode: state.mode,
+        setUsingTransformControl: state.setUsingTransformControl,
+        setSelectionBaseTransformation: state.setSelectionBaseTransformation,
+      })),
+    )
 
   const pivotRef = useRef<Group>(null) as MutableRefObject<Group>
   const boundingBoxHelperRef = useRef<Box3Helper>(null)
@@ -95,27 +98,46 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
 
     pivotInitialPosition.current.copy(pivotRef.current.position)
     pivotInitialQuaternion.current.copy(pivotRef.current.quaternion)
-
-    selectedEntityInitialTransformations.current = []
-
-    for (const id of selectedEntityIds) {
-      const refData = useEntityRefStore
-        .getState()
-        .entityRefs.find((d) => d.id === id)!
-      const object = refData.objectRef.current
-
-      selectedEntityInitialTransformations.current.push({
-        object,
-        position: object.position.clone(),
-        quaternion: object.quaternion.clone(),
-        scale: object.scale.clone(),
-      })
-    }
   }, [firstSelectedEntityRefData, selectedEntityIds])
 
   useEffect(() => {
     updateBoundingBox()
   }, [selectedEntityIds, updateBoundingBox])
+
+  useEffect(() => {
+    const selectedEntities = entities.filter((e) =>
+      selectedEntityIds.includes(e.id),
+    )
+
+    selectedEntityInitialTransformations.current = []
+
+    for (const entity of selectedEntities) {
+      const refData = useEntityRefStore
+        .getState()
+        .entityRefs.find((d) => d.id === entity.id)!
+      const object = refData.objectRef.current
+
+      const positionVector = new Vector3(...entity.position)
+      const roatationEuler = new Euler(...entity.rotation)
+      const scaleVector = new Vector3(...entity.size)
+
+      selectedEntityInitialTransformations.current.push({
+        object,
+        position: positionVector,
+        quaternion: new Quaternion().setFromEuler(roatationEuler),
+        scale: scaleVector,
+      })
+
+      if (entity.id === firstSelectedEntityId) {
+        pivotRef.current.position.copy(positionVector)
+        pivotRef.current.rotation.copy(roatationEuler)
+      }
+    }
+
+    if (selectedEntityIds.length > 1) {
+      updateBoundingBox()
+    }
+  }, [entities, selectedEntityIds, firstSelectedEntityId, updateBoundingBox])
 
   return (
     <>
@@ -300,6 +322,21 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
 
             // 새로 바라볼 방향으로 설정
             objectRef.quaternion.copy(quaternion)
+          }
+
+          if (selectedEntityIds.length > 0) {
+            const firstSelectedEntityRefData = useEntityRefStore
+              .getState()
+              .entityRefs.find((d) => d.id === selectedEntityIds[0])!
+
+            setSelectionBaseTransformation({
+              position:
+                firstSelectedEntityRefData.objectRef.current.position.toArray(),
+              rotation: firstSelectedEntityRefData.objectRef.current.rotation
+                .toArray()
+                .slice(0, 3) as [number, number, number],
+              size: firstSelectedEntityRefData.objectRef.current.scale.toArray(),
+            })
           }
 
           // update box
