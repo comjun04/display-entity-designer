@@ -53,7 +53,6 @@ class SelectionBox {
     this.endPoint = endPoint || this.endPoint
     this.collection = []
     this.updateFrustum(this.startPoint, this.endPoint)
-    console.log('selectionbox.select(): frustum:', frustum)
     this.searchChildInFrustum(frustum, this.scene)
     return this.collection
   }

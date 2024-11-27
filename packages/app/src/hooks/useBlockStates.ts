@@ -206,8 +206,6 @@ const useBlockStates = (blockString?: string) => {
       }
     }
 
-    console.log('before', models)
-
     // blockstate가 없을 경우 empty string을 key로 사용하게 되어 map에 들어가게 됨
     // 데이터 리턴 전에 빼주기
     blockstateMap.delete('')
