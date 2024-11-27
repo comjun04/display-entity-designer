@@ -5,7 +5,7 @@ import { useShallow } from 'zustand/shallow'
 
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
-import { Number3Tuple } from '@/types'
+import { ItemDisplayEntity, Number3Tuple } from '@/types'
 
 import Model from './Model'
 
@@ -35,7 +35,9 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
     setSelected,
   } = useDisplayEntityStore(
     useShallow((state) => {
-      const thisEntity = state.entities.find((e) => e.id === id)
+      const thisEntity = state.entities.find(
+        (e) => e.id === id && e.kind === 'item',
+      ) as ItemDisplayEntity | undefined
 
       return {
         thisEntitySelected: state.selectedEntityIds.includes(id),

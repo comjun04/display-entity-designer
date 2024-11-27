@@ -85,19 +85,31 @@ export type CDNItemsListResponse = {
   items: string[]
 }
 
-export type DisplayEntity = {
+export type BaseDisplayEntity = {
   id: string
-  type: string
   size: Number3Tuple
   position: Number3Tuple
   rotation: Number3Tuple
+}
+
+export type BlockDisplayEntity = BaseDisplayEntity & {
+  kind: 'block'
+  type: string
+  blockstates: Record<string, string>
   display: ModelDisplayPositionKey | null
-} & (
-  | {
-      kind: 'block'
-      blockstates: Record<string, string>
-    }
-  | {
-      kind: 'item'
-    }
-)
+}
+
+export type ItemDisplayEntity = BaseDisplayEntity & {
+  kind: 'item'
+  type: string
+  display: ModelDisplayPositionKey | null
+}
+
+export type DisplayEntityGroup = BaseDisplayEntity & {
+  kind: 'group'
+}
+
+export type DisplayEntity =
+  | BlockDisplayEntity
+  | ItemDisplayEntity
+  | DisplayEntityGroup

@@ -24,8 +24,8 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
 
       return {
         kind: entity.kind,
-        type: entity.type,
-        display: entity.display,
+        type: 'type' in entity ? entity.type : undefined,
+        display: 'display' in entity ? entity.display : null,
         blockstates: entity.kind === 'block' ? entity.blockstates : undefined,
         selected: state.selectedEntityIds.includes(id),
         setSelected: state.setSelected,
