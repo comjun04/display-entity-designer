@@ -68,7 +68,10 @@ const DragSelectControl: FC<DragSelectControlProps> = ({
       const { selectedEntityIds, setSelected } =
         useDisplayEntityStore.getState()
       const newSelectedEntityIds = allSelectedRefData.map((d) => d.id)
-      if (!shallow(selectedEntityIds, newSelectedEntityIds)) {
+      if (
+        newSelectedEntityIds.length > 0 &&
+        !shallow(selectedEntityIds, newSelectedEntityIds) // shallow equal
+      ) {
         setSelected(newSelectedEntityIds)
       }
     }
