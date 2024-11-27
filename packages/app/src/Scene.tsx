@@ -1,43 +1,31 @@
-import { Grid, PerspectiveCamera, TransformControls } from '@react-three/drei'
+import { Grid, PerspectiveCamera } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
 import { FC, useEffect, useState } from 'react'
-import { Color, Event } from 'three'
+import { Color } from 'three'
 import { useDialogStore } from './stores/dialogStore'
 import { useEditorStore } from './stores/editorStore'
-import { useEntityRefStore } from './stores/entityRefStore'
 import { useDisplayEntityStore } from './stores/displayEntityStore'
 import { useShallow } from 'zustand/shallow'
 import CustomCameraControls from './CustomCameraControls'
-import { TransformControls as OriginalTransformControls } from 'three/examples/jsm/Addons.js'
 import DisplayEntity from './components/canvas/DisplayEntity'
+import DragSelectControl from './components/DragSelectControl'
+import TransformControls from './components/TransformControls'
 
 const Scene: FC = () => {
-  const {
-    entityIds,
-    selectedEntityId,
-    setSelected,
-    setEntityTranslation,
-    setEntityRotation,
-    setEntityScale,
-    deleteEntity,
-  } = useDisplayEntityStore(
+  const { entityIds, selectedEntityIds, setSelected, deleteEntity } =
+    useDisplayEntityStore(
+      useShallow((state) => ({
+        entityIds: state.entityIds,
+        selectedEntityIds: state.selectedEntityIds,
+        setSelected: state.setSelected,
+        deleteEntity: state.deleteEntity,
+      })),
+    )
+
+  const { setMode } = useEditorStore(
     useShallow((state) => ({
-      entityIds: state.entityIds,
-      selectedEntityId: state.selectedEntityId,
-      setSelected: state.setSelected,
-      setEntityTranslation: state.setEntityTranslation,
-      setEntityRotation: state.setEntityRotation,
-      setEntityScale: state.setEntityScale,
-      deleteEntity: state.deleteEntity,
+      setMode: state.setMode,
     })),
-  )
-  const { entityRefs } = useEntityRefStore(
-    useShallow((state) => ({
-      entityRefs: state.entityRefs,
-    })),
-  )
-  const { mode, setMode } = useEditorStore(
-    useShallow((state) => ({ mode: state.mode, setMode: state.setMode })),
   )
   const { openedDialog } = useDialogStore(
     useShallow((state) => ({
@@ -76,15 +64,13 @@ const Scene: FC = () => {
           setMode('scale')
           break
         case 'Delete':
-          if (selectedEntityId != null) {
-            deleteEntity(selectedEntityId)
-          }
+          selectedEntityIds.forEach(deleteEntity)
       }
     }
 
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [setMode, deleteEntity, selectedEntityId, openedDialog])
+  }, [setMode, deleteEntity, selectedEntityIds, openedDialog])
 
   useEffect(() => {
     const handler = (evt: KeyboardEvent) => {
@@ -103,6 +89,9 @@ const Scene: FC = () => {
     <Canvas
       scene={{
         background: new Color(0x222222),
+      }}
+      onPointerMissed={() => {
+        setSelected([])
       }}
     >
       {/* Axis lines */}
@@ -140,52 +129,14 @@ const Scene: FC = () => {
         <lineBasicMaterial color={0x0000ff} />
       </line>
 
-      {entityIds.map((id) => (
-        <DisplayEntity key={id} id={id} />
-      ))}
+      <group name="Display Entities">
+        {entityIds.map((id) => (
+          <DisplayEntity key={id} id={id} />
+        ))}
+      </group>
 
-      <TransformControls
-        object={
-          entityRefs.find((d) => d.id === selectedEntityId)?.objectRef ??
-          undefined
-        }
-        mode={mode}
-        translationSnap={shiftPressed ? 0.00125 : 0.0625}
-        rotationSnap={Math.PI / 12} // 15도
-        scaleSnap={0.0625}
-        // visible={selectedEntity != null} // 왜인지 모르겠는데 작동 안함
-        showX={selectedEntityId != null}
-        showY={selectedEntityId != null}
-        showZ={selectedEntityId != null}
-        enabled={selectedEntityId != null}
-        onObjectChange={(e) => {
-          const target = (e as Event<string, OriginalTransformControls>).target
-          setEntityTranslation(
-            selectedEntityId!,
-            target.object.position.toArray(),
-          )
-
-          const scale = target.object.scale.toArray().map(Math.abs) as [
-            number,
-            number,
-            number,
-          ]
-
-          // state를 건드리기 전에 object3d에 먼저 scale 값을 세팅해야 음수 값일 경우 음수 <-> 양수로 계속 바뀌면서 생기는 깜빡거림을 방지할 수 있음
-          target.object.scale.fromArray(scale)
-          setEntityScale(selectedEntityId!, scale) // 그 이후에 state 조작
-
-          const rotation = target.object.rotation
-          setEntityRotation(selectedEntityId!, [
-            rotation.x,
-            rotation.y,
-            rotation.z,
-          ])
-        }}
-        onPointerMissed={() => {
-          setSelected(null)
-        }}
-      />
+      <TransformControls shiftPressed={shiftPressed} />
+      <DragSelectControl />
 
       <ambientLight intensity={1.7} color={0xffffff} />
       <directionalLight position={[0, 10, 6]} />

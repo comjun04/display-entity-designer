@@ -1,4 +1,5 @@
-import { FC, useState } from 'react'
+import { PartialNumber3Tuple } from '@/types'
+import { FC, useCallback, useEffect, useState } from 'react'
 
 type NumberInputProps = {
   value?: number
@@ -8,9 +9,10 @@ type NumberInputProps = {
 }
 
 type XYZInputProps = {
-  value: [number, number, number]
+  // value가 undefined = 비어 있는 칸
+  value: PartialNumber3Tuple
   allowNegative?: boolean
-  onChange?: (xyz: [number, number, number]) => void
+  onChange?: (xyz: PartialNumber3Tuple) => void
 }
 
 const NumberInput: FC<NumberInputProps> = ({
@@ -19,23 +21,39 @@ const NumberInput: FC<NumberInputProps> = ({
   onChange,
   className,
 }) => {
-  const [focused, setFocused] = useState(false)
+  const [localValue, setLocalValue] = useState('')
+  const [directChange, setDirectChange] = useState(false)
+
+  useEffect(() => {
+    if (localValue.length < 1) return
+
+    const num = Number(localValue)
+    if (
+      directChange &&
+      !isNaN(num) &&
+      isFinite(num) &&
+      (allowNegative || num > 0)
+    ) {
+      onChange?.(num)
+    }
+
+    setDirectChange(false)
+  }, [directChange, localValue, allowNegative, onChange])
+
+  useEffect(() => {
+    setDirectChange(false)
+    setLocalValue(value?.toString() ?? '')
+  }, [value])
 
   return (
     <input
       type="number"
       min={allowNegative ? undefined : 0}
-      value={focused ? undefined : value}
+      value={localValue}
       onChange={(evt) => {
-        if (evt.target.value.length < 1) return
-
-        const num = Number(evt.target.value)
-        if (!isNaN(num) && isFinite(num) && (allowNegative || num > 0)) {
-          onChange?.(num)
-        }
+        setDirectChange(true)
+        setLocalValue(evt.target.value)
       }}
-      onFocus={() => setFocused(true)}
-      onBlur={() => setFocused(false)}
       className={className}
     />
   )
@@ -47,6 +65,25 @@ const XYZInput: FC<XYZInputProps> = ({
   onChange,
 }) => {
   const [x, y, z] = value
+  const xUpdateFn = useCallback(
+    (num: number) => {
+      onChange?.([num, undefined, undefined])
+    },
+    [onChange],
+  )
+  const yUpdateFn = useCallback(
+    (num: number) => {
+      onChange?.([undefined, num, undefined])
+    },
+    [onChange],
+  )
+  const zUpdateFn = useCallback(
+    (num: number) => {
+      onChange?.([undefined, undefined, num])
+    },
+    [onChange],
+  )
+
   return (
     <div className="flex flex-row justify-stretch gap-2">
       <div className="flex flex-row items-center gap-2">
@@ -54,7 +91,7 @@ const XYZInput: FC<XYZInputProps> = ({
         <NumberInput
           value={x}
           allowNegative={allowNegative}
-          onChange={(num) => onChange?.([num, y, z])}
+          onChange={xUpdateFn}
           className="w-full rounded border-l-4 border-red-500 bg-neutral-800 py-1 pl-1 text-xs outline-none"
         />
       </div>
@@ -63,7 +100,7 @@ const XYZInput: FC<XYZInputProps> = ({
         <NumberInput
           value={y}
           allowNegative={allowNegative}
-          onChange={(num) => onChange?.([x, num, z])}
+          onChange={yUpdateFn}
           className="w-full rounded border-l-4 border-green-500 bg-neutral-800 py-1 pl-1 text-xs outline-none"
         />
       </div>
@@ -72,7 +109,7 @@ const XYZInput: FC<XYZInputProps> = ({
         <NumberInput
           value={z}
           allowNegative={allowNegative}
-          onChange={(num) => onChange?.([x, y, num])}
+          onChange={zUpdateFn}
           className="w-full rounded border-l-4 border-blue-500 bg-neutral-800 py-1 pl-1 text-xs outline-none"
         />
       </div>

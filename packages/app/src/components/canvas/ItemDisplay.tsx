@@ -1,18 +1,22 @@
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
-import { FC, Ref } from 'react'
+import { FC, memo, MutableRefObject, useEffect } from 'react'
 import { BoxHelper, Object3D } from 'three'
 import { useShallow } from 'zustand/shallow'
 import Model from './Model'
 import { Helper } from '@react-three/drei'
+import { useEditorStore } from '@/stores/editorStore'
+import { Number3Tuple } from '@/types'
 
 type ItemDisplayProps = {
   id: string
   type: string
-  size: [number, number, number]
-  position: [number, number, number]
-  rotation: [number, number, number]
-  object3DRef?: Ref<Object3D>
+  size: Number3Tuple
+  position: Number3Tuple
+  rotation: Number3Tuple
+  object3DRef?: MutableRefObject<Object3D>
 }
+
+const MemoizedModel = memo(Model)
 
 const ItemDisplay: FC<ItemDisplayProps> = ({
   id,
@@ -22,25 +26,59 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
   rotation,
   object3DRef: ref,
 }) => {
-  const { thisEntityDisplay, selectedEntityId, setSelected } =
-    useDisplayEntityStore(
-      useShallow((state) => {
-        const thisEntity = state.entities.find((e) => e.id === id)
+  const {
+    thisEntitySelected,
+    thisEntityDisplay,
+    selectedEntityIds,
+    setSelected,
+  } = useDisplayEntityStore(
+    useShallow((state) => {
+      const thisEntity = state.entities.find((e) => e.id === id)
 
-        return {
-          thisEntityDisplay: thisEntity?.display,
-          selectedEntityId: state.selectedEntityId,
-          setSelected: state.setSelected,
-        }
-      }),
-    )
+      return {
+        thisEntitySelected: state.selectedEntityIds.includes(id),
+        thisEntityDisplay: thisEntity?.display,
+        selectedEntityIds: state.selectedEntityIds,
+        setSelected: state.setSelected,
+      }
+    }),
+  )
+  const { usingTransformControl } = useEditorStore(
+    useShallow((state) => ({
+      usingTransformControl: state.usingTransformControl,
+    })),
+  )
+
+  useEffect(() => {
+    if (!thisEntitySelected) {
+      ref?.current.position.set(...position)
+    }
+  }, [ref, position, thisEntitySelected])
+  useEffect(() => {
+    if (!thisEntitySelected) {
+      ref?.current.rotation.set(...rotation)
+    }
+  }, [ref, rotation, thisEntitySelected])
+  useEffect(() => {
+    if (!thisEntitySelected) {
+      ref?.current.scale.set(...size)
+    }
+  }, [ref, size, thisEntitySelected])
 
   return (
-    <object3D position={position} scale={size} rotation={rotation} ref={ref}>
-      {selectedEntityId === id && <Helper type={BoxHelper} args={['gold']} />}
+    <object3D ref={ref}>
+      {selectedEntityIds.includes(id) && (
+        <Helper type={BoxHelper} args={['gold']} />
+      )}
 
-      <group onClick={() => setSelected(id)}>
-        <Model
+      <group
+        onClick={() => {
+          if (!usingTransformControl) {
+            setSelected([id])
+          }
+        }}
+      >
+        <MemoizedModel
           initialResourceLocation={`item/${type}`}
           displayType={thisEntityDisplay ?? undefined}
         />

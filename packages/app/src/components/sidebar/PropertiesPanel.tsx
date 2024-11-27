@@ -17,23 +17,32 @@ const displayValue: (ModelDisplayPositionKey | null)[] = [
 ]
 
 const PropertiesPanel: FC = () => {
-  const { selectedEntity, setEntityDisplayType, setBDEntityBlockstates } =
+  const { singleSelectedEntity, setEntityDisplayType, setBDEntityBlockstates } =
     useDisplayEntityStore(
-      useShallow((state) => ({
-        selectedEntity: state.getSelectedEntity(),
-        setEntityDisplayType: state.setEntityDisplayType,
-        setBDEntityBlockstates: state.setBDEntityBlockstates,
-      })),
+      useShallow((state) => {
+        return {
+          singleSelectedEntity:
+            state.selectedEntityIds.length === 1
+              ? state.entities.find((e) => e.id === state.selectedEntityIds[0])!
+              : null,
+          setEntityDisplayType: state.setEntityDisplayType,
+          setBDEntityBlockstates: state.setBDEntityBlockstates,
+        }
+      }),
     )
 
   const { data: blockstatesData } = useBlockStates(
-    selectedEntity?.kind === 'block' ? selectedEntity.type : undefined,
+    singleSelectedEntity?.kind === 'block'
+      ? singleSelectedEntity.type
+      : undefined,
   )
+
+  console.log(singleSelectedEntity)
 
   return (
     <div className="flex select-none flex-col gap-[2px] rounded-lg bg-neutral-900 p-2 text-sm">
       <span className="font-bold">Properties</span>
-      {selectedEntity?.kind === 'block' &&
+      {singleSelectedEntity?.kind === 'block' &&
         blockstatesData.blockstates.size > 0 && (
           <div className="flex flex-col gap-2">
             <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
@@ -45,9 +54,9 @@ const PropertiesPanel: FC = () => {
                   <label className="flex-1 text-end">{key}</label>
                   <select
                     className="flex-[2] rounded bg-neutral-800 px-2 py-1"
-                    value={selectedEntity.blockstates[key]}
+                    value={singleSelectedEntity.blockstates[key]}
                     onChange={(evt) => {
-                      setBDEntityBlockstates(selectedEntity.id, {
+                      setBDEntityBlockstates(singleSelectedEntity.id, {
                         [key]: evt.target.value,
                       })
                     }}
@@ -62,7 +71,7 @@ const PropertiesPanel: FC = () => {
           </div>
         )}
 
-      {selectedEntity?.kind === 'item' && (
+      {singleSelectedEntity?.kind === 'item' && (
         <div className="flex flex-col gap-2">
           <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
             Display
@@ -72,10 +81,10 @@ const PropertiesPanel: FC = () => {
             <label className="flex-1 text-end">display</label>
             <select
               className="flex-[2] rounded bg-neutral-800 px-2 py-1"
-              value={selectedEntity.display ?? 'none'}
+              value={singleSelectedEntity.display ?? 'none'}
               onChange={(evt) => {
                 setEntityDisplayType(
-                  selectedEntity.id,
+                  singleSelectedEntity.id,
                   evt.target.value === 'none'
                     ? null
                     : (evt.target.value as ModelDisplayPositionKey),

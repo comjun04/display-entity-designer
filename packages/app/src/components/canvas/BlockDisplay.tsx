@@ -1,10 +1,11 @@
 import useBlockStates from '@/hooks/useBlockStates'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
-import { FC, Ref, useEffect } from 'react'
+import { FC, memo, MutableRefObject, useEffect } from 'react'
 import { BoxHelper, Object3D } from 'three'
 import { useShallow } from 'zustand/shallow'
 import Model from './Model'
 import { Helper } from '@react-three/drei'
+import { useEditorStore } from '@/stores/editorStore'
 
 type BlockDisplayProps = {
   id: string
@@ -13,8 +14,10 @@ type BlockDisplayProps = {
   position: [number, number, number]
   rotation: [number, number, number]
   color?: number | string
-  object3DRef?: Ref<Object3D>
+  object3DRef?: MutableRefObject<Object3D>
 }
+
+const MemoizedModel = memo(Model)
 
 const BlockDisplay: FC<BlockDisplayProps> = ({
   id,
@@ -24,15 +27,24 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
   rotation,
   object3DRef: ref,
 }) => {
-  const { thisEntity, selectedEntityId, setSelected, setBDEntityBlockstates } =
-    useDisplayEntityStore(
-      useShallow((state) => ({
-        thisEntity: state.entities.find((e) => e.id === id),
-        selectedEntityId: state.selectedEntityId,
-        setSelected: state.setSelected,
-        setBDEntityBlockstates: state.setBDEntityBlockstates,
-      })),
-    )
+  const {
+    thisEntity,
+    thisEntitySelected,
+    setSelected,
+    setBDEntityBlockstates,
+  } = useDisplayEntityStore(
+    useShallow((state) => ({
+      thisEntity: state.entities.find((e) => e.id === id),
+      thisEntitySelected: state.selectedEntityIds.includes(id),
+      setSelected: state.setSelected,
+      setBDEntityBlockstates: state.setBDEntityBlockstates,
+    })),
+  )
+  const { usingTransformControl } = useEditorStore(
+    useShallow((state) => ({
+      usingTransformControl: state.usingTransformControl,
+    })),
+  )
 
   // =====
 
@@ -46,7 +58,9 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
   useEffect(() => {
     if (blockstatesData == null) return
 
-    console.log('trigger')
+    // console.log(
+    //   'BlockDisplay: blockstates data changed maybe, resetting blockstates default values',
+    // )
 
     const newBlockstateObject: Record<string, string> = {}
     for (const [
@@ -63,13 +77,34 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
     setBDEntityBlockstates(id, newBlockstateObject)
   }, [blockstatesData, id, setBDEntityBlockstates])
 
+  useEffect(() => {
+    if (!thisEntitySelected) {
+      ref?.current.position.set(...position)
+    }
+  }, [ref, position, thisEntitySelected])
+  useEffect(() => {
+    if (!thisEntitySelected) {
+      ref?.current.rotation.set(...rotation)
+    }
+  }, [ref, rotation, thisEntitySelected])
+  useEffect(() => {
+    if (!thisEntitySelected) {
+      ref?.current.scale.set(...size)
+    }
+  }, [ref, size, thisEntitySelected])
+
   if (thisEntity?.kind !== 'block') return null
 
   return (
-    <object3D position={position} ref={ref} scale={size} rotation={rotation}>
-      {selectedEntityId === id && <Helper type={BoxHelper} args={['gold']} />}
-
-      <group onClick={() => setSelected(id)}>
+    <object3D ref={ref}>
+      {thisEntitySelected && <Helper type={BoxHelper} args={['gold']} />}
+      <group
+        onClick={() => {
+          if (!usingTransformControl) {
+            setSelected([id])
+          }
+        }}
+      >
         {(blockstatesData?.models ?? []).map((model, idx) => {
           let shouldRender = model.when.length < 1 // when 배열 안에 조건이 정의되어 있지 않다면 무조건 렌더링
           for (const conditionObject of model.when) {
@@ -97,7 +132,7 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
           // apply가 여러 개 있는 경우(랜덤), 맨 처음 것만 고정으로 사용
           const modelToApply = model.apply[0]
           return (
-            <Model
+            <MemoizedModel
               key={idx}
               initialResourceLocation={modelToApply.model}
               xRotation={modelToApply.x}

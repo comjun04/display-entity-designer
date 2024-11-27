@@ -4,6 +4,7 @@ import {
   ModelDisplayPositionKey,
   ModelElement,
   ModelFaceKey,
+  Number3Tuple,
 } from '@/types'
 import { generateBuiltinItemModel, stripMinecraftPrefix } from '@/utils'
 import { FC, ReactNode, Suspense, useEffect, useState } from 'react'
@@ -193,7 +194,7 @@ const Model: FC<ModelProps> = ({
   const displayInfo = displayType != null ? (display[displayType] ?? {}) : {}
   const displayRotation = (displayInfo.rotation ?? [0, 0, 0]).map((d) =>
     MathUtils.degToRad(d),
-  ) as [number, number, number]
+  ) as Number3Tuple
   const displayTranslation = new Vector3(
     ...(displayInfo.translation ?? [0, 0, 0]),
   )
@@ -259,8 +260,8 @@ const Model: FC<ModelProps> = ({
                   }
 
                   // element rotation
-                  let rotation = [0, 0, 0] as [number, number, number]
-                  let groupScale = [1, 1, 1] as [number, number, number]
+                  let rotation = [0, 0, 0] satisfies Number3Tuple
+                  let groupScale = [1, 1, 1] satisfies Number3Tuple
                   if (element.rotation != null) {
                     const rad = MathUtils.degToRad(element.rotation.angle)
 

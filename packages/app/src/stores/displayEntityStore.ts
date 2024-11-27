@@ -1,5 +1,10 @@
 import { useEntityRefStore } from '@/stores/entityRefStore'
-import { DisplayEntity, ModelDisplayPositionKey } from '@/types'
+import {
+  DisplayEntity,
+  ModelDisplayPositionKey,
+  Number3Tuple,
+  PartialNumber3Tuple,
+} from '@/types'
 import { nanoid } from 'nanoid'
 import { createRef, MutableRefObject } from 'react'
 import { Object3D } from 'three'
@@ -9,16 +14,22 @@ import { immer } from 'zustand/middleware/immer'
 export type DisplayEntityState = {
   entityIds: string[]
   entities: DisplayEntity[]
-  selectedEntityId: string | null
+  selectedEntityIds: string[]
+
   createNew: (kind: DisplayEntity['kind'], type: string) => void
-  setSelected: (id: string | null) => void
-  getSelectedEntity: () => DisplayEntity | null
-  setEntityTranslation: (
-    id: string,
-    translation: [number, number, number],
+  setSelected: (ids: string[]) => void
+  addToSelected: (id: string) => void
+  setEntityTranslation: (id: string, translation: PartialNumber3Tuple) => void
+  setEntityRotation: (id: string, rotation: PartialNumber3Tuple) => void
+  setEntityScale: (id: string, scale: PartialNumber3Tuple) => void
+  batchSetEntityTransformation: (
+    data: {
+      id: string
+      translation?: PartialNumber3Tuple
+      rotation?: PartialNumber3Tuple
+      scale?: PartialNumber3Tuple
+    }[],
   ) => void
-  setEntityRotation: (id: string, rotation: [number, number, number]) => void
-  setEntityScale: (id: string, scale: [number, number, number]) => void
   setEntityDisplayType: (
     id: string,
     display: ModelDisplayPositionKey | null,
@@ -31,10 +42,11 @@ export type DisplayEntityState = {
 }
 
 export const useDisplayEntityStore = create(
-  immer<DisplayEntityState>((set, get) => ({
+  immer<DisplayEntityState>((set) => ({
     entityIds: [],
     entities: [],
-    selectedEntityId: null,
+    selectedEntityIds: [],
+    selectedEntities: [],
 
     createNew: (kind, type) => {
       const id = nanoid(16)
@@ -69,43 +81,114 @@ export const useDisplayEntityStore = create(
         }
       })
     },
-    setSelected: (id) =>
+    setSelected: (ids) =>
       set((state) => {
-        // selectedEntityId 삭제
-        if (id == null) {
-          state.selectedEntityId = null
+        state.selectedEntityIds = ids
+      }),
+    addToSelected: (id) =>
+      set((state) => {
+        if (!state.selectedEntityIds.includes(id)) {
+          state.selectedEntityIds.push(id)
+        }
+      }),
+    setEntityTranslation: (id, translation) =>
+      set((state) => {
+        console.debug(
+          'displayEntityStore setEntityTranslation',
+          id,
+          translation,
+        )
+
+        const entity = state.entities.find((e) => e.id === id)
+        if (entity == null) {
+          console.error(
+            `displayEntityStore.setEntityTranslation(): unknown entity ${id}`,
+          )
           return
         }
 
-        const entity = state.entities.find((e) => e.id === id)
-        if (entity != null) {
-          state.selectedEntityId = entity.id
-        }
-      }),
-    getSelectedEntity: () => {
-      const { entities, selectedEntityId } = get()
-      return entities.find((e) => e.id === selectedEntityId) ?? null
-    },
-    setEntityTranslation: (id, translation) =>
-      set((state) => {
-        const entity = state.entities.find((e) => e.id === id)
-        if (entity != null) {
-          entity.position = translation
-        }
+        const positionDraft = entity.position.slice() as Number3Tuple
+        translation.forEach((d, idx) => {
+          if (d != null) {
+            positionDraft[idx] = d
+          }
+        })
+        entity.position = positionDraft
       }),
     setEntityRotation: (id, rotation) =>
       set((state) => {
         const entity = state.entities.find((e) => e.id === id)
-        if (entity != null) {
-          entity.rotation = rotation
+        if (entity == null) {
+          console.error(
+            `displayEntityStore.setEntityRotation(): unknown entity ${id}`,
+          )
+          return
         }
+
+        const rotationDraft = entity.rotation.slice() as Number3Tuple
+        rotation.forEach((d, idx) => {
+          if (d != null) {
+            rotationDraft[idx] = d
+          }
+        })
+        entity.rotation = rotationDraft
       }),
     setEntityScale: (id, scale) =>
       set((state) => {
+        console.debug('displayEntityStore setEntityScale', id, scale)
+
         const entity = state.entities.find((e) => e.id === id)
-        if (entity != null) {
-          entity.size = scale
+        if (entity == null) {
+          console.error(
+            `displayEntityStore.setEntityScale(): unknown entity ${id}`,
+          )
+          return
         }
+
+        const scaleDraft = entity.size.slice() as Number3Tuple
+        scale.forEach((d, idx) => {
+          if (d != null) {
+            scaleDraft[idx] = d
+          }
+        })
+        entity.size = scaleDraft
+      }),
+    batchSetEntityTransformation: (data) =>
+      set((state) => {
+        console.debug('displayEntityStore batchSetEntityTransformation', data)
+
+        data.forEach((item) => {
+          const entity = state.entities.find((e) => e.id === item.id)
+          if (entity == null) return
+
+          if (item.translation != null) {
+            const positionDraft = entity.position.slice() as Number3Tuple
+            item.translation.forEach((d, idx) => {
+              if (d != null) {
+                positionDraft[idx] = d
+              }
+            })
+            entity.position = positionDraft
+          }
+          if (item.rotation != null) {
+            const rotationDraft = entity.rotation.slice() as Number3Tuple
+            item.rotation.forEach((d, idx) => {
+              if (d != null) {
+                rotationDraft[idx] = d
+              }
+            })
+            entity.rotation = rotationDraft
+          }
+          if (item.scale != null) {
+            const scaleDraft = entity.size.slice() as Number3Tuple
+            item.scale.forEach((d, idx) => {
+              if (d != null) {
+                scaleDraft[idx] = d
+              }
+            })
+            entity.size = scaleDraft
+          }
+        })
       }),
     setEntityDisplayType: (id, display) =>
       set((state) => {
@@ -156,8 +239,11 @@ export const useDisplayEntityStore = create(
           state.entities.splice(entityIdx, 1)
         }
 
-        if (state.selectedEntityId === id) {
-          state.selectedEntityId = null
+        const selectedEntityIdIdx = state.selectedEntityIds.findIndex(
+          (entityId) => entityId === id,
+        )
+        if (selectedEntityIdIdx >= 0) {
+          state.selectedEntityIds.splice(selectedEntityIdIdx, 1)
         }
       }),
   })),

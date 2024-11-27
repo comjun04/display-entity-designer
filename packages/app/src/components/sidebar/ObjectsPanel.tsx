@@ -14,8 +14,9 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
     type,
     display,
     blockstates,
-    selectedEntityId,
-    setSelectedEntity,
+    selected,
+    setSelected,
+    addToSelectedEntity,
   } = useDisplayEntityStore(
     useShallow((state) => {
       const entity = state.entities.find((e) => e.id === id)!
@@ -25,8 +26,9 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
         type: entity.type,
         display: entity.display,
         blockstates: entity.kind === 'block' ? entity.blockstates : undefined,
-        selectedEntityId: state.selectedEntityId,
-        setSelectedEntity: state.setSelected,
+        selected: state.selectedEntityIds.includes(id),
+        setSelected: state.setSelected,
+        addToSelectedEntity: state.addToSelected,
       }
     }),
   )
@@ -42,9 +44,11 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
     <div
       className={cn(
         'flex cursor-pointer flex-row items-center gap-1',
-        selectedEntityId === id && 'font-bold text-yellow-500',
+        selected && 'font-bold text-yellow-500',
       )}
-      onClick={() => setSelectedEntity(id)}
+      onClick={(evt) =>
+        evt.ctrlKey ? addToSelectedEntity(id) : setSelected([id])
+      }
     >
       <span className="flex-none">
         {kind === 'block' && <IoCubeOutline size={16} />}
