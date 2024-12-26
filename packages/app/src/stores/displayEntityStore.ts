@@ -13,7 +13,6 @@ import {
 } from '@/types'
 
 export type DisplayEntityState = {
-  entityIds: string[]
   entities: DisplayEntity[]
   selectedEntityIds: string[]
 
@@ -44,16 +43,13 @@ export type DisplayEntityState = {
 
 export const useDisplayEntityStore = create(
   immer<DisplayEntityState>((set) => ({
-    entityIds: [],
     entities: [],
     selectedEntityIds: [],
-    selectedEntities: [],
 
     createNew: (kind, type) => {
       const id = nanoid(16)
 
       return set((state) => {
-        state.entityIds.push(id)
         useEntityRefStore
           .getState()
           .setEntityRef(id, createRef() as MutableRefObject<Object3D>)
@@ -227,13 +223,6 @@ export const useDisplayEntityStore = create(
       }),
     deleteEntity: (id) =>
       set((state) => {
-        const entityIdIdx = state.entityIds.findIndex(
-          (entityId) => entityId === id,
-        )
-        if (entityIdIdx >= 0) {
-          state.entityIds.splice(entityIdIdx, 1)
-        }
-
         const entityIdx = state.entities.findIndex((e) => e.id === id)
         if (entityIdx >= 0) {
           useEntityRefStore.getState().deleteEntityRef(id)

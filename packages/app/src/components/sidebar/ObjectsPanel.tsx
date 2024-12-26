@@ -67,10 +67,8 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
 }
 
 const ObjectsPanel: FC = () => {
-  const { entityIds } = useDisplayEntityStore(
-    useShallow((state) => ({
-      entityIds: state.entityIds,
-    })),
+  const entityIds = useDisplayEntityStore(
+    useShallow((state) => state.entities.map((entity) => entity.id)),
   )
 
   return (

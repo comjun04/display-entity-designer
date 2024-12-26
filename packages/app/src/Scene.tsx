@@ -13,15 +13,17 @@ import { useDisplayEntityStore } from './stores/displayEntityStore'
 import { useEditorStore } from './stores/editorStore'
 
 const Scene: FC = () => {
-  const { entityIds, selectedEntityIds, setSelected, deleteEntity } =
+  const { selectedEntityIds, setSelected, deleteEntity } =
     useDisplayEntityStore(
       useShallow((state) => ({
-        entityIds: state.entityIds,
         selectedEntityIds: state.selectedEntityIds,
         setSelected: state.setSelected,
         deleteEntity: state.deleteEntity,
       })),
     )
+  const entityIds = useDisplayEntityStore(
+    useShallow((state) => state.entities.map((entity) => entity.id)),
+  )
 
   const { setMode } = useEditorStore(
     useShallow((state) => ({
