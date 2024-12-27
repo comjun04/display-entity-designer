@@ -1,3 +1,12 @@
+import { MutableRefObject, RefCallback } from 'react'
+
+/**
+ * ref에 커스텀 함수(callback)을 쓸 수 있으면서
+ * 동시에 `current` 값도 사용할 수 있는 Ref
+ */
+export type RefCallbackWithMutableRefObject<T> = RefCallback<T> &
+  MutableRefObject<T>
+
 export type Number3Tuple = [number, number, number]
 export type PartialNumber3Tuple = [
   number | undefined,

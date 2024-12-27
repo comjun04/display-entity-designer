@@ -1,6 +1,4 @@
 import { nanoid } from 'nanoid'
-import { MutableRefObject, createRef } from 'react'
-import { Object3D } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
@@ -50,9 +48,7 @@ export const useDisplayEntityStore = create(
       const id = nanoid(16)
 
       return set((state) => {
-        useEntityRefStore
-          .getState()
-          .setEntityRef(id, createRef() as MutableRefObject<Object3D>)
+        useEntityRefStore.getState().createEntityRef(id)
 
         if (kind === 'block') {
           state.entities.push({

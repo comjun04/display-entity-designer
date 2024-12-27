@@ -2,10 +2,17 @@ import { MutableRefObject } from 'react'
 import { Object3D } from 'three'
 import { create } from 'zustand'
 
+import { RefCallbackWithMutableRefObject } from '@/types'
+
 // ==========
 type EntityRefStoreState = {
-  entityRefs: { id: string; objectRef: MutableRefObject<Object3D> }[]
-  setEntityRef: (id: string, ref: MutableRefObject<Object3D>) => void
+  entityRefs: {
+    id: string
+    refAvailable: boolean
+    objectRef: MutableRefObject<Object3D>
+  }[]
+
+  createEntityRef: (id: string) => void
   deleteEntityRef: (id: string) => void
 }
 // DisplayEntity#objectRef는 mutable해야 하므로(object 내부 property를 수정할 수 있어야 하므로)
@@ -14,13 +21,35 @@ type EntityRefStoreState = {
 
 export const useEntityRefStore = create<EntityRefStoreState>((set) => ({
   entityRefs: [],
-  setEntityRef: (id, ref) =>
+
+  createEntityRef: (id) =>
     set((state) => {
+      const ref = ((node: Object3D) => {
+        ref.current = node
+
+        const refAvailable = node != null
+        set((state) => {
+          const entityIdx = state.entityRefs.findIndex((e) => e.id === id)
+          if (entityIdx >= 0) {
+            const originalEntityRefData = state.entityRefs[entityIdx]
+            return {
+              entityRefs: state.entityRefs.toSpliced(entityIdx, 1, {
+                ...originalEntityRefData,
+                refAvailable,
+              }),
+            }
+          }
+
+          return {}
+        })
+      }) as RefCallbackWithMutableRefObject<Object3D>
+
       const entityIdx = state.entityRefs.findIndex((e) => e.id === id)
       if (entityIdx >= 0) {
         return {
           entityRefs: state.entityRefs.toSpliced(entityIdx, 1, {
             id,
+            refAvailable: false,
             objectRef: ref,
           }),
         }
@@ -30,6 +59,7 @@ export const useEntityRefStore = create<EntityRefStoreState>((set) => ({
             ...state.entityRefs,
             {
               id,
+              refAvailable: false,
               objectRef: ref,
             },
           ],
