@@ -36,7 +36,7 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
     setBDEntityBlockstates,
   } = useDisplayEntityStore(
     useShallow((state) => ({
-      thisEntity: state.entities.find((e) => e.id === id),
+      thisEntity: state.findEntity(id),
       thisEntitySelected: state.selectedEntityIds.includes(id),
       setSelected: state.setSelected,
       setBDEntityBlockstates: state.setBDEntityBlockstates,
@@ -81,17 +81,17 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
 
   useEffect(() => {
     if (!thisEntitySelected) {
-      ref?.current.position.set(...position)
+      ref?.current?.position.set(...position)
     }
   }, [ref, position, thisEntitySelected])
   useEffect(() => {
     if (!thisEntitySelected) {
-      ref?.current.rotation.set(...rotation)
+      ref?.current?.rotation.set(...rotation)
     }
   }, [ref, rotation, thisEntitySelected])
   useEffect(() => {
     if (!thisEntitySelected) {
-      ref?.current.scale.set(...size)
+      ref?.current?.scale.set(...size)
     }
   }, [ref, size, thisEntitySelected])
 

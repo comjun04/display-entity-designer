@@ -55,7 +55,7 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
         {kind === 'block' && <IoCubeOutline size={16} />}
         {kind === 'item' && <TbDiamondFilled size={16} />}
       </span>
-      <span>{type}</span>
+      <span>{kind === 'group' ? 'Group' : type}</span>
       {blockstateArr.length > 0 && (
         <span className="truncate opacity-50">[{blockstateArr.join(',')}]</span>
       )}

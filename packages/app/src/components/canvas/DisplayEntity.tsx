@@ -1,4 +1,5 @@
-import { FC } from 'react'
+import { FC, MutableRefObject } from 'react'
+import { Group } from 'three'
 import { useShallow } from 'zustand/shallow'
 
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
@@ -14,7 +15,7 @@ type DisplayEntityProps = {
 const DisplayEntity: FC<DisplayEntityProps> = ({ id }) => {
   const { thisEntity } = useDisplayEntityStore(
     useShallow((state) => ({
-      thisEntity: state.entities.find((e) => e.id === id),
+      thisEntity: state.findEntity(id),
     })),
   )
 
@@ -47,6 +48,15 @@ const DisplayEntity: FC<DisplayEntityProps> = ({ id }) => {
         size={thisEntity.size}
         object3DRef={thisEntityRef?.objectRef}
       />
+    )
+  } else if (thisEntity.kind === 'group') {
+    return (
+      <group ref={thisEntityRef?.objectRef as MutableRefObject<Group>}>
+        {thisEntity.children.map((entity) => {
+          console.log('aa', entity)
+          return <DisplayEntity key={entity.id} id={entity.id} />
+        })}
+      </group>
     )
   }
 

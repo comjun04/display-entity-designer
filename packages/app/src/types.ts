@@ -116,6 +116,7 @@ export type ItemDisplayEntity = BaseDisplayEntity & {
 
 export type DisplayEntityGroup = BaseDisplayEntity & {
   kind: 'group'
+  children: DisplayEntity[]
 }
 
 export type DisplayEntity =

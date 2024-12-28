@@ -39,14 +39,18 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
   const firstSelectedEntityId =
     selectedEntityIds.length > 0 ? selectedEntityIds[0] : null
 
-  const { firstSelectedEntityRefData } = useEntityRefStore(
-    useShallow((state) => ({
-      firstSelectedEntityRefData:
-        firstSelectedEntityId != null
-          ? state.entityRefs.find((d) => d.id === firstSelectedEntityId)
-          : undefined,
-    })),
-  )
+  const { firstSelectedEntityRefData, selectedEntityRefAllAvailable } =
+    useEntityRefStore(
+      useShallow((state) => ({
+        firstSelectedEntityRefData:
+          firstSelectedEntityId != null
+            ? state.entityRefs.find((d) => d.id === firstSelectedEntityId)
+            : undefined,
+        selectedEntityRefAllAvailable: selectedEntityIds.every(
+          (id) => state.entityRefs.find((d) => d.id === id)?.refAvailable,
+        ),
+      })),
+    )
   const { mode, setUsingTransformControl, setSelectionBaseTransformation } =
     useEditorStore(
       useShallow((state) => ({
@@ -71,7 +75,8 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
   >([])
 
   const updateBoundingBox = useCallback(() => {
-    if (boundingBoxHelperRef.current == null) return
+    if (boundingBoxHelperRef.current == null || !selectedEntityRefAllAvailable)
+      return
 
     const box = boundingBoxHelperRef.current.box
     box.set(infinityVector.clone(), minusInfinityVector.clone()) // 넓이 초기화
@@ -82,7 +87,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
         .entityRefs.find((d) => d.id === entityId)!
       box.expandByObject(refData.objectRef.current)
     })
-  }, [selectedEntityIds])
+  }, [selectedEntityIds, selectedEntityRefAllAvailable])
 
   useEffect(() => {
     if (pivotRef.current == null) return
@@ -112,6 +117,8 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
 
     selectedEntityInitialTransformations.current = []
 
+    if (!selectedEntityRefAllAvailable) return
+
     for (const entity of selectedEntities) {
       const refData = useEntityRefStore
         .getState()
@@ -138,7 +145,13 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
     if (selectedEntityIds.length > 1) {
       updateBoundingBox()
     }
-  }, [entities, selectedEntityIds, firstSelectedEntityId, updateBoundingBox])
+  }, [
+    entities,
+    selectedEntityIds,
+    firstSelectedEntityId,
+    updateBoundingBox,
+    selectedEntityRefAllAvailable,
+  ])
 
   return (
     <>
