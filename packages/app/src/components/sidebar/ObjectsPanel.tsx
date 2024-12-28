@@ -1,5 +1,6 @@
 import { FC } from 'react'
 import { IoCubeOutline } from 'react-icons/io5'
+import { LuChevronDown } from 'react-icons/lu'
 import { TbDiamondFilled } from 'react-icons/tb'
 import { useShallow } from 'zustand/shallow'
 
@@ -18,9 +19,10 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
     selected,
     setSelected,
     addToSelectedEntity,
+    children,
   } = useDisplayEntityStore(
     useShallow((state) => {
-      const entity = state.entities.find((e) => e.id === id)!
+      const entity = state.findEntity(id)!
 
       return {
         kind: entity.kind,
@@ -30,6 +32,8 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
         selected: state.selectedEntityIds.includes(id),
         setSelected: state.setSelected,
         addToSelectedEntity: state.addToSelected,
+
+        children: entity.kind === 'group' ? entity.children : null,
       }
     }),
   )
@@ -42,25 +46,39 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
   }
 
   return (
-    <div
-      className={cn(
-        'flex cursor-pointer flex-row items-center gap-1',
-        selected && 'font-bold text-yellow-500',
-      )}
-      onClick={(evt) =>
-        evt.ctrlKey ? addToSelectedEntity(id) : setSelected([id])
-      }
-    >
-      <span className="flex-none">
-        {kind === 'block' && <IoCubeOutline size={16} />}
-        {kind === 'item' && <TbDiamondFilled size={16} />}
-      </span>
-      <span>{kind === 'group' ? 'Group' : type}</span>
-      {blockstateArr.length > 0 && (
-        <span className="truncate opacity-50">[{blockstateArr.join(',')}]</span>
-      )}
-      {kind === 'item' && display != null && (
-        <span className="truncate opacity-50">[display={display}]</span>
+    <div>
+      <div
+        className={cn(
+          'flex cursor-pointer flex-row items-center gap-1',
+          selected && 'font-bold text-yellow-500',
+        )}
+        onClick={(evt) =>
+          evt.ctrlKey ? addToSelectedEntity(id) : setSelected([id])
+        }
+      >
+        <span className="flex-none">
+          {kind === 'block' && <IoCubeOutline size={16} />}
+          {kind === 'item' && <TbDiamondFilled size={16} />}
+
+          {kind === 'group' && <LuChevronDown size={16} />}
+        </span>
+        <span>{kind === 'group' ? 'Group' : type}</span>
+        {blockstateArr.length > 0 && (
+          <span className="truncate opacity-50">
+            [{blockstateArr.join(',')}]
+          </span>
+        )}
+        {kind === 'item' && display != null && (
+          <span className="truncate opacity-50">[display={display}]</span>
+        )}
+      </div>
+
+      {kind === 'group' && children != null && (
+        <div className="pl-4">
+          {children.map((entity) => (
+            <ObjectItem key={entity.id} id={entity.id} />
+          ))}
+        </div>
       )}
     </div>
   )
