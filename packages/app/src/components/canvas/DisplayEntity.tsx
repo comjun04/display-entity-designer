@@ -1,11 +1,11 @@
-import { FC, MutableRefObject } from 'react'
-import { Group } from 'three'
+import { FC } from 'react'
 import { useShallow } from 'zustand/shallow'
 
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEntityRefStore } from '@/stores/entityRefStore'
 
 import BlockDisplay from './BlockDisplay'
+import DisplayEntityGroup from './DisplayEntityGroup'
 import ItemDisplay from './ItemDisplay'
 
 type DisplayEntityProps = {
@@ -51,12 +51,14 @@ const DisplayEntity: FC<DisplayEntityProps> = ({ id }) => {
     )
   } else if (thisEntity.kind === 'group') {
     return (
-      <group ref={thisEntityRef?.objectRef as MutableRefObject<Group>}>
-        {thisEntity.children.map((entity) => {
-          console.log('aa', entity)
-          return <DisplayEntity key={entity.id} id={entity.id} />
-        })}
-      </group>
+      <DisplayEntityGroup
+        position={thisEntity.position}
+        rotation={thisEntity.rotation}
+        size={thisEntity.size}
+        // eslint-disable-next-line react/no-children-prop
+        children={thisEntity.children}
+        object3DRef={thisEntityRef?.objectRef}
+      />
     )
   }
 
