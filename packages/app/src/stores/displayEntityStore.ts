@@ -319,12 +319,21 @@ function findEntityRecursively(
   list: DisplayEntity[],
   id: string,
   removeFromList: boolean = false,
-) {
+): DisplayEntity | undefined {
   for (let i = 0; i < list.length; i++) {
     const entity = list[i]
 
     if (entity.kind === 'group' && entity.id !== id) {
-      return findEntityRecursively(entity.children, id, removeFromList)
+      const childrenFindResult = findEntityRecursively(
+        entity.children,
+        id,
+        removeFromList,
+      )
+
+      // group의 children 중에 찾는 entity가 있을 경우 리턴
+      if (childrenFindResult != null) {
+        return childrenFindResult
+      }
     } else if (entity.id === id) {
       if (removeFromList) {
         list.splice(i, 1)

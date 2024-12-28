@@ -21,7 +21,7 @@ const Scene: FC = () => {
         deleteEntity: state.deleteEntity,
       })),
     )
-  const entityIds = useDisplayEntityStore(
+  const rootEntityIds = useDisplayEntityStore(
     useShallow((state) => state.entities.map((entity) => entity.id)),
   )
 
@@ -133,7 +133,7 @@ const Scene: FC = () => {
       </line>
 
       <group name="Display Entities">
-        {entityIds.map((id) => (
+        {rootEntityIds.map((id) => (
           <DisplayEntity key={id} id={id} />
         ))}
       </group>
