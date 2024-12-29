@@ -1,6 +1,6 @@
 import { Helper } from '@react-three/drei'
 import { FC, MutableRefObject, memo, useEffect } from 'react'
-import { BoxHelper, Object3D } from 'three'
+import { BoxHelper, Group } from 'three'
 import { useShallow } from 'zustand/shallow'
 
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
@@ -15,7 +15,7 @@ type ItemDisplayProps = {
   size: Number3Tuple
   position: Number3Tuple
   rotation: Number3Tuple
-  object3DRef?: MutableRefObject<Object3D>
+  objectRef?: MutableRefObject<Group>
 }
 
 const MemoizedModel = memo(Model)
@@ -26,7 +26,7 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
   size,
   position,
   rotation,
-  object3DRef: ref,
+  objectRef: ref,
 }) => {
   const {
     thisEntitySelected,
@@ -35,7 +35,7 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
     setSelected,
   } = useDisplayEntityStore(
     useShallow((state) => {
-      const thisEntity = state.findEntity(id)
+      const thisEntity = state.entities.find((e) => e.id === id)
 
       return {
         thisEntitySelected: state.selectedEntityIds.includes(id),

@@ -1,6 +1,6 @@
 import { Helper } from '@react-three/drei'
 import { FC, MutableRefObject, memo, useEffect } from 'react'
-import { BoxHelper, Object3D } from 'three'
+import { BoxHelper, Group } from 'three'
 import { useShallow } from 'zustand/shallow'
 
 import useBlockStates from '@/hooks/useBlockStates'
@@ -16,7 +16,8 @@ type BlockDisplayProps = {
   position: [number, number, number]
   rotation: [number, number, number]
   color?: number | string
-  object3DRef?: MutableRefObject<Object3D>
+  objectRef?: MutableRefObject<Group>
+  parentGroupRef: MutableRefObject<Group>
 }
 
 const MemoizedModel = memo(Model)
@@ -27,7 +28,7 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
   size,
   position,
   rotation,
-  object3DRef: ref,
+  objectRef: ref,
 }) => {
   const {
     thisEntity,
@@ -36,7 +37,7 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
     setBDEntityBlockstates,
   } = useDisplayEntityStore(
     useShallow((state) => ({
-      thisEntity: state.findEntity(id),
+      thisEntity: state.entities.find((e) => e.id === id),
       thisEntitySelected: state.selectedEntityIds.includes(id),
       setSelected: state.setSelected,
       setBDEntityBlockstates: state.setBDEntityBlockstates,
@@ -98,7 +99,7 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
   if (thisEntity?.kind !== 'block') return null
 
   return (
-    <object3D ref={ref}>
+    <group ref={ref}>
       {thisEntitySelected && <Helper type={BoxHelper} args={['gold']} />}
       <group
         onClick={() => {
@@ -143,7 +144,7 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
           )
         })}
       </group>
-    </object3D>
+    </group>
   )
 }
 

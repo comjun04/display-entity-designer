@@ -1,17 +1,12 @@
 import { FC, MutableRefObject, useEffect } from 'react'
-import { Group, Object3D } from 'three'
-
-import { DisplayEntity } from '@/types'
-
-import DisplayEntityImpl from './DisplayEntity'
+import { Group } from 'three'
 
 type DisplayEntityGroupProps = {
   // id: string
   size: [number, number, number]
   position: [number, number, number]
   rotation: [number, number, number]
-  children: DisplayEntity[]
-  object3DRef?: MutableRefObject<Object3D>
+  objectRef?: MutableRefObject<Group>
 }
 
 const DisplayEntityGroup: FC<DisplayEntityGroupProps> = ({
@@ -19,8 +14,7 @@ const DisplayEntityGroup: FC<DisplayEntityGroupProps> = ({
   position,
   rotation,
   size,
-  children,
-  object3DRef: ref,
+  objectRef: ref,
 }) => {
   useEffect(() => {
     ref?.current?.position.set(...position)
@@ -34,9 +28,7 @@ const DisplayEntityGroup: FC<DisplayEntityGroupProps> = ({
 
   return (
     <group ref={ref as MutableRefObject<Group>}>
-      {children.map((entity) => (
-        <DisplayEntityImpl key={entity.id} id={entity.id} />
-      ))}
+      {/* 그룹 안에 들어가야 할 display entity들은 portal을 사용해서 이 안에서 렌더링됨 */}
     </group>
   )
 }

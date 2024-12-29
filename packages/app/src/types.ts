@@ -96,6 +96,7 @@ export type CDNItemsListResponse = {
 
 export type BaseDisplayEntity = {
   id: string
+  parent?: string
   size: Number3Tuple
   position: Number3Tuple
   rotation: Number3Tuple
@@ -116,7 +117,7 @@ export type ItemDisplayEntity = BaseDisplayEntity & {
 
 export type DisplayEntityGroup = BaseDisplayEntity & {
   kind: 'group'
-  children: DisplayEntity[]
+  children: string[] // list of entity ids
 }
 
 export type DisplayEntity =

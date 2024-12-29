@@ -15,8 +15,6 @@ export type DisplayEntityState = {
   entities: DisplayEntity[]
   selectedEntityIds: string[]
 
-  findEntity: (id: string) => DisplayEntity | undefined
-
   createNew: (kind: DisplayEntity['kind'], type: string) => void
   setSelected: (ids: string[]) => void
   addToSelected: (id: string) => void
@@ -46,14 +44,9 @@ export type DisplayEntityState = {
 }
 
 export const useDisplayEntityStore = create(
-  immer<DisplayEntityState>((set, get) => ({
+  immer<DisplayEntityState>((set) => ({
     entities: [],
     selectedEntityIds: [],
-
-    findEntity: (id) => {
-      const entities = get().entities
-      return findEntityRecursively(entities, id)
-    },
 
     createNew: (kind, type) => {
       const id = nanoid(16)
@@ -213,7 +206,7 @@ export const useDisplayEntityStore = create(
       }),
     setBDEntityBlockstates: (id, blockstates) =>
       set((state) => {
-        const entity = findEntityRecursively(state.entities, id)
+        const entity = state.entities.find((e) => e.id === id)
         if (entity == null) {
           console.error(
             `Attempted to set blockstates for unknown block display entity: ${id}`,
@@ -231,10 +224,28 @@ export const useDisplayEntityStore = create(
     deleteEntity: (id) =>
       set((state) => {
         const entityIdx = state.entities.findIndex((e) => e.id === id)
-        if (entityIdx >= 0) {
-          useEntityRefStore.getState().deleteEntityRef(id)
-          state.entities.splice(entityIdx, 1)
+        if (entityIdx < 0) {
+          console.error(
+            `displayEntityStore.deleteEntity(): Attempt to remove unknown entity with id ${id}`,
+          )
+          return
         }
+
+        const entity = state.entities[entityIdx]
+
+        // parent가 있을 경우 parent entity에서 children으로 등록된 걸 삭제
+        if (entity.parent != null) {
+          const parentElement = state.entities.find(
+            (e) => e.id === entity.parent,
+          )
+          if (parentElement == null || parentElement.kind !== 'group') return
+
+          const idx = parentElement.children.findIndex((d) => d === id)
+          parentElement.children.splice(idx, 1)
+        }
+
+        useEntityRefStore.getState().deleteEntityRef(id)
+        state.entities.splice(entityIdx, 1)
 
         const selectedEntityIdIdx = state.selectedEntityIds.findIndex(
           (entityId) => entityId === id,
@@ -248,12 +259,10 @@ export const useDisplayEntityStore = create(
       set((state) => {
         if (state.selectedEntityIds.length < 1) return
 
-        const entitiesToGroup: DisplayEntity[] = [] // WritableDraft<DisplayEntity>
+        const groupId = nanoid(16)
 
-        const firstSelectedEntity = findEntityRecursively(
-          state.entities,
-          state.selectedEntityIds[0],
-          true,
+        const firstSelectedEntity = state.entities.find(
+          (e) => e.id === state.selectedEntityIds[0],
         )
         if (firstSelectedEntity == null) {
           console.error(
@@ -269,13 +278,11 @@ export const useDisplayEntityStore = create(
         ]
         firstSelectedEntity.position = [0, 0, 0]
 
-        entitiesToGroup.push(firstSelectedEntity)
+        firstSelectedEntity.parent = groupId
 
         for (const selectedEntityId of state.selectedEntityIds.slice(1)) {
-          const selectedEntity = findEntityRecursively(
-            state.entities,
-            selectedEntityId,
-            true,
+          const selectedEntity = state.entities.find(
+            (e) => e.id === selectedEntityId,
           )
           if (selectedEntity == null) {
             console.error(
@@ -290,56 +297,25 @@ export const useDisplayEntityStore = create(
             selectedEntity.position[2] - firstSelectedEntityPosition[2],
           ]
 
-          entitiesToGroup.push(selectedEntity)
+          selectedEntity.parent = groupId
         }
-
-        const groupId = nanoid(16)
 
         useEntityRefStore.getState().createEntityRef(groupId)
 
-        const group: DisplayEntityGroup = {
+        state.entities.unshift({
           kind: 'group',
           id: groupId,
           position: firstSelectedEntityPosition,
           rotation: [0, 0, 0],
           size: [1, 1, 1],
-          children: entitiesToGroup,
-        }
+          children: [...state.selectedEntityIds],
+        } satisfies DisplayEntityGroup)
 
-        state.entities.unshift(group)
+        console.log('aaa', state.entities)
 
         // 선택된 디스플레이 엔티티를 방금 생성한 그룹으로 설정
-        state.selectedEntityIds = [group.id]
+        state.selectedEntityIds = [groupId]
       }),
     ungroup: () => {},
   })),
 )
-
-function findEntityRecursively(
-  list: DisplayEntity[],
-  id: string,
-  removeFromList: boolean = false,
-): DisplayEntity | undefined {
-  for (let i = 0; i < list.length; i++) {
-    const entity = list[i]
-
-    if (entity.kind === 'group' && entity.id !== id) {
-      const childrenFindResult = findEntityRecursively(
-        entity.children,
-        id,
-        removeFromList,
-      )
-
-      // group의 children 중에 찾는 entity가 있을 경우 리턴
-      if (childrenFindResult != null) {
-        return childrenFindResult
-      }
-    } else if (entity.id === id) {
-      if (removeFromList) {
-        list.splice(i, 1)
-      }
-
-      return entity
-    }
-  }
-}

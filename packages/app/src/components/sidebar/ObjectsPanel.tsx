@@ -22,7 +22,7 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
     children,
   } = useDisplayEntityStore(
     useShallow((state) => {
-      const entity = state.findEntity(id)!
+      const entity = state.entities.find((e) => e.id === id)!
 
       return {
         kind: entity.kind,
@@ -75,8 +75,8 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
 
       {kind === 'group' && children != null && (
         <div className="pl-4">
-          {children.map((entity) => (
-            <ObjectItem key={entity.id} id={entity.id} />
+          {children.map((entityId) => (
+            <ObjectItem key={entityId} id={entityId} />
           ))}
         </div>
       )}
@@ -85,15 +85,17 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
 }
 
 const ObjectsPanel: FC = () => {
-  const entityIds = useDisplayEntityStore(
-    useShallow((state) => state.entities.map((entity) => entity.id)),
+  const rootEntityIds = useDisplayEntityStore(
+    useShallow((state) =>
+      state.entities.filter((e) => e.parent == null).map((entity) => entity.id),
+    ),
   )
 
   return (
     <div className="flex select-none flex-col gap-[2px] rounded-lg bg-neutral-900 p-2 text-sm">
       <span className="font-bold">Objects</span>
 
-      {entityIds.map((id) => (
+      {rootEntityIds.map((id) => (
         <ObjectItem key={id} id={id} />
       ))}
     </div>
