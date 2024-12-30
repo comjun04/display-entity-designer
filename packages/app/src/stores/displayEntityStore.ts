@@ -1,4 +1,5 @@
 import { nanoid } from 'nanoid'
+import { Box3 } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
@@ -242,6 +243,11 @@ export const useDisplayEntityStore = create(
 
           const idx = parentElement.children.findIndex((d) => d === id)
           parentElement.children.splice(idx, 1)
+        }
+
+        // children으로 등록된 entity들이 있다면 같이 삭제
+        if (entity.kind === 'group') {
+          entity.children.forEach((id) => state.deleteEntity(id))
         }
 
         useEntityRefStore.getState().deleteEntityRef(id)
