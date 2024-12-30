@@ -261,43 +261,25 @@ export const useDisplayEntityStore = create(
 
         const groupId = nanoid(16)
 
-        const firstSelectedEntity = state.entities.find(
-          (e) => e.id === state.selectedEntityIds[0],
+        const selectedEntities = state.entities.filter((e) =>
+          state.selectedEntityIds.includes(e.id),
         )
-        if (firstSelectedEntity == null) {
-          console.error(
-            `displayEntityStore.groupSelected(): cannot find selected entity ${state.selectedEntityIds[0]}`,
-          )
-          return
-        }
 
-        // TODO: box.expandByObject() 같은 방식으로 별도로 group의 position을 계산한 다음
-        // 이에 따른 상대적인 좌표를 반영해야 함
-        const firstSelectedEntityPosition: Number3Tuple = [
-          ...firstSelectedEntity.position,
-        ]
-        firstSelectedEntity.position = [0, 0, 0]
-
-        firstSelectedEntity.parent = groupId
-
-        for (const selectedEntityId of state.selectedEntityIds.slice(1)) {
-          const selectedEntity = state.entities.find(
-            (e) => e.id === selectedEntityId,
-          )
-          if (selectedEntity == null) {
-            console.error(
-              `displayEntityStore.groupSelected(): cannot find selected entity ${selectedEntityId}`,
-            )
-            return
-          }
-
-          selectedEntity.position = [
-            selectedEntity.position[0] - firstSelectedEntityPosition[0],
-            selectedEntity.position[1] - firstSelectedEntityPosition[1],
-            selectedEntity.position[2] - firstSelectedEntityPosition[2],
-          ]
+        // box3로 그룹 안에 포함될 모든 entity들을 포함하도록 늘려서 측정
+        const box3 = new Box3()
+        const entityRefs = useEntityRefStore.getState().entityRefs
+        for (const selectedEntity of selectedEntities) {
+          const entityRefData = entityRefs.find(
+            (d) => d.id === selectedEntity.id,
+          )!
+          box3.expandByObject(entityRefData.objectRef.current)
 
           selectedEntity.parent = groupId
+        }
+        for (const selectedEntity of selectedEntities) {
+          selectedEntity.position[0] -= box3.min.x
+          selectedEntity.position[1] -= box3.min.y
+          selectedEntity.position[2] -= box3.min.z
         }
 
         useEntityRefStore.getState().createEntityRef(groupId)
@@ -305,7 +287,7 @@ export const useDisplayEntityStore = create(
         state.entities.unshift({
           kind: 'group',
           id: groupId,
-          position: firstSelectedEntityPosition,
+          position: box3.min.toArray(),
           rotation: [0, 0, 0],
           size: [1, 1, 1],
           children: [...state.selectedEntityIds],
