@@ -81,6 +81,7 @@ const DisplayEntity: FC<DisplayEntityProps> = ({ id }) => {
   } else if (thisEntity.kind === 'group') {
     return (
       <DisplayEntityGroup
+        id={id}
         position={thisEntity.position}
         rotation={thisEntity.rotation}
         size={thisEntity.size}

@@ -1,8 +1,12 @@
+import { Helper } from '@react-three/drei'
 import { FC, MutableRefObject, useEffect } from 'react'
-import { Group } from 'three'
+import { BoxHelper, Group } from 'three'
+import { useShallow } from 'zustand/shallow'
+
+import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 
 type DisplayEntityGroupProps = {
-  // id: string
+  id: string
   size: [number, number, number]
   position: [number, number, number]
   rotation: [number, number, number]
@@ -10,12 +14,18 @@ type DisplayEntityGroupProps = {
 }
 
 const DisplayEntityGroup: FC<DisplayEntityGroupProps> = ({
-  // id,
+  id,
   position,
   rotation,
   size,
   objectRef: ref,
 }) => {
+  const { thisEntitySelected } = useDisplayEntityStore(
+    useShallow((state) => ({
+      thisEntitySelected: state.selectedEntityIds.includes(id),
+    })),
+  )
+
   useEffect(() => {
     ref?.current?.position.set(...position)
   }, [ref, position])
@@ -28,6 +38,7 @@ const DisplayEntityGroup: FC<DisplayEntityGroupProps> = ({
 
   return (
     <group ref={ref as MutableRefObject<Group>}>
+      {thisEntitySelected && <Helper type={BoxHelper} args={['green']} />}
       {/* 그룹 안에 들어가야 할 display entity들은 portal을 사용해서 이 안에서 렌더링됨 */}
     </group>
   )
