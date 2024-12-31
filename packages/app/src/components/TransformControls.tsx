@@ -60,7 +60,6 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
   const boundingBoxHelperRef = useRef<Box3Helper>(null)
 
   const pivotInitialPosition = useRef(new Vector3())
-  const pivotInitialQuaternion = useRef(new Quaternion())
   const selectedEntityInitialTransformations = useRef<
     {
       object: Object3D
@@ -98,7 +97,6 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
     }
 
     pivotInitialPosition.current.copy(pivotRef.current.position)
-    pivotInitialQuaternion.current.copy(pivotRef.current.quaternion)
   }, [firstSelectedEntityRefData, selectedEntityIds])
 
   useEffect(() => {
@@ -131,9 +129,11 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
 
       if (entity.id === firstSelectedEntityId) {
         pivotRef.current.position.copy(positionVector)
-        pivotRef.current.rotation.copy(roatationEuler)
       }
     }
+
+    // pivot rotation 리셋
+    pivotRef.current.rotation.set(0, 0, 0)
 
     if (selectedEntityIds.length > 1) {
       updateBoundingBox()
@@ -254,7 +254,9 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
           }
 
           pivotInitialPosition.current.copy(pivotRef.current.position)
-          pivotInitialQuaternion.current.copy(pivotRef.current.quaternion)
+
+          // pivot rotation 리셋
+          pivotRef.current.rotation.set(0, 0, 0)
         }}
         onObjectChange={(e) => {
           if (pivotRef.current == null) return
@@ -281,24 +283,20 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
               .clone()
               .sub(pivotInitialPosition.current)
 
-            // entity 초기 quaternion에서 pivot 초기 quaternion의 차이
-            const relativeQuaternion = pivotInitialQuaternion.current
-              .clone()
-              .invert()
-              .premultiply(initialTransformation.quaternion)
-            // pivot 현재 quaternion + relativeQuaternion
-            // 이게 object의 quaternion에 들어감 (방향을 결정)
-            const quaternion = pivotRef.current.quaternion
-              .clone()
-              .multiply(relativeQuaternion)
+            // pivot quaternion 회전값 (pivot quaternion은 처음에 (0,0,0)으로 초기화됨)
+            const relativeQuaternion = pivotRef.current.quaternion
 
-            // 위치이동 시
-            // pivot 현재 quaternion에서 pivot initial quaternion의 차이
-            // current_quaternion x initial_quaternion^-1
-            const positionalQuaternion = pivotInitialQuaternion.current
+            /*
+             * pivot 현재 quaternion + entity 초기 quaternion
+             * 이게 object의 quaternion에 들어감 (방향을 결정)
+             * cross(relativeQuaternion, initialTransformation.quaternion)
+             *
+             * Three.js `Object3D#rotateOnWorldAxis()` 참조
+             * https://github.com/mrdoob/three.js/blob/e8af245aaac4f65d2f1f4df5a302bd19599d899e/src/core/Object3D.js#L192
+             */
+            const quaternion = initialTransformation.quaternion
               .clone()
-              .invert()
-              .premultiply(pivotRef.current.quaternion)
+              .premultiply(relativeQuaternion)
 
             if (mode === 'scale') {
               objectRef.position
@@ -317,7 +315,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
             } else {
               objectRef.position
                 .copy(relativePosition)
-                .applyQuaternion(positionalQuaternion)
+                .applyQuaternion(relativeQuaternion)
                 .add(pivotRef.current.position)
             }
 
