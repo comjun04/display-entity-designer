@@ -117,13 +117,13 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
       const object = refData.objectRef.current
 
       const positionVector = new Vector3(...entity.position)
-      const roatationEuler = new Euler(...entity.rotation)
+      const rotationEuler = new Euler(...entity.rotation)
       const scaleVector = new Vector3(...entity.size)
 
       selectedEntityInitialTransformations.current.push({
         object,
         position: positionVector,
-        quaternion: new Quaternion().setFromEuler(roatationEuler),
+        quaternion: new Quaternion().setFromEuler(rotationEuler),
         scale: scaleVector,
       })
 
