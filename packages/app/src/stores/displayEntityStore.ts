@@ -12,6 +12,8 @@ import {
   PartialNumber3Tuple,
 } from '@/types'
 
+import { useEditorStore } from './editorStore'
+
 export type DisplayEntityState = {
   entityIds: string[]
   entities: DisplayEntity[]
@@ -84,6 +86,18 @@ export const useDisplayEntityStore = create(
     },
     setSelected: (ids) =>
       set((state) => {
+        if (state.selectedEntityIds[0] !== ids[0]) {
+          const firstSelectedEntity = state.entities.find(
+            (e) => e.id === ids[0],
+          )
+
+          useEditorStore.getState().setSelectionBaseTransformation({
+            position: firstSelectedEntity?.position,
+            rotation: firstSelectedEntity?.rotation,
+            size: firstSelectedEntity?.size,
+          })
+        }
+
         state.selectedEntityIds = ids
       }),
     addToSelected: (id) =>
