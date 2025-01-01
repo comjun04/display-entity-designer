@@ -10,6 +10,7 @@ import {
   Vector3,
 } from 'three'
 
+import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEntityRefStore } from '@/stores/entityRefStore'
 
 const frustum = new Frustum()
@@ -167,26 +168,65 @@ class SelectionBox {
     }
   }
 
+  /**
+   * frustum 안에 지정된 `object`가 포함되어 있는지 확인합니다.
+   * @returns object가 frustum에 포함되어 있을 경우 `true`, 아니면 `false`를 반환합니다.
+   */
   searchChildInFrustum(frustum2: Frustum, object: Object3D) {
     const entityRefs = useEntityRefStore.getState().entityRefs
-    const isDisplayEntity =
-      entityRefs.find((d) => d.objectRef.current.id === object.id) != null
+    const targetEntityRefData = entityRefs.find(
+      (d) => d.objectRef.current.id === object.id,
+    )
+    const isDisplayEntity = targetEntityRefData != null
 
+    // 디스플레이 엔티티인 경우
     if (object instanceof Object3D && isDisplayEntity) {
-      // console.log(object)
+      const entity = useDisplayEntityStore
+        .getState()
+        .entities.find((e) => e.id === targetEntityRefData.id)
+      if (entity == null) {
+        return false
+      }
 
       const box3 = new Box3().setFromObject(object)
       box3.getCenter(center)
 
+      // SelectionBox 안에 엔티티가 포함되었을 경우
       if (frustum2.containsPoint(center)) {
-        this.collection.push(object)
+        // 최상단 엔티티/그룹일 경우 바로 선택
+        if (entity.parent == null) {
+          this.collection.push(object)
+        }
+
+        return true
+      }
+
+      // SelectionBox가 최상단 그룹을 감지하진 못했는데 그 안에 있는 entity를 감지했을 경우
+      // 이를 확인하여 최상단 그룹이 선택된 걸로 처리
+      if (entity.kind === 'group') {
+        // 그룹 children에 포함되어 있는 엔티티들에 대해 같은 계산을 수행행
+        const frustumIncludesChild = object.children.some((o) =>
+          this.searchChildInFrustum(frustum2, o),
+        )
+        if (frustumIncludesChild) {
+          if (entity.parent == null) {
+            this.collection.push(object)
+          }
+
+          return true
+        } else {
+          return false
+        }
       }
     }
+
     if (!isDisplayEntity && object.children.length > 0) {
       for (let x = 0; x < object.children.length; x++) {
         this.searchChildInFrustum(frustum2, object.children[x])
       }
     }
+
+    return false
   }
 }
 
