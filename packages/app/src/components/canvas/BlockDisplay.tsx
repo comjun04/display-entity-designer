@@ -1,11 +1,11 @@
 import { Helper } from '@react-three/drei'
+import { ThreeEvent } from '@react-three/fiber'
 import { FC, MutableRefObject, memo, useEffect } from 'react'
 import { BoxHelper, Group } from 'three'
 import { useShallow } from 'zustand/shallow'
 
 import useBlockStates from '@/hooks/useBlockStates'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
-import { useEditorStore } from '@/stores/editorStore'
 
 import Model from './Model'
 
@@ -16,6 +16,7 @@ type BlockDisplayProps = {
   position: [number, number, number]
   rotation: [number, number, number]
   color?: number | string
+  onClick?: (event: ThreeEvent<MouseEvent>) => void
   objectRef?: MutableRefObject<Group>
   parentGroupRef: MutableRefObject<Group>
 }
@@ -28,26 +29,17 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
   size,
   position,
   rotation,
+  onClick,
   objectRef: ref,
 }) => {
-  const {
-    thisEntity,
-    thisEntitySelected,
-    setSelected,
-    setBDEntityBlockstates,
-  } = useDisplayEntityStore(
-    useShallow((state) => ({
-      thisEntity: state.entities.find((e) => e.id === id),
-      thisEntitySelected: state.selectedEntityIds.includes(id),
-      setSelected: state.setSelected,
-      setBDEntityBlockstates: state.setBDEntityBlockstates,
-    })),
-  )
-  const { usingTransformControl } = useEditorStore(
-    useShallow((state) => ({
-      usingTransformControl: state.usingTransformControl,
-    })),
-  )
+  const { thisEntity, thisEntitySelected, setBDEntityBlockstates } =
+    useDisplayEntityStore(
+      useShallow((state) => ({
+        thisEntity: state.entities.find((e) => e.id === id),
+        thisEntitySelected: state.selectedEntityIds.includes(id),
+        setBDEntityBlockstates: state.setBDEntityBlockstates,
+      })),
+    )
 
   // =====
 
@@ -101,13 +93,7 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
   return (
     <group ref={ref}>
       {thisEntitySelected && <Helper type={BoxHelper} args={['gold']} />}
-      <group
-        onClick={() => {
-          if (!usingTransformControl) {
-            setSelected([id])
-          }
-        }}
-      >
+      <group onClick={onClick}>
         {(blockstatesData?.models ?? []).map((model, idx) => {
           let shouldRender = model.when.length < 1 // when 배열 안에 조건이 정의되어 있지 않다면 무조건 렌더링
           for (const conditionObject of model.when) {

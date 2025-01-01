@@ -1,10 +1,10 @@
 import { Helper } from '@react-three/drei'
+import { ThreeEvent } from '@react-three/fiber'
 import { FC, MutableRefObject, memo, useEffect } from 'react'
 import { BoxHelper, Group } from 'three'
 import { useShallow } from 'zustand/shallow'
 
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
-import { useEditorStore } from '@/stores/editorStore'
 import { Number3Tuple } from '@/types'
 
 import Model from './Model'
@@ -15,6 +15,7 @@ type ItemDisplayProps = {
   size: Number3Tuple
   position: Number3Tuple
   rotation: Number3Tuple
+  onClick?: (event: ThreeEvent<MouseEvent>) => void
   objectRef?: MutableRefObject<Group>
 }
 
@@ -26,31 +27,22 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
   size,
   position,
   rotation,
+  onClick,
   objectRef: ref,
 }) => {
-  const {
-    thisEntitySelected,
-    thisEntityDisplay,
-    selectedEntityIds,
-    setSelected,
-  } = useDisplayEntityStore(
-    useShallow((state) => {
-      const thisEntity = state.entities.find((e) => e.id === id)
+  const { thisEntitySelected, thisEntityDisplay, selectedEntityIds } =
+    useDisplayEntityStore(
+      useShallow((state) => {
+        const thisEntity = state.entities.find((e) => e.id === id)
 
-      return {
-        thisEntitySelected: state.selectedEntityIds.includes(id),
-        thisEntityDisplay:
-          thisEntity?.kind === 'item' ? thisEntity.display : undefined,
-        selectedEntityIds: state.selectedEntityIds,
-        setSelected: state.setSelected,
-      }
-    }),
-  )
-  const { usingTransformControl } = useEditorStore(
-    useShallow((state) => ({
-      usingTransformControl: state.usingTransformControl,
-    })),
-  )
+        return {
+          thisEntitySelected: state.selectedEntityIds.includes(id),
+          thisEntityDisplay:
+            thisEntity?.kind === 'item' ? thisEntity.display : undefined,
+          selectedEntityIds: state.selectedEntityIds,
+        }
+      }),
+    )
 
   useEffect(() => {
     if (!thisEntitySelected) {
@@ -74,13 +66,7 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
         <Helper type={BoxHelper} args={['gold']} />
       )}
 
-      <group
-        onClick={() => {
-          if (!usingTransformControl) {
-            setSelected([id])
-          }
-        }}
-      >
+      <group onClick={onClick}>
         <MemoizedModel
           initialResourceLocation={`item/${type}`}
           displayType={thisEntityDisplay ?? undefined}
