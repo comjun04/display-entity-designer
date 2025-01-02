@@ -43,7 +43,7 @@ export type DisplayEntityState = {
   deleteEntity: (id: string) => void
 
   groupSelected: () => void
-  ungroup: () => void
+  ungroupSelected: () => void
 }
 
 export const useDisplayEntityStore = create(
@@ -313,11 +313,44 @@ export const useDisplayEntityStore = create(
           children: [...state.selectedEntityIds],
         } satisfies DisplayEntityGroup)
 
-        console.log('aaa', state.entities)
-
         // 선택된 디스플레이 엔티티를 방금 생성한 그룹으로 설정
         state.selectedEntityIds = [groupId]
       }),
-    ungroup: () => {},
+    ungroupSelected: () =>
+      set((state) => {
+        if (state.selectedEntityIds.length !== 1) {
+          console.error(
+            `displayEntityStore.ungroupSelected(): Cannot ungroup ${state.selectedEntityIds.length} items; Only single group can be ungrouped.`,
+          )
+          return
+        }
+
+        const entityId = state.selectedEntityIds[0]
+        const selectedEntity = state.entities.find((e) => e.id === entityId)
+        if (selectedEntity?.kind != 'group') {
+          console.error(
+            `displayEntityStore.ungroupSelected(): selected entity ${entityId} (kind: ${selectedEntity?.kind}) is not a group`,
+          )
+          return
+        }
+
+        state.entities
+          .filter((e) => selectedEntity.children.includes(e.id))
+          .forEach((e) => {
+            e.parent = undefined
+            e.position[0] += selectedEntity.position[0]
+            e.position[1] += selectedEntity.position[1]
+            e.position[2] += selectedEntity.position[2]
+          })
+
+        // 그룹의 children을 비우기
+        // 그룹 삭제는 DisplayEntity.tsx의 useEffect()에서 수행 (그룹에 children이 비어있을 경우 삭제)
+        // 여기서 먼저 삭제할 경우 그룹에 속한 엔티티들의 reparenting이 진행되기 전에 엔티티 instance가 삭제되어 버려서
+        // 화면에 렌더링이 안되는 문제가 있음
+        selectedEntity.children = []
+
+        // ungroup한 뒤에는 모든 선택된 엔티티들의 선택을 해제
+        state.selectedEntityIds = []
+      }),
   })),
 )

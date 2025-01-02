@@ -16,14 +16,12 @@ const TopButtonPanel: FC = () => {
       setOpenedDialog: state.setOpenedDialog,
     })),
   )
-  const { selectedEntityIds, deleteEntity, groupSelected } =
-    useDisplayEntityStore(
-      useShallow((state) => ({
-        selectedEntityIds: state.selectedEntityIds,
-        deleteEntity: state.deleteEntity,
-        groupSelected: state.groupSelected,
-      })),
-    )
+  const { selectedEntityIds, deleteEntity } = useDisplayEntityStore(
+    useShallow((state) => ({
+      selectedEntityIds: state.selectedEntityIds,
+      deleteEntity: state.deleteEntity,
+    })),
+  )
 
   return (
     <div className="absolute left-1/2 top-4 z-[5] -translate-x-1/2">
@@ -47,7 +45,18 @@ const TopButtonPanel: FC = () => {
 
         <FloatingButton
           onClick={() => {
-            groupSelected()
+            const { entities, groupSelected, ungroupSelected } =
+              useDisplayEntityStore.getState()
+
+            const alreadyGrouped =
+              selectedEntityIds.length === 1 &&
+              entities.find((e) => e.id === selectedEntityIds[0])?.kind ===
+                'group'
+            if (alreadyGrouped) {
+              ungroupSelected()
+            } else {
+              groupSelected()
+            }
           }}
         >
           <FaObjectGroup size={24} />
