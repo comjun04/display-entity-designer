@@ -92,8 +92,10 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
     if (pivotRef.current == null) return
 
     if (firstSelectedEntityRefData) {
-      pivotRef.current.position.copy(
-        firstSelectedEntityRefData.objectRef.current.position,
+      // pivot을 해당 entity의 world position으로 이동
+      // (local position은 entity가 그룹 안에 속해 있을 경우 상대적인 값으로 지정되므로 사용할 수 없음)
+      firstSelectedEntityRefData.objectRef.current.getWorldPosition(
+        pivotRef.current.position,
       )
       pivotRef.current.rotation.copy(
         firstSelectedEntityRefData.objectRef.current.rotation,
@@ -134,8 +136,11 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
         scale: scaleVector,
       })
 
+      // 선택된 entity가 selectedEntityIds 리스트에서 맨 첫 번째일 경우 기준점으로 설정
       if (entity.id === firstSelectedEntityId) {
-        pivotRef.current.position.copy(positionVector)
+        // pivot을 해당 entity의 world position으로 이동
+        // (local position은 entity가 그룹 안에 속해 있을 경우 상대적인 값으로 지정되므로 사용할 수 없음)
+        object.getWorldPosition(pivotRef.current.position)
       }
     }
 
@@ -181,18 +186,18 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
                 const entityRefData = useEntityRefStore
                   .getState()
                   .entityRefs.find((d) => d.id === entity.id)!
-                const newPosition = new Vector3()
-                entityRefData.objectRef.current.getWorldPosition(newPosition)
+                const entityRefPosition =
+                  entityRefData.objectRef.current.position
 
                 const initialTransform =
                   selectedEntityInitialTransformations.current.find(
                     (d) => d.object.id === entityRefData.objectRef.current.id,
                   )!
-                initialTransform.position.copy(newPosition)
+                initialTransform.position.copy(entityRefPosition)
 
                 return {
                   id: entity.id,
-                  translation: newPosition.toArray(),
+                  translation: entityRefPosition.toArray(),
                 }
               })
             batchSetEntityTransformation(batchUpdateData)
