@@ -33,6 +33,7 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
         setSelected: state.setSelected,
         addToSelectedEntity: state.addToSelected,
 
+        parent: entity.parent,
         children: entity.kind === 'group' ? entity.children : null,
       }
     }),
@@ -52,9 +53,31 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
           'flex cursor-pointer flex-row items-center gap-1',
           selected && 'font-bold text-yellow-500',
         )}
-        onClick={(evt) =>
-          evt.ctrlKey ? addToSelectedEntity(id) : setSelected([id])
-        }
+        onClick={(evt) => {
+          if (evt.ctrlKey) {
+            const { entities, selectedEntityIds } =
+              useDisplayEntityStore.getState()
+
+            if (selectedEntityIds.length < 1) {
+              addToSelectedEntity(id)
+              return
+            }
+
+            const thisEntity = entities.find((e) => e.id === id)
+            if (thisEntity == null) return
+
+            // 같은 parent 내의 object만 다중 선택 가능
+            const selectedEntityParent = entities.find((e) =>
+              selectedEntityIds.includes(e.id),
+            )!.parent
+            if (thisEntity.parent === selectedEntityParent) {
+              addToSelectedEntity(id)
+              return
+            }
+          }
+
+          setSelected([id])
+        }}
       >
         <span className="flex-none">
           {kind === 'block' && <IoCubeOutline size={16} />}
