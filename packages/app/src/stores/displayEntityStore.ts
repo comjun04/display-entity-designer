@@ -277,13 +277,34 @@ export const useDisplayEntityStore = create(
 
     groupSelected: () =>
       set((state) => {
-        if (state.selectedEntityIds.length < 1) return
-
         const groupId = nanoid(16)
 
         const selectedEntities = state.entities.filter((e) =>
           state.selectedEntityIds.includes(e.id),
         )
+        if (selectedEntities.length < 1) {
+          console.error(
+            'displayEntityStore.groupSelected(): no selected entities to group',
+          )
+          return
+        }
+
+        const firstSelectedEntityParent = selectedEntities[0].parent
+        if (
+          !selectedEntities.every((e) => e.parent === firstSelectedEntityParent)
+        ) {
+          console.error(
+            'displayEntityStore.groupSelected(): cannot group entities with different parent',
+          )
+          return
+        }
+
+        const previousParentGroup =
+          firstSelectedEntityParent != null
+            ? (state.entities.find(
+                (e) => e.id === firstSelectedEntityParent,
+              ) as DisplayEntityGroup) // WritableDraft<DisplayEntityGroup>
+            : undefined
 
         // box3로 그룹 안에 포함될 모든 entity들을 포함하도록 늘려서 측정
         const box3 = new Box3()
@@ -295,6 +316,15 @@ export const useDisplayEntityStore = create(
           box3.expandByObject(entityRefData.objectRef.current)
 
           selectedEntity.parent = groupId
+          if (previousParentGroup != null) {
+            // group하기 전 엔티티가 다른 그룹에 속해 있었다면 children 목록에서 제거거
+            const idx = previousParentGroup.children.findIndex(
+              (id) => id === selectedEntity.id,
+            )
+            if (idx >= 0) {
+              previousParentGroup.children.splice(idx, 1)
+            }
+          }
         }
         for (const selectedEntity of selectedEntities) {
           selectedEntity.position[0] -= box3.min.x
@@ -310,8 +340,13 @@ export const useDisplayEntityStore = create(
           position: box3.min.toArray(),
           rotation: [0, 0, 0],
           size: [1, 1, 1],
+          parent: firstSelectedEntityParent,
           children: [...state.selectedEntityIds],
         } satisfies DisplayEntityGroup)
+        if (previousParentGroup != null) {
+          // 새로 만들어진 그룹을 기존에 엔티티들이 있었던 그룹의 children으로 추가
+          previousParentGroup.children.push(groupId)
+        }
 
         // 선택된 디스플레이 엔티티를 방금 생성한 그룹으로 설정
         state.selectedEntityIds = [groupId]
