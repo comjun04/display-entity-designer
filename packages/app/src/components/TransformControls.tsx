@@ -66,6 +66,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
   const pivotInitialPosition = useRef(new Vector3())
   const selectedEntityInitialTransformations = useRef<
     {
+      id: string
       object: Object3D
       position: Vector3
       quaternion: Quaternion
@@ -130,6 +131,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
       const scaleVector = new Vector3(...entity.size)
 
       selectedEntityInitialTransformations.current.push({
+        id: entity.id,
         object,
         position: positionVector,
         quaternion: new Quaternion().setFromEuler(rotationEuler),
@@ -184,16 +186,12 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
             const batchUpdateData = entities
               .filter((e) => selectedEntityIds.includes(e.id))
               .map((entity) => {
-                const entityRefData = useEntityRefStore
-                  .getState()
-                  .entityRefs.find((d) => d.id === entity.id)!
-                const entityRefPosition =
-                  entityRefData.objectRef.current.position
-
                 const initialTransform =
                   selectedEntityInitialTransformations.current.find(
-                    (d) => d.object.id === entityRefData.objectRef.current.id,
+                    (d) => d.id === entity.id,
                   )!
+
+                const entityRefPosition = initialTransform.object.position
                 initialTransform.position.copy(entityRefPosition)
 
                 return {
@@ -206,29 +204,28 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
             const batchUpdateData = entities
               .filter((e) => selectedEntityIds.includes(e.id))
               .map((entity) => {
-                const refData = useEntityRefStore
-                  .getState()
-                  .entityRefs.find((d) => d.id === entity.id)!
+                const initialTransform =
+                  selectedEntityInitialTransformations.current.find(
+                    (d) => d.id === entity.id,
+                  )!
 
-                const newPosition = refData.objectRef.current.position
+                const newPosition = initialTransform.object.position
 
-                const newRotationQ = new Quaternion()
-                refData.objectRef.current.getWorldQuaternion(newRotationQ)
-                const newRotationE = new Euler()
-                  .setFromQuaternion(newRotationQ)
+                const newRotationQuaternion = new Quaternion()
+                initialTransform.object.getWorldQuaternion(
+                  newRotationQuaternion,
+                )
+                const newRotationEuler = new Euler()
+                  .setFromQuaternion(newRotationQuaternion)
                   .toArray()
                   .slice(0, 3) as Number3Tuple
 
-                const initialTransform =
-                  selectedEntityInitialTransformations.current.find(
-                    (d) => d.object.id === refData.objectRef.current.id,
-                  )!
                 initialTransform.position.copy(newPosition)
-                initialTransform.quaternion.copy(newRotationQ)
+                initialTransform.quaternion.copy(newRotationQuaternion)
 
                 return {
                   id: entity.id,
-                  rotation: newRotationE,
+                  rotation: newRotationEuler,
                   translation: newPosition.toArray(),
                 }
               })
@@ -240,23 +237,18 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
             const batchUpdateData = entities
               .filter((e) => selectedEntityIds.includes(e.id))
               .map((entity) => {
-                const entityRefData = useEntityRefStore
-                  .getState()
-                  .entityRefs.find((d) => d.id === entity.id)!
+                const initialTransform =
+                  selectedEntityInitialTransformations.current.find(
+                    (d) => d.id === entity.id,
+                  )!
+
                 const newScale = new Vector3()
-                entityRefData.objectRef.current.getWorldScale(newScale)
+                initialTransform.object.getWorldScale(newScale)
 
                 // 다중 선택되어 있을 경우 그룹 중심점과 떨어져 있는 object들은 scale 시 위치가 달라짐
                 // 따라서 world location을 별도로 계산하여 state에 반영
-                const refData = useEntityRefStore
-                  .getState()
-                  .entityRefs.find((d) => d.id === entity.id)
-                const newPosition = refData!.objectRef.current.position
+                const newPosition = initialTransform.object.position
 
-                const initialTransform =
-                  selectedEntityInitialTransformations.current.find(
-                    (d) => d.object.id === entityRefData.objectRef.current.id,
-                  )!
                 initialTransform.position.copy(newPosition)
                 initialTransform.scale.copy(newScale)
 
@@ -286,18 +278,15 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
           target.object.scale.fromArray(absoluteScale)
 
           for (const selectedEntityId of selectedEntityIds) {
-            const refData = useEntityRefStore
-              .getState()
-              .entityRefs.find((d) => d.id === selectedEntityId)!
-            const objectRef = refData.objectRef.current
+            const initialTransformation =
+              selectedEntityInitialTransformations.current.find(
+                (d) => d.id === selectedEntityId,
+              )!
+            const objectRef = initialTransformation.object
 
             const pivotCurrentPositionOnLocalSpace =
               objectRef.parent!.worldToLocal(pivotRef.current.position.clone())
 
-            const initialTransformation =
-              selectedEntityInitialTransformations.current.find(
-                (d) => d.object.id === objectRef.id,
-              )!
             const relativePosition = initialTransformation.position
               .clone()
               .sub(
