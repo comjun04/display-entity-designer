@@ -256,7 +256,9 @@ export const useDisplayEntityStore = create(
           if (parentElement == null || parentElement.kind !== 'group') return
 
           const idx = parentElement.children.findIndex((d) => d === id)
-          parentElement.children.splice(idx, 1)
+          if (idx >= 0) {
+            parentElement.children.splice(idx, 1)
+          }
         }
 
         // children으로 등록된 entity들이 있다면 같이 삭제
@@ -289,9 +291,11 @@ export const useDisplayEntityStore = create(
           return
         }
 
-        const firstSelectedEntityParent = selectedEntities[0].parent
+        const firstSelectedEntityParentId = selectedEntities[0].parent
         if (
-          !selectedEntities.every((e) => e.parent === firstSelectedEntityParent)
+          !selectedEntities.every(
+            (e) => e.parent === firstSelectedEntityParentId,
+          )
         ) {
           console.error(
             'displayEntityStore.groupSelected(): cannot group entities with different parent',
@@ -300,9 +304,9 @@ export const useDisplayEntityStore = create(
         }
 
         const previousParentGroup =
-          firstSelectedEntityParent != null
+          firstSelectedEntityParentId != null
             ? (state.entities.find(
-                (e) => e.id === firstSelectedEntityParent,
+                (e) => e.id === firstSelectedEntityParentId,
               ) as DisplayEntityGroup) // WritableDraft<DisplayEntityGroup>
             : undefined
 
@@ -317,7 +321,7 @@ export const useDisplayEntityStore = create(
 
           selectedEntity.parent = groupId
           if (previousParentGroup != null) {
-            // group하기 전 엔티티가 다른 그룹에 속해 있었다면 children 목록에서 제거거
+            // group하기 전 엔티티가 다른 그룹에 속해 있었다면 children 목록에서 제거
             const idx = previousParentGroup.children.findIndex(
               (id) => id === selectedEntity.id,
             )
@@ -340,7 +344,7 @@ export const useDisplayEntityStore = create(
           position: box3.min.toArray(),
           rotation: [0, 0, 0],
           size: [1, 1, 1],
-          parent: firstSelectedEntityParent,
+          parent: firstSelectedEntityParentId,
           children: [...state.selectedEntityIds],
         } satisfies DisplayEntityGroup)
         if (previousParentGroup != null) {
@@ -360,29 +364,50 @@ export const useDisplayEntityStore = create(
           return
         }
 
-        const entityId = state.selectedEntityIds[0]
-        const selectedEntity = state.entities.find((e) => e.id === entityId)
-        if (selectedEntity?.kind != 'group') {
+        const entityGroupId = state.selectedEntityIds[0]
+        const selectedEntityGroup = state.entities.find(
+          (e) => e.id === entityGroupId,
+        )
+        if (selectedEntityGroup?.kind !== 'group') {
           console.error(
-            `displayEntityStore.ungroupSelected(): selected entity ${entityId} (kind: ${selectedEntity?.kind}) is not a group`,
+            `displayEntityStore.ungroupSelected(): selected entity ${entityGroupId} (kind: ${selectedEntityGroup?.kind}) is not a group`,
           )
           return
         }
 
+        const parentEntityGroup =
+          selectedEntityGroup.parent != null
+            ? (state.entities.find(
+                (e) => e.id === selectedEntityGroup.parent,
+              ) as DisplayEntityGroup) // WritableDraft<DisplayEntityGroup>
+            : undefined
+        if (parentEntityGroup != null) {
+          const idx = parentEntityGroup.children.findIndex(
+            (id) => id === entityGroupId,
+          )
+          if (idx >= 0) {
+            parentEntityGroup.children.splice(idx, 1)
+          }
+        }
+
         state.entities
-          .filter((e) => selectedEntity.children.includes(e.id))
+          .filter((e) => selectedEntityGroup.children.includes(e.id))
           .forEach((e) => {
-            e.parent = undefined
-            e.position[0] += selectedEntity.position[0]
-            e.position[1] += selectedEntity.position[1]
-            e.position[2] += selectedEntity.position[2]
+            e.parent = parentEntityGroup?.id
+            if (parentEntityGroup != null) {
+              parentEntityGroup.children.push(e.id)
+            }
+
+            e.position[0] += selectedEntityGroup.position[0]
+            e.position[1] += selectedEntityGroup.position[1]
+            e.position[2] += selectedEntityGroup.position[2]
           })
 
         // 그룹의 children을 비우기
         // 그룹 삭제는 DisplayEntity.tsx의 useEffect()에서 수행 (그룹에 children이 비어있을 경우 삭제)
         // 여기서 먼저 삭제할 경우 그룹에 속한 엔티티들의 reparenting이 진행되기 전에 엔티티 instance가 삭제되어 버려서
         // 화면에 렌더링이 안되는 문제가 있음
-        selectedEntity.children = []
+        selectedEntityGroup.children = []
 
         // ungroup한 뒤에는 모든 선택된 엔티티들의 선택을 해제
         state.selectedEntityIds = []
