@@ -141,6 +141,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
         // pivot을 해당 entity의 world position으로 이동
         // (local position은 entity가 그룹 안에 속해 있을 경우 상대적인 값으로 지정되므로 사용할 수 없음)
         object.getWorldPosition(pivotRef.current.position)
+        pivotInitialPosition.current.copy(pivotRef.current.position)
       }
     }
 
@@ -209,8 +210,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
                   .getState()
                   .entityRefs.find((d) => d.id === entity.id)!
 
-                const newTranslation = new Vector3()
-                refData.objectRef.current.getWorldPosition(newTranslation)
+                const newPosition = refData.objectRef.current.position
 
                 const newRotationQ = new Quaternion()
                 refData.objectRef.current.getWorldQuaternion(newRotationQ)
@@ -223,13 +223,13 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
                   selectedEntityInitialTransformations.current.find(
                     (d) => d.object.id === refData.objectRef.current.id,
                   )!
-                initialTransform.position.copy(newTranslation)
+                initialTransform.position.copy(newPosition)
                 initialTransform.quaternion.copy(newRotationQ)
 
                 return {
                   id: entity.id,
                   rotation: newRotationE,
-                  translation: newTranslation.toArray(),
+                  translation: newPosition.toArray(),
                 }
               })
 
@@ -251,21 +251,19 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
                 const refData = useEntityRefStore
                   .getState()
                   .entityRefs.find((d) => d.id === entity.id)
-                const updatedPosition = refData!.objectRef.current.localToWorld(
-                  new Vector3(0, 0, 0),
-                )
+                const newPosition = refData!.objectRef.current.position
 
                 const initialTransform =
                   selectedEntityInitialTransformations.current.find(
                     (d) => d.object.id === entityRefData.objectRef.current.id,
                   )!
-                initialTransform.position.copy(updatedPosition)
+                initialTransform.position.copy(newPosition)
                 initialTransform.scale.copy(newScale)
 
                 return {
                   id: entity.id,
                   scale: newScale.toArray(),
-                  translation: updatedPosition.toArray(),
+                  translation: newPosition.toArray(),
                 }
               })
             batchSetEntityTransformation(batchUpdateData)
@@ -293,13 +291,20 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
               .entityRefs.find((d) => d.id === selectedEntityId)!
             const objectRef = refData.objectRef.current
 
+            const pivotCurrentPositionOnLocalSpace =
+              objectRef.parent!.worldToLocal(pivotRef.current.position.clone())
+
             const initialTransformation =
               selectedEntityInitialTransformations.current.find(
                 (d) => d.object.id === objectRef.id,
               )!
             const relativePosition = initialTransformation.position
               .clone()
-              .sub(pivotInitialPosition.current)
+              .sub(
+                objectRef.parent!.worldToLocal(
+                  pivotInitialPosition.current.clone(),
+                ),
+              )
 
             // pivot quaternion 회전값 (pivot quaternion은 처음에 (0,0,0)으로 초기화됨)
             const relativeQuaternion = pivotRef.current.quaternion
@@ -323,7 +328,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
                 .applyQuaternion(quaternion.clone().invert()) // 적용된 rotation을 revert하여 기본 rotation으로 만들기
                 .multiply(pivotRef.current.scale) // 그리고 나서 position scale 적용
                 .applyQuaternion(quaternion) // rotation 다시 적용
-              objectRef.position.add(pivotRef.current.position)
+              objectRef.position.add(pivotCurrentPositionOnLocalSpace)
 
               objectRef.scale.copy(
                 initialTransformation.scale
@@ -334,7 +339,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
               objectRef.position
                 .copy(relativePosition)
                 .applyQuaternion(relativeQuaternion)
-                .add(pivotRef.current.position)
+                .add(pivotCurrentPositionOnLocalSpace)
             }
 
             // 새로 바라볼 방향으로 설정
