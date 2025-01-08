@@ -18,7 +18,6 @@ type BlockDisplayProps = {
   color?: number | string
   onClick?: (event: ThreeEvent<MouseEvent>) => void
   objectRef?: MutableRefObject<Group>
-  parentGroupRef: MutableRefObject<Group>
 }
 
 const MemoizedModel = memo(Model)

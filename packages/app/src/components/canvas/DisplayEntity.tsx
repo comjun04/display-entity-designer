@@ -124,7 +124,6 @@ const DisplayEntity: FC<DisplayEntityProps> = ({ id }) => {
         size={thisEntity.size}
         onClick={handleClick}
         objectRef={thisEntityRef?.objectRef}
-        parentGroupRef={parentGroupRefData.objectRef}
       />
     )
   } else if (thisEntity.kind === 'item') {
@@ -135,6 +134,7 @@ const DisplayEntity: FC<DisplayEntityProps> = ({ id }) => {
         position={thisEntity.position}
         rotation={thisEntity.rotation}
         size={thisEntity.size}
+        onClick={handleClick}
         objectRef={thisEntityRef?.objectRef}
       />
     )
