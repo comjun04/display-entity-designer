@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid'
-import { Box3 } from 'three'
+import { Box3, Euler, Vector3 } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
@@ -390,6 +390,12 @@ export const useDisplayEntityStore = create(
           }
         }
 
+        const { entityRefs } = useEntityRefStore.getState()
+
+        const groupTransformationMatrix = entityRefs
+          .find((d) => d.id === entityGroupId)!
+          .objectRef.current.matrix.clone()
+
         state.entities
           .filter((e) => selectedEntityGroup.children.includes(e.id))
           .forEach((e) => {
@@ -398,9 +404,31 @@ export const useDisplayEntityStore = create(
               parentEntityGroup.children.push(e.id)
             }
 
-            e.position[0] += selectedEntityGroup.position[0]
-            e.position[1] += selectedEntityGroup.position[1]
-            e.position[2] += selectedEntityGroup.position[2]
+            const refData = entityRefs.find((d) => d.id === e.id)!
+            const entityInstance = refData.objectRef.current
+            const newEntityMatrix = entityInstance.matrix
+              .clone()
+              .premultiply(groupTransformationMatrix) // entityInstance.applyMatrix4(groupTransformationMatrix)
+            console.log(
+              e.id,
+              entityInstance.position.toArray(),
+              entityInstance.rotation.toArray(),
+              entityInstance.scale.toArray(),
+              parentEntityGroup,
+              groupTransformationMatrix,
+            )
+
+            const newPosition = new Vector3().setFromMatrixPosition(
+              newEntityMatrix,
+            )
+            const newRotation = new Euler().setFromRotationMatrix(
+              newEntityMatrix,
+            )
+            const newScale = new Vector3().setFromMatrixScale(newEntityMatrix)
+
+            e.position = newPosition.toArray()
+            e.rotation = [newRotation.x, newRotation.y, newRotation.z]
+            e.size = newScale.toArray()
           })
 
         // 그룹의 children을 비우기
