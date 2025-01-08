@@ -122,13 +122,10 @@ const ExportToMinecraftDialog: FC = () => {
       entities: state.entities,
     })),
   )
-  const { entityRefs } = useEntityRefStore(
-    useShallow((state) => ({
-      entityRefs: state.entityRefs,
-    })),
-  )
 
   const [baseTag, setBaseTag] = useState('')
+  const [nbtDataGenerated, setNbtDataGenerated] = useState(false)
+  const [nbtStrings, setNbtStrings] = useState<string[]>([])
 
   useEffect(() => {
     if (isOpen) {
@@ -136,61 +133,80 @@ const ExportToMinecraftDialog: FC = () => {
     }
   }, [isOpen])
 
-  const tagString = baseTag.length > 0 ? `Tags:["${baseTag}"],` : ''
-  const passengersStrings = entities
-    .map((entity) => {
-      const refData = entityRefs.find((e) => e.id === entity.id)
-      if (refData == null || refData.objectRef.current == null) {
-        console.warn(`entity ref of entity ${entity.id} not found, ignoring.`)
-        return
-      }
+  // 엔티티 데이터나 태그가 바뀌었다면 커맨드를 다시 생성해야 함
+  useEffect(() => {
+    setNbtDataGenerated(false)
+  }, [entities, baseTag])
 
-      const worldMatrix = refData.objectRef.current.matrixWorld
+  useEffect(() => {
+    if (!nbtDataGenerated && isOpen) {
+      const { entityRefs } = useEntityRefStore.getState()
 
-      const idText = entity.kind + '_display' // block_display, item_display
-      const transformationString = worldMatrix
-        .clone()
-        .transpose()
-        .toArray()
-        .map((num) => Math.round(num * 1_0000_0000) / 1_0000_0000 + 'f')
-        .join(',')
+      const tagString = baseTag.length > 0 ? `Tags:["${baseTag}"],` : ''
+      const passengersStrings = entities
+        .map((entity) => {
+          const refData = entityRefs.find((e) => e.id === entity.id)
+          if (refData == null || refData.objectRef.current == null) {
+            console.warn(
+              `entity ref of entity ${entity.id} not found, ignoring.`,
+            )
+            return
+          }
 
-      let specificData = ''
-      if (entity.kind === 'block') {
-        const propertiesText = Object.entries(entity.blockstates)
-          .map(([k, v]) => `${k}:"${v}"`)
-          .join(',')
+          const worldMatrix = refData.objectRef.current.matrixWorld
 
-        specificData = `block_state:{Name:"${entity.type}",Properties:{${propertiesText}}}`
-      } else if (entity.kind === 'item') {
-        {
-          const displayText =
-            entity.display != null ? `,item_display:"${entity.display}"` : ''
-          specificData = `item:{id:"${entity.type}"}${displayText}`
+          const idText = entity.kind + '_display' // block_display, item_display
+          const transformationString = worldMatrix
+            .clone()
+            .transpose()
+            .toArray()
+            .map((num) => Math.round(num * 1_0000_0000) / 1_0000_0000 + 'f')
+            .join(',')
+
+          let specificData = ''
+          if (entity.kind === 'block') {
+            const propertiesText = Object.entries(entity.blockstates)
+              .map(([k, v]) => `${k}:"${v}"`)
+              .join(',')
+
+            specificData = `block_state:{Name:"${entity.type}",Properties:{${propertiesText}}}`
+          } else if (entity.kind === 'item') {
+            {
+              const displayText =
+                entity.display != null
+                  ? `,item_display:"${entity.display}"`
+                  : ''
+              specificData = `item:{id:"${entity.type}"}${displayText}`
+            }
+          }
+
+          return `{id:"${idText}",${tagString}${specificData},transformation:[${transformationString}]}`
+        })
+        .filter((d) => d != null)
+
+      let le = Infinity
+      const groupedPassengersStrings: string[] = []
+      for (const passengersStr of passengersStrings) {
+        // 32500 (max command length in command block) - 60 (length of `/summon block_display ~ ~ ~ {Tags:[""],Passengers:[]}` + alpha) - baseTag length
+        if (le + passengersStr.length > 32440 - baseTag.length) {
+          groupedPassengersStrings.push(passengersStr)
+          le = passengersStr.length + 1
+        } else {
+          groupedPassengersStrings[groupedPassengersStrings.length - 1] +=
+            ',' + passengersStr
+          le += passengersStr.length + 1
         }
       }
 
-      return `{id:"${idText}",${tagString}${specificData},transformation:[${transformationString}]}`
-    })
-    .filter((d) => d != null)
+      const newNbtStrings = groupedPassengersStrings.map(
+        (str) => `{${tagString}Passengers:[${str}]}`,
+      )
+      setNbtStrings(newNbtStrings)
 
-  let le = Infinity
-  const groupedPassengersStrings: string[] = []
-  for (const passengersStr of passengersStrings) {
-    // 32500 (max command length in command block) - 60 (length of `/summon block_display ~ ~ ~ {Tags:[""],Passengers:[]}` + alpha) - baseTag length
-    if (le + passengersStr.length > 32440 - baseTag.length) {
-      groupedPassengersStrings.push(passengersStr)
-      le = passengersStr.length + 1
-    } else {
-      groupedPassengersStrings[groupedPassengersStrings.length - 1] +=
-        ',' + passengersStr
-      le += passengersStr.length + 1
+      setNbtDataGenerated(true)
     }
-  }
+  }, [nbtDataGenerated, isOpen, baseTag, entities])
 
-  const nbts = groupedPassengersStrings.map(
-    (str) => `{${tagString}Passengers:[${str}]}`,
-  )
   const removeCommand = `/kill @e[${baseTag.length > 0 ? `tag=${baseTag}` : 'type=block_display'},distance=..2]`
 
   return (
@@ -220,7 +236,7 @@ const ExportToMinecraftDialog: FC = () => {
           <hr className="my-2 border-gray-600" />
 
           <div className="overflow-y-auto">
-            {nbts.map((nbt, idx) => {
+            {nbtStrings.map((nbt, idx) => {
               const summonCommand = `/summon block_display ~ ~ ~ ${nbt}`
               return (
                 <div key={idx}>
