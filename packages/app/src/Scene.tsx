@@ -11,18 +11,26 @@ import DisplayEntity from './components/canvas/DisplayEntity'
 import { useDialogStore } from './stores/dialogStore'
 import { useDisplayEntityStore } from './stores/displayEntityStore'
 import { useEditorStore } from './stores/editorStore'
+import { useEntityRefStore } from './stores/entityRefStore'
 
 const Scene: FC = () => {
-  const { entityIds, selectedEntityIds, setSelected, deleteEntity } =
+  const { selectedEntityIds, setSelected, deleteEntity } =
     useDisplayEntityStore(
       useShallow((state) => ({
-        entityIds: state.entityIds,
         selectedEntityIds: state.selectedEntityIds,
         setSelected: state.setSelected,
         deleteEntity: state.deleteEntity,
       })),
     )
+  const rootEntityIds = useDisplayEntityStore(
+    useShallow((state) => state.entities.map((entity) => entity.id)),
+  )
 
+  const { rootGroupRefData } = useEntityRefStore(
+    useShallow((state) => ({
+      rootGroupRefData: state.rootGroupRefData,
+    })),
+  )
   const { setMode } = useEditorStore(
     useShallow((state) => ({
       setMode: state.setMode,
@@ -130,8 +138,8 @@ const Scene: FC = () => {
         <lineBasicMaterial color={0x0000ff} />
       </line>
 
-      <group name="Display Entities">
-        {entityIds.map((id) => (
+      <group name="Display Entities" ref={rootGroupRefData.objectRef}>
+        {rootEntityIds.map((id) => (
           <DisplayEntity key={id} id={id} />
         ))}
       </group>

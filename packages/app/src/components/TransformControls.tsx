@@ -39,14 +39,18 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
   const firstSelectedEntityId =
     selectedEntityIds.length > 0 ? selectedEntityIds[0] : null
 
-  const { firstSelectedEntityRefData } = useEntityRefStore(
-    useShallow((state) => ({
-      firstSelectedEntityRefData:
-        firstSelectedEntityId != null
-          ? state.entityRefs.find((d) => d.id === firstSelectedEntityId)
-          : undefined,
-    })),
-  )
+  const { firstSelectedEntityRefData, selectedEntityRefAllAvailable } =
+    useEntityRefStore(
+      useShallow((state) => ({
+        firstSelectedEntityRefData:
+          firstSelectedEntityId != null
+            ? state.entityRefs.find((d) => d.id === firstSelectedEntityId)
+            : undefined,
+        selectedEntityRefAllAvailable: selectedEntityIds.every(
+          (id) => state.entityRefs.find((d) => d.id === id)?.refAvailable,
+        ),
+      })),
+    )
   const { mode, setUsingTransformControl, setSelectionBaseTransformation } =
     useEditorStore(
       useShallow((state) => ({
@@ -62,6 +66,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
   const pivotInitialPosition = useRef(new Vector3())
   const selectedEntityInitialTransformations = useRef<
     {
+      id: string
       object: Object3D
       position: Vector3
       quaternion: Quaternion
@@ -70,7 +75,8 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
   >([])
 
   const updateBoundingBox = useCallback(() => {
-    if (boundingBoxHelperRef.current == null) return
+    if (boundingBoxHelperRef.current == null || !selectedEntityRefAllAvailable)
+      return
 
     const box = boundingBoxHelperRef.current.box
     box.set(infinityVector.clone(), minusInfinityVector.clone()) // 넓이 초기화
@@ -81,14 +87,16 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
         .entityRefs.find((d) => d.id === entityId)!
       box.expandByObject(refData.objectRef.current)
     })
-  }, [selectedEntityIds])
+  }, [selectedEntityIds, selectedEntityRefAllAvailable])
 
   useEffect(() => {
     if (pivotRef.current == null) return
 
     if (firstSelectedEntityRefData) {
-      pivotRef.current.position.copy(
-        firstSelectedEntityRefData.objectRef.current.position,
+      // pivot을 해당 entity의 world position으로 이동
+      // (local position은 entity가 그룹 안에 속해 있을 경우 상대적인 값으로 지정되므로 사용할 수 없음)
+      firstSelectedEntityRefData.objectRef.current.getWorldPosition(
+        pivotRef.current.position,
       )
       pivotRef.current.rotation.copy(
         firstSelectedEntityRefData.objectRef.current.rotation,
@@ -110,6 +118,8 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
 
     selectedEntityInitialTransformations.current = []
 
+    if (!selectedEntityRefAllAvailable) return
+
     for (const entity of selectedEntities) {
       const refData = useEntityRefStore
         .getState()
@@ -121,14 +131,19 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
       const scaleVector = new Vector3(...entity.size)
 
       selectedEntityInitialTransformations.current.push({
+        id: entity.id,
         object,
         position: positionVector,
         quaternion: new Quaternion().setFromEuler(rotationEuler),
         scale: scaleVector,
       })
 
+      // 선택된 entity가 selectedEntityIds 리스트에서 맨 첫 번째일 경우 기준점으로 설정
       if (entity.id === firstSelectedEntityId) {
-        pivotRef.current.position.copy(positionVector)
+        // pivot을 해당 entity의 world position으로 이동
+        // (local position은 entity가 그룹 안에 속해 있을 경우 상대적인 값으로 지정되므로 사용할 수 없음)
+        object.getWorldPosition(pivotRef.current.position)
+        pivotInitialPosition.current.copy(pivotRef.current.position)
       }
     }
 
@@ -138,7 +153,13 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
     if (selectedEntityIds.length > 1) {
       updateBoundingBox()
     }
-  }, [entities, selectedEntityIds, firstSelectedEntityId, updateBoundingBox])
+  }, [
+    entities,
+    selectedEntityIds,
+    firstSelectedEntityId,
+    updateBoundingBox,
+    selectedEntityRefAllAvailable,
+  ])
 
   return (
     <>
@@ -165,21 +186,17 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
             const batchUpdateData = entities
               .filter((e) => selectedEntityIds.includes(e.id))
               .map((entity) => {
-                const entityRefData = useEntityRefStore
-                  .getState()
-                  .entityRefs.find((d) => d.id === entity.id)!
-                const newPosition = new Vector3()
-                entityRefData.objectRef.current.getWorldPosition(newPosition)
-
                 const initialTransform =
                   selectedEntityInitialTransformations.current.find(
-                    (d) => d.object.id === entityRefData.objectRef.current.id,
+                    (d) => d.id === entity.id,
                   )!
-                initialTransform.position.copy(newPosition)
+
+                const entityRefPosition = initialTransform.object.position
+                initialTransform.position.copy(entityRefPosition)
 
                 return {
                   id: entity.id,
-                  translation: newPosition.toArray(),
+                  translation: entityRefPosition.toArray(),
                 }
               })
             batchSetEntityTransformation(batchUpdateData)
@@ -187,31 +204,29 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
             const batchUpdateData = entities
               .filter((e) => selectedEntityIds.includes(e.id))
               .map((entity) => {
-                const refData = useEntityRefStore
-                  .getState()
-                  .entityRefs.find((d) => d.id === entity.id)!
+                const initialTransform =
+                  selectedEntityInitialTransformations.current.find(
+                    (d) => d.id === entity.id,
+                  )!
 
-                const newTranslation = new Vector3()
-                refData.objectRef.current.getWorldPosition(newTranslation)
+                const newPosition = initialTransform.object.position
 
-                const newRotationQ = new Quaternion()
-                refData.objectRef.current.getWorldQuaternion(newRotationQ)
-                const newRotationE = new Euler()
-                  .setFromQuaternion(newRotationQ)
+                const newRotationQuaternion = new Quaternion()
+                initialTransform.object.getWorldQuaternion(
+                  newRotationQuaternion,
+                )
+                const newRotationEuler = new Euler()
+                  .setFromQuaternion(newRotationQuaternion)
                   .toArray()
                   .slice(0, 3) as Number3Tuple
 
-                const initialTransform =
-                  selectedEntityInitialTransformations.current.find(
-                    (d) => d.object.id === refData.objectRef.current.id,
-                  )!
-                initialTransform.position.copy(newTranslation)
-                initialTransform.quaternion.copy(newRotationQ)
+                initialTransform.position.copy(newPosition)
+                initialTransform.quaternion.copy(newRotationQuaternion)
 
                 return {
                   id: entity.id,
-                  rotation: newRotationE,
-                  translation: newTranslation.toArray(),
+                  rotation: newRotationEuler,
+                  translation: newPosition.toArray(),
                 }
               })
 
@@ -222,32 +237,25 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
             const batchUpdateData = entities
               .filter((e) => selectedEntityIds.includes(e.id))
               .map((entity) => {
-                const entityRefData = useEntityRefStore
-                  .getState()
-                  .entityRefs.find((d) => d.id === entity.id)!
+                const initialTransform =
+                  selectedEntityInitialTransformations.current.find(
+                    (d) => d.id === entity.id,
+                  )!
+
                 const newScale = new Vector3()
-                entityRefData.objectRef.current.getWorldScale(newScale)
+                initialTransform.object.getWorldScale(newScale)
 
                 // 다중 선택되어 있을 경우 그룹 중심점과 떨어져 있는 object들은 scale 시 위치가 달라짐
                 // 따라서 world location을 별도로 계산하여 state에 반영
-                const refData = useEntityRefStore
-                  .getState()
-                  .entityRefs.find((d) => d.id === entity.id)
-                const updatedPosition = refData!.objectRef.current.localToWorld(
-                  new Vector3(0, 0, 0),
-                )
+                const newPosition = initialTransform.object.position
 
-                const initialTransform =
-                  selectedEntityInitialTransformations.current.find(
-                    (d) => d.object.id === entityRefData.objectRef.current.id,
-                  )!
-                initialTransform.position.copy(updatedPosition)
+                initialTransform.position.copy(newPosition)
                 initialTransform.scale.copy(newScale)
 
                 return {
                   id: entity.id,
                   scale: newScale.toArray(),
-                  translation: updatedPosition.toArray(),
+                  translation: newPosition.toArray(),
                 }
               })
             batchSetEntityTransformation(batchUpdateData)
@@ -270,18 +278,22 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
           target.object.scale.fromArray(absoluteScale)
 
           for (const selectedEntityId of selectedEntityIds) {
-            const refData = useEntityRefStore
-              .getState()
-              .entityRefs.find((d) => d.id === selectedEntityId)!
-            const objectRef = refData.objectRef.current
-
             const initialTransformation =
               selectedEntityInitialTransformations.current.find(
-                (d) => d.object.id === objectRef.id,
+                (d) => d.id === selectedEntityId,
               )!
+            const objectRef = initialTransformation.object
+
+            const pivotCurrentPositionOnLocalSpace =
+              objectRef.parent!.worldToLocal(pivotRef.current.position.clone())
+
             const relativePosition = initialTransformation.position
               .clone()
-              .sub(pivotInitialPosition.current)
+              .sub(
+                objectRef.parent!.worldToLocal(
+                  pivotInitialPosition.current.clone(),
+                ),
+              )
 
             // pivot quaternion 회전값 (pivot quaternion은 처음에 (0,0,0)으로 초기화됨)
             const relativeQuaternion = pivotRef.current.quaternion
@@ -305,7 +317,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
                 .applyQuaternion(quaternion.clone().invert()) // 적용된 rotation을 revert하여 기본 rotation으로 만들기
                 .multiply(pivotRef.current.scale) // 그리고 나서 position scale 적용
                 .applyQuaternion(quaternion) // rotation 다시 적용
-              objectRef.position.add(pivotRef.current.position)
+              objectRef.position.add(pivotCurrentPositionOnLocalSpace)
 
               objectRef.scale.copy(
                 initialTransformation.scale
@@ -316,7 +328,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
               objectRef.position
                 .copy(relativePosition)
                 .applyQuaternion(relativeQuaternion)
-                .add(pivotRef.current.position)
+                .add(pivotCurrentPositionOnLocalSpace)
             }
 
             // 새로 바라볼 방향으로 설정

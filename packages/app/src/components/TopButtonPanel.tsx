@@ -1,4 +1,5 @@
 import { FC } from 'react'
+import { FaObjectGroup } from 'react-icons/fa6'
 import { IoMdTrash } from 'react-icons/io'
 import { IoCubeOutline } from 'react-icons/io5'
 import { TbDiamondFilled } from 'react-icons/tb'
@@ -42,6 +43,24 @@ const TopButtonPanel: FC = () => {
 
         <div className="my-2 border-l border-gray-700" />
 
+        <FloatingButton
+          onClick={() => {
+            const { entities, groupSelected, ungroupSelected } =
+              useDisplayEntityStore.getState()
+
+            const alreadyGrouped =
+              selectedEntityIds.length === 1 &&
+              entities.find((e) => e.id === selectedEntityIds[0])?.kind ===
+                'group'
+            if (alreadyGrouped) {
+              ungroupSelected()
+            } else {
+              groupSelected()
+            }
+          }}
+        >
+          <FaObjectGroup size={24} />
+        </FloatingButton>
         <FloatingButton
           onClick={() => {
             if (selectedEntityIds.length > 0) {

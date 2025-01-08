@@ -1,3 +1,12 @@
+import { MutableRefObject, RefCallback } from 'react'
+
+/**
+ * ref에 커스텀 함수(callback)을 쓸 수 있으면서
+ * 동시에 `current` 값도 사용할 수 있는 Ref
+ */
+export type RefCallbackWithMutableRefObject<T> = RefCallback<T> &
+  MutableRefObject<T>
+
 export type Number3Tuple = [number, number, number]
 export type PartialNumber3Tuple = [
   number | undefined,
@@ -85,19 +94,33 @@ export type CDNItemsListResponse = {
   items: string[]
 }
 
-export type DisplayEntity = {
+export type BaseDisplayEntity = {
   id: string
-  type: string
+  parent?: string
   size: Number3Tuple
   position: Number3Tuple
   rotation: Number3Tuple
+}
+
+export type BlockDisplayEntity = BaseDisplayEntity & {
+  kind: 'block'
+  type: string
+  blockstates: Record<string, string>
   display: ModelDisplayPositionKey | null
-} & (
-  | {
-      kind: 'block'
-      blockstates: Record<string, string>
-    }
-  | {
-      kind: 'item'
-    }
-)
+}
+
+export type ItemDisplayEntity = BaseDisplayEntity & {
+  kind: 'item'
+  type: string
+  display: ModelDisplayPositionKey | null
+}
+
+export type DisplayEntityGroup = BaseDisplayEntity & {
+  kind: 'group'
+  children: string[] // list of entity ids
+}
+
+export type DisplayEntity =
+  | BlockDisplayEntity
+  | ItemDisplayEntity
+  | DisplayEntityGroup
