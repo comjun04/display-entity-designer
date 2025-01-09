@@ -2,10 +2,10 @@ import Scene from './Scene'
 import Sidebar from './Sidebar'
 import LeftButtonPanel from './components/LeftButtonPanel'
 import TopButtonPanel from './components/TopButtonPanel'
-import AppInfoDialog from './components/dialog/AppInfoDialog'
 import BlockDisplaySelectDialog from './components/dialog/BlockDisplaySelectDialog'
 import ExportToMinecraftDialog from './components/dialog/ExportToMinecraftDialog'
 import ItemDisplaySelectDialog from './components/dialog/ItemDisplaySelectDialog'
+import SettingsDialog from './components/dialog/SettingsDialog'
 
 function App() {
   return (
@@ -20,7 +20,7 @@ function App() {
 
       <Sidebar />
 
-      <AppInfoDialog />
+      <SettingsDialog />
       <BlockDisplaySelectDialog />
       <ItemDisplaySelectDialog />
       <ExportToMinecraftDialog />

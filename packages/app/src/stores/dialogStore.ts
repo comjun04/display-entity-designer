@@ -3,7 +3,7 @@ import { immer } from 'zustand/middleware/immer'
 
 // ==========
 type DialogType =
-  | 'appInfo'
+  | 'settings'
   | 'blockDisplaySelect'
   | 'itemDisplaySelect'
   | 'exportToMinecraft'

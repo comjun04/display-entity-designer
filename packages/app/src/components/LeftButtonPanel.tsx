@@ -29,7 +29,7 @@ const LeftButtonPanel: FC = () => {
         <MenuItems
           transition
           anchor="right start"
-          className="z-10 ml-2 flex origin-top-left flex-col rounded-lg bg-neutral-900 p-2 outline-none transition duration-100 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
+          className="z-10 ml-2 flex min-w-64 origin-top-left flex-col rounded-lg bg-neutral-900 p-2 outline-none transition duration-100 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
         >
           <MenuItem>
             <button
@@ -45,11 +45,11 @@ const LeftButtonPanel: FC = () => {
           <MenuItem>
             <button
               className="rounded-lg px-2 py-1 text-start transition hover:bg-white/10 data-[focus]:bg-white/10"
-              onClick={() => setOpenedDialog('appInfo')}
+              onClick={() => setOpenedDialog('settings')}
             >
-              <div>Program Info</div>
+              <div>Settings</div>
               <div className="text-xs text-neutral-500">
-                Show Information about Display Entity Designer
+                Configure the program to your liking
               </div>
             </button>
           </MenuItem>
