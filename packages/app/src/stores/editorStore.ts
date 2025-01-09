@@ -10,6 +10,11 @@ type TransformationData = {
   rotation: Number3Tuple
   size: Number3Tuple
 }
+
+type Settings = {
+  testOption: boolean
+}
+
 type EditorState = {
   mode: EditorMode
   setMode: (newMode: EditorMode) => void
@@ -26,6 +31,9 @@ type EditorState = {
     rotation?: PartialNumber3Tuple
     size?: PartialNumber3Tuple
   }) => void
+
+  settings: Settings
+  setSettings: (newSettings: Partial<Settings>) => void
 }
 
 export const useEditorStore = create(
@@ -79,6 +87,14 @@ export const useEditorStore = create(
           })
           state.selectionBaseTransformation.size = scaleDraft
         }
+      }),
+
+    settings: {
+      testOption: false,
+    },
+    setSettings: (newSettings) =>
+      set((state) => {
+        state.settings = { ...state.settings, ...newSettings }
       }),
   })),
 )
