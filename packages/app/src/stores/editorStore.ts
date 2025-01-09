@@ -36,65 +36,90 @@ type EditorState = {
   setSettings: (newSettings: Partial<Settings>) => void
 }
 
+function getStoredSettings() {
+  try {
+    const settingsString = window.localStorage.getItem('settings')
+    return settingsString != null
+      ? (JSON.parse(settingsString) as Settings)
+      : null
+  } catch (err) {
+    console.error(err)
+    return null
+  }
+}
+
 export const useEditorStore = create(
-  immer<EditorState>((set) => ({
-    mode: 'translate',
-    setMode: (newMode) =>
-      set((state) => {
-        state.mode = newMode
-      }),
-
-    usingTransformControl: false,
-    setUsingTransformControl: (value) =>
-      set((state) => {
-        state.usingTransformControl = value
-      }),
-
-    selectionBaseTransformation: {
-      position: [0, 0, 0],
-      rotation: [0, 0, 0],
-      size: [1, 1, 1],
-    },
-    setSelectionBaseTransformation: (data) =>
-      set((state) => {
-        if (data?.position != null) {
-          const positionDraft =
-            state.selectionBaseTransformation.position.slice() as Number3Tuple
-          data.position.forEach((d, idx) => {
-            if (d != null) {
-              positionDraft[idx] = d
-            }
-          })
-          state.selectionBaseTransformation.position = positionDraft
-        }
-        if (data?.rotation != null) {
-          const rotationDraft =
-            state.selectionBaseTransformation.rotation.slice() as Number3Tuple
-          data.rotation.forEach((d, idx) => {
-            if (d != null) {
-              rotationDraft[idx] = d
-            }
-          })
-          state.selectionBaseTransformation.rotation = rotationDraft
-        }
-        if (data?.size != null) {
-          const scaleDraft =
-            state.selectionBaseTransformation.size.slice() as Number3Tuple
-          data.size.forEach((d, idx) => {
-            if (d != null) {
-              scaleDraft[idx] = d
-            }
-          })
-          state.selectionBaseTransformation.size = scaleDraft
-        }
-      }),
-
-    settings: {
+  immer<EditorState>((set) => {
+    const initialSettings = getStoredSettings() ?? {
       testOption: false,
-    },
-    setSettings: (newSettings) =>
-      set((state) => {
-        state.settings = { ...state.settings, ...newSettings }
-      }),
-  })),
+    }
+
+    return {
+      mode: 'translate',
+      setMode: (newMode) =>
+        set((state) => {
+          state.mode = newMode
+        }),
+
+      usingTransformControl: false,
+      setUsingTransformControl: (value) =>
+        set((state) => {
+          state.usingTransformControl = value
+        }),
+
+      selectionBaseTransformation: {
+        position: [0, 0, 0],
+        rotation: [0, 0, 0],
+        size: [1, 1, 1],
+      },
+      setSelectionBaseTransformation: (data) =>
+        set((state) => {
+          if (data?.position != null) {
+            const positionDraft =
+              state.selectionBaseTransformation.position.slice() as Number3Tuple
+            data.position.forEach((d, idx) => {
+              if (d != null) {
+                positionDraft[idx] = d
+              }
+            })
+            state.selectionBaseTransformation.position = positionDraft
+          }
+          if (data?.rotation != null) {
+            const rotationDraft =
+              state.selectionBaseTransformation.rotation.slice() as Number3Tuple
+            data.rotation.forEach((d, idx) => {
+              if (d != null) {
+                rotationDraft[idx] = d
+              }
+            })
+            state.selectionBaseTransformation.rotation = rotationDraft
+          }
+          if (data?.size != null) {
+            const scaleDraft =
+              state.selectionBaseTransformation.size.slice() as Number3Tuple
+            data.size.forEach((d, idx) => {
+              if (d != null) {
+                scaleDraft[idx] = d
+              }
+            })
+            state.selectionBaseTransformation.size = scaleDraft
+          }
+        }),
+
+      settings: initialSettings,
+      setSettings: (newSettings) =>
+        set((state) => {
+          state.settings = { ...state.settings, ...newSettings }
+
+          try {
+            window.localStorage.setItem(
+              'settings',
+              JSON.stringify(state.settings),
+            )
+          } catch (err) {
+            console.error(err)
+          }
+        }),
+    }
+  }),
 )
