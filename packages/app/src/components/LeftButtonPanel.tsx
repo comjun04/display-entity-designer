@@ -1,4 +1,10 @@
-import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
+import {
+  Menu,
+  MenuButton,
+  MenuItem,
+  MenuItems,
+  MenuSeparator,
+} from '@headlessui/react'
 import { FC } from 'react'
 import { IoMove } from 'react-icons/io5'
 import { LuMenu, LuMoveDiagonal, LuRotate3D } from 'react-icons/lu'
@@ -32,11 +38,30 @@ const LeftButtonPanel: FC = () => {
           className="z-10 ml-2 flex min-w-64 origin-top-left flex-col rounded-lg bg-neutral-900 p-2 outline-none transition duration-100 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
         >
           <MenuItem>
+            <button className="rounded-lg px-2 py-1 text-start transition hover:bg-white/10 data-[focus]:bg-white/10">
+              <div className="flex flex-row items-center gap-2 text-sm">
+                <span className="grow">Open</span>
+                <span className="text-xs text-gray-500">Ctrl + O</span>
+              </div>
+            </button>
+          </MenuItem>
+          <MenuItem>
+            <button className="rounded-lg px-2 py-1 text-start transition hover:bg-white/10 data-[focus]:bg-white/10">
+              <div className="flex flex-row items-center gap-2 text-sm">
+                <span className="grow">Save</span>
+                <span className="text-xs text-gray-500">Ctrl + S</span>
+              </div>
+            </button>
+          </MenuItem>
+
+          <MenuSeparator className="my-1 h-px bg-neutral-700" />
+
+          <MenuItem>
             <button
               className="rounded-lg px-2 py-1 text-start transition hover:bg-white/10 data-[focus]:bg-white/10"
               onClick={() => setOpenedDialog('exportToMinecraft')}
             >
-              <div>Export to Minecraft</div>
+              <div className="text-sm">Export to Minecraft</div>
               <div className="text-xs text-neutral-500">
                 Export this project to Minecraft
               </div>
@@ -47,10 +72,7 @@ const LeftButtonPanel: FC = () => {
               className="rounded-lg px-2 py-1 text-start transition hover:bg-white/10 data-[focus]:bg-white/10"
               onClick={() => setOpenedDialog('settings')}
             >
-              <div>Settings</div>
-              <div className="text-xs text-neutral-500">
-                Configure the program to your liking
-              </div>
+              <div className="text-sm">Settings</div>
             </button>
           </MenuItem>
         </MenuItems>
