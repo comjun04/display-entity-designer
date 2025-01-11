@@ -1,7 +1,6 @@
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
-import { useEntityRefStore } from '@/stores/entityRefStore'
-import { DisplayEntity, DisplayEntitySaveDataItem } from '@/types'
+import { DisplayEntitySaveDataItem } from '@/types'
 
 type DisplayEntitySaveData = {
   __version: number
@@ -74,37 +73,7 @@ export function openFromFile() {
 }
 
 export async function saveToFile() {
-  const { entities } = useDisplayEntityStore.getState()
-  const { entityRefs } = useEntityRefStore.getState()
-
-  const generateEntitySaveData: (
-    entity: DisplayEntity,
-  ) => DisplayEntitySaveDataItem = (entity) => {
-    const refData = entityRefs.find((d) => d.id === entity.id)!
-    const transforms = refData.objectRef.current.matrixWorld
-      .clone()
-      .transpose()
-      .toArray()
-
-    const children =
-      'children' in entity
-        ? entity.children.map((childrenEntityId) => {
-            const e = entities.find((e) => e.id === childrenEntityId)!
-            return generateEntitySaveData(e)
-          })
-        : undefined
-
-    return {
-      kind: entity.kind,
-      type: 'type' in entity ? entity.type : undefined,
-      transforms,
-      children,
-    }
-  }
-
-  const rootEntities = entities
-    .filter((e) => e.parent == null)
-    .map((e) => generateEntitySaveData(e))
+  const rootEntities = useDisplayEntityStore.getState().exportAll()
   const finalSaveObject = {
     __version: FILE_VERSION,
     __program: 'Display Entity Platform',

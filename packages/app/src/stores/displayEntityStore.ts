@@ -44,6 +44,8 @@ export type DisplayEntityState = {
   deleteEntity: (id: string) => void
 
   bulkImport: (items: DisplayEntitySaveDataItem[]) => void
+  exportAll: () => DisplayEntitySaveDataItem[]
+
   clearEntities: () => void
 
   groupSelected: () => void
@@ -51,7 +53,7 @@ export type DisplayEntityState = {
 }
 
 export const useDisplayEntityStore = create(
-  immer<DisplayEntityState>((set) => ({
+  immer<DisplayEntityState>((set, get) => ({
     entities: [],
     selectedEntityIds: [],
 
@@ -367,6 +369,42 @@ export const useDisplayEntityStore = create(
         })
         state.entities = entities
       }),
+    exportAll: () => {
+      const { entities } = get()
+      const { entityRefs } = useEntityRefStore.getState()
+
+      const generateEntitySaveData: (
+        entity: DisplayEntity,
+      ) => DisplayEntitySaveDataItem = (entity) => {
+        const refData = entityRefs.find((d) => d.id === entity.id)!
+        const transforms = refData.objectRef.current.matrixWorld
+          .clone()
+          .transpose()
+          .toArray()
+
+        const children =
+          'children' in entity
+            ? entity.children.map((childrenEntityId) => {
+                const e = entities.find((e) => e.id === childrenEntityId)!
+                return generateEntitySaveData(e)
+              })
+            : undefined
+
+        return {
+          kind: entity.kind,
+          type: 'type' in entity ? entity.type : undefined,
+          transforms,
+          children,
+        }
+      }
+
+      const rootEntities = entities
+        .filter((e) => e.parent == null)
+        .map((e) => generateEntitySaveData(e))
+
+      return rootEntities
+    },
+
     clearEntities: () =>
       set((state) => {
         state.entities = []
