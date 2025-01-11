@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid'
-import { Box3, Euler, Vector3 } from 'three'
+import { Box3, Euler, Matrix4, Vector3 } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
@@ -7,6 +7,7 @@ import { useEntityRefStore } from '@/stores/entityRefStore'
 import {
   DisplayEntity,
   DisplayEntityGroup,
+  DisplayEntitySaveDataItem,
   ModelDisplayPositionKey,
   Number3Tuple,
   PartialNumber3Tuple,
@@ -18,7 +19,7 @@ export type DisplayEntityState = {
   entities: DisplayEntity[]
   selectedEntityIds: string[]
 
-  createNew: (kind: DisplayEntity['kind'], type: string) => void
+  createNew: (kind: DisplayEntity['kind'], type: string) => string
   setSelected: (ids: string[]) => void
   addToSelected: (id: string) => void
   setEntityTranslation: (id: string, translation: PartialNumber3Tuple) => void
@@ -42,6 +43,9 @@ export type DisplayEntityState = {
   ) => void
   deleteEntity: (id: string) => void
 
+  bulkImport: (items: DisplayEntitySaveDataItem[]) => void
+  clearEntities: () => void
+
   groupSelected: () => void
   ungroupSelected: () => void
 }
@@ -54,7 +58,7 @@ export const useDisplayEntityStore = create(
     createNew: (kind, type) => {
       const id = nanoid(16)
 
-      return set((state) => {
+      set((state) => {
         useEntityRefStore.getState().createEntityRef(id)
 
         if (kind === 'block') {
@@ -80,6 +84,8 @@ export const useDisplayEntityStore = create(
           })
         }
       })
+
+      return id
     },
     setSelected: (ids) =>
       set((state) => {
@@ -275,6 +281,98 @@ export const useDisplayEntityStore = create(
         if (selectedEntityIdIdx >= 0) {
           state.selectedEntityIds.splice(selectedEntityIdIdx, 1)
         }
+      }),
+
+    bulkImport: (items) =>
+      set((state) => {
+        const { createEntityRef } = useEntityRefStore.getState()
+
+        const entities: DisplayEntity[] = []
+
+        const tempMatrix4 = new Matrix4()
+        const tempVector = new Vector3()
+        const tempEuler = new Euler()
+
+        const f: (
+          itemList: DisplayEntitySaveDataItem[],
+          parentEntityId?: string,
+        ) => string[] = (itemList, parentEntityId) => {
+          return itemList.map((item) => {
+            const id = nanoid(16)
+
+            tempMatrix4.fromArray(item.transforms).transpose()
+            const position = tempVector
+              .setFromMatrixPosition(tempMatrix4)
+              .toArray()
+            const scale = tempVector.setFromMatrixScale(tempMatrix4).toArray()
+            const rotationEuler = tempEuler.setFromRotationMatrix(tempMatrix4)
+            const rotation = [
+              rotationEuler.x,
+              rotationEuler.y,
+              rotationEuler.z,
+            ] satisfies Number3Tuple
+
+            if (item.kind === 'group') {
+              const children = item.children ?? []
+              const childrenIds = f(children, id)
+
+              entities.push({
+                kind: 'group',
+                id,
+                position,
+                rotation,
+                size: scale,
+                children: childrenIds,
+                parent: parentEntityId,
+              })
+            } else if (item.kind === 'block') {
+              entities.push({
+                kind: 'block',
+                id,
+                type: item.type!,
+                position,
+                rotation,
+                size: scale,
+                parent: parentEntityId,
+
+                // TODO: fill this with real information
+                blockstates: {},
+                display: 'ground',
+              })
+            } else if (item.kind === 'item') {
+              entities.push({
+                kind: 'item',
+                id,
+                type: item.type!,
+                position,
+                rotation,
+                size: scale,
+                parent: parentEntityId,
+
+                // TODO: fill this with real information
+                display: 'ground',
+              })
+            }
+
+            return id
+          })
+        }
+
+        f(items)
+
+        console.log(entities)
+
+        entities.forEach((entity) => {
+          createEntityRef(entity.id)
+        })
+        state.entities = entities
+      }),
+    clearEntities: () =>
+      set((state) => {
+        state.entities = []
+        state.selectedEntityIds = []
+
+        useEntityRefStore.getState().clearEntityRefs()
       }),
 
     groupSelected: () =>

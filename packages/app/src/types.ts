@@ -1,4 +1,5 @@
 import { MutableRefObject, RefCallback } from 'react'
+import { Matrix4Tuple } from 'three'
 
 /**
  * ref에 커스텀 함수(callback)을 쓸 수 있으면서
@@ -124,3 +125,9 @@ export type DisplayEntity =
   | BlockDisplayEntity
   | ItemDisplayEntity
   | DisplayEntityGroup
+
+export type DisplayEntitySaveDataItem = Pick<DisplayEntity, 'kind'> &
+  Partial<Pick<BlockDisplayEntity, 'type'>> & {
+    transforms: Matrix4Tuple
+    children?: DisplayEntitySaveDataItem[]
+  }
