@@ -10,6 +10,7 @@ import { IoMove } from 'react-icons/io5'
 import { LuMenu, LuMoveDiagonal, LuRotate3D } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
+import { saveToFile } from '@/services/fileService'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useEditorStore } from '@/stores/editorStore'
 
@@ -46,7 +47,12 @@ const LeftButtonPanel: FC = () => {
             </button>
           </MenuItem>
           <MenuItem>
-            <button className="rounded-lg px-2 py-1 text-start transition hover:bg-white/10 data-[focus]:bg-white/10">
+            <button
+              className="rounded-lg px-2 py-1 text-start transition hover:bg-white/10 data-[focus]:bg-white/10"
+              onClick={() => {
+                saveToFile().catch(console.error)
+              }}
+            >
               <div className="flex flex-row items-center gap-2 text-sm">
                 <span className="grow">Save</span>
                 <span className="text-xs text-gray-500">Ctrl + S</span>
