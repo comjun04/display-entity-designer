@@ -41,7 +41,20 @@ const LeftButtonPanel: FC = () => {
           <MenuItem>
             <button
               className="rounded-lg px-2 py-1 text-start transition hover:bg-white/10 data-[focus]:bg-white/10"
-              onClick={openFromFile}
+              onClick={() => {
+                const inputElement = document.createElement('input')
+                inputElement.type = 'file'
+                inputElement.onchange = (evt) => {
+                  const file = (evt.target as HTMLInputElement).files?.[0]
+                  if (file == null) {
+                    return
+                  }
+
+                  openFromFile(file).catch(console.error)
+                }
+
+                inputElement.click()
+              }}
             >
               <div className="flex flex-row items-center gap-2 text-sm">
                 <span className="grow">Open</span>
