@@ -78,7 +78,7 @@ export async function saveToFile() {
     __version: FILE_VERSION,
     __program: 'Display Entity Platform',
     entities: rootEntities,
-  }
+  } satisfies DisplayEntitySaveData
 
   const finalSaveObjectString = JSON.stringify(finalSaveObject)
 

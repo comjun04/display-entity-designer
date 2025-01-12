@@ -1,5 +1,5 @@
 import { nanoid } from 'nanoid'
-import { Box3, Euler, Matrix4, Vector3 } from 'three'
+import { Box3, Euler, Matrix4, Quaternion, Vector3 } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
@@ -292,7 +292,9 @@ export const useDisplayEntityStore = create(
         const entities: DisplayEntity[] = []
 
         const tempMatrix4 = new Matrix4()
-        const tempVector = new Vector3()
+        const tempPositionVec = new Vector3()
+        const tempScaleVec = new Vector3()
+        const tempQuaternion = new Quaternion()
         const tempEuler = new Euler()
 
         const f: (
@@ -302,16 +304,15 @@ export const useDisplayEntityStore = create(
           return itemList.map((item) => {
             const id = nanoid(16)
 
-            tempMatrix4.fromArray(item.transforms).transpose()
-            const position = tempVector
-              .setFromMatrixPosition(tempMatrix4)
-              .toArray()
-            const scale = tempVector.setFromMatrixScale(tempMatrix4).toArray()
-            const rotationEuler = tempEuler.setFromRotationMatrix(tempMatrix4)
+            tempMatrix4.fromArray(item.transforms)
+            tempMatrix4.decompose(tempPositionVec, tempQuaternion, tempScaleVec)
+            const position = tempPositionVec.toArray()
+            const scale = tempScaleVec.toArray()
+            tempEuler.setFromQuaternion(tempQuaternion)
             const rotation = [
-              rotationEuler.x,
-              rotationEuler.y,
-              rotationEuler.z,
+              tempEuler.x,
+              tempEuler.y,
+              tempEuler.z,
             ] satisfies Number3Tuple
 
             if (item.kind === 'group') {
@@ -377,10 +378,7 @@ export const useDisplayEntityStore = create(
         entity: DisplayEntity,
       ) => DisplayEntitySaveDataItem = (entity) => {
         const refData = entityRefs.find((d) => d.id === entity.id)!
-        const transforms = refData.objectRef.current.matrixWorld
-          .clone()
-          .transpose()
-          .toArray()
+        const transforms = refData.objectRef.current.matrix.toArray()
 
         const children =
           'children' in entity
