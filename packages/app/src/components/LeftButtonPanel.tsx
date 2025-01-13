@@ -13,6 +13,9 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from './ui/DropdownMenu'
 
@@ -60,7 +63,7 @@ const LeftButtonPanel: FC = () => {
           >
             <div className="flex w-full flex-row items-center gap-2 text-sm">
               <span className="grow">Open</span>
-              <span className="text-xs text-gray-500">Ctrl + O</span>
+              <span className="text-xs text-neutral-500">Ctrl + O</span>
             </div>
           </DropdownMenuItem>
           <DropdownMenuItem
@@ -71,21 +74,26 @@ const LeftButtonPanel: FC = () => {
           >
             <div className="flex w-full flex-row items-center gap-2 text-sm">
               <span className="grow">Save</span>
-              <span className="text-xs text-gray-500">Ctrl + S</span>
+              <span className="text-xs text-neutral-500">Ctrl + S</span>
             </div>
           </DropdownMenuItem>
 
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem
-            className="block"
-            onClick={() => setOpenedDialog('exportToMinecraft')}
-          >
-            <div className="text-sm">Export to Minecraft</div>
-            <div className="text-xs text-neutral-500">
-              Export this project to Minecraft
-            </div>
-          </DropdownMenuItem>
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>Export to...</DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuItem
+                className="block"
+                onClick={() => setOpenedDialog('exportToMinecraft')}
+              >
+                <div className="text-sm">Minecraft</div>
+                <div className="text-xs text-neutral-500">
+                  Export this project to Minecraft
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
           <DropdownMenuItem
             className="w-full"
             onClick={() => setOpenedDialog('settings')}
