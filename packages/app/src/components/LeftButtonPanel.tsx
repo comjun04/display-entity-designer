@@ -1,10 +1,3 @@
-import {
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuItems,
-  MenuSeparator,
-} from '@headlessui/react'
 import { FC } from 'react'
 import { IoMove } from 'react-icons/io5'
 import { LuMenu, LuMoveDiagonal, LuRotate3D } from 'react-icons/lu'
@@ -15,6 +8,13 @@ import { useDialogStore } from '@/stores/dialogStore'
 import { useEditorStore } from '@/stores/editorStore'
 
 import FloatingButton from './FloatingButton'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from './ui/DropdownMenu'
 
 const LeftButtonPanel: FC = () => {
   const { mode, setMode } = useEditorStore(
@@ -29,76 +29,71 @@ const LeftButtonPanel: FC = () => {
 
   return (
     <div className="absolute left-0 top-0 z-[5] ml-4 mt-4 flex flex-col gap-2">
-      <Menu>
-        <MenuButton as={FloatingButton}>
-          <LuMenu size={24} />
-        </MenuButton>
-        <MenuItems
-          transition
-          anchor="right start"
-          className="z-10 ml-2 flex min-w-64 origin-top-left flex-col rounded-lg bg-neutral-900 p-2 outline-none transition duration-100 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <FloatingButton>
+            <LuMenu size={24} />
+          </FloatingButton>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          side="right"
+          sideOffset={10}
+          align="start"
+          className="data-[state=open]:slide-in-from-left-0 min-w-52 origin-top-left p-2"
         >
-          <MenuItem>
-            <button
-              className="rounded-lg px-2 py-1 text-start transition hover:bg-white/10 data-[focus]:bg-white/10"
-              onClick={() => {
-                const inputElement = document.createElement('input')
-                inputElement.type = 'file'
-                inputElement.onchange = (evt) => {
-                  const file = (evt.target as HTMLInputElement).files?.[0]
-                  if (file == null) {
-                    return
-                  }
-
-                  openFromFile(file).catch(console.error)
+          <DropdownMenuItem
+            className="w-full"
+            onClick={() => {
+              const inputElement = document.createElement('input')
+              inputElement.type = 'file'
+              inputElement.onchange = (evt) => {
+                const file = (evt.target as HTMLInputElement).files?.[0]
+                if (file == null) {
+                  return
                 }
 
-                inputElement.click()
-              }}
-            >
-              <div className="flex flex-row items-center gap-2 text-sm">
-                <span className="grow">Open</span>
-                <span className="text-xs text-gray-500">Ctrl + O</span>
-              </div>
-            </button>
-          </MenuItem>
-          <MenuItem>
-            <button
-              className="rounded-lg px-2 py-1 text-start transition hover:bg-white/10 data-[focus]:bg-white/10"
-              onClick={() => {
-                saveToFile().catch(console.error)
-              }}
-            >
-              <div className="flex flex-row items-center gap-2 text-sm">
-                <span className="grow">Save</span>
-                <span className="text-xs text-gray-500">Ctrl + S</span>
-              </div>
-            </button>
-          </MenuItem>
+                openFromFile(file).catch(console.error)
+              }
 
-          <MenuSeparator className="my-1 h-px bg-neutral-700" />
+              inputElement.click()
+            }}
+          >
+            <div className="flex w-full flex-row items-center gap-2 text-sm">
+              <span className="grow">Open</span>
+              <span className="text-xs text-gray-500">Ctrl + O</span>
+            </div>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="w-full"
+            onClick={() => {
+              saveToFile().catch(console.error)
+            }}
+          >
+            <div className="flex w-full flex-row items-center gap-2 text-sm">
+              <span className="grow">Save</span>
+              <span className="text-xs text-gray-500">Ctrl + S</span>
+            </div>
+          </DropdownMenuItem>
 
-          <MenuItem>
-            <button
-              className="rounded-lg px-2 py-1 text-start transition hover:bg-white/10 data-[focus]:bg-white/10"
-              onClick={() => setOpenedDialog('exportToMinecraft')}
-            >
-              <div className="text-sm">Export to Minecraft</div>
-              <div className="text-xs text-neutral-500">
-                Export this project to Minecraft
-              </div>
-            </button>
-          </MenuItem>
-          <MenuItem>
-            <button
-              className="rounded-lg px-2 py-1 text-start transition hover:bg-white/10 data-[focus]:bg-white/10"
-              onClick={() => setOpenedDialog('settings')}
-            >
-              <div className="text-sm">Settings</div>
-            </button>
-          </MenuItem>
-        </MenuItems>
-      </Menu>
+          <DropdownMenuSeparator />
+
+          <DropdownMenuItem
+            className="block"
+            onClick={() => setOpenedDialog('exportToMinecraft')}
+          >
+            <div className="text-sm">Export to Minecraft</div>
+            <div className="text-xs text-neutral-500">
+              Export this project to Minecraft
+            </div>
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="w-full"
+            onClick={() => setOpenedDialog('settings')}
+          >
+            <div className="text-sm">Settings</div>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <FloatingButton
         active={mode === 'translate'}
