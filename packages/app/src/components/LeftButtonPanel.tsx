@@ -49,6 +49,7 @@ const LeftButtonPanel: FC = () => {
             onClick={() => {
               const inputElement = document.createElement('input')
               inputElement.type = 'file'
+              inputElement.accept = '.depl,.bdengine'
               inputElement.onchange = (evt) => {
                 const file = (evt.target as HTMLInputElement).files?.[0]
                 if (file == null) {

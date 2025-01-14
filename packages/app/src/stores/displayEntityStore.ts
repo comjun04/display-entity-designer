@@ -5,6 +5,8 @@ import { immer } from 'zustand/middleware/immer'
 
 import { useEntityRefStore } from '@/stores/entityRefStore'
 import {
+  BDEngineSaveData,
+  BDEngineSaveDataItem,
   DisplayEntity,
   DisplayEntityGroup,
   DisplayEntitySaveDataItem,
@@ -44,6 +46,7 @@ export type DisplayEntityState = {
   deleteEntity: (id: string) => void
 
   bulkImport: (items: DisplayEntitySaveDataItem[]) => void
+  bulkImportFromBDE: (saveData: BDEngineSaveData) => void
   exportAll: () => DisplayEntitySaveDataItem[]
 
   clearEntities: () => void
@@ -365,6 +368,98 @@ export const useDisplayEntityStore = create(
 
         console.log(entities)
 
+        entities.forEach((entity) => {
+          createEntityRef(entity.id)
+        })
+        state.entities = entities
+      }),
+    bulkImportFromBDE: (saveData) =>
+      set((state) => {
+        const entities: DisplayEntity[] = []
+
+        const tempMatrix4 = new Matrix4()
+        const tempPositionVec = new Vector3()
+        const tempScaleVec = new Vector3()
+        const tempQuaternion = new Quaternion()
+        const tempEuler = new Euler()
+
+        const f: (
+          items: BDEngineSaveDataItem[],
+          parentEntityId?: string,
+        ) => string[] = (items, parentEntityId) => {
+          return items.map((item) => {
+            const id = nanoid(16)
+
+            tempMatrix4.fromArray(item.transforms).transpose()
+            tempMatrix4.decompose(tempPositionVec, tempQuaternion, tempScaleVec)
+            const position = tempPositionVec.toArray()
+            const scale = tempScaleVec.toArray()
+            tempEuler.setFromQuaternion(tempQuaternion)
+            const rotation = [
+              tempEuler.x,
+              tempEuler.y,
+              tempEuler.z,
+            ] satisfies Number3Tuple
+
+            console.log(position, rotation, scale)
+
+            const itemType = item.name.split('[')[0] // block_type[some_blockstate=value,another_blockstate=value2]
+
+            if ('isCollection' in item && item.isCollection) {
+              // group
+              const children = item.children ?? []
+              const childrenIds = f(children, id)
+
+              entities.push({
+                kind: 'group',
+                id,
+                position,
+                rotation,
+                size: scale,
+                children: childrenIds,
+                parent: parentEntityId,
+              })
+            } else if ('isBlockDisplay' in item && item.isBlockDisplay) {
+              // block display
+
+              entities.push({
+                kind: 'block',
+                id,
+                type: itemType,
+                position,
+                rotation,
+                size: scale,
+                parent: parentEntityId,
+
+                // TODO: fill this with real information
+                blockstates: {},
+                display: 'ground',
+              })
+            } else if ('isItemDisplay' in item && item.isItemDisplay) {
+              // item display
+
+              entities.push({
+                kind: 'item',
+                id,
+                type: itemType,
+                position,
+                rotation,
+                size: scale,
+                parent: parentEntityId,
+
+                // TODO: fill this with real information
+                display: 'ground',
+              })
+            }
+
+            return id
+          })
+        }
+
+        // saveData[0]이 최상단 그룹으로 확인되어 이거만 처리함
+        f(saveData[0].children)
+
+        const { createEntityRef } = useEntityRefStore.getState()
         entities.forEach((entity) => {
           createEntityRef(entity.id)
         })

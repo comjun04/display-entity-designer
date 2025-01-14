@@ -131,3 +131,38 @@ export type DisplayEntitySaveDataItem = Pick<DisplayEntity, 'kind'> &
     transforms: Matrix4Tuple
     children?: DisplayEntitySaveDataItem[]
   }
+
+// BDEngine
+
+export type BDEngineSaveData = {
+  isCollection: true
+  name: string
+  transforms: Matrix4Tuple
+  children: BDEngineSaveDataItem[]
+  settings: { defaultBrightness: boolean }
+  mainNBT: string
+}[] // 왜 얘내들 최상단 Project group을 배열에 넣어둠???
+
+export type BDEngineSaveDataItem = {
+  name: string
+  nbt: string
+  transforms: Matrix4Tuple
+  brightness: {
+    sky: number
+    block: number
+  }
+} & (
+  | {
+      isBlockDisplay: true
+    }
+  | {
+      isTextDisplay: true
+    }
+  | {
+      isItemDisplay: true
+    }
+  | {
+      isCollection: true
+      children: BDEngineSaveDataItem[]
+    }
+)
