@@ -124,15 +124,13 @@ const DisplayEntityGroup: FC<DisplayEntityGroupProps> = ({
     }
   })
 
-  useEffect(() => {
-    ref?.current?.position.set(...position)
-  }, [ref, position])
-  useEffect(() => {
-    ref?.current?.rotation.set(...rotation)
-  }, [ref, rotation])
-  useEffect(() => {
-    ref?.current?.scale.set(...size)
-  }, [ref, size])
+  useFrame(() => {
+    if (!thisEntitySelected) {
+      ref?.current?.position.set(...position)
+      ref?.current?.rotation.set(...rotation)
+      ref?.current?.scale.set(...size)
+    }
+  })
 
   return (
     <group ref={ref as MutableRefObject<Group>} onClick={onClick}>

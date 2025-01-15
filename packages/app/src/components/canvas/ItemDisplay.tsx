@@ -1,6 +1,6 @@
 import { Helper } from '@react-three/drei'
-import { ThreeEvent } from '@react-three/fiber'
-import { FC, MutableRefObject, memo, useEffect } from 'react'
+import { ThreeEvent, useFrame } from '@react-three/fiber'
+import { FC, MutableRefObject, memo } from 'react'
 import { BoxHelper, Group } from 'three'
 import { useShallow } from 'zustand/shallow'
 
@@ -44,21 +44,13 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
       }),
     )
 
-  useEffect(() => {
+  useFrame(() => {
     if (!thisEntitySelected) {
-      ref?.current.position.set(...position)
+      ref?.current?.position.set(...position)
+      ref?.current?.rotation.set(...rotation)
+      ref?.current?.scale.set(...size)
     }
-  }, [ref, position, thisEntitySelected])
-  useEffect(() => {
-    if (!thisEntitySelected) {
-      ref?.current.rotation.set(...rotation)
-    }
-  }, [ref, rotation, thisEntitySelected])
-  useEffect(() => {
-    if (!thisEntitySelected) {
-      ref?.current.scale.set(...size)
-    }
-  }, [ref, size, thisEntitySelected])
+  })
 
   return (
     <object3D ref={ref}>

@@ -1,5 +1,5 @@
 import { Helper } from '@react-three/drei'
-import { ThreeEvent } from '@react-three/fiber'
+import { ThreeEvent, useFrame } from '@react-three/fiber'
 import { FC, MutableRefObject, memo, useEffect } from 'react'
 import { BoxHelper, Group } from 'three'
 import { useShallow } from 'zustand/shallow'
@@ -71,21 +71,13 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
     setBDEntityBlockstates(id, newBlockstateObject)
   }, [blockstatesData, id, setBDEntityBlockstates])
 
-  useEffect(() => {
+  useFrame(() => {
     if (!thisEntitySelected) {
       ref?.current?.position.set(...position)
-    }
-  }, [ref, position, thisEntitySelected])
-  useEffect(() => {
-    if (!thisEntitySelected) {
       ref?.current?.rotation.set(...rotation)
-    }
-  }, [ref, rotation, thisEntitySelected])
-  useEffect(() => {
-    if (!thisEntitySelected) {
       ref?.current?.scale.set(...size)
     }
-  }, [ref, size, thisEntitySelected])
+  })
 
   if (thisEntity?.kind !== 'block') return null
 
