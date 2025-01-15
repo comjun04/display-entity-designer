@@ -115,7 +115,7 @@ const ObjectsPanel: FC = () => {
   )
 
   return (
-    <div className="flex select-none flex-col gap-[2px] rounded-lg bg-neutral-900 p-2 text-sm">
+    <div className="flex max-h-[50vh] select-none flex-col gap-[2px] overflow-y-auto rounded-lg bg-neutral-900 p-2 text-sm">
       <span className="font-bold">Objects</span>
 
       {rootEntityIds.map((id) => (
