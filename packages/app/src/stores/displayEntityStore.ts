@@ -386,7 +386,7 @@ export const useDisplayEntityStore = create(
         const f: (
           items: BDEngineSaveDataItem[],
           parentEntityId?: string,
-        ) => string[] = (items, parentEntityId) => {
+        ) => (string | null)[] = (items, parentEntityId) => {
           return items.map((item) => {
             const id = nanoid(16)
 
@@ -401,12 +401,13 @@ export const useDisplayEntityStore = create(
               tempEuler.z,
             ] satisfies Number3Tuple
 
-            console.log(position, rotation, scale)
+            console.log(id, item.name, position, rotation, scale)
 
             const itemType = item.name.split('[')[0] // block_type[some_blockstate=value,another_blockstate=value2]
 
             if ('isCollection' in item && item.isCollection) {
               // group
+
               const children = item.children ?? []
               const childrenIds = f(children, id)
 
@@ -416,7 +417,7 @@ export const useDisplayEntityStore = create(
                 position,
                 rotation,
                 size: scale,
-                children: childrenIds,
+                children: childrenIds.filter((id) => id != null),
                 parent: parentEntityId,
               })
             } else if ('isBlockDisplay' in item && item.isBlockDisplay) {
@@ -450,6 +451,8 @@ export const useDisplayEntityStore = create(
                 // TODO: fill this with real information
                 display: 'ground',
               })
+            } else {
+              return null
             }
 
             return id
