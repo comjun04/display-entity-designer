@@ -42,12 +42,7 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
 
   // =====
 
-  const { data: blockstatesData, isLoading: isBlockstatesLoading } =
-    useBlockStates(type)
-  console.log(
-    `Blockstates data for ${type}, isLoading: ${isBlockstatesLoading}`,
-    blockstatesData,
-  )
+  const { data: blockstatesData } = useBlockStates(type)
 
   useEffect(() => {
     if (blockstatesData == null) return
