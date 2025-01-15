@@ -53,6 +53,15 @@ const BlockFace: FC<BlockFaceProps> = ({
       return
     }
 
+    // 한번에 많은 양의 block display가 추가된 경우 (예: 프로젝트 파일을 로드할 때) state update로 인한 rerender가 일어나기 전에 이 부분이 먼저 실행되어
+    // 캐시에 데이터가 이미 있음에도 불구하고 새로 처리하는 문제가 발생
+    // 따라서 state update event는 발생 안했는데 state는 변경된 경우를 체크하여 이 경우 텍스쳐 처리를 하지 않도록 코드 추가
+    const cachedProcessedTextureDataUrl =
+      useCacheStore.getState().croppedTextureDataUrls[textureResourceLocation]
+    if (cachedProcessedTextureDataUrl != null) {
+      return
+    }
+
     const img = texture.image as HTMLImageElement
 
     const canvas = document.createElement('canvas')
@@ -73,6 +82,8 @@ const BlockFace: FC<BlockFaceProps> = ({
     textureSize,
     textureResourceLocation,
   ])
+
+  if (processedImageDataUrl == null) return
 
   // 텍스쳐 픽셀끼리 뭉쳐져서 blur되어 보이지 않게 설정
   // https://discourse.threejs.org/t/low-resolution-texture-is-very-blurry-how-can-i-get-around-this-issue/29948
