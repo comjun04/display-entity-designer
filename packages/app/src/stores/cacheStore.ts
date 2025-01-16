@@ -2,7 +2,12 @@ import { MeshStandardMaterial } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
-import { ModelDisplayPositionKey, ModelElement, Number3Tuple } from '@/types'
+import {
+  BlockstatesData,
+  ModelDisplayPositionKey,
+  ModelElement,
+  Number3Tuple,
+} from '@/types'
 
 // ==========
 type ModelData = {
@@ -18,7 +23,10 @@ type ModelData = {
   >
   elements: ModelElement[]
 }
-type ModelDataStoreState = {
+type CacheStoreState = {
+  blockstatesData: Record<string, BlockstatesData>
+  setBlockstateData: (blockType: string, data: BlockstatesData) => void
+
   modelData: Record<
     string,
     {
@@ -38,10 +46,17 @@ type ModelDataStoreState = {
     imageDataUrl: string,
   ) => void
 }
-// 모델 데이터 캐시 저장소
+
+// 캐시 저장소
 
 export const useCacheStore = create(
-  immer<ModelDataStoreState>((set) => ({
+  immer<CacheStoreState>((set) => ({
+    blockstatesData: {},
+    setBlockstateData: (blockType, blockstatesData) =>
+      set((state) => {
+        state.blockstatesData[blockType] = blockstatesData
+      }),
+
     modelData: {},
     setModelData: (resourceLocation, data, isBlockShapedItemModel) =>
       set((state) => {
