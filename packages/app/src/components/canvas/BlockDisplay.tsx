@@ -34,7 +34,7 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
   const { thisEntity, thisEntitySelected, setBDEntityBlockstates } =
     useDisplayEntityStore(
       useShallow((state) => ({
-        thisEntity: state.entities.find((e) => e.id === id),
+        thisEntity: state.entities.get(id),
         thisEntitySelected: state.selectedEntityIds.includes(id),
         setBDEntityBlockstates: state.setBDEntityBlockstates,
       })),
@@ -49,9 +49,7 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
   useEffect(() => {
     if (blockstatesData == null) return
 
-    const thisEntity = useDisplayEntityStore
-      .getState()
-      .entities.find((e) => e.id === id)
+    const thisEntity = useDisplayEntityStore.getState().entities.get(id)
     if (thisEntity?.kind !== 'block') return
 
     const newBlockstateObject: Record<string, string> = {}

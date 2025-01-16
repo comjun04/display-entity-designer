@@ -143,7 +143,7 @@ const ExportToMinecraftDialog: FC = () => {
       const { entityRefs } = useEntityRefStore.getState()
 
       const tagString = baseTag.length > 0 ? `Tags:["${baseTag}"],` : ''
-      const passengersStrings = entities
+      const passengersStrings = [...entities.values()]
         .map((entity) => {
           // 그룹은 커맨드 생성에 들어가지 않음
           // 그룹 안에 있는 엔티티들은 world transform으로 반영됨

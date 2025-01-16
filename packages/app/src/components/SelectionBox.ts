@@ -183,7 +183,7 @@ class SelectionBox {
     if (object instanceof Object3D && isDisplayEntity) {
       const entity = useDisplayEntityStore
         .getState()
-        .entities.find((e) => e.id === targetEntityRefData.id)
+        .entities.get(targetEntityRefData.id)
       if (entity == null) {
         return false
       }

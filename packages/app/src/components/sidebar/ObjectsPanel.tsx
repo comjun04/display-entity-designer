@@ -22,7 +22,7 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
     children,
   } = useDisplayEntityStore(
     useShallow((state) => {
-      const entity = state.entities.find((e) => e.id === id)!
+      const entity = state.entities.get(id)!
 
       return {
         kind: entity.kind,
@@ -63,11 +63,11 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
               return
             }
 
-            const thisEntity = entities.find((e) => e.id === id)
+            const thisEntity = entities.get(id)
             if (thisEntity == null) return
 
             // 같은 parent 내의 object만 다중 선택 가능
-            const selectedEntityParent = entities.find((e) =>
+            const selectedEntityParent = [...entities.values()].find((e) =>
               selectedEntityIds.includes(e.id),
             )!.parent
             if (thisEntity.parent === selectedEntityParent) {
@@ -110,7 +110,9 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
 const ObjectsPanel: FC = () => {
   const rootEntityIds = useDisplayEntityStore(
     useShallow((state) =>
-      state.entities.filter((e) => e.parent == null).map((entity) => entity.id),
+      [...state.entities.values()]
+        .filter((e) => e.parent == null)
+        .map((entity) => entity.id),
     ),
   )
 

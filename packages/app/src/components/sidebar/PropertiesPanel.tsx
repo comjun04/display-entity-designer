@@ -24,7 +24,7 @@ const PropertiesPanel: FC = () => {
         return {
           singleSelectedEntity:
             state.selectedEntityIds.length === 1
-              ? state.entities.find((e) => e.id === state.selectedEntityIds[0])!
+              ? state.entities.get(state.selectedEntityIds[0])!
               : null,
           setEntityDisplayType: state.setEntityDisplayType,
           setBDEntityBlockstates: state.setBDEntityBlockstates,

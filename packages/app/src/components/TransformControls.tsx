@@ -112,7 +112,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
   }, [selectedEntityIds, updateBoundingBox])
 
   useEffect(() => {
-    const selectedEntities = entities.filter((e) =>
+    const selectedEntities = [...entities.values()].filter((e) =>
       selectedEntityIds.includes(e.id),
     )
 
@@ -183,7 +183,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
           const entities = useDisplayEntityStore.getState().entities
 
           if (mode === 'translate') {
-            const batchUpdateData = entities
+            const batchUpdateData = [...entities.values()]
               .filter((e) => selectedEntityIds.includes(e.id))
               .map((entity) => {
                 const initialTransform =
@@ -201,7 +201,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
               })
             batchSetEntityTransformation(batchUpdateData)
           } else if (mode === 'rotate') {
-            const batchUpdateData = entities
+            const batchUpdateData = [...entities.values()]
               .filter((e) => selectedEntityIds.includes(e.id))
               .map((entity) => {
                 const initialTransform =
@@ -234,7 +234,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
           } else if (mode === 'scale') {
             pivotRef.current.scale.set(1, 1, 1)
 
-            const batchUpdateData = entities
+            const batchUpdateData = [...entities.values()]
               .filter((e) => selectedEntityIds.includes(e.id))
               .map((entity) => {
                 const initialTransform =

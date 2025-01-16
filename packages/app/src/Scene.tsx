@@ -22,8 +22,8 @@ const Scene: FC = () => {
         deleteEntity: state.deleteEntity,
       })),
     )
-  const rootEntityIds = useDisplayEntityStore(
-    useShallow((state) => state.entities.map((entity) => entity.id)),
+  const entityIds = useDisplayEntityStore(
+    useShallow((state) => [...state.entities.keys()]),
   )
 
   const { rootGroupRefData } = useEntityRefStore(
@@ -139,7 +139,7 @@ const Scene: FC = () => {
       </line>
 
       <group name="Display Entities" ref={rootGroupRefData.objectRef}>
-        {rootEntityIds.map((id) => (
+        {entityIds.map((id) => (
           <DisplayEntity key={id} id={id} />
         ))}
       </group>

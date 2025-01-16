@@ -17,8 +17,28 @@ import {
 
 import { useEditorStore } from './editorStore'
 
+const ENTITY_ID_LENGTH = 16
+
+/**
+ * 새로운 id를 생성합니다.
+ * @param idUsabiityCheckPredicate id가 사용 가능한지 판별하는 함수. 중복값을 걸러내야 할 때 등에 사용할 수 있습니다.
+ * 지정하지 않을 경우 생성된 id를 항상 사용 가능하다고 판별합니다.
+ * @returns 새로 생성된 id
+ */
+const generateId = (
+  length: number,
+  idUsabiityCheckPredicate: (id: string) => boolean = () => true,
+) => {
+  const id = nanoid(length)
+  if (!idUsabiityCheckPredicate(id)) {
+    return generateId(length, idUsabiityCheckPredicate)
+  }
+
+  return id
+}
+
 export type DisplayEntityState = {
-  entities: DisplayEntity[]
+  entities: Map<string, DisplayEntity>
   selectedEntityIds: string[]
 
   createNew: (kind: DisplayEntity['kind'], type: string) => string
@@ -57,17 +77,17 @@ export type DisplayEntityState = {
 
 export const useDisplayEntityStore = create(
   immer<DisplayEntityState>((set, get) => ({
-    entities: [],
+    entities: new Map(),
     selectedEntityIds: [],
 
     createNew: (kind, type) => {
-      const id = nanoid(16)
+      const id = generateId(ENTITY_ID_LENGTH)
 
       set((state) => {
         useEntityRefStore.getState().createEntityRef(id)
 
         if (kind === 'block') {
-          state.entities.push({
+          state.entities.set(id, {
             kind: 'block',
             id,
             type,
@@ -78,7 +98,7 @@ export const useDisplayEntityStore = create(
             blockstates: {},
           })
         } else if (kind === 'item') {
-          state.entities.push({
+          state.entities.set(id, {
             kind: 'item',
             id,
             type,
@@ -95,9 +115,7 @@ export const useDisplayEntityStore = create(
     setSelected: (ids) =>
       set((state) => {
         if (state.selectedEntityIds[0] !== ids[0]) {
-          const firstSelectedEntity = state.entities.find(
-            (e) => e.id === ids[0],
-          )
+          const firstSelectedEntity = state.entities.get(ids[0])
 
           useEditorStore.getState().setSelectionBaseTransformation({
             position: firstSelectedEntity?.position,
@@ -122,7 +140,7 @@ export const useDisplayEntityStore = create(
           translation,
         )
 
-        const entity = state.entities.find((e) => e.id === id)
+        const entity = state.entities.get(id)
         if (entity == null) {
           console.error(
             `displayEntityStore.setEntityTranslation(): unknown entity ${id}`,
@@ -140,7 +158,7 @@ export const useDisplayEntityStore = create(
       }),
     setEntityRotation: (id, rotation) =>
       set((state) => {
-        const entity = state.entities.find((e) => e.id === id)
+        const entity = state.entities.get(id)
         if (entity == null) {
           console.error(
             `displayEntityStore.setEntityRotation(): unknown entity ${id}`,
@@ -160,7 +178,7 @@ export const useDisplayEntityStore = create(
       set((state) => {
         console.debug('displayEntityStore setEntityScale', id, scale)
 
-        const entity = state.entities.find((e) => e.id === id)
+        const entity = state.entities.get(id)
         if (entity == null) {
           console.error(
             `displayEntityStore.setEntityScale(): unknown entity ${id}`,
@@ -181,7 +199,7 @@ export const useDisplayEntityStore = create(
         console.debug('displayEntityStore batchSetEntityTransformation', data)
 
         data.forEach((item) => {
-          const entity = state.entities.find((e) => e.id === item.id)
+          const entity = state.entities.get(item.id)
           if (entity == null) return
 
           if (item.translation != null) {
@@ -215,7 +233,7 @@ export const useDisplayEntityStore = create(
       }),
     setEntityDisplayType: (id, display) =>
       set((state) => {
-        const entity = state.entities.find((e) => e.id === id)
+        const entity = state.entities.get(id)
         if (entity == null) {
           console.error(
             `Attempted to set display type for unknown display entity: ${id}`,
@@ -232,7 +250,7 @@ export const useDisplayEntityStore = create(
       }),
     setBDEntityBlockstates: (id, blockstates) =>
       set((state) => {
-        const entity = state.entities.find((e) => e.id === id)
+        const entity = state.entities.get(id)
         if (entity == null) {
           console.error(
             `Attempted to set blockstates for unknown block display entity: ${id}`,
@@ -249,21 +267,17 @@ export const useDisplayEntityStore = create(
       }),
     deleteEntity: (id) =>
       set((state) => {
-        const entityIdx = state.entities.findIndex((e) => e.id === id)
-        if (entityIdx < 0) {
+        const entity = state.entities.get(id)
+        if (entity == null) {
           console.error(
             `displayEntityStore.deleteEntity(): Attempt to remove unknown entity with id ${id}`,
           )
           return
         }
 
-        const entity = state.entities[entityIdx]
-
         // parent가 있을 경우 parent entity에서 children으로 등록된 걸 삭제
         if (entity.parent != null) {
-          const parentElement = state.entities.find(
-            (e) => e.id === entity.parent,
-          )
+          const parentElement = state.entities.get(entity.parent)
           if (parentElement == null || parentElement.kind !== 'group') return
 
           const idx = parentElement.children.findIndex((d) => d === id)
@@ -278,7 +292,7 @@ export const useDisplayEntityStore = create(
         }
 
         useEntityRefStore.getState().deleteEntityRef(id)
-        state.entities.splice(entityIdx, 1)
+        state.entities.delete(id)
 
         const selectedEntityIdIdx = state.selectedEntityIds.findIndex(
           (entityId) => entityId === id,
@@ -292,7 +306,7 @@ export const useDisplayEntityStore = create(
       set((state) => {
         const { createEntityRef } = useEntityRefStore.getState()
 
-        const entities: DisplayEntity[] = []
+        const entities = new Map<string, DisplayEntity>()
 
         const tempMatrix4 = new Matrix4()
         const tempPositionVec = new Vector3()
@@ -322,7 +336,7 @@ export const useDisplayEntityStore = create(
               const children = item.children ?? []
               const childrenIds = f(children, id)
 
-              entities.push({
+              entities.set(id, {
                 kind: 'group',
                 id,
                 position,
@@ -332,7 +346,7 @@ export const useDisplayEntityStore = create(
                 parent: parentEntityId,
               })
             } else if (item.kind === 'block') {
-              entities.push({
+              entities.set(id, {
                 kind: 'block',
                 id,
                 type: item.type,
@@ -344,7 +358,7 @@ export const useDisplayEntityStore = create(
                 display: item.display,
               })
             } else if (item.kind === 'item') {
-              entities.push({
+              entities.set(id, {
                 kind: 'item',
                 id,
                 type: item.type,
@@ -369,7 +383,7 @@ export const useDisplayEntityStore = create(
       }),
     bulkImportFromBDE: (saveData) =>
       set((state) => {
-        const entities: DisplayEntity[] = []
+        const entities = new Map<string, DisplayEntity>()
 
         const tempMatrix4 = new Matrix4()
         const tempPositionVec = new Vector3()
@@ -413,7 +427,7 @@ export const useDisplayEntityStore = create(
               const children = item.children ?? []
               const childrenIds = f(children, id)
 
-              entities.push({
+              entities.set(id, {
                 kind: 'group',
                 id,
                 position,
@@ -425,7 +439,7 @@ export const useDisplayEntityStore = create(
             } else if ('isBlockDisplay' in item && item.isBlockDisplay) {
               // block display
 
-              entities.push({
+              entities.set(id, {
                 kind: 'block',
                 id,
                 type: itemType,
@@ -439,7 +453,7 @@ export const useDisplayEntityStore = create(
             } else if ('isItemDisplay' in item && item.isItemDisplay) {
               // item display
 
-              entities.push({
+              entities.set(id, {
                 kind: 'item',
                 id,
                 type: itemType,
@@ -493,7 +507,7 @@ export const useDisplayEntityStore = create(
           }
         } else if (entity.kind === 'group') {
           const children = entity.children.map((childrenEntityId) => {
-            const e = entities.find((e) => e.id === childrenEntityId)!
+            const e = entities.get(childrenEntityId)!
             return generateEntitySaveData(e)
           })
           return {
@@ -509,7 +523,7 @@ export const useDisplayEntityStore = create(
         )
       }
 
-      const rootEntities = entities
+      const rootEntities = [...entities.values()]
         .filter((e) => e.parent == null)
         .map((e) => generateEntitySaveData(e))
 
@@ -518,7 +532,7 @@ export const useDisplayEntityStore = create(
 
     clearEntities: () =>
       set((state) => {
-        state.entities = []
+        state.entities.clear()
         state.selectedEntityIds = []
 
         useEntityRefStore.getState().clearEntityRefs()
@@ -528,7 +542,7 @@ export const useDisplayEntityStore = create(
       set((state) => {
         const groupId = nanoid(16)
 
-        const selectedEntities = state.entities.filter((e) =>
+        const selectedEntities = [...state.entities.values()].filter((e) =>
           state.selectedEntityIds.includes(e.id),
         )
         if (selectedEntities.length < 1) {
@@ -552,8 +566,8 @@ export const useDisplayEntityStore = create(
 
         const previousParentGroup =
           firstSelectedEntityParentId != null
-            ? (state.entities.find(
-                (e) => e.id === firstSelectedEntityParentId,
+            ? (state.entities.get(
+                firstSelectedEntityParentId,
               ) as DisplayEntityGroup) // WritableDraft<DisplayEntityGroup>
             : undefined
 
@@ -585,7 +599,8 @@ export const useDisplayEntityStore = create(
 
         useEntityRefStore.getState().createEntityRef(groupId)
 
-        state.entities.unshift({
+        // unshift 이제 더 이상 안됨 흑흑
+        state.entities.set(groupId, {
           kind: 'group',
           id: groupId,
           position: box3.min.toArray(),
@@ -612,9 +627,7 @@ export const useDisplayEntityStore = create(
         }
 
         const entityGroupId = state.selectedEntityIds[0]
-        const selectedEntityGroup = state.entities.find(
-          (e) => e.id === entityGroupId,
-        )
+        const selectedEntityGroup = state.entities.get(entityGroupId)
         if (selectedEntityGroup?.kind !== 'group') {
           console.error(
             `displayEntityStore.ungroupSelected(): selected entity ${entityGroupId} (kind: ${selectedEntityGroup?.kind}) is not a group`,
@@ -624,8 +637,8 @@ export const useDisplayEntityStore = create(
 
         const parentEntityGroup =
           selectedEntityGroup.parent != null
-            ? (state.entities.find(
-                (e) => e.id === selectedEntityGroup.parent,
+            ? (state.entities.get(
+                selectedEntityGroup.parent,
               ) as DisplayEntityGroup) // WritableDraft<DisplayEntityGroup>
             : undefined
         if (parentEntityGroup != null) {
@@ -643,7 +656,7 @@ export const useDisplayEntityStore = create(
           .find((d) => d.id === entityGroupId)!
           .objectRef.current.matrix.clone()
 
-        state.entities
+        ;[...state.entities.values()]
           .filter((e) => selectedEntityGroup.children.includes(e.id))
           .forEach((e) => {
             e.parent = parentEntityGroup?.id

@@ -17,7 +17,7 @@ type DisplayEntityProps = {
 const DisplayEntity: FC<DisplayEntityProps> = ({ id }) => {
   const { thisEntity, deleteEntity } = useDisplayEntityStore(
     useShallow((state) => ({
-      thisEntity: state.entities.find((e) => e.id === id),
+      thisEntity: state.entities.get(id),
       deleteEntity: state.deleteEntity,
     })),
   )

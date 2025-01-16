@@ -50,8 +50,7 @@ const TopButtonPanel: FC = () => {
 
             const alreadyGrouped =
               selectedEntityIds.length === 1 &&
-              entities.find((e) => e.id === selectedEntityIds[0])?.kind ===
-                'group'
+              entities.get(selectedEntityIds[0])?.kind === 'group'
             if (alreadyGrouped) {
               ungroupSelected()
             } else {
