@@ -50,7 +50,7 @@ export const useEntityRefStore = create<EntityRefStoreState>((set) => {
 
           const refAvailable = node != null
 
-          console.log(`id: ${id}, refAvailable: ${refAvailable}`, node)
+          // console.log(`id: ${id}, refAvailable: ${refAvailable}`, node)
 
           set((state) => {
             const entityIdx = state.entityRefs.findIndex((e) => e.id === id)

@@ -343,7 +343,6 @@ export const useDisplayEntityStore = create(
                 blockstates: item.blockstates,
                 display: item.display,
               })
-              console.log(item.blockstates)
             } else if (item.kind === 'item') {
               entities.push({
                 kind: 'item',
@@ -362,8 +361,6 @@ export const useDisplayEntityStore = create(
         }
 
         f(items)
-
-        console.log(entities)
 
         entities.forEach((entity) => {
           createEntityRef(entity.id)
@@ -659,14 +656,6 @@ export const useDisplayEntityStore = create(
             const newEntityMatrix = entityInstance.matrix
               .clone()
               .premultiply(groupTransformationMatrix) // entityInstance.applyMatrix4(groupTransformationMatrix)
-            console.log(
-              e.id,
-              entityInstance.position.toArray(),
-              entityInstance.rotation.toArray(),
-              entityInstance.scale.toArray(),
-              parentEntityGroup,
-              groupTransformationMatrix,
-            )
 
             const newPosition = new Vector3().setFromMatrixPosition(
               newEntityMatrix,
