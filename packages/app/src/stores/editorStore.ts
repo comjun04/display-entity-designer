@@ -34,6 +34,8 @@ type EditorState = {
 
   settings: Settings
   setSettings: (newSettings: Partial<Settings>) => void
+
+  resetProject: () => void
 }
 
 function getStoredSettings() {
@@ -119,6 +121,16 @@ export const useEditorStore = create(
           } catch (err) {
             console.error(err)
           }
+        }),
+
+      resetProject: () =>
+        set((state) => {
+          state.selectionBaseTransformation = {
+            position: [0, 0, 0],
+            rotation: [0, 0, 0],
+            size: [1, 1, 1],
+          }
+          state.usingTransformControl = false
         }),
     }
   }),

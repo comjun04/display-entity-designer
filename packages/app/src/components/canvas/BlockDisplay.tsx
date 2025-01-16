@@ -1,5 +1,5 @@
 import { Helper } from '@react-three/drei'
-import { ThreeEvent } from '@react-three/fiber'
+import { ThreeEvent, useFrame } from '@react-three/fiber'
 import { FC, MutableRefObject, memo, useEffect } from 'react'
 import { BoxHelper, Group } from 'three'
 import { useShallow } from 'zustand/shallow'
@@ -42,50 +42,43 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
 
   // =====
 
-  const { data: blockstatesData, isLoading: isBlockstatesLoading } =
-    useBlockStates(type)
-  console.log(
-    `Blockstates data for ${type}, isLoading: ${isBlockstatesLoading}`,
-    blockstatesData,
-  )
+  const { data: blockstatesData } = useBlockStates(type)
 
+  // blockstates 데이터가 변경되었을 경우 현재 block display에 적용되어 있는 값을 확인 후
+  // 새 blockstates key 값 목록에 있다면 그대로 두고, 없다면 기본값을 적용
   useEffect(() => {
     if (blockstatesData == null) return
 
-    // console.log(
-    //   'BlockDisplay: blockstates data changed maybe, resetting blockstates default values',
-    // )
+    const thisEntity = useDisplayEntityStore
+      .getState()
+      .entities.find((e) => e.id === id)
+    if (thisEntity?.kind !== 'block') return
 
     const newBlockstateObject: Record<string, string> = {}
     for (const [
       blockstateKey,
       blockstateValues,
     ] of blockstatesData.blockstates.entries()) {
-      newBlockstateObject[blockstateKey] = blockstateValues.states.has(
-        blockstateValues.default,
-      )
-        ? blockstateValues.default
-        : [...blockstateValues.states.values()][0]
+      const existingValue = thisEntity.blockstates[blockstateKey]
+      if (existingValue == null) {
+        newBlockstateObject[blockstateKey] = blockstateValues.states.has(
+          blockstateValues.default,
+        )
+          ? blockstateValues.default
+          : [...blockstateValues.states.values()][0]
+      }
     }
 
     setBDEntityBlockstates(id, newBlockstateObject)
   }, [blockstatesData, id, setBDEntityBlockstates])
 
-  useEffect(() => {
+  useFrame(() => {
     if (!thisEntitySelected) {
       ref?.current?.position.set(...position)
-    }
-  }, [ref, position, thisEntitySelected])
-  useEffect(() => {
-    if (!thisEntitySelected) {
       ref?.current?.rotation.set(...rotation)
-    }
-  }, [ref, rotation, thisEntitySelected])
-  useEffect(() => {
-    if (!thisEntitySelected) {
       ref?.current?.scale.set(...size)
     }
-  }, [ref, size, thisEntitySelected])
+  })
 
   if (thisEntity?.kind !== 'block') return null
 
