@@ -335,28 +335,25 @@ export const useDisplayEntityStore = create(
               entities.push({
                 kind: 'block',
                 id,
-                type: item.type!,
+                type: item.type,
                 position,
                 rotation,
                 size: scale,
                 parent: parentEntityId,
-
-                // TODO: fill this with real information
-                blockstates: {},
-                display: 'ground',
+                blockstates: item.blockstates,
+                display: item.display,
               })
+              console.log(item.blockstates)
             } else if (item.kind === 'item') {
               entities.push({
                 kind: 'item',
                 id,
-                type: item.type!,
+                type: item.type,
                 position,
                 rotation,
                 size: scale,
                 parent: parentEntityId,
-
-                // TODO: fill this with real information
-                display: 'ground',
+                display: item.display,
               })
             }
 
@@ -400,8 +397,6 @@ export const useDisplayEntityStore = create(
               tempEuler.y,
               tempEuler.z,
             ] satisfies Number3Tuple
-
-            console.log(id, item.name, position, rotation, scale)
 
             const itemType = item.name.split('[')[0] // block_type[some_blockstate=value,another_blockstate=value2]
 
@@ -478,20 +473,37 @@ export const useDisplayEntityStore = create(
         const refData = entityRefs.find((d) => d.id === entity.id)!
         const transforms = refData.objectRef.current.matrix.toArray()
 
-        const children =
-          'children' in entity
-            ? entity.children.map((childrenEntityId) => {
-                const e = entities.find((e) => e.id === childrenEntityId)!
-                return generateEntitySaveData(e)
-              })
-            : undefined
-
-        return {
-          kind: entity.kind,
-          type: 'type' in entity ? entity.type : undefined,
-          transforms,
-          children,
+        if (entity.kind === 'block') {
+          return {
+            kind: entity.kind,
+            type: entity.type,
+            transforms,
+            blockstates: entity.blockstates,
+            display: entity.display,
+          }
+        } else if (entity.kind === 'item') {
+          return {
+            kind: entity.kind,
+            type: entity.type,
+            transforms,
+            display: entity.display,
+          }
+        } else if (entity.kind === 'group') {
+          const children = entity.children.map((childrenEntityId) => {
+            const e = entities.find((e) => e.id === childrenEntityId)!
+            return generateEntitySaveData(e)
+          })
+          return {
+            kind: entity.kind,
+            transforms,
+            children,
+          }
         }
+
+        // This should not happen
+        throw new Error(
+          `Unexpected entity kind ${(entity as DisplayEntity).kind}`,
+        )
       }
 
       const rootEntities = entities

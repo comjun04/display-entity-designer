@@ -126,11 +126,21 @@ export type DisplayEntity =
   | ItemDisplayEntity
   | DisplayEntityGroup
 
-export type DisplayEntitySaveDataItem = Pick<DisplayEntity, 'kind'> &
+export type DisplayEntitySaveDataItemOld = Pick<DisplayEntity, 'kind'> &
   Partial<Pick<BlockDisplayEntity, 'type'>> & {
     transforms: Matrix4Tuple
     children?: DisplayEntitySaveDataItem[]
   }
+
+export type DisplayEntitySaveDataItem = {
+  transforms: Matrix4Tuple
+} & (
+  | Pick<BlockDisplayEntity, 'kind' | 'type' | 'blockstates' | 'display'>
+  | Pick<ItemDisplayEntity, 'kind' | 'type' | 'display'>
+  | (Pick<DisplayEntityGroup, 'kind'> & {
+      children: DisplayEntitySaveDataItem[]
+    })
+)
 
 // BDEngine
 
