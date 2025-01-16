@@ -399,6 +399,16 @@ export const useDisplayEntityStore = create(
             ] satisfies Number3Tuple
 
             const itemType = item.name.split('[')[0] // block_type[some_blockstate=value,another_blockstate=value2]
+            const extraDataList = item.name
+              .slice(itemType.length + 1, -1)
+              .split(',')
+            const extraData: Record<string, string> = extraDataList.reduce(
+              (acc, cur) => {
+                const [k, v] = cur.split('=')
+                return { ...acc, [k]: v }
+              },
+              {},
+            )
 
             if ('isCollection' in item && item.isCollection) {
               // group
@@ -426,10 +436,8 @@ export const useDisplayEntityStore = create(
                 rotation,
                 size: scale,
                 parent: parentEntityId,
-
-                // TODO: fill this with real information
-                blockstates: {},
-                display: 'ground',
+                blockstates: extraData,
+                display: extraData['display'] as ModelDisplayPositionKey,
               })
             } else if ('isItemDisplay' in item && item.isItemDisplay) {
               // item display
@@ -442,9 +450,7 @@ export const useDisplayEntityStore = create(
                 rotation,
                 size: scale,
                 parent: parentEntityId,
-
-                // TODO: fill this with real information
-                display: 'ground',
+                display: extraData['display'] as ModelDisplayPositionKey,
               })
             } else {
               return null
