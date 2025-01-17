@@ -14,14 +14,12 @@ import { useEditorStore } from './stores/editorStore'
 import { useEntityRefStore } from './stores/entityRefStore'
 
 const Scene: FC = () => {
-  const { selectedEntityIds, setSelected, deleteEntity } =
-    useDisplayEntityStore(
-      useShallow((state) => ({
-        selectedEntityIds: state.selectedEntityIds,
-        setSelected: state.setSelected,
-        deleteEntity: state.deleteEntity,
-      })),
-    )
+  const { selectedEntityIds } = useDisplayEntityStore(
+    useShallow((state) => ({
+      selectedEntityIds: state.selectedEntityIds,
+    })),
+  )
+  // 매번 다른 array가 생성돼서 array 안의 값을 shallow equal로 검사하기 위해 따로 선언
   const entityIds = useDisplayEntityStore(
     useShallow((state) => [...state.entities.keys()]),
   )
@@ -29,11 +27,6 @@ const Scene: FC = () => {
   const { rootGroupRefData } = useEntityRefStore(
     useShallow((state) => ({
       rootGroupRefData: state.rootGroupRefData,
-    })),
-  )
-  const { setMode } = useEditorStore(
-    useShallow((state) => ({
-      setMode: state.setMode,
     })),
   )
   const { openedDialog } = useDialogStore(
@@ -61,6 +54,9 @@ const Scene: FC = () => {
         return true
       }
 
+      const { deleteEntity } = useDisplayEntityStore.getState()
+      const { setMode } = useEditorStore.getState()
+
       // 단축키 처리
       switch (evt.key) {
         case 't':
@@ -79,7 +75,7 @@ const Scene: FC = () => {
 
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [setMode, deleteEntity, selectedEntityIds, openedDialog])
+  }, [selectedEntityIds, openedDialog])
 
   useEffect(() => {
     const handler = (evt: KeyboardEvent) => {
@@ -101,7 +97,7 @@ const Scene: FC = () => {
         background: new Color(0x222222),
       }}
       onPointerMissed={() => {
-        setSelected([])
+        useDisplayEntityStore.getState().setSelected([])
       }}
     >
       {/* Axis lines */}
