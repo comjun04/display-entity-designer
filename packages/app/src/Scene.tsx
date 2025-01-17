@@ -42,7 +42,7 @@ const Scene: FC = () => {
         return true
       }
 
-      const { deleteEntity } = useDisplayEntityStore.getState()
+      const { deleteEntities } = useDisplayEntityStore.getState()
       const { setMode } = useEditorStore.getState()
 
       // 단축키 처리
@@ -57,7 +57,7 @@ const Scene: FC = () => {
           setMode('scale')
           break
         case 'Delete':
-          selectedEntityIds.forEach(deleteEntity)
+          deleteEntities(selectedEntityIds)
       }
     }
 

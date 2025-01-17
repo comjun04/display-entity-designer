@@ -63,7 +63,7 @@ export type DisplayEntityState = {
     id: string,
     blockstates: Record<string, string>,
   ) => void
-  deleteEntity: (id: string) => void
+  deleteEntities: (entityIds: string[]) => void
 
   bulkImport: (items: DisplayEntitySaveDataItem[]) => void
   bulkImportFromBDE: (saveData: BDEngineSaveData) => void
@@ -270,41 +270,55 @@ export const useDisplayEntityStore = create(
 
         entity.blockstates = { ...entity.blockstates, ...blockstates }
       }),
-    deleteEntity: (id) =>
+    deleteEntities: (entityIds) =>
       set((state) => {
-        const entity = state.entities.get(id)
-        if (entity == null) {
-          console.error(
-            `displayEntityStore.deleteEntity(): Attempt to remove unknown entity with id ${id}`,
-          )
-          return
-        }
+        const deletePendingEntityIds = new Set<string>()
 
-        // parent가 있을 경우 parent entity에서 children으로 등록된 걸 삭제
-        if (entity.parent != null) {
-          const parentElement = state.entities.get(entity.parent)
-          if (parentElement == null || parentElement.kind !== 'group') return
+        const recursivelyDelete = (ids: string[]) => {
+          for (const id of ids) {
+            // 이미 삭제 대상인 entity일 경우 스킵
+            // 이 entity의 parent entity가 삭제 대상이라 이미 처리한 경우임
+            if (deletePendingEntityIds.has(id)) continue
 
-          const idx = parentElement.children.findIndex((d) => d === id)
-          if (idx >= 0) {
-            parentElement.children.splice(idx, 1)
+            const entity = state.entities.get(id)
+            if (entity == null) {
+              console.error(
+                `displayEntityStore.deleteEntities(): Attempt to remove unknown entity with id ${id}`,
+              )
+              continue
+            }
+
+            // parent가 있을 경우 parent entity에서 children으로 등록된 걸 삭제
+            if (entity.parent != null) {
+              const parentElement = state.entities.get(entity.parent)
+              if (parentElement == null || parentElement.kind !== 'group')
+                return
+
+              const idx = parentElement.children.findIndex((d) => d === id)
+              if (idx >= 0) {
+                parentElement.children.splice(idx, 1)
+              }
+            }
+
+            // children으로 등록된 entity들이 있다면 같이 삭제
+            if (entity.kind === 'group') {
+              recursivelyDelete(entity.children)
+            }
+
+            useEntityRefStore.getState().deleteEntityRef(id)
+            state.entities.delete(id)
+            const selectedEntityIdIdx = state.selectedEntityIds.findIndex(
+              (entityId) => entityId === id,
+            )
+            if (selectedEntityIdIdx >= 0) {
+              state.selectedEntityIds.splice(selectedEntityIdIdx, 1)
+            }
+
+            deletePendingEntityIds.add(id)
           }
         }
 
-        // children으로 등록된 entity들이 있다면 같이 삭제
-        if (entity.kind === 'group') {
-          entity.children.forEach((id) => state.deleteEntity(id))
-        }
-
-        useEntityRefStore.getState().deleteEntityRef(id)
-        state.entities.delete(id)
-
-        const selectedEntityIdIdx = state.selectedEntityIds.findIndex(
-          (entityId) => entityId === id,
-        )
-        if (selectedEntityIdIdx >= 0) {
-          state.selectedEntityIds.splice(selectedEntityIdIdx, 1)
-        }
+        recursivelyDelete(entityIds)
       }),
 
     bulkImport: (items) =>

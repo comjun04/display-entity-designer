@@ -59,7 +59,7 @@ const DisplayEntity: FC<DisplayEntityProps> = ({ id }) => {
   // 내가 group 안에 children이 더 이상 없으면 나 자신도 삭제
   useEffect(() => {
     if (thisEntity?.kind === 'group' && thisEntity.children.length < 1) {
-      useDisplayEntityStore.getState().deleteEntity(id)
+      useDisplayEntityStore.getState().deleteEntities([id])
     }
   }, [id, thisEntity])
 
