@@ -1,6 +1,6 @@
 import { Grid, PerspectiveCamera } from '@react-three/drei'
 import { Canvas } from '@react-three/fiber'
-import { FC, useEffect, useState } from 'react'
+import { FC, useEffect } from 'react'
 import { Color } from 'three'
 import { useShallow } from 'zustand/shallow'
 
@@ -34,8 +34,6 @@ const Scene: FC = () => {
       openedDialog: state.openedDialog,
     })),
   )
-
-  const [shiftPressed, setShiftPressed] = useState(false)
 
   useEffect(() => {
     const focusableElements = ['input', 'textarea']
@@ -76,19 +74,6 @@ const Scene: FC = () => {
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
   }, [selectedEntityIds, openedDialog])
-
-  useEffect(() => {
-    const handler = (evt: KeyboardEvent) => {
-      setShiftPressed(evt.shiftKey)
-    }
-
-    document.addEventListener('keydown', handler)
-    document.addEventListener('keyup', handler)
-    return () => {
-      document.removeEventListener('keydown', handler)
-      document.removeEventListener('keyup', handler)
-    }
-  }, [])
 
   return (
     <Canvas
@@ -141,7 +126,7 @@ const Scene: FC = () => {
         ))}
       </group>
 
-      <TransformControls shiftPressed={shiftPressed} />
+      <TransformControls />
       <DragSelectControl />
 
       <ambientLight intensity={1.7} color={0xffffff} />

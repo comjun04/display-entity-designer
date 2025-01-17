@@ -1,5 +1,12 @@
 import { TransformControls as TransformControlsImpl } from '@react-three/drei'
-import { FC, MutableRefObject, useCallback, useEffect, useRef } from 'react'
+import {
+  FC,
+  MutableRefObject,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import {
   Box3,
   Box3Helper,
@@ -22,11 +29,7 @@ const infinityVector = new Vector3(Infinity, Infinity, Infinity)
 const minusInfinityVector = new Vector3(-Infinity, -Infinity, -Infinity)
 const dummyBox = new Box3(infinityVector.clone(), minusInfinityVector.clone())
 
-type TransformControlsProps = {
-  shiftPressed: boolean
-}
-
-const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
+const TransformControls: FC = () => {
   const { entities, selectedEntityIds, batchSetEntityTransformation } =
     useDisplayEntityStore(
       useShallow((state) => ({
@@ -59,6 +62,8 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
         setSelectionBaseTransformation: state.setSelectionBaseTransformation,
       })),
     )
+
+  const [shiftPressed, setShiftPressed] = useState(false)
 
   const pivotRef = useRef<Group>(null) as MutableRefObject<Group>
   const boundingBoxHelperRef = useRef<Box3Helper>(null)
@@ -156,6 +161,19 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
     updateBoundingBox,
     selectedEntityRefAllAvailable,
   ])
+
+  useEffect(() => {
+    const handler = (evt: KeyboardEvent) => {
+      setShiftPressed(evt.shiftKey)
+    }
+
+    document.addEventListener('keydown', handler)
+    document.addEventListener('keyup', handler)
+    return () => {
+      document.removeEventListener('keydown', handler)
+      document.removeEventListener('keyup', handler)
+    }
+  }, [])
 
   return (
     <>
