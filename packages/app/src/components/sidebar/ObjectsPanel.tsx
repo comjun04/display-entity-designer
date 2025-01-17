@@ -11,33 +11,23 @@ type ObjectItemProps = {
   id: string
 }
 const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
-  const {
-    kind,
-    type,
-    display,
-    blockstates,
-    selected,
-    setSelected,
-    addToSelectedEntity,
-    children,
-  } = useDisplayEntityStore(
-    useShallow((state) => {
-      const entity = state.entities.get(id)!
+  const { kind, type, display, blockstates, selected, children } =
+    useDisplayEntityStore(
+      useShallow((state) => {
+        const entity = state.entities.get(id)!
 
-      return {
-        kind: entity.kind,
-        type: 'type' in entity ? entity.type : undefined,
-        display: 'display' in entity ? entity.display : null,
-        blockstates: entity.kind === 'block' ? entity.blockstates : undefined,
-        selected: state.selectedEntityIds.includes(id),
-        setSelected: state.setSelected,
-        addToSelectedEntity: state.addToSelected,
+        return {
+          kind: entity.kind,
+          type: 'type' in entity ? entity.type : undefined,
+          display: 'display' in entity ? entity.display : null,
+          blockstates: entity.kind === 'block' ? entity.blockstates : undefined,
+          selected: state.selectedEntityIds.includes(id),
 
-        parent: entity.parent,
-        children: entity.kind === 'group' ? entity.children : null,
-      }
-    }),
-  )
+          parent: entity.parent,
+          children: entity.kind === 'group' ? entity.children : null,
+        }
+      }),
+    )
 
   const blockstateArr: string[] = []
   if (kind === 'block') {
@@ -54,6 +44,9 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
           selected && 'font-bold text-yellow-500',
         )}
         onClick={(evt) => {
+          const { addToSelected: addToSelectedEntity, setSelected } =
+            useDisplayEntityStore.getState()
+
           if (evt.ctrlKey) {
             const { entities, selectedEntityIds } =
               useDisplayEntityStore.getState()

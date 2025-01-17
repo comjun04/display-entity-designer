@@ -31,14 +31,13 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
   onClick,
   objectRef: ref,
 }) => {
-  const { thisEntity, thisEntitySelected, setBDEntityBlockstates } =
-    useDisplayEntityStore(
-      useShallow((state) => ({
-        thisEntity: state.entities.get(id),
-        thisEntitySelected: state.selectedEntityIds.includes(id),
-        setBDEntityBlockstates: state.setBDEntityBlockstates,
-      })),
-    )
+  const { thisEntity, thisEntitySelected } = useDisplayEntityStore(
+    useShallow((state) => ({
+      thisEntity: state.entities.get(id),
+      thisEntitySelected: state.selectedEntityIds.includes(id),
+      setBDEntityBlockstates: state.setBDEntityBlockstates,
+    })),
+  )
 
   // =====
 
@@ -67,8 +66,10 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
       }
     }
 
-    setBDEntityBlockstates(id, newBlockstateObject)
-  }, [blockstatesData, id, setBDEntityBlockstates])
+    useDisplayEntityStore
+      .getState()
+      .setBDEntityBlockstates(id, newBlockstateObject)
+  }, [blockstatesData, id])
 
   useFrame(() => {
     if (!thisEntitySelected) {

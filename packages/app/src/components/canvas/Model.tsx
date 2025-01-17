@@ -29,10 +29,9 @@ const Model: FC<ModelProps> = ({
   xRotation = 0,
   yRotation = 0,
 }) => {
-  const { cachedModelData, setCachedModelData } = useCacheStore(
+  const { cachedModelData } = useCacheStore(
     useShallow((state) => ({
       cachedModelData: state.modelData[initialResourceLocation], // nullable
-      setCachedModelData: state.setModelData,
     })),
   )
 
@@ -146,7 +145,7 @@ const Model: FC<ModelProps> = ({
   useEffect(() => {
     if (!modelDataLoadFinished || elements.length < 1) return
 
-    setCachedModelData(
+    useCacheStore.getState().setModelData(
       initialResourceLocation,
       {
         elements,
@@ -160,7 +159,6 @@ const Model: FC<ModelProps> = ({
     elements,
     textures,
     initialResourceLocation,
-    setCachedModelData,
     isBlockShapedItemModel,
     modelDataLoadFinished,
   ])
