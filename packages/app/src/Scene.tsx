@@ -5,13 +5,12 @@ import { Color } from 'three'
 import { useShallow } from 'zustand/shallow'
 
 import CustomCameraControls from './CustomCameraControls'
+import DisplayentitiesRootGroup from './components/DisplayEntitiesRootGroup'
 import DragSelectControl from './components/DragSelectControl'
 import TransformControls from './components/TransformControls'
-import DisplayEntity from './components/canvas/DisplayEntity'
 import { useDialogStore } from './stores/dialogStore'
 import { useDisplayEntityStore } from './stores/displayEntityStore'
 import { useEditorStore } from './stores/editorStore'
-import { useEntityRefStore } from './stores/entityRefStore'
 
 const Scene: FC = () => {
   const { selectedEntityIds } = useDisplayEntityStore(
@@ -19,16 +18,7 @@ const Scene: FC = () => {
       selectedEntityIds: state.selectedEntityIds,
     })),
   )
-  // 매번 다른 array가 생성돼서 array 안의 값을 shallow equal로 검사하기 위해 따로 선언
-  const entityIds = useDisplayEntityStore(
-    useShallow((state) => [...state.entities.keys()]),
-  )
 
-  const { rootGroupRefData } = useEntityRefStore(
-    useShallow((state) => ({
-      rootGroupRefData: state.rootGroupRefData,
-    })),
-  )
   const { openedDialog } = useDialogStore(
     useShallow((state) => ({
       openedDialog: state.openedDialog,
@@ -120,11 +110,7 @@ const Scene: FC = () => {
         <lineBasicMaterial color={0x0000ff} />
       </line>
 
-      <group name="Display Entities" ref={rootGroupRefData.objectRef}>
-        {entityIds.map((id) => (
-          <DisplayEntity key={id} id={id} />
-        ))}
-      </group>
+      <DisplayentitiesRootGroup />
 
       <TransformControls />
       <DragSelectControl />
