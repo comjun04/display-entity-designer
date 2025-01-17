@@ -263,6 +263,11 @@ export const useDisplayEntityStore = create(
           return
         }
 
+        // 변경할 게 없으면 그냥 종료
+        if ([...Object.keys(blockstates)].length < 1) {
+          return
+        }
+
         entity.blockstates = { ...entity.blockstates, ...blockstates }
       }),
     deleteEntity: (id) =>
