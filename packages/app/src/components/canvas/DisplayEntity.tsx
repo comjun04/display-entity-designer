@@ -27,11 +27,20 @@ const DisplayEntity: FC<DisplayEntityProps> = ({ id }) => {
       // parent 값이 있다면
       const parentGroupRefData =
         thisEntity?.parent != null
-          ? state.entityRefs.find((e) => e.id === thisEntity.parent)
+          ? state.entityRefs.get(thisEntity.parent)
           : state.rootGroupRefData
 
+      if (
+        thisEntity?.parent != null &&
+        !state.entityRefs.has(thisEntity.parent)
+      ) {
+        console.warn(
+          'thisEntity.parent is not null, but parent entity ref is null',
+        )
+      }
+
       return {
-        thisEntityRef: state.entityRefs.find((e) => e.id === id),
+        thisEntityRef: state.entityRefs.get(id),
         parentGroupRefData:
           parentGroupRefData?.refAvailable === true &&
           parentGroupRefData.objectRef != null

@@ -44,10 +44,10 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
       useShallow((state) => ({
         firstSelectedEntityRefData:
           firstSelectedEntityId != null
-            ? state.entityRefs.find((d) => d.id === firstSelectedEntityId)
+            ? state.entityRefs.get(firstSelectedEntityId)
             : undefined,
         selectedEntityRefAllAvailable: selectedEntityIds.every(
-          (id) => state.entityRefs.find((d) => d.id === id)?.refAvailable,
+          (id) => state.entityRefs.get(id)?.refAvailable,
         ),
       })),
     )
@@ -82,9 +82,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
     box.set(infinityVector.clone(), minusInfinityVector.clone()) // 넓이 초기화
 
     selectedEntityIds.forEach((entityId) => {
-      const refData = useEntityRefStore
-        .getState()
-        .entityRefs.find((d) => d.id === entityId)!
+      const refData = useEntityRefStore.getState().entityRefs.get(entityId)!
       box.expandByObject(refData.objectRef.current)
     })
   }, [selectedEntityIds, selectedEntityRefAllAvailable])
@@ -121,9 +119,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
     if (!selectedEntityRefAllAvailable) return
 
     for (const entity of selectedEntities) {
-      const refData = useEntityRefStore
-        .getState()
-        .entityRefs.find((d) => d.id === entity.id)!
+      const refData = useEntityRefStore.getState().entityRefs.get(entity.id)!
       const object = refData.objectRef.current
 
       const positionVector = new Vector3(...entity.position)
@@ -338,7 +334,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
           if (selectedEntityIds.length > 0) {
             const firstSelectedEntityRefData = useEntityRefStore
               .getState()
-              .entityRefs.find((d) => d.id === selectedEntityIds[0])!
+              .entityRefs.get(selectedEntityIds[0])!
 
             setSelectionBaseTransformation({
               position:

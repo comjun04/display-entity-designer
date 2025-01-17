@@ -52,19 +52,15 @@ const DragSelectControl: FC<DragSelectControlProps> = ({
     }
 
     const updateSelectedList = () => {
-      const entityRefs = useEntityRefStore.getState().entityRefs
+      const entityRefsArray = [
+        ...useEntityRefStore.getState().entityRefs.values(),
+      ]
       const allSelectedRefData = selectionBox
         .select()
-        .filter(
-          (o) =>
-            entityRefs.find((d) => d.objectRef.current.id === o.id) != null,
+        .map((o) =>
+          entityRefsArray.find((d) => d.objectRef.current.id === o.id),
         )
-        .map((o) => entityRefs.find((d) => d.objectRef.current.id === o.id)!)
-        .sort((a, b) => {
-          const aIndex = entityRefs.findIndex((d) => d.id === a.id)
-          const bIndex = entityRefs.findIndex((d) => d.id === b.id)
-          return aIndex - bIndex
-        })
+        .filter((o) => o != null)
 
       const { selectedEntityIds, setSelected } =
         useDisplayEntityStore.getState()

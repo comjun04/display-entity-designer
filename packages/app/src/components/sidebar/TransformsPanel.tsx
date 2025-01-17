@@ -102,9 +102,7 @@ const TransformsPanel: FC = () => {
       })
 
       const d = selectedEntityIds.map((id) => {
-        const entityRefData = useEntityRefStore
-          .getState()
-          .entityRefs.find((d) => d.id === id)!
+        const entityRefData = useEntityRefStore.getState().entityRefs.get(id)!
 
         if (xyz[0] != null) {
           entityRefData.objectRef.current.position.setX(xyz[0])
@@ -146,9 +144,7 @@ const TransformsPanel: FC = () => {
       })
 
       const d = selectedEntityIds.map((id) => {
-        const entityRefData = useEntityRefStore
-          .getState()
-          .entityRefs.find((d) => d.id === id)!
+        const entityRefData = useEntityRefStore.getState().entityRefs.get(id)!
 
         if (radianRotation[0] != null) {
           entityRefData.objectRef.current.rotation.x = radianRotation[0]
@@ -182,9 +178,7 @@ const TransformsPanel: FC = () => {
       })
 
       selectedEntityIds.forEach((id) => {
-        const entityRefData = useEntityRefStore
-          .getState()
-          .entityRefs.find((d) => d.id === id)!
+        const entityRefData = useEntityRefStore.getState().entityRefs.get(id)!
 
         if (xyz[0] != null) {
           entityRefData.objectRef.current.scale.setX(xyz[0])

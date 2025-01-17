@@ -149,7 +149,7 @@ const ExportToMinecraftDialog: FC = () => {
           // 그룹 안에 있는 엔티티들은 world transform으로 반영됨
           if (entity.kind === 'group') return
 
-          const refData = entityRefs.find((e) => e.id === entity.id)
+          const refData = entityRefs.get(entity.id)
           if (refData == null || refData.objectRef.current == null) {
             console.warn(
               `entity ref of entity ${entity.id} not found, ignoring.`,

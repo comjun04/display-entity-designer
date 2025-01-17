@@ -487,7 +487,7 @@ export const useDisplayEntityStore = create(
       const generateEntitySaveData: (
         entity: DisplayEntity,
       ) => DisplayEntitySaveDataItem = (entity) => {
-        const refData = entityRefs.find((d) => d.id === entity.id)!
+        const refData = entityRefs.get(entity.id)!
         const transforms = refData.objectRef.current.matrix.toArray()
 
         if (entity.kind === 'block') {
@@ -575,9 +575,7 @@ export const useDisplayEntityStore = create(
         const box3 = new Box3()
         const entityRefs = useEntityRefStore.getState().entityRefs
         for (const selectedEntity of selectedEntities) {
-          const entityRefData = entityRefs.find(
-            (d) => d.id === selectedEntity.id,
-          )!
+          const entityRefData = entityRefs.get(selectedEntity.id)!
           box3.expandByObject(entityRefData.objectRef.current)
 
           selectedEntity.parent = groupId
@@ -653,7 +651,7 @@ export const useDisplayEntityStore = create(
         const { entityRefs } = useEntityRefStore.getState()
 
         const groupTransformationMatrix = entityRefs
-          .find((d) => d.id === entityGroupId)!
+          .get(entityGroupId)!
           .objectRef.current.matrix.clone()
 
         ;[...state.entities.values()]
@@ -664,7 +662,7 @@ export const useDisplayEntityStore = create(
               parentEntityGroup.children.push(e.id)
             }
 
-            const refData = entityRefs.find((d) => d.id === e.id)!
+            const refData = entityRefs.get(e.id)!
             const entityInstance = refData.objectRef.current
             const newEntityMatrix = entityInstance.matrix
               .clone()

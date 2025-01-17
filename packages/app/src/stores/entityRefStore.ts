@@ -6,11 +6,14 @@ import { RefCallbackWithMutableRefObject } from '@/types'
 
 // ==========
 type EntityRefStoreState = {
-  entityRefs: {
-    id: string
-    refAvailable: boolean
-    objectRef: MutableRefObject<Group>
-  }[]
+  entityRefs: Map<
+    string,
+    {
+      id: string
+      refAvailable: boolean
+      objectRef: MutableRefObject<Group>
+    }
+  >
   rootGroupRefData: {
     refAvailable: boolean
     objectRef: MutableRefObject<Group>
@@ -37,7 +40,7 @@ export const useEntityRefStore = create<EntityRefStoreState>((set) => {
   }) as RefCallbackWithMutableRefObject<Group>
 
   return {
-    entityRefs: [],
+    entityRefs: new Map(),
     rootGroupRefData: {
       refAvailable: false,
       objectRef: rootGroupRef,
@@ -53,57 +56,42 @@ export const useEntityRefStore = create<EntityRefStoreState>((set) => {
           // console.log(`id: ${id}, refAvailable: ${refAvailable}`, node)
 
           set((state) => {
-            const entityIdx = state.entityRefs.findIndex((e) => e.id === id)
-            if (entityIdx >= 0) {
-              const originalEntityRefData = state.entityRefs[entityIdx]
-              return {
-                entityRefs: state.entityRefs.toSpliced(entityIdx, 1, {
-                  ...originalEntityRefData,
-                  refAvailable,
-                }),
-              }
+            if (state.entityRefs.has(id)) {
+              const existingData = state.entityRefs.get(id)!
+              const newMap = new Map(state.entityRefs)
+              newMap.set(id, { ...existingData, refAvailable })
+              return { entityRefs: newMap }
             }
 
             return {}
           })
         }) as RefCallbackWithMutableRefObject<Group>
 
-        const entityIdx = state.entityRefs.findIndex((e) => e.id === id)
-        if (entityIdx >= 0) {
-          return {
-            entityRefs: state.entityRefs.toSpliced(entityIdx, 1, {
-              id,
-              refAvailable: false,
-              objectRef: ref,
-            }),
-          }
-        } else {
-          return {
-            entityRefs: [
-              ...state.entityRefs,
-              {
-                id,
-                refAvailable: false,
-                objectRef: ref,
-              },
-            ],
-          }
+        if (state.entityRefs.has(id)) {
+          console.warn(
+            `entityRefStore.createEntityRef(): creating entity ref data with entity id ${id} which already has one`,
+          )
         }
+
+        const newMap = new Map(state.entityRefs)
+        newMap.set(id, {
+          id,
+          refAvailable: false,
+          objectRef: ref,
+        })
+        return { entityRefs: newMap }
       }),
     deleteEntityRef: (id) =>
       set((state) => {
-        const entityIdx = state.entityRefs.findIndex((e) => e.id === id)
-        if (entityIdx >= 0) {
-          return { entityRefs: state.entityRefs.toSpliced(entityIdx, 1) }
-        }
-
-        return {}
+        const newMap = new Map(state.entityRefs)
+        newMap.delete(id)
+        return { entityRefs: newMap }
       }),
     // displayEntityStore.clearEntities() 호출 시(= 모든 엔티티 삭제 시)에만 호출할 것
     // 이외 호출 시 내부 엔티티 리스트와 맞지 않아 버그를 일으킬 수 있음
     clearEntityRefs: () =>
       set(() => ({
-        entityRefs: [],
+        entityRefs: new Map(),
       })),
   }
 })

@@ -174,7 +174,7 @@ class SelectionBox {
    */
   searchChildInFrustum(frustum2: Frustum, object: Object3D) {
     const entityRefs = useEntityRefStore.getState().entityRefs
-    const targetEntityRefData = entityRefs.find(
+    const targetEntityRefData = [...entityRefs.values()].find(
       (d) => d.objectRef.current.id === object.id,
     )
     const isDisplayEntity = targetEntityRefData != null
