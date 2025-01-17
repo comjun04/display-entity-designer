@@ -96,6 +96,7 @@ const Scene: FC = () => {
 
   return (
     <Canvas
+      frameloop="demand"
       scene={{
         background: new Color(0x222222),
       }}
