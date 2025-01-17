@@ -27,7 +27,7 @@ type EntityRefStoreState = {
 // immer middleware로 전체 적용하지 않고 필요한 부분만 produce로 따로 적용
 // DO NOT USE IMMER ON THIS STORE
 
-export const useEntityRefStore = create<EntityRefStoreState>((set) => {
+export const useEntityRefStore = create<EntityRefStoreState>((set, get) => {
   const rootGroupRef = ((node: Group) => {
     rootGroupRef.current = node
 
@@ -54,6 +54,10 @@ export const useEntityRefStore = create<EntityRefStoreState>((set) => {
           const refAvailable = node != null
 
           // console.log(`id: ${id}, refAvailable: ${refAvailable}`, node)
+
+          // entity ref 데이터가 이미 삭제된 경우 다시 추가하지 말고 중단
+          // 엔티티 삭제할 때 필요없는 데이터 재추가를 막아서 삭제 처리 시간을 줄임
+          if (!get().entityRefs.has(id)) return
 
           set((state) => {
             if (state.entityRefs.has(id)) {
