@@ -1,6 +1,6 @@
 // Base code is from @react-three/drei `Select` component
 // https://github.com/pmndrs/drei/blob/adae93761fa0925c2ee80b30dcb2f903e6d11f3c/src/web/Select.tsx
-import { useThree } from '@react-three/fiber'
+import { invalidate, useThree } from '@react-three/fiber'
 import { FC, useEffect, useRef } from 'react'
 import { Group, Vector2, Vector3 } from 'three'
 import { shallow } from 'zustand/shallow'
@@ -109,6 +109,7 @@ const DragSelectControl: FC<DragSelectControlProps> = ({
       if (controls != null) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
         ;(controls as any).enabled = oldControlsEnabled
+        invalidate()
       }
 
       prepareRay(pointTopLeft, selectionBox.startPoint)
