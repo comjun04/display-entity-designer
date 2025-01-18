@@ -291,22 +291,22 @@ export const useDisplayEntityStore = create(
             // parent가 있을 경우 parent entity에서 children으로 등록된 걸 삭제
             if (entity.parent != null) {
               const parentElement = state.entities.get(entity.parent)
-              if (parentElement == null || parentElement.kind !== 'group')
-                return
-
-              const idx = parentElement.children.findIndex((d) => d === id)
-              if (idx >= 0) {
-                parentElement.children.splice(idx, 1)
+              if (parentElement != null && parentElement.kind === 'group') {
+                const idx = parentElement.children.findIndex((d) => d === id)
+                if (idx >= 0) {
+                  parentElement.children.splice(idx, 1)
+                }
               }
             }
 
             // children으로 등록된 entity들이 있다면 같이 삭제
             if (entity.kind === 'group') {
-              recursivelyDelete(entity.children)
+              // children entity에서 parent entity의 children id 배열을 건드릴 경우 for ... of 배열 순환에 문제가 생김
+              // index가 하나씩 앞으로 당겨지면서 일부 엔티티가 삭제 처리가 안됨
+              recursivelyDelete(entity.children.slice())
             }
 
             useEntityRefStore.getState().deleteEntityRef(id)
-            state.entities.delete(id)
             const selectedEntityIdIdx = state.selectedEntityIds.findIndex(
               (entityId) => entityId === id,
             )
@@ -319,6 +319,10 @@ export const useDisplayEntityStore = create(
         }
 
         recursivelyDelete(entityIds)
+
+        for (const entityIdToDelete of deletePendingEntityIds) {
+          state.entities.delete(entityIdToDelete)
+        }
       }),
 
     bulkImport: (items) =>
