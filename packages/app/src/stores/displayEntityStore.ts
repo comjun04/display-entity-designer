@@ -367,6 +367,10 @@ export const useDisplayEntityStore = create(
                 parent: parentEntityId,
               })
             } else if (item.kind === 'block') {
+              // blockstate가 없을 경우 empty string을 key로 사용하게 되어 들어가게 되므로 빼주기
+              const blockstatesCopy = Object.assign({}, item.blockstates)
+              delete blockstatesCopy['']
+
               entities.set(id, {
                 kind: 'block',
                 id,
@@ -437,6 +441,8 @@ export const useDisplayEntityStore = create(
             const extraData: Record<string, string> = extraDataList.reduce(
               (acc, cur) => {
                 const [k, v] = cur.split('=')
+                // blockstate가 없을 경우 empty string을 key로 사용하게 되어 들어가게 되므로 빼주기
+                if (k.length < 1) return acc
                 return { ...acc, [k]: v }
               },
               {},
