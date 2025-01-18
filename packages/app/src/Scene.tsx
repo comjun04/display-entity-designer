@@ -1,5 +1,5 @@
 import { Grid, PerspectiveCamera } from '@react-three/drei'
-import { Canvas } from '@react-three/fiber'
+import { Canvas, invalidate } from '@react-three/fiber'
 import { FC } from 'react'
 import { Color } from 'three'
 
@@ -16,6 +16,11 @@ const Scene: FC = () => {
       frameloop="demand"
       scene={{
         background: new Color(0x222222),
+      }}
+      onPointerDown={() => {
+        // frameloop="demand"일 경우 가끔 TransformControls가 작동하지 않는 경우가 발생하는데
+        // 이를 방지하기 위해 클릭 시 강제로 다음 프레임 렌더링하도록 하여 다시 작동하도록 고치기
+        invalidate()
       }}
       onPointerMissed={() => {
         useDisplayEntityStore.getState().setSelected([])
