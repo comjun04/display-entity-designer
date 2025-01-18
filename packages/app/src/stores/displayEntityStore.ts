@@ -17,8 +17,28 @@ import {
 
 import { useEditorStore } from './editorStore'
 
+const ENTITY_ID_LENGTH = 16
+
+/**
+ * 새로운 id를 생성합니다.
+ * @param idUsabiityCheckPredicate id가 사용 가능한지 판별하는 함수. 중복값을 걸러내야 할 때 등에 사용할 수 있습니다.
+ * 지정하지 않을 경우 생성된 id를 항상 사용 가능하다고 판별합니다.
+ * @returns 새로 생성된 id
+ */
+const generateId = (
+  length: number,
+  idUsabiityCheckPredicate: (id: string) => boolean = () => true,
+) => {
+  const id = nanoid(length)
+  if (!idUsabiityCheckPredicate(id)) {
+    return generateId(length, idUsabiityCheckPredicate)
+  }
+
+  return id
+}
+
 export type DisplayEntityState = {
-  entities: DisplayEntity[]
+  entities: Map<string, DisplayEntity>
   selectedEntityIds: string[]
 
   createNew: (kind: DisplayEntity['kind'], type: string) => string
@@ -43,7 +63,7 @@ export type DisplayEntityState = {
     id: string,
     blockstates: Record<string, string>,
   ) => void
-  deleteEntity: (id: string) => void
+  deleteEntities: (entityIds: string[]) => void
 
   bulkImport: (items: DisplayEntitySaveDataItem[]) => void
   bulkImportFromBDE: (saveData: BDEngineSaveData) => void
@@ -57,17 +77,17 @@ export type DisplayEntityState = {
 
 export const useDisplayEntityStore = create(
   immer<DisplayEntityState>((set, get) => ({
-    entities: [],
+    entities: new Map(),
     selectedEntityIds: [],
 
     createNew: (kind, type) => {
-      const id = nanoid(16)
+      const id = generateId(ENTITY_ID_LENGTH)
 
       set((state) => {
         useEntityRefStore.getState().createEntityRef(id)
 
         if (kind === 'block') {
-          state.entities.push({
+          state.entities.set(id, {
             kind: 'block',
             id,
             type,
@@ -78,7 +98,7 @@ export const useDisplayEntityStore = create(
             blockstates: {},
           })
         } else if (kind === 'item') {
-          state.entities.push({
+          state.entities.set(id, {
             kind: 'item',
             id,
             type,
@@ -95,9 +115,7 @@ export const useDisplayEntityStore = create(
     setSelected: (ids) =>
       set((state) => {
         if (state.selectedEntityIds[0] !== ids[0]) {
-          const firstSelectedEntity = state.entities.find(
-            (e) => e.id === ids[0],
-          )
+          const firstSelectedEntity = state.entities.get(ids[0])
 
           useEditorStore.getState().setSelectionBaseTransformation({
             position: firstSelectedEntity?.position,
@@ -122,7 +140,7 @@ export const useDisplayEntityStore = create(
           translation,
         )
 
-        const entity = state.entities.find((e) => e.id === id)
+        const entity = state.entities.get(id)
         if (entity == null) {
           console.error(
             `displayEntityStore.setEntityTranslation(): unknown entity ${id}`,
@@ -140,7 +158,7 @@ export const useDisplayEntityStore = create(
       }),
     setEntityRotation: (id, rotation) =>
       set((state) => {
-        const entity = state.entities.find((e) => e.id === id)
+        const entity = state.entities.get(id)
         if (entity == null) {
           console.error(
             `displayEntityStore.setEntityRotation(): unknown entity ${id}`,
@@ -160,7 +178,7 @@ export const useDisplayEntityStore = create(
       set((state) => {
         console.debug('displayEntityStore setEntityScale', id, scale)
 
-        const entity = state.entities.find((e) => e.id === id)
+        const entity = state.entities.get(id)
         if (entity == null) {
           console.error(
             `displayEntityStore.setEntityScale(): unknown entity ${id}`,
@@ -181,7 +199,7 @@ export const useDisplayEntityStore = create(
         console.debug('displayEntityStore batchSetEntityTransformation', data)
 
         data.forEach((item) => {
-          const entity = state.entities.find((e) => e.id === item.id)
+          const entity = state.entities.get(item.id)
           if (entity == null) return
 
           if (item.translation != null) {
@@ -215,7 +233,7 @@ export const useDisplayEntityStore = create(
       }),
     setEntityDisplayType: (id, display) =>
       set((state) => {
-        const entity = state.entities.find((e) => e.id === id)
+        const entity = state.entities.get(id)
         if (entity == null) {
           console.error(
             `Attempted to set display type for unknown display entity: ${id}`,
@@ -232,7 +250,7 @@ export const useDisplayEntityStore = create(
       }),
     setBDEntityBlockstates: (id, blockstates) =>
       set((state) => {
-        const entity = state.entities.find((e) => e.id === id)
+        const entity = state.entities.get(id)
         if (entity == null) {
           console.error(
             `Attempted to set blockstates for unknown block display entity: ${id}`,
@@ -245,54 +263,71 @@ export const useDisplayEntityStore = create(
           return
         }
 
-        entity.blockstates = { ...entity.blockstates, ...blockstates }
-      }),
-    deleteEntity: (id) =>
-      set((state) => {
-        const entityIdx = state.entities.findIndex((e) => e.id === id)
-        if (entityIdx < 0) {
-          console.error(
-            `displayEntityStore.deleteEntity(): Attempt to remove unknown entity with id ${id}`,
-          )
+        // 변경할 게 없으면 그냥 종료
+        if ([...Object.keys(blockstates)].length < 1) {
           return
         }
 
-        const entity = state.entities[entityIdx]
+        entity.blockstates = { ...entity.blockstates, ...blockstates }
+      }),
+    deleteEntities: (entityIds) =>
+      set((state) => {
+        const deletePendingEntityIds = new Set<string>()
 
-        // parent가 있을 경우 parent entity에서 children으로 등록된 걸 삭제
-        if (entity.parent != null) {
-          const parentElement = state.entities.find(
-            (e) => e.id === entity.parent,
-          )
-          if (parentElement == null || parentElement.kind !== 'group') return
+        const recursivelyDelete = (ids: string[]) => {
+          for (const id of ids) {
+            // 이미 삭제 대상인 entity일 경우 스킵
+            // 이 entity의 parent entity가 삭제 대상이라 이미 처리한 경우임
+            if (deletePendingEntityIds.has(id)) continue
 
-          const idx = parentElement.children.findIndex((d) => d === id)
-          if (idx >= 0) {
-            parentElement.children.splice(idx, 1)
+            const entity = state.entities.get(id)
+            if (entity == null) {
+              console.error(
+                `displayEntityStore.deleteEntities(): Attempt to remove unknown entity with id ${id}`,
+              )
+              continue
+            }
+
+            // parent가 있을 경우 parent entity에서 children으로 등록된 걸 삭제
+            if (entity.parent != null) {
+              const parentElement = state.entities.get(entity.parent)
+              if (parentElement != null && parentElement.kind === 'group') {
+                const idx = parentElement.children.findIndex((d) => d === id)
+                if (idx >= 0) {
+                  parentElement.children.splice(idx, 1)
+                }
+              }
+            }
+
+            // children으로 등록된 entity들이 있다면 같이 삭제
+            if (entity.kind === 'group') {
+              // children entity에서 parent entity의 children id 배열을 건드릴 경우 for ... of 배열 순환에 문제가 생김
+              // index가 하나씩 앞으로 당겨지면서 일부 엔티티가 삭제 처리가 안됨
+              recursivelyDelete(entity.children.slice())
+            }
+
+            deletePendingEntityIds.add(id)
           }
         }
 
-        // children으로 등록된 entity들이 있다면 같이 삭제
-        if (entity.kind === 'group') {
-          entity.children.forEach((id) => state.deleteEntity(id))
+        recursivelyDelete(entityIds)
+
+        useEntityRefStore
+          .getState()
+          .deleteEntityRefs([...deletePendingEntityIds.values()])
+        for (const entityIdToDelete of deletePendingEntityIds) {
+          state.entities.delete(entityIdToDelete)
         }
-
-        useEntityRefStore.getState().deleteEntityRef(id)
-        state.entities.splice(entityIdx, 1)
-
-        const selectedEntityIdIdx = state.selectedEntityIds.findIndex(
-          (entityId) => entityId === id,
+        state.selectedEntityIds = state.selectedEntityIds.filter(
+          (entityId) => !deletePendingEntityIds.has(entityId),
         )
-        if (selectedEntityIdIdx >= 0) {
-          state.selectedEntityIds.splice(selectedEntityIdIdx, 1)
-        }
       }),
 
     bulkImport: (items) =>
       set((state) => {
         const { createEntityRef } = useEntityRefStore.getState()
 
-        const entities: DisplayEntity[] = []
+        const entities = new Map<string, DisplayEntity>()
 
         const tempMatrix4 = new Matrix4()
         const tempPositionVec = new Vector3()
@@ -322,7 +357,7 @@ export const useDisplayEntityStore = create(
               const children = item.children ?? []
               const childrenIds = f(children, id)
 
-              entities.push({
+              entities.set(id, {
                 kind: 'group',
                 id,
                 position,
@@ -332,7 +367,11 @@ export const useDisplayEntityStore = create(
                 parent: parentEntityId,
               })
             } else if (item.kind === 'block') {
-              entities.push({
+              // blockstate가 없을 경우 empty string을 key로 사용하게 되어 들어가게 되므로 빼주기
+              const blockstatesCopy = Object.assign({}, item.blockstates)
+              delete blockstatesCopy['']
+
+              entities.set(id, {
                 kind: 'block',
                 id,
                 type: item.type,
@@ -343,9 +382,8 @@ export const useDisplayEntityStore = create(
                 blockstates: item.blockstates,
                 display: item.display,
               })
-              console.log(item.blockstates)
             } else if (item.kind === 'item') {
-              entities.push({
+              entities.set(id, {
                 kind: 'item',
                 id,
                 type: item.type,
@@ -363,8 +401,6 @@ export const useDisplayEntityStore = create(
 
         f(items)
 
-        console.log(entities)
-
         entities.forEach((entity) => {
           createEntityRef(entity.id)
         })
@@ -372,7 +408,7 @@ export const useDisplayEntityStore = create(
       }),
     bulkImportFromBDE: (saveData) =>
       set((state) => {
-        const entities: DisplayEntity[] = []
+        const entities = new Map<string, DisplayEntity>()
 
         const tempMatrix4 = new Matrix4()
         const tempPositionVec = new Vector3()
@@ -405,6 +441,8 @@ export const useDisplayEntityStore = create(
             const extraData: Record<string, string> = extraDataList.reduce(
               (acc, cur) => {
                 const [k, v] = cur.split('=')
+                // blockstate가 없을 경우 empty string을 key로 사용하게 되어 들어가게 되므로 빼주기
+                if (k.length < 1) return acc
                 return { ...acc, [k]: v }
               },
               {},
@@ -416,7 +454,7 @@ export const useDisplayEntityStore = create(
               const children = item.children ?? []
               const childrenIds = f(children, id)
 
-              entities.push({
+              entities.set(id, {
                 kind: 'group',
                 id,
                 position,
@@ -428,7 +466,7 @@ export const useDisplayEntityStore = create(
             } else if ('isBlockDisplay' in item && item.isBlockDisplay) {
               // block display
 
-              entities.push({
+              entities.set(id, {
                 kind: 'block',
                 id,
                 type: itemType,
@@ -442,7 +480,7 @@ export const useDisplayEntityStore = create(
             } else if ('isItemDisplay' in item && item.isItemDisplay) {
               // item display
 
-              entities.push({
+              entities.set(id, {
                 kind: 'item',
                 id,
                 type: itemType,
@@ -476,7 +514,7 @@ export const useDisplayEntityStore = create(
       const generateEntitySaveData: (
         entity: DisplayEntity,
       ) => DisplayEntitySaveDataItem = (entity) => {
-        const refData = entityRefs.find((d) => d.id === entity.id)!
+        const refData = entityRefs.get(entity.id)!
         const transforms = refData.objectRef.current.matrix.toArray()
 
         if (entity.kind === 'block') {
@@ -496,7 +534,7 @@ export const useDisplayEntityStore = create(
           }
         } else if (entity.kind === 'group') {
           const children = entity.children.map((childrenEntityId) => {
-            const e = entities.find((e) => e.id === childrenEntityId)!
+            const e = entities.get(childrenEntityId)!
             return generateEntitySaveData(e)
           })
           return {
@@ -512,7 +550,7 @@ export const useDisplayEntityStore = create(
         )
       }
 
-      const rootEntities = entities
+      const rootEntities = [...entities.values()]
         .filter((e) => e.parent == null)
         .map((e) => generateEntitySaveData(e))
 
@@ -521,7 +559,7 @@ export const useDisplayEntityStore = create(
 
     clearEntities: () =>
       set((state) => {
-        state.entities = []
+        state.entities.clear()
         state.selectedEntityIds = []
 
         useEntityRefStore.getState().clearEntityRefs()
@@ -531,7 +569,7 @@ export const useDisplayEntityStore = create(
       set((state) => {
         const groupId = nanoid(16)
 
-        const selectedEntities = state.entities.filter((e) =>
+        const selectedEntities = [...state.entities.values()].filter((e) =>
           state.selectedEntityIds.includes(e.id),
         )
         if (selectedEntities.length < 1) {
@@ -555,8 +593,8 @@ export const useDisplayEntityStore = create(
 
         const previousParentGroup =
           firstSelectedEntityParentId != null
-            ? (state.entities.find(
-                (e) => e.id === firstSelectedEntityParentId,
+            ? (state.entities.get(
+                firstSelectedEntityParentId,
               ) as DisplayEntityGroup) // WritableDraft<DisplayEntityGroup>
             : undefined
 
@@ -564,9 +602,7 @@ export const useDisplayEntityStore = create(
         const box3 = new Box3()
         const entityRefs = useEntityRefStore.getState().entityRefs
         for (const selectedEntity of selectedEntities) {
-          const entityRefData = entityRefs.find(
-            (d) => d.id === selectedEntity.id,
-          )!
+          const entityRefData = entityRefs.get(selectedEntity.id)!
           box3.expandByObject(entityRefData.objectRef.current)
 
           selectedEntity.parent = groupId
@@ -588,7 +624,8 @@ export const useDisplayEntityStore = create(
 
         useEntityRefStore.getState().createEntityRef(groupId)
 
-        state.entities.unshift({
+        // unshift 이제 더 이상 안됨 흑흑
+        state.entities.set(groupId, {
           kind: 'group',
           id: groupId,
           position: box3.min.toArray(),
@@ -615,9 +652,7 @@ export const useDisplayEntityStore = create(
         }
 
         const entityGroupId = state.selectedEntityIds[0]
-        const selectedEntityGroup = state.entities.find(
-          (e) => e.id === entityGroupId,
-        )
+        const selectedEntityGroup = state.entities.get(entityGroupId)
         if (selectedEntityGroup?.kind !== 'group') {
           console.error(
             `displayEntityStore.ungroupSelected(): selected entity ${entityGroupId} (kind: ${selectedEntityGroup?.kind}) is not a group`,
@@ -627,8 +662,8 @@ export const useDisplayEntityStore = create(
 
         const parentEntityGroup =
           selectedEntityGroup.parent != null
-            ? (state.entities.find(
-                (e) => e.id === selectedEntityGroup.parent,
+            ? (state.entities.get(
+                selectedEntityGroup.parent,
               ) as DisplayEntityGroup) // WritableDraft<DisplayEntityGroup>
             : undefined
         if (parentEntityGroup != null) {
@@ -643,10 +678,10 @@ export const useDisplayEntityStore = create(
         const { entityRefs } = useEntityRefStore.getState()
 
         const groupTransformationMatrix = entityRefs
-          .find((d) => d.id === entityGroupId)!
+          .get(entityGroupId)!
           .objectRef.current.matrix.clone()
 
-        state.entities
+        ;[...state.entities.values()]
           .filter((e) => selectedEntityGroup.children.includes(e.id))
           .forEach((e) => {
             e.parent = parentEntityGroup?.id
@@ -654,19 +689,11 @@ export const useDisplayEntityStore = create(
               parentEntityGroup.children.push(e.id)
             }
 
-            const refData = entityRefs.find((d) => d.id === e.id)!
+            const refData = entityRefs.get(e.id)!
             const entityInstance = refData.objectRef.current
             const newEntityMatrix = entityInstance.matrix
               .clone()
               .premultiply(groupTransformationMatrix) // entityInstance.applyMatrix4(groupTransformationMatrix)
-            console.log(
-              e.id,
-              entityInstance.position.toArray(),
-              entityInstance.rotation.toArray(),
-              entityInstance.scale.toArray(),
-              parentEntityGroup,
-              groupTransformationMatrix,
-            )
 
             const newPosition = new Vector3().setFromMatrixPosition(
               newEntityMatrix,

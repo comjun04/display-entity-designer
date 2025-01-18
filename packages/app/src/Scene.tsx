@@ -1,106 +1,29 @@
 import { Grid, PerspectiveCamera } from '@react-three/drei'
-import { Canvas } from '@react-three/fiber'
-import { FC, useEffect, useState } from 'react'
+import { Canvas, invalidate } from '@react-three/fiber'
+import { FC } from 'react'
 import { Color } from 'three'
-import { useShallow } from 'zustand/shallow'
 
 import CustomCameraControls from './CustomCameraControls'
+import DisplayentitiesRootGroup from './components/DisplayEntitiesRootGroup'
 import DragSelectControl from './components/DragSelectControl'
+import ShortcutHandler from './components/ShortcutHandler'
 import TransformControls from './components/TransformControls'
-import DisplayEntity from './components/canvas/DisplayEntity'
-import { useDialogStore } from './stores/dialogStore'
 import { useDisplayEntityStore } from './stores/displayEntityStore'
-import { useEditorStore } from './stores/editorStore'
-import { useEntityRefStore } from './stores/entityRefStore'
 
 const Scene: FC = () => {
-  const { selectedEntityIds, setSelected, deleteEntity } =
-    useDisplayEntityStore(
-      useShallow((state) => ({
-        selectedEntityIds: state.selectedEntityIds,
-        setSelected: state.setSelected,
-        deleteEntity: state.deleteEntity,
-      })),
-    )
-  const rootEntityIds = useDisplayEntityStore(
-    useShallow((state) => state.entities.map((entity) => entity.id)),
-  )
-
-  const { rootGroupRefData } = useEntityRefStore(
-    useShallow((state) => ({
-      rootGroupRefData: state.rootGroupRefData,
-    })),
-  )
-  const { setMode } = useEditorStore(
-    useShallow((state) => ({
-      setMode: state.setMode,
-    })),
-  )
-  const { openedDialog } = useDialogStore(
-    useShallow((state) => ({
-      openedDialog: state.openedDialog,
-    })),
-  )
-
-  const [shiftPressed, setShiftPressed] = useState(false)
-
-  useEffect(() => {
-    const focusableElements = ['input', 'textarea']
-    const handler = (evt: KeyboardEvent) => {
-      // <input>이나 <textarea>에 focus가 잡혀 있다면 이벤트를 처리하지 않음
-      if (
-        focusableElements.includes(
-          (document.activeElement?.tagName ?? '').toLowerCase(),
-        )
-      ) {
-        return true
-      }
-
-      // dialog 창이 열려 있을 떄는 이벤트를 처리하지 않음
-      if (openedDialog != null) {
-        return true
-      }
-
-      // 단축키 처리
-      switch (evt.key) {
-        case 't':
-          setMode('translate')
-          break
-        case 'r':
-          setMode('rotate')
-          break
-        case 's':
-          setMode('scale')
-          break
-        case 'Delete':
-          selectedEntityIds.forEach(deleteEntity)
-      }
-    }
-
-    document.addEventListener('keydown', handler)
-    return () => document.removeEventListener('keydown', handler)
-  }, [setMode, deleteEntity, selectedEntityIds, openedDialog])
-
-  useEffect(() => {
-    const handler = (evt: KeyboardEvent) => {
-      setShiftPressed(evt.shiftKey)
-    }
-
-    document.addEventListener('keydown', handler)
-    document.addEventListener('keyup', handler)
-    return () => {
-      document.removeEventListener('keydown', handler)
-      document.removeEventListener('keyup', handler)
-    }
-  }, [])
-
   return (
     <Canvas
+      frameloop="demand"
       scene={{
         background: new Color(0x222222),
       }}
+      onPointerDown={() => {
+        // frameloop="demand"일 경우 가끔 TransformControls가 작동하지 않는 경우가 발생하는데
+        // 이를 방지하기 위해 클릭 시 강제로 다음 프레임 렌더링하도록 하여 다시 작동하도록 고치기
+        invalidate()
+      }}
       onPointerMissed={() => {
-        setSelected([])
+        useDisplayEntityStore.getState().setSelected([])
       }}
     >
       {/* Axis lines */}
@@ -138,14 +61,12 @@ const Scene: FC = () => {
         <lineBasicMaterial color={0x0000ff} />
       </line>
 
-      <group name="Display Entities" ref={rootGroupRefData.objectRef}>
-        {rootEntityIds.map((id) => (
-          <DisplayEntity key={id} id={id} />
-        ))}
-      </group>
+      <DisplayentitiesRootGroup />
 
-      <TransformControls shiftPressed={shiftPressed} />
+      <TransformControls />
       <DragSelectControl />
+
+      <ShortcutHandler />
 
       <ambientLight intensity={1.7} color={0xffffff} />
       <directionalLight position={[0, 10, 6]} />

@@ -1,5 +1,12 @@
 import { TransformControls as TransformControlsImpl } from '@react-three/drei'
-import { FC, MutableRefObject, useCallback, useEffect, useRef } from 'react'
+import {
+  FC,
+  MutableRefObject,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import {
   Box3,
   Box3Helper,
@@ -22,11 +29,7 @@ const infinityVector = new Vector3(Infinity, Infinity, Infinity)
 const minusInfinityVector = new Vector3(-Infinity, -Infinity, -Infinity)
 const dummyBox = new Box3(infinityVector.clone(), minusInfinityVector.clone())
 
-type TransformControlsProps = {
-  shiftPressed: boolean
-}
-
-const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
+const TransformControls: FC = () => {
   const { entities, selectedEntityIds, batchSetEntityTransformation } =
     useDisplayEntityStore(
       useShallow((state) => ({
@@ -44,10 +47,10 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
       useShallow((state) => ({
         firstSelectedEntityRefData:
           firstSelectedEntityId != null
-            ? state.entityRefs.find((d) => d.id === firstSelectedEntityId)
+            ? state.entityRefs.get(firstSelectedEntityId)
             : undefined,
         selectedEntityRefAllAvailable: selectedEntityIds.every(
-          (id) => state.entityRefs.find((d) => d.id === id)?.refAvailable,
+          (id) => state.entityRefs.get(id)?.refAvailable,
         ),
       })),
     )
@@ -59,6 +62,8 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
         setSelectionBaseTransformation: state.setSelectionBaseTransformation,
       })),
     )
+
+  const [shiftPressed, setShiftPressed] = useState(false)
 
   const pivotRef = useRef<Group>(null) as MutableRefObject<Group>
   const boundingBoxHelperRef = useRef<Box3Helper>(null)
@@ -82,9 +87,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
     box.set(infinityVector.clone(), minusInfinityVector.clone()) // 넓이 초기화
 
     selectedEntityIds.forEach((entityId) => {
-      const refData = useEntityRefStore
-        .getState()
-        .entityRefs.find((d) => d.id === entityId)!
+      const refData = useEntityRefStore.getState().entityRefs.get(entityId)!
       box.expandByObject(refData.objectRef.current)
     })
   }, [selectedEntityIds, selectedEntityRefAllAvailable])
@@ -112,7 +115,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
   }, [selectedEntityIds, updateBoundingBox])
 
   useEffect(() => {
-    const selectedEntities = entities.filter((e) =>
+    const selectedEntities = [...entities.values()].filter((e) =>
       selectedEntityIds.includes(e.id),
     )
 
@@ -121,9 +124,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
     if (!selectedEntityRefAllAvailable) return
 
     for (const entity of selectedEntities) {
-      const refData = useEntityRefStore
-        .getState()
-        .entityRefs.find((d) => d.id === entity.id)!
+      const refData = useEntityRefStore.getState().entityRefs.get(entity.id)!
       const object = refData.objectRef.current
 
       const positionVector = new Vector3(...entity.position)
@@ -161,6 +162,19 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
     selectedEntityRefAllAvailable,
   ])
 
+  useEffect(() => {
+    const handler = (evt: KeyboardEvent) => {
+      setShiftPressed(evt.shiftKey)
+    }
+
+    document.addEventListener('keydown', handler)
+    document.addEventListener('keyup', handler)
+    return () => {
+      document.removeEventListener('keydown', handler)
+      document.removeEventListener('keyup', handler)
+    }
+  }, [])
+
   return (
     <>
       <TransformControlsImpl
@@ -183,7 +197,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
           const entities = useDisplayEntityStore.getState().entities
 
           if (mode === 'translate') {
-            const batchUpdateData = entities
+            const batchUpdateData = [...entities.values()]
               .filter((e) => selectedEntityIds.includes(e.id))
               .map((entity) => {
                 const initialTransform =
@@ -201,7 +215,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
               })
             batchSetEntityTransformation(batchUpdateData)
           } else if (mode === 'rotate') {
-            const batchUpdateData = entities
+            const batchUpdateData = [...entities.values()]
               .filter((e) => selectedEntityIds.includes(e.id))
               .map((entity) => {
                 const initialTransform =
@@ -234,7 +248,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
           } else if (mode === 'scale') {
             pivotRef.current.scale.set(1, 1, 1)
 
-            const batchUpdateData = entities
+            const batchUpdateData = [...entities.values()]
               .filter((e) => selectedEntityIds.includes(e.id))
               .map((entity) => {
                 const initialTransform =
@@ -338,7 +352,7 @@ const TransformControls: FC<TransformControlsProps> = ({ shiftPressed }) => {
           if (selectedEntityIds.length > 0) {
             const firstSelectedEntityRefData = useEntityRefStore
               .getState()
-              .entityRefs.find((d) => d.id === selectedEntityIds[0])!
+              .entityRefs.get(selectedEntityIds[0])!
 
             setSelectionBaseTransformation({
               position:

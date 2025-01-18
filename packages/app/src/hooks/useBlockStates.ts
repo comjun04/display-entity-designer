@@ -1,25 +1,42 @@
-import { useMemo } from 'react'
+import { useEffect } from 'react'
 import useSWRImmutable from 'swr/immutable'
+import { useShallow } from 'zustand/shallow'
 
 import fetcher from '@/fetcher'
+import { useCacheStore } from '@/stores/cacheStore'
 import { BlockStateApplyModelInfo, CDNBlockStatesResponse } from '@/types'
 import { stripMinecraftPrefix } from '@/utils'
 
 const useBlockStates = (blockString?: string) => {
   const blockType = blockString != null ? blockString.split('[')[0] : null
 
-  const { data, isLoading } = useSWRImmutable<CDNBlockStatesResponse>(
-    blockType != null
-      ? `/assets/minecraft/blockstates/${blockType}.json`
-      : null,
-    fetcher,
+  const { blockstatesData } = useCacheStore(
+    useShallow((state) => ({
+      blockstatesData:
+        blockType != null ? state.blockstatesData[blockType] : null,
+    })),
   )
 
-  const blockstatesData = useMemo(() => {
+  const { data: rawBlockstatesData, isLoading: webFileIsLoading } =
+    useSWRImmutable<CDNBlockStatesResponse>(
+      blockType != null
+        ? `/assets/minecraft/blockstates/${blockType}.json`
+        : null,
+      fetcher,
+    )
+
+  useEffect(() => {
+    if (blockType == null) return
+    if (rawBlockstatesData == null) return
+
+    const directFetchedBlockstatesData =
+      useCacheStore.getState().blockstatesData[blockType]
+    if (directFetchedBlockstatesData != null) return
+
     const blockDefaultValues: Record<string, string> =
       blockString != null
         ? blockString
-            .slice(blockType!.length + 1, -1)
+            .slice(blockType.length + 1, -1)
             .split(',')
             .reduce((acc, cur) => {
               const [key, value] = cur.split('=')
@@ -43,10 +60,6 @@ const useBlockStates = (blockString?: string) => {
       when: Record<string, string[]>[]
       apply: BlockStateApplyModelInfo[]
     }[] = []
-
-    if (data == null) {
-      return { blockstates: blockstateMap, models }
-    }
 
     const addBlockstatesKeyValue = (key: string, originalValues: string[]) => {
       const values = originalValues.slice()
@@ -74,8 +87,8 @@ const useBlockStates = (blockString?: string) => {
       }
     }
 
-    if ('variants' in data) {
-      for (const key in data.variants) {
+    if ('variants' in rawBlockstatesData) {
+      for (const key in rawBlockstatesData.variants) {
         const blockstateDefinition = key.split(',').map((section) => {
           const [k, v] = section.split('=')
           return { key: k, value: v }
@@ -85,9 +98,9 @@ const useBlockStates = (blockString?: string) => {
           addBlockstatesKeyValue(blockstate.key, [blockstate.value])
         }
 
-        const applyInfos = Array.isArray(data.variants[key])
-          ? data.variants[key]
-          : [data.variants[key]]
+        const applyInfos = Array.isArray(rawBlockstatesData.variants[key])
+          ? rawBlockstatesData.variants[key]
+          : [rawBlockstatesData.variants[key]]
         models.push({
           when: [
             blockstateDefinition
@@ -103,8 +116,8 @@ const useBlockStates = (blockString?: string) => {
           })),
         })
       }
-    } else if ('multipart' in data) {
-      for (const multipartItem of data.multipart) {
+    } else if ('multipart' in rawBlockstatesData) {
+      for (const multipartItem of rawBlockstatesData.multipart) {
         // when 구문이 없을 경우, 무조건 적용
         if (multipartItem.when == null) {
           const applyInfos = Array.isArray(multipartItem.apply)
@@ -211,12 +224,13 @@ const useBlockStates = (blockString?: string) => {
     // 데이터 리턴 전에 빼주기
     blockstateMap.delete('')
 
-    return { blockstates: blockstateMap, models }
-  }, [data, blockString, blockType])
+    const newBlockstatesData = { blockstates: blockstateMap, models }
+    useCacheStore.getState().setBlockstateData(blockType, newBlockstatesData)
+  }, [blockString, blockType, blockstatesData, rawBlockstatesData])
 
   return {
     data: blockstatesData,
-    isLoading,
+    isLoading: webFileIsLoading || blockstatesData == null,
   }
 }
 

@@ -16,10 +16,10 @@ const TopButtonPanel: FC = () => {
       setOpenedDialog: state.setOpenedDialog,
     })),
   )
-  const { selectedEntityIds, deleteEntity } = useDisplayEntityStore(
+  const { selectedEntityIds, deleteEntities } = useDisplayEntityStore(
     useShallow((state) => ({
       selectedEntityIds: state.selectedEntityIds,
-      deleteEntity: state.deleteEntity,
+      deleteEntities: state.deleteEntities,
     })),
   )
 
@@ -50,8 +50,7 @@ const TopButtonPanel: FC = () => {
 
             const alreadyGrouped =
               selectedEntityIds.length === 1 &&
-              entities.find((e) => e.id === selectedEntityIds[0])?.kind ===
-                'group'
+              entities.get(selectedEntityIds[0])?.kind === 'group'
             if (alreadyGrouped) {
               ungroupSelected()
             } else {
@@ -63,9 +62,7 @@ const TopButtonPanel: FC = () => {
         </FloatingButton>
         <FloatingButton
           onClick={() => {
-            if (selectedEntityIds.length > 0) {
-              selectedEntityIds.forEach(deleteEntity)
-            }
+            deleteEntities(selectedEntityIds)
           }}
         >
           <IoMdTrash size={24} />

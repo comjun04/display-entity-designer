@@ -15,23 +15,34 @@ type DisplayEntityProps = {
 }
 
 const DisplayEntity: FC<DisplayEntityProps> = ({ id }) => {
-  const { thisEntity, deleteEntity } = useDisplayEntityStore(
+  const { thisEntity } = useDisplayEntityStore(
     useShallow((state) => ({
-      thisEntity: state.entities.find((e) => e.id === id),
-      deleteEntity: state.deleteEntity,
+      thisEntity: state.entities.get(id),
     })),
   )
 
   const { thisEntityRef, parentGroupRefData } = useEntityRefStore(
     useShallow((state) => {
-      // parent 값이 있다면
+      // parent 값이 있다면 parent ref data를 찾아서 제공, ref data가 아직 없을 경우 (프로젝트 파일 로드로 인한 동시 entity 생성 등 상황) 임시로 root group ref를 제공
+      // 나중에 parent ref data가 준비되면 store가 업데이트되면서 다시 렌더링되므로 이때 맞는 parent ref data를 찾아서 제공
       const parentGroupRefData =
         thisEntity?.parent != null
-          ? state.entityRefs.find((e) => e.id === thisEntity.parent)
+          ? state.entityRefs.get(thisEntity.parent)
           : state.rootGroupRefData
 
+      // parent 값이 있지만 ref가 없을 경우 무언가 문제가 발생했다고 알려주려 했는데,
+      // 여러 entity를 삭제하는 경우에 이런 현상이 자연스럽게 생길 수 있어서 관련 코드 비활성화
+      // if (
+      //   thisEntity?.parent != null &&
+      //   !state.entityRefs.has(thisEntity.parent)
+      // ) {
+      //   console.warn(
+      //     'thisEntity.parent is not null, but parent entity ref is null',
+      //   )
+      // }
+
       return {
-        thisEntityRef: state.entityRefs.find((e) => e.id === id),
+        thisEntityRef: state.entityRefs.get(id),
         parentGroupRefData:
           parentGroupRefData?.refAvailable === true &&
           parentGroupRefData.objectRef != null
@@ -51,9 +62,9 @@ const DisplayEntity: FC<DisplayEntityProps> = ({ id }) => {
   // 내가 group 안에 children이 더 이상 없으면 나 자신도 삭제
   useEffect(() => {
     if (thisEntity?.kind === 'group' && thisEntity.children.length < 1) {
-      deleteEntity(id)
+      useDisplayEntityStore.getState().deleteEntities([id])
     }
-  }, [id, thisEntity, deleteEntity])
+  }, [id, thisEntity])
 
   const handleClick = useCallback(
     (event: ThreeEvent<MouseEvent>) => {

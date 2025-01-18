@@ -46,6 +46,20 @@ export type CDNBlockStatesResponse =
       }[]
     }
 
+export type BlockstatesData = {
+  blockstates: Map<
+    string,
+    {
+      states: Set<string>
+      default: string
+    }
+  >
+  models: {
+    when: Record<string, string[]>[]
+    apply: BlockStateApplyModelInfo[]
+  }[]
+}
+
 export type ModelDisplayPositionKey =
   | 'thirdperson_righthand'
   | 'thirdperson_lefthand'

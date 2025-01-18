@@ -22,7 +22,7 @@ const TransformsPanel: FC = () => {
 
       firstSelectedEntity:
         state.selectedEntityIds.length > 0
-          ? state.entities.find((e) => e.id === state.selectedEntityIds[0])!
+          ? state.entities.get(state.selectedEntityIds[0])!
           : null,
     })),
   )
@@ -39,9 +39,7 @@ const TransformsPanel: FC = () => {
   const allSelectedEntityTranslationEqual =
     firstSelectedEntity != null &&
     selectedEntityIds.every((entityId) => {
-      const entity = useDisplayEntityStore
-        .getState()
-        .entities.find((e) => e.id === entityId)!
+      const entity = useDisplayEntityStore.getState().entities.get(entityId)!
       return (
         entity.position[0] === firstSelectedEntity.position[0] &&
         entity.position[1] === firstSelectedEntity.position[1] &&
@@ -59,9 +57,7 @@ const TransformsPanel: FC = () => {
   const allSelectedEntityRotationEqual =
     firstSelectedEntity != null &&
     selectedEntityIds.every((entityId) => {
-      const entity = useDisplayEntityStore
-        .getState()
-        .entities.find((e) => e.id === entityId)!
+      const entity = useDisplayEntityStore.getState().entities.get(entityId)!
       return (
         entity.rotation[0] === firstSelectedEntity.rotation[0] &&
         entity.rotation[1] === firstSelectedEntity.rotation[1] &&
@@ -81,9 +77,7 @@ const TransformsPanel: FC = () => {
   const allSelectedEntityScaleEqual =
     firstSelectedEntity != null &&
     selectedEntityIds.every((entityId) => {
-      const entity = useDisplayEntityStore
-        .getState()
-        .entities.find((e) => e.id === entityId)!
+      const entity = useDisplayEntityStore.getState().entities.get(entityId)!
       return (
         entity.size[0] === firstSelectedEntity.size[0] &&
         entity.size[1] === firstSelectedEntity.size[1] &&
@@ -108,9 +102,7 @@ const TransformsPanel: FC = () => {
       })
 
       const d = selectedEntityIds.map((id) => {
-        const entityRefData = useEntityRefStore
-          .getState()
-          .entityRefs.find((d) => d.id === id)!
+        const entityRefData = useEntityRefStore.getState().entityRefs.get(id)!
 
         if (xyz[0] != null) {
           entityRefData.objectRef.current.position.setX(xyz[0])
@@ -152,9 +144,7 @@ const TransformsPanel: FC = () => {
       })
 
       const d = selectedEntityIds.map((id) => {
-        const entityRefData = useEntityRefStore
-          .getState()
-          .entityRefs.find((d) => d.id === id)!
+        const entityRefData = useEntityRefStore.getState().entityRefs.get(id)!
 
         if (radianRotation[0] != null) {
           entityRefData.objectRef.current.rotation.x = radianRotation[0]
@@ -188,9 +178,7 @@ const TransformsPanel: FC = () => {
       })
 
       selectedEntityIds.forEach((id) => {
-        const entityRefData = useEntityRefStore
-          .getState()
-          .entityRefs.find((d) => d.id === id)!
+        const entityRefData = useEntityRefStore.getState().entityRefs.get(id)!
 
         if (xyz[0] != null) {
           entityRefData.objectRef.current.scale.setX(xyz[0])

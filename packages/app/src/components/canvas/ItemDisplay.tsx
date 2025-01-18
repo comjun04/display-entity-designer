@@ -33,7 +33,7 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
   const { thisEntitySelected, thisEntityDisplay, selectedEntityIds } =
     useDisplayEntityStore(
       useShallow((state) => {
-        const thisEntity = state.entities.find((e) => e.id === id)
+        const thisEntity = state.entities.get(id)
 
         return {
           thisEntitySelected: state.selectedEntityIds.includes(id),

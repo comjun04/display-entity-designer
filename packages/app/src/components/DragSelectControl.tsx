@@ -1,6 +1,6 @@
 // Base code is from @react-three/drei `Select` component
 // https://github.com/pmndrs/drei/blob/adae93761fa0925c2ee80b30dcb2f903e6d11f3c/src/web/Select.tsx
-import { useThree } from '@react-three/fiber'
+import { invalidate, useThree } from '@react-three/fiber'
 import { FC, useEffect, useRef } from 'react'
 import { Group, Vector2, Vector3 } from 'three'
 import { shallow } from 'zustand/shallow'
@@ -52,19 +52,15 @@ const DragSelectControl: FC<DragSelectControlProps> = ({
     }
 
     const updateSelectedList = () => {
-      const entityRefs = useEntityRefStore.getState().entityRefs
+      const entityRefsArray = [
+        ...useEntityRefStore.getState().entityRefs.values(),
+      ]
       const allSelectedRefData = selectionBox
         .select()
-        .filter(
-          (o) =>
-            entityRefs.find((d) => d.objectRef.current.id === o.id) != null,
+        .map((o) =>
+          entityRefsArray.find((d) => d.objectRef.current.id === o.id),
         )
-        .map((o) => entityRefs.find((d) => d.objectRef.current.id === o.id)!)
-        .sort((a, b) => {
-          const aIndex = entityRefs.findIndex((d) => d.id === a.id)
-          const bIndex = entityRefs.findIndex((d) => d.id === b.id)
-          return aIndex - bIndex
-        })
+        .filter((o) => o != null)
 
       const { selectedEntityIds, setSelected } =
         useDisplayEntityStore.getState()
@@ -113,6 +109,7 @@ const DragSelectControl: FC<DragSelectControlProps> = ({
       if (controls != null) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
         ;(controls as any).enabled = oldControlsEnabled
+        invalidate()
       }
 
       prepareRay(pointTopLeft, selectionBox.startPoint)

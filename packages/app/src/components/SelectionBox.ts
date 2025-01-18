@@ -174,7 +174,7 @@ class SelectionBox {
    */
   searchChildInFrustum(frustum2: Frustum, object: Object3D) {
     const entityRefs = useEntityRefStore.getState().entityRefs
-    const targetEntityRefData = entityRefs.find(
+    const targetEntityRefData = [...entityRefs.values()].find(
       (d) => d.objectRef.current.id === object.id,
     )
     const isDisplayEntity = targetEntityRefData != null
@@ -183,7 +183,7 @@ class SelectionBox {
     if (object instanceof Object3D && isDisplayEntity) {
       const entity = useDisplayEntityStore
         .getState()
-        .entities.find((e) => e.id === targetEntityRefData.id)
+        .entities.get(targetEntityRefData.id)
       if (entity == null) {
         return false
       }

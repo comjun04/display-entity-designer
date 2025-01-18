@@ -1,13 +1,10 @@
-import { useTexture } from '@react-three/drei'
-import { FC, useEffect } from 'react'
-import { MathUtils, NearestFilter } from 'three'
-import { useShallow } from 'zustand/shallow'
+import { FC } from 'react'
+import { MathUtils } from 'three'
 
-import { useCacheStore } from '@/stores/cacheStore'
+import useCachedMaterial from '@/hooks/useCachedMaterial'
 import { Number3Tuple } from '@/types'
-import { getTextureColor } from '@/utils'
 
-type BlockFaceProps = {
+type BlockFaceNewProps = {
   faceName: 'up' | 'down' | 'north' | 'south' | 'west' | 'east'
   modelResourceLocation: string
   textureResourceLocation: string
@@ -21,7 +18,7 @@ type BlockFaceProps = {
   tintindex?: number
 }
 
-const BlockFace: FC<BlockFaceProps> = ({
+const BlockFaceNew: FC<BlockFaceNewProps> = ({
   modelResourceLocation,
   textureResourceLocation,
   parentElementSize: elementSize,
@@ -34,61 +31,15 @@ const BlockFace: FC<BlockFaceProps> = ({
   textureSize = [16, 16],
   tintindex,
 }) => {
-  const { processedImageDataUrl, setProcessedImageDataUrl } = useCacheStore(
-    useShallow((state) => ({
-      processedImageDataUrl:
-        state.croppedTextureDataUrls[textureResourceLocation],
-      setProcessedImageDataUrl: state.setCroppedTextureDataUrl,
-    })),
-  )
-
-  const texture = useTexture(
-    processedImageDataUrl ??
-      `${import.meta.env.VITE_CDN_BASE_URL}/assets/minecraft/textures/${textureResourceLocation}.png`,
-  )
-
-  // 텍스쳐 사진을 처음 로드했을 경우 맨 위 16x16만 잘라서 적용
-  useEffect(() => {
-    if (processedImageDataUrl != null || texture == null) {
-      return
-    }
-
-    // 한번에 많은 양의 block display가 추가된 경우 (예: 프로젝트 파일을 로드할 때) state update로 인한 rerender가 일어나기 전에 이 부분이 먼저 실행되어
-    // 캐시에 데이터가 이미 있음에도 불구하고 새로 처리하는 문제가 발생
-    // 따라서 state update event는 발생 안했는데 state는 변경된 경우를 체크하여 이 경우 텍스쳐 처리를 하지 않도록 코드 추가
-    const cachedProcessedTextureDataUrl =
-      useCacheStore.getState().croppedTextureDataUrls[textureResourceLocation]
-    if (cachedProcessedTextureDataUrl != null) {
-      return
-    }
-
-    const img = texture.image as HTMLImageElement
-
-    const canvas = document.createElement('canvas')
-    const ctx = canvas.getContext('2d')!
-
-    const [width, height] = textureSize
-    canvas.width = width
-    canvas.height = height
-
-    ctx.drawImage(img, 0, 0, width, height, 0, 0, width, height)
-
-    const croppedTextureDataUrl = canvas.toDataURL()
-    setProcessedImageDataUrl(textureResourceLocation, croppedTextureDataUrl)
-  }, [
-    processedImageDataUrl,
-    setProcessedImageDataUrl,
-    texture,
-    textureSize,
+  const cachedMaterial = useCachedMaterial({
+    modelResourceLocation,
     textureResourceLocation,
-  ])
+    textureSize,
+    textureLayer,
+    tintindex,
+  })
 
-  if (processedImageDataUrl == null) return
-
-  // 텍스쳐 픽셀끼리 뭉쳐져서 blur되어 보이지 않게 설정
-  // https://discourse.threejs.org/t/low-resolution-texture-is-very-blurry-how-can-i-get-around-this-issue/29948
-  // https://github.com/mrdoob/three.js/blob/37d6f280a5cd642e801469bb048f52300d31258e/examples/webgl_geometry_minecraft.html#L154
-  texture.magFilter = NearestFilter
+  if (cachedMaterial == null) return
 
   let width = 1
   let height = 1
@@ -200,14 +151,12 @@ const BlockFace: FC<BlockFaceProps> = ({
   // const f = new Float32Array([0, 1, 1, 1, 0, 0, 1, 0])
   const vertexUVArr = new Float32Array(vertexUV)
 
-  const textureColor = getTextureColor(
-    modelResourceLocation,
-    textureLayer,
-    tintindex,
-  )
-
   return (
-    <mesh position={meshPosition} rotation={meshRotation}>
+    <mesh
+      position={meshPosition}
+      rotation={meshRotation}
+      material={cachedMaterial}
+    >
       <planeGeometry args={[width, height]}>
         <bufferAttribute
           attach="attributes-uv"
@@ -218,15 +167,8 @@ const BlockFace: FC<BlockFaceProps> = ({
       </planeGeometry>
       {/* transparent일 경우 빈 공간을 transparent 처리하면 opacity=0이 되는데 */}
       {/* alphaTest > 0 이어야 빈 공간이 실제로 렌더링되지 않음 (안 할 경우 빈 공간이 다른 mesh도 안보이게 만듬) */}
-      <meshStandardMaterial
-        map={texture}
-        transparent
-        alphaTest={0.01}
-        toneMapped={false} // 인게임에서는 블록이 실제 텍스쳐보다 덜 선명하게 렌더링됨
-        color={textureColor}
-      />
     </mesh>
   )
 }
 
-export default BlockFace
+export default BlockFaceNew
