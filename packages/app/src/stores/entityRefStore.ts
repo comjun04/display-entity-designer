@@ -20,7 +20,7 @@ type EntityRefStoreState = {
   }
 
   createEntityRef: (id: string) => void
-  deleteEntityRef: (id: string) => void
+  deleteEntityRefs: (entityIds: string[]) => void
   clearEntityRefs: () => void
 }
 // DisplayEntity#objectRef는 mutable해야 하므로(object 내부 property를 수정할 수 있어야 하므로)
@@ -85,10 +85,12 @@ export const useEntityRefStore = create<EntityRefStoreState>((set, get) => {
         })
         return { entityRefs: newMap }
       }),
-    deleteEntityRef: (id) =>
+    deleteEntityRefs: (entityIds) =>
       set((state) => {
         const newMap = new Map(state.entityRefs)
-        newMap.delete(id)
+        for (const id of entityIds) {
+          newMap.delete(id)
+        }
         return { entityRefs: newMap }
       }),
     // displayEntityStore.clearEntities() 호출 시(= 모든 엔티티 삭제 시)에만 호출할 것

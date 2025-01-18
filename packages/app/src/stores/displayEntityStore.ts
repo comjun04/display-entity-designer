@@ -306,23 +306,21 @@ export const useDisplayEntityStore = create(
               recursivelyDelete(entity.children.slice())
             }
 
-            useEntityRefStore.getState().deleteEntityRef(id)
-            const selectedEntityIdIdx = state.selectedEntityIds.findIndex(
-              (entityId) => entityId === id,
-            )
-            if (selectedEntityIdIdx >= 0) {
-              state.selectedEntityIds.splice(selectedEntityIdIdx, 1)
-            }
-
             deletePendingEntityIds.add(id)
           }
         }
 
         recursivelyDelete(entityIds)
 
+        useEntityRefStore
+          .getState()
+          .deleteEntityRefs([...deletePendingEntityIds.values()])
         for (const entityIdToDelete of deletePendingEntityIds) {
           state.entities.delete(entityIdToDelete)
         }
+        state.selectedEntityIds = state.selectedEntityIds.filter(
+          (entityId) => !deletePendingEntityIds.has(entityId),
+        )
       }),
 
     bulkImport: (items) =>
