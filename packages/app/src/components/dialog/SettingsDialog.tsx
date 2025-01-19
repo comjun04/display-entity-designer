@@ -82,7 +82,11 @@ const SettingsDialog: FC = () => {
                   <h3 className="text-2xl font-bold">
                     Display Entity Platform
                   </h3>
-                  Build <span className="font-mono">{__COMMIT_HASH__}</span>
+                  <div className="mt-2 flex flex-row items-center gap-2">
+                    <span>v{__VERSION__}</span>
+                    <span className="font-mono">{__COMMIT_HASH__}</span>
+                    {__IS_DEV__ && <span>(Development Build)</span>}
+                  </div>
                 </div>
               )}
 
