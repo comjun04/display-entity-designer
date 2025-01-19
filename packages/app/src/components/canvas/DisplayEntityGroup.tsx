@@ -1,4 +1,4 @@
-import { ThreeEvent, useFrame } from '@react-three/fiber'
+import { ThreeEvent, invalidate, useFrame } from '@react-three/fiber'
 import { FC, MutableRefObject, useEffect, useRef } from 'react'
 import { BoxHelper, Group, Matrix4 } from 'three'
 import { useShallow } from 'zustand/shallow'
@@ -73,6 +73,8 @@ const DisplayEntityGroup: FC<DisplayEntityGroupProps> = ({
       // Prevent the helpers from blocking rays
       currentBoxHelper.traverse((child) => (child.raycast = () => null))
       entityInstance.add(currentBoxHelper)
+
+      invalidate()
 
       // group이 제거될 때 boxHelper 인스턴스도 정리
       return () => {
