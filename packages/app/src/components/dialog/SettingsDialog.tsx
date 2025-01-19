@@ -80,7 +80,7 @@ const SettingsDialog: FC = () => {
               {selectedPage === 'programInfo' && (
                 <div>
                   <h3 className="text-2xl font-bold">
-                    Display Entity Designer
+                    Display Entity Platform
                   </h3>
                   Build <span className="font-mono">{__COMMIT_HASH__}</span>
                 </div>
