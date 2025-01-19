@@ -88,6 +88,14 @@ const SettingsDialog: FC = () => {
                     <span className="font-mono">{__COMMIT_HASH__}</span>
                     {__IS_DEV__ && <span>(Development Build)</span>}
                   </div>
+
+                  {/* Disclaimer */}
+                  <div className="mt-4 text-sm text-neutral-500">
+                    This website or tool is not an official Minecraft product.
+                    Minecraft is a trademark of Mojang AB. All rights related to
+                    Minecraft and its intellectual property are owned by Mojang
+                    AB.
+                  </div>
                 </div>
               )}
 
