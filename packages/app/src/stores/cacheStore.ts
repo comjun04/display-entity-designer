@@ -2,27 +2,10 @@ import { MeshStandardMaterial } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
-import {
-  BlockstatesData,
-  ModelDisplayPositionKey,
-  ModelElement,
-  Number3Tuple,
-} from '@/types'
+import { BlockstatesData, ModelData } from '@/types'
 
 // ==========
-type ModelData = {
-  textures: Record<string, string>
-  textureSize?: [number, number]
-  display: Record<
-    ModelDisplayPositionKey,
-    {
-      rotation?: Number3Tuple
-      translation?: Number3Tuple
-      scale?: Number3Tuple
-    }
-  >
-  elements: ModelElement[]
-}
+
 type CacheStoreState = {
   blockstatesData: Record<string, BlockstatesData>
   setBlockstateData: (blockType: string, data: BlockstatesData) => void

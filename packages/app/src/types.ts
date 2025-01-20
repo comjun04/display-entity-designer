@@ -71,6 +71,20 @@ export type ModelDisplayPositionKey =
   | 'fixed'
 export type ModelFaceKey = 'up' | 'down' | 'north' | 'south' | 'west' | 'east'
 
+export type ModelData = {
+  textures: Record<string, string>
+  textureSize?: [number, number]
+  display: Record<
+    ModelDisplayPositionKey,
+    {
+      rotation?: Number3Tuple
+      translation?: Number3Tuple
+      scale?: Number3Tuple
+    }
+  >
+  elements: ModelElement[]
+}
+
 export type ModelElement = {
   __comment?: string
   from: Number3Tuple
