@@ -2,13 +2,19 @@ import { MeshStandardMaterial } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
-import { BlockstatesData, ModelData } from '@/types'
+import { BlockstatesData, CDNModelResponse, ModelData } from '@/types'
 
 // ==========
 
 type CacheStoreState = {
   blockstatesData: Record<string, BlockstatesData>
   setBlockstateData: (blockType: string, data: BlockstatesData) => void
+
+  modelJson: Record<string, CDNModelResponse>
+  setModelJson: (
+    resourceLocation: string,
+    jsonContent: CDNModelResponse,
+  ) => void
 
   modelData: Record<
     string,
@@ -38,6 +44,12 @@ export const useCacheStore = create(
     setBlockstateData: (blockType, blockstatesData) =>
       set((state) => {
         state.blockstatesData[blockType] = blockstatesData
+      }),
+
+    modelJson: {},
+    setModelJson: (resourceLocation, jsonContent) =>
+      set((state) => {
+        state.modelJson[resourceLocation] = jsonContent
       }),
 
     modelData: {},

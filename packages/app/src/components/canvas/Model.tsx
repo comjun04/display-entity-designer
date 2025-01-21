@@ -1,8 +1,13 @@
-import { FC, ReactNode, Suspense } from 'react'
+import { FC, ReactNode, Suspense, useEffect, useState } from 'react'
 import { MathUtils, Vector3 } from 'three'
 
-import useModel from '@/hooks/useModel'
-import { ModelDisplayPositionKey, ModelFaceKey, Number3Tuple } from '@/types'
+import { loadModel } from '@/services/resourceLoadService'
+import {
+  ModelData,
+  ModelDisplayPositionKey,
+  ModelFaceKey,
+  Number3Tuple,
+} from '@/types'
 import { stripMinecraftPrefix } from '@/utils'
 
 import BlockFace from './BlockFace'
@@ -20,13 +25,28 @@ const Model: FC<ModelProps> = ({
   xRotation = 0,
   yRotation = 0,
 }) => {
-  const { modelData, isBlockShapedItemModel } = useModel(
-    initialResourceLocation,
-  )
+  const [modelData, setModelData] = useState<ModelData>()
+  const [isBlockShapedItemModel, setIsBlockShapedItemModel] =
+    useState<boolean>()
 
   const isItemModel = stripMinecraftPrefix(initialResourceLocation).startsWith(
     'item/',
   )
+
+  useEffect(() => {
+    const fn = async () => {
+      const loadResult = await loadModel(initialResourceLocation)
+      if (loadResult == null) {
+        console.error(`Failed to load model for ${initialResourceLocation}`)
+        return
+      }
+
+      setModelData(loadResult.data)
+      setIsBlockShapedItemModel(loadResult.isBlockShapedItemModel)
+    }
+
+    fn().catch(console.error)
+  }, [initialResourceLocation])
 
   // ==========
 
