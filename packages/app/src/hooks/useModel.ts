@@ -22,7 +22,7 @@ const useModel = (initialResourceLocation: string) => {
     const { modelData: cachedModelData, setModelData: setCachedModelData } =
       useCacheStore.getState()
 
-    const d = cachedModelData[initialResourceLocation]
+    const cachedModelData = cachedModelDatas[initialResourceLocation]
 
     let tempIsBlockShapedItemModel = false
 
@@ -31,8 +31,10 @@ const useModel = (initialResourceLocation: string) => {
     let tempDisplay = {} as ModelData['display']
     let tempElements: ModelElement[] = []
 
-    if (d != null) {
-      setModelData(d.data)
+    if (cachedModelData != null) {
+      setModelData(cachedModelData.data)
+      setIsBlockShapedItemModel(cachedModelData.isBlockShapedItemModel)
+      return
     }
 
     let textureSize: [number, number] | undefined = undefined
