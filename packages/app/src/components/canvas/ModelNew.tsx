@@ -1,10 +1,11 @@
 import { invalidate } from '@react-three/fiber'
 import { FC, useEffect, useRef, useState } from 'react'
 import { Group, MathUtils, Mesh, Vector3 } from 'three'
+import { useShallow } from 'zustand/shallow'
 
-import { loadModel } from '@/services/resourceLoadService'
 import { loadModelMesh } from '@/services/resources/modelMesh'
-import { ModelData, ModelDisplayPositionKey, Number3Tuple } from '@/types'
+import { useCacheStore } from '@/stores/cacheStore'
+import { ModelDisplayPositionKey, Number3Tuple } from '@/types'
 import { stripMinecraftPrefix } from '@/utils'
 
 type ModelNewProps = {
@@ -20,37 +21,37 @@ const ModelNew: FC<ModelNewProps> = ({
   xRotation = 0,
   yRotation = 0,
 }) => {
-  const [modelData, setModelData] = useState<ModelData>()
-  const [isBlockShapedItemModel, setIsBlockShapedItemModel] =
-    useState<boolean>()
-
   const groupRef = useRef<Group>(null)
   const mergedMeshRef = useRef<Mesh>()
   const [meshLoaded, setMeshLoaded] = useState(false)
+
+  const { modelData: modelDataTemp, modelDataLoading } = useCacheStore(
+    useShallow((state) => ({
+      modelData: state.modelData[initialResourceLocation],
+      modelDataLoading: state.modelDataLoading.has(initialResourceLocation),
+    })),
+  )
 
   const isItemModel = stripMinecraftPrefix(initialResourceLocation).startsWith(
     'item/',
   )
 
   useEffect(() => {
-    const fn = async () => {
-      const loadResult = await loadModel(initialResourceLocation)
-      if (loadResult == null) {
-        console.error(`Failed to load model for ${initialResourceLocation}`)
-        return
-      }
+    if (modelDataTemp != null) return
 
-      setModelData(loadResult.data)
-      setIsBlockShapedItemModel(loadResult.isBlockShapedItemModel)
-      setMeshLoaded(false)
-    }
+    const { modelDataLoading: latestModelDataLoading, loadModelData } =
+      useCacheStore.getState()
 
-    fn().catch(console.error)
-  }, [initialResourceLocation])
+    if (latestModelDataLoading.has(initialResourceLocation)) return
+
+    loadModelData(initialResourceLocation)
+  }, [initialResourceLocation, modelDataTemp, modelDataLoading])
 
   useEffect(() => {
-    if (modelData == null || isBlockShapedItemModel == null) return
+    if (modelDataTemp == null) return
     if (meshLoaded) return
+
+    const { data: modelData, isBlockShapedItemModel } = modelDataTemp
 
     const fn = async () => {
       const loadResult = await loadModelMesh({
@@ -74,13 +75,7 @@ const ModelNew: FC<ModelNewProps> = ({
     }
 
     fn().catch(console.error)
-  }, [
-    initialResourceLocation,
-    modelData,
-    isBlockShapedItemModel,
-    meshLoaded,
-    isItemModel,
-  ])
+  }, [initialResourceLocation, modelDataTemp, meshLoaded, isItemModel])
 
   useEffect(() => {
     if (mergedMeshRef.current == null) return
@@ -95,9 +90,11 @@ const ModelNew: FC<ModelNewProps> = ({
 
   // ==========
 
-  if (modelData == null || isBlockShapedItemModel == null) {
+  if (modelDataTemp == null) {
     return null
   }
+
+  const { data: modelData } = modelDataTemp
 
   const { display, elements } = modelData
 
