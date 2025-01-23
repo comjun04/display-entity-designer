@@ -28,6 +28,9 @@ importers:
       '@types/three':
         specifier: ^0.169.0
         version: 0.169.0
+      async-mutex:
+        specifier: ^0.5.0
+        version: 0.5.0
       camera-controls:
         specifier: ^2.9.0
         version: 2.9.0(three@0.169.0)
@@ -1376,6 +1379,9 @@ packages:
   arraybuffer.prototype.slice@1.0.3:
     resolution: {integrity: sha512-bMxMKAjg13EBSVscxTaYA4mRc5t1UAXa2kXiGTNfZ079HIWXEkKmkgFrh/nJqamaLSrXO5H4WFFkPEaLJWbs3A==}
     engines: {node: '>= 0.4'}
+
+  async-mutex@0.5.0:
+    resolution: {integrity: sha512-1A94B18jkJ3DYq284ohPxoXbfTA5HsQ7/Mf4DEhcyLx3Bz27Rh59iScbB6EPiP+B+joue6YCxcMXSbFC1tZKwA==}
 
   autoprefixer@10.4.20:
     resolution: {integrity: sha512-XY25y5xSv/wEoqzDyXXME4AFfkZI0P23z6Fs3YgymDnKJkCGOnkL0iTxCa85UTqaSgfcqyf3UA6+c7wUvx/16g==}
@@ -4206,6 +4212,10 @@ snapshots:
       get-intrinsic: 1.2.4
       is-array-buffer: 3.0.4
       is-shared-array-buffer: 1.0.3
+
+  async-mutex@0.5.0:
+    dependencies:
+      tslib: 2.7.0
 
   autoprefixer@10.4.20(postcss@8.4.47):
     dependencies:
