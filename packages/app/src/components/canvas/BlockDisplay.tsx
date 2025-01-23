@@ -7,7 +7,7 @@ import { useShallow } from 'zustand/shallow'
 import useBlockStates from '@/hooks/useBlockStates'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 
-import Model from './ModelNew'
+import Model from './Model'
 
 type BlockDisplayProps = {
   id: string
