@@ -15,6 +15,23 @@ import { stripMinecraftPrefix } from '@/utils'
 
 import { loadMaterial } from './material'
 
+const getTextureResourceLocation = (
+  textureResourceLocationMap: Record<string, string>,
+  key: string,
+) => {
+  if (key.startsWith('#'))
+    return getTextureResourceLocation(textureResourceLocationMap, key.slice(1))
+
+  if (!(key in textureResourceLocationMap)) return
+
+  if (textureResourceLocationMap[key].startsWith('#'))
+    return getTextureResourceLocation(
+      textureResourceLocationMap,
+      textureResourceLocationMap[key].slice(1),
+    )
+  else return stripMinecraftPrefix(textureResourceLocationMap[key])
+}
+
 export type LoadModelMaterialsArgs = {
   modelResourceLocation: string
   elements: ModelElement[]
@@ -36,22 +53,16 @@ export async function loadModelMaterials({
   textureSize = [16, 16],
   isItemModel,
 }: LoadModelMaterialsArgs) {
-  const getTexture = (key: string) => {
-    if (key.startsWith('#')) return getTexture(key.slice(1))
-
-    if (!(key in textures)) return
-
-    if (textures[key].startsWith('#')) return getTexture(textures[key].slice(1))
-    else return stripMinecraftPrefix(textures[key])
-  }
-
   for (const element of elements) {
     const materials: Material[] = []
 
     for (const faceKey in element.faces) {
       const face = faceKey as ModelFaceKey
       const faceData = element.faces[face]!
-      const textureResourceLocation = getTexture(faceData.texture)
+      const textureResourceLocation = getTextureResourceLocation(
+        textures,
+        faceData.texture,
+      )
       if (textureResourceLocation == null) {
         console.warn(
           `Cannot extract texture resource location from model face data. model: ${modelResourceLocation}, faceKey: ${faceKey}`,
@@ -92,15 +103,6 @@ export async function loadModelMesh({
   isItemModel,
   isBlockShapedItemModel,
 }: LoadModelMeshArgs) {
-  const getTexture = (key: string) => {
-    if (key.startsWith('#')) return getTexture(key.slice(1))
-
-    if (!(key in textures)) return
-
-    if (textures[key].startsWith('#')) return getTexture(textures[key].slice(1))
-    else return stripMinecraftPrefix(textures[key])
-  }
-
   const mergedGeometries: BufferGeometry[] = []
   const fullGeometryGroups: GeometryGroup[] = []
   const fullMaterials: Material[] = []
@@ -124,7 +126,10 @@ export async function loadModelMesh({
     for (const faceKey in element.faces) {
       const face = faceKey as ModelFaceKey
       const faceData = element.faces[face]!
-      const textureResourceLocation = getTexture(faceData.texture)
+      const textureResourceLocation = getTextureResourceLocation(
+        textures,
+        faceData.texture,
+      )
       if (textureResourceLocation == null) {
         console.warn(
           `Cannot extract texture resource location from model face data. model: ${modelResourceLocation}, faceKey: ${faceKey}`,
