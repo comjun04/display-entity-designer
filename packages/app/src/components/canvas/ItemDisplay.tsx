@@ -7,7 +7,7 @@ import { useShallow } from 'zustand/shallow'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { Number3Tuple } from '@/types'
 
-import Model from './Model'
+import Model from './ModelNew'
 
 type ItemDisplayProps = {
   id: string
