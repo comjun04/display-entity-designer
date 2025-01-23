@@ -15,7 +15,68 @@ import { stripMinecraftPrefix } from '@/utils'
 
 import { loadMaterial } from './material'
 
-export type LoadElementsGroupMeshArgs = {
+export type LoadModelMaterialsArgs = {
+  modelResourceLocation: string
+  elements: ModelElement[]
+  textures: Record<string, string>
+  textureSize?: [number, number]
+  isItemModel: boolean
+}
+
+/**
+ * model에 포함된 texture들이 매핑된 material들을 로딩합니다.
+ * material이 캐싱되어 있으면 그냥 넘기고 아니면 material를 생성 후 캐싱합니다.
+ *
+ * 별도의 리턴값은 없습니다.
+ */
+export async function loadModelMaterials({
+  modelResourceLocation,
+  elements,
+  textures,
+  textureSize = [16, 16],
+  isItemModel,
+}: LoadModelMaterialsArgs) {
+  const getTexture = (key: string) => {
+    if (key.startsWith('#')) return getTexture(key.slice(1))
+
+    if (!(key in textures)) return
+
+    if (textures[key].startsWith('#')) return getTexture(textures[key].slice(1))
+    else return stripMinecraftPrefix(textures[key])
+  }
+
+  for (const element of elements) {
+    const materials: Material[] = []
+
+    for (const faceKey in element.faces) {
+      const face = faceKey as ModelFaceKey
+      const faceData = element.faces[face]!
+      const textureResourceLocation = getTexture(faceData.texture)
+      if (textureResourceLocation == null) {
+        console.warn(
+          `Cannot extract texture resource location from model face data. model: ${modelResourceLocation}, faceKey: ${faceKey}`,
+        )
+        return
+      }
+
+      const textureLayer =
+        isItemModel && /^#layer\d{1,}$/.test(faceData.texture)
+          ? faceData.texture.slice(6)
+          : undefined
+
+      const material = await loadMaterial({
+        textureResourceLocation,
+        modelResourceLocation,
+        textureLayer,
+        textureSize,
+        tintindex: faceData.tintindex,
+      })
+      materials.push(material)
+    }
+  }
+}
+
+export type LoadModelMeshArgs = {
   modelResourceLocation: string
   elements: ModelElement[]
   textures: Record<string, string>
@@ -23,7 +84,6 @@ export type LoadElementsGroupMeshArgs = {
   isItemModel: boolean
   isBlockShapedItemModel: boolean
 }
-
 export async function loadModelMesh({
   modelResourceLocation,
   elements,
@@ -31,7 +91,7 @@ export async function loadModelMesh({
   textureSize = [16, 16],
   isItemModel,
   isBlockShapedItemModel,
-}: LoadElementsGroupMeshArgs) {
+}: LoadModelMeshArgs) {
   const getTexture = (key: string) => {
     if (key.startsWith('#')) return getTexture(key.slice(1))
 

@@ -11,7 +11,7 @@ import {
 } from '@/types'
 import { generateBuiltinItemModel, stripMinecraftPrefix } from '@/utils'
 
-import { loadModelMesh } from './resources/modelMesh'
+import { loadModelMaterials } from './resources/modelMesh'
 
 export async function preloadResources(entities: DisplayEntity[]) {
   const applyModelInfoList: BlockStateApplyModelInfo[] = []
@@ -33,15 +33,14 @@ export async function preloadResources(entities: DisplayEntity[]) {
 
   for (const applyModelInfo of applyModelInfoList) {
     const modelData = await loadModel(applyModelInfo.model)
-    const { data, isBlockShapedItemModel } = modelData
+    const { data } = modelData
 
-    await loadModelMesh({
+    await loadModelMaterials({
       modelResourceLocation: applyModelInfo.model,
       elements: data.elements,
       textures: data.textures,
       textureSize: data.textureSize,
       isItemModel: false,
-      isBlockShapedItemModel,
     })
   }
 
