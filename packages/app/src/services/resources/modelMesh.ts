@@ -214,7 +214,7 @@ export async function loadModelMesh({
       geometryGroups.push({
         start: fullGeometryGroups.length * 6 + faceIdx * 6,
         count: 6, // PlaneGeometry = 2 triangles * 3 indices = 6
-        materialIndex: fullGeometryGroups.length * 6 + faceIdx,
+        materialIndex: fullGeometryGroups.length + faceIdx,
       })
 
       faceIdx++
