@@ -1,73 +1,106 @@
-import { FC, ReactNode, Suspense, useEffect, useState } from 'react'
-import { MathUtils, Vector3 } from 'three'
+import { invalidate } from '@react-three/fiber'
+import { FC, useEffect, useRef, useState } from 'react'
+import { Group, MathUtils, Mesh, Vector3 } from 'three'
+import { useShallow } from 'zustand/shallow'
 
-import { loadModel } from '@/services/resourceLoadService'
-import {
-  ModelData,
-  ModelDisplayPositionKey,
-  ModelFaceKey,
-  Number3Tuple,
-} from '@/types'
+import { loadModelMesh } from '@/services/resources/modelMesh'
+import { useCacheStore } from '@/stores/cacheStore'
+import { ModelDisplayPositionKey, Number3Tuple } from '@/types'
 import { stripMinecraftPrefix } from '@/utils'
 
-import BlockFace from './BlockFace'
-
-type ModelProps = {
+type ModelNewProps = {
   initialResourceLocation: string
   displayType?: ModelDisplayPositionKey
   xRotation?: number
   yRotation?: number
 }
 
-const Model: FC<ModelProps> = ({
+const ModelNew: FC<ModelNewProps> = ({
   initialResourceLocation,
   displayType,
   xRotation = 0,
   yRotation = 0,
 }) => {
-  const [modelData, setModelData] = useState<ModelData>()
-  const [isBlockShapedItemModel, setIsBlockShapedItemModel] =
-    useState<boolean>()
+  const groupRef = useRef<Group>(null)
+  const mergedMeshRef = useRef<Mesh>()
+  const [meshLoaded, setMeshLoaded] = useState(false)
+
+  const { modelData: modelDataTemp, modelDataLoading } = useCacheStore(
+    useShallow((state) => ({
+      modelData: state.modelData[initialResourceLocation],
+      modelDataLoading: state.modelDataLoading.has(initialResourceLocation),
+    })),
+  )
 
   const isItemModel = stripMinecraftPrefix(initialResourceLocation).startsWith(
     'item/',
   )
 
   useEffect(() => {
+    if (modelDataTemp != null) return
+
+    const { modelDataLoading: latestModelDataLoading, loadModelData } =
+      useCacheStore.getState()
+
+    if (latestModelDataLoading.has(initialResourceLocation)) return
+
+    loadModelData(initialResourceLocation)
+  }, [initialResourceLocation, modelDataTemp, modelDataLoading])
+
+  useEffect(() => {
+    if (modelDataTemp == null) return
+    if (meshLoaded) return
+
+    const { data: modelData, isBlockShapedItemModel } = modelDataTemp
+
     const fn = async () => {
-      const loadResult = await loadModel(initialResourceLocation)
+      const loadResult = await loadModelMesh({
+        modelResourceLocation: initialResourceLocation,
+        elements: modelData.elements,
+        textures: modelData.textures,
+        textureSize: modelData.textureSize,
+        isItemModel,
+        isBlockShapedItemModel,
+      })
+
       if (loadResult == null) {
-        console.error(`Failed to load model for ${initialResourceLocation}`)
+        console.error(
+          `Failed to load model mesh for ${initialResourceLocation}`,
+        )
         return
       }
 
-      setModelData(loadResult.data)
-      setIsBlockShapedItemModel(loadResult.isBlockShapedItemModel)
+      mergedMeshRef.current = loadResult
+      setMeshLoaded(true)
     }
 
     fn().catch(console.error)
-  }, [initialResourceLocation])
+  }, [initialResourceLocation, modelDataTemp, meshLoaded, isItemModel])
+
+  useEffect(() => {
+    if (mergedMeshRef.current == null) return
+
+    if (meshLoaded) {
+      groupRef.current?.add(mergedMeshRef.current)
+    } else {
+      groupRef.current?.remove(mergedMeshRef.current)
+    }
+    invalidate()
+  }, [meshLoaded])
 
   // ==========
 
-  if (modelData == null || isBlockShapedItemModel == null) {
+  if (modelDataTemp == null) {
     return null
   }
 
-  const { display, elements, textures, textureSize } = modelData
+  const { data: modelData } = modelDataTemp
+
+  const { display, elements } = modelData
 
   // elements가 없을 경우 렌더링할 것이 없으므로 그냥 null을 리턴
   if (elements == null || elements.length < 1) {
     return null
-  }
-
-  const getTexture = (key: string) => {
-    if (key.startsWith('#')) return getTexture(key.slice(1))
-
-    if (!(key in textures)) return
-
-    if (textures[key].startsWith('#')) return getTexture(textures[key].slice(1))
-    else return stripMinecraftPrefix(textures[key])
   }
 
   // display info
@@ -101,105 +134,8 @@ const Model: FC<ModelProps> = ({
           <group position={[-0.5, -0.5, -0.5]}>
             {/* set display translation, rotation and scale */}
             <group rotation={displayRotation} scale={displayScale}>
-              <group position={displayTranslation}>
-                {elements.map((element, idx) => {
-                  const fromVec = new Vector3(...element.from).divideScalar(16)
-                  const toVec = new Vector3(...element.to).divideScalar(16)
-                  const centerVec = new Vector3()
-                    .addVectors(fromVec, toVec)
-                    .divideScalar(2)
-                  const sizeVec = new Vector3().add(toVec).sub(fromVec)
-
-                  const faces: ReactNode[] = []
-                  for (const faceKey in element.faces) {
-                    const face = faceKey as ModelFaceKey
-                    const faceData = element.faces[face]!
-                    const texture = getTexture(faceData.texture)
-                    if (texture == null) continue
-
-                    const textureLayer =
-                      isItemModel && /^#layer\d{1,}$/.test(faceData.texture)
-                        ? faceData.texture.slice(6)
-                        : undefined
-
-                    faces.push(
-                      <BlockFace
-                        key={face}
-                        modelResourceLocation={initialResourceLocation}
-                        textureResourceLocation={texture}
-                        faceName={face}
-                        uv={faceData.uv}
-                        textureLayer={textureLayer}
-                        textureSize={textureSize}
-                        rotation={faceData.rotation}
-                        tintindex={faceData.tintindex}
-                        parentElementSize={sizeVec.toArray()}
-                        parentElementFrom={element.from}
-                        parentElementTo={element.to}
-                      />,
-                    )
-                  }
-
-                  // element rotation
-                  let rotation = [0, 0, 0] satisfies Number3Tuple
-                  let groupScale = [1, 1, 1] satisfies Number3Tuple
-                  if (element.rotation != null) {
-                    const rad = MathUtils.degToRad(element.rotation.angle)
-
-                    switch (element.rotation.axis) {
-                      case 'x':
-                        rotation = [rad, 0, 0]
-                        break
-                      case 'y':
-                        rotation = [0, rad, 0]
-                        break
-                      case 'z':
-                        rotation = [0, 0, rad]
-                        break
-                    }
-
-                    if (element.rotation.rescale) {
-                      const scaleBy = 1 / Math.cos(rad)
-                      switch (element.rotation.axis) {
-                        case 'x':
-                          groupScale = [1, scaleBy, scaleBy]
-                          break
-                        case 'y':
-                          groupScale = [scaleBy, 1, scaleBy]
-                          break
-                        case 'z':
-                          groupScale = [scaleBy, scaleBy, 1]
-                          break
-                      }
-                    }
-                  }
-
-                  // 회전 중심 위치
-                  const rotationOriginVec = new Vector3(
-                    ...(element.rotation?.origin ?? ([0, 0, 0] as const)),
-                  ).divideScalar(16)
-
-                  const vec1 = centerVec.clone().sub(rotationOriginVec)
-                  const vec2 = rotationOriginVec
-                    .clone()
-                    .subScalar(isBlockShapedItemModel ? 0.5 : 0)
-
-                  // rotation origin 적용할 때
-                  // 1. centerVec - rotationOriginVec 위치로 이동 => 회전 중심위치가 (0,0,0)에 위치하도록 함
-                  // 2. 부모 group에서 rotation을 적용하고 원래 위치로 다시 움직임 (centerVec - rotationOriginVec + rotationOriginVec = centerVec)
-                  return (
-                    <group
-                      key={idx}
-                      rotation={rotation}
-                      position={vec2}
-                      scale={groupScale}
-                    >
-                      <group position={vec1}>
-                        <Suspense>{faces}</Suspense>
-                      </group>
-                    </group>
-                  )
-                })}
+              <group position={displayTranslation} ref={groupRef}>
+                {/* ref로 직접 mesh 추가 */}
               </group>
             </group>
           </group>
@@ -209,4 +145,4 @@ const Model: FC<ModelProps> = ({
   )
 }
 
-export default Model
+export default ModelNew

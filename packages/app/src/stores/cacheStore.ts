@@ -2,6 +2,7 @@ import { MeshStandardMaterial } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
+import { loadModel } from '@/services/resources/model'
 import { BlockstatesData, CDNModelResponse, ModelData } from '@/types'
 
 // ==========
@@ -23,6 +24,8 @@ type CacheStoreState = {
       isBlockShapedItemModel: boolean
     }
   >
+  modelDataLoading: Set<string>
+  loadModelData: (resourceLocation: string) => void
   setModelData: (
     resourceLocation: string,
     data: ModelData,
@@ -53,6 +56,25 @@ export const useCacheStore = create(
       }),
 
     modelData: {},
+    modelDataLoading: new Set(),
+    loadModelData: (resourceLocation) => {
+      set((state) => {
+        if (state.modelDataLoading.has(resourceLocation)) return
+        state.modelDataLoading = new Set(state.modelDataLoading)
+        state.modelDataLoading.add(resourceLocation)
+      })
+
+      loadModel(resourceLocation)
+        .then((modelData) => {
+          set((state) => {
+            state.modelData[resourceLocation] = modelData
+
+            state.modelDataLoading = new Set(state.modelDataLoading)
+            state.modelDataLoading.delete(resourceLocation)
+          })
+        })
+        .catch(console.error)
+    },
     setModelData: (resourceLocation, data, isBlockShapedItemModel) =>
       set((state) => {
         const modelData = state.modelData[resourceLocation]
