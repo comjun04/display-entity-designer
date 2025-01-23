@@ -70,7 +70,7 @@ async function openProjectFile(file: File): Promise<boolean> {
   clearEntities()
   useEditorStore.getState().resetProject()
 
-  bulkImport(saveData.entities)
+  bulkImport(saveData.entities).catch(console.error)
 
   return true
 }
@@ -134,7 +134,7 @@ export async function importFromBDE(file: File): Promise<boolean> {
   clearEntities()
   useEditorStore.getState().resetProject()
 
-  bulkImportFromBDE(saveData)
+  bulkImportFromBDE(saveData).catch(console.error)
 
   return true
 }
