@@ -62,8 +62,6 @@ async function openProjectFile(file: File): Promise<boolean> {
 
   // TODO: saveData type validation
 
-  console.log(saveData)
-
   const { bulkImport, clearEntities } = useDisplayEntityStore.getState()
 
   // reset project and load data
@@ -124,8 +122,6 @@ export async function importFromBDE(file: File): Promise<boolean> {
     .pipeThrough(new DecompressionStream('gzip'))
 
   const saveDataString = await new Response(gzipDecompressionStream).text()
-  console.log(saveDataString)
-
   const saveData = JSON.parse(saveDataString) as BDEngineSaveData
 
   const { bulkImportFromBDE, clearEntities } = useDisplayEntityStore.getState()
