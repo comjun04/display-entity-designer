@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import { loadBlockstates } from '@/services/resourceLoadService'
+import { loadBlockstates } from '@/services/resources/blockstates'
 import { BlockstatesData } from '@/types'
 
 const useBlockStates = (blockString?: string) => {

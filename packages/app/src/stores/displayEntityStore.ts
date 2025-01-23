@@ -3,7 +3,7 @@ import { Box3, Euler, Matrix4, Quaternion, Vector3 } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
-import { preloadResources } from '@/services/resourceLoadService'
+import { preloadResources } from '@/services/resources/preload'
 import { useEntityRefStore } from '@/stores/entityRefStore'
 import {
   BDEngineSaveData,

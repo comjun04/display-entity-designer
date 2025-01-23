@@ -2,7 +2,7 @@ import { MeshStandardMaterial } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
-import { loadModel } from '@/services/resourceLoadService'
+import { loadModel } from '@/services/resources/model'
 import { BlockstatesData, CDNModelResponse, ModelData } from '@/types'
 
 // ==========
