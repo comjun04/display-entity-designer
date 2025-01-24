@@ -53,6 +53,8 @@ const BoundingBox: FC<BoundingBoxProps> = ({ object, visible, color }) => {
       args={[dummyObject, color]}
       visible={visible}
       ref={boxHelperRef}
+      // disable click detection for BoxHelper (r3f automatically enables it by default)
+      raycast={() => {}}
     />
   )
 }
