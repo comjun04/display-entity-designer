@@ -17,8 +17,17 @@ const BoundingBox: FC<BoundingBoxProps> = ({ object, visible, color }) => {
     if (object == null || boxHelperRef.current == null) return
     if (!visible) return
 
+    // transformation 초기 상태에 있어야 제대로 위치와 크기 계산을 하므로
+    // 임시로 parent를 빼고 transformation 건드리기
+    const parent = object.parent
+    if (parent != null) {
+      parent.remove(object)
+    }
+    // BoxHelper도 빼야 시작지점이 (0,0,0)이 아닌 경우를 제대로 핸들링함
+    object.remove(boxHelperRef.current)
+
     // BoxHelper가 object의 transformation이 초기 상태일 때만 위치와 크기를 제대로 계산하는 것으로 보임
-    // 따라서 BoxHelper 생성 전에 초기 상태로 만든 다음 생성하고 나서 되돌리기
+    // 따라서 초기 상태로 만든 다음 setFromObject() 호출 후 되돌리기
     const m = object.matrix.clone()
     const freshMatrix = new Matrix4()
     freshMatrix.decompose(object.position, object.quaternion, object.scale)
@@ -31,7 +40,12 @@ const BoundingBox: FC<BoundingBoxProps> = ({ object, visible, color }) => {
     // Prevent the helpers from blocking rays
     boxHelperRef.current.traverse((child) => (child.raycast = () => null))
 
+    // BoxHelper 뺀 거 다시 넣기
     object.add(boxHelperRef.current)
+
+    if (parent != null) {
+      parent.add(object)
+    }
   })
 
   return (
