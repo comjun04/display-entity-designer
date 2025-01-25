@@ -15,18 +15,30 @@ const fileVersionArrayBuffer = new ArrayBuffer(4)
 const fileVersionDataView = new DataView(fileVersionArrayBuffer)
 fileVersionDataView.setUint32(0, FILE_VERSION, false)
 
-export async function openFromFile(file: File) {
-  try {
-    // first try to open as depl project
-    const isDeplProject = await openProjectFile(file)
-    if (isDeplProject) return
+export function openFromFile() {
+  const inputElement = document.createElement('input')
+  inputElement.type = 'file'
+  inputElement.accept = '.depl,.bdengine'
+  inputElement.onchange = async (evt) => {
+    const file = (evt.target as HTMLInputElement).files?.[0]
+    if (file == null) {
+      return
+    }
 
-    // if not, try to open with bdengine file
-    const isBDEProject = await importFromBDE(file)
-    if (isBDEProject) return
-  } catch (err) {
-    console.error(err)
+    try {
+      // first try to open as depl project
+      const isDeplProject = await openProjectFile(file)
+      if (isDeplProject) return
+
+      // if not, try to open with bdengine file
+      const isBDEProject = await importFromBDE(file)
+      if (isBDEProject) return
+    } catch (err) {
+      console.error(err)
+    }
   }
+
+  inputElement.click()
 }
 
 async function openProjectFile(file: File): Promise<boolean> {

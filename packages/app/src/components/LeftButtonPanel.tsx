@@ -42,26 +42,9 @@ const LeftButtonPanel: FC = () => {
           side="right"
           sideOffset={10}
           align="start"
-          className="data-[state=open]:slide-in-from-left-0 min-w-52 origin-top-left p-2"
+          className="min-w-52 origin-top-left p-2 data-[state=open]:slide-in-from-left-0"
         >
-          <DropdownMenuItem
-            className="w-full"
-            onClick={() => {
-              const inputElement = document.createElement('input')
-              inputElement.type = 'file'
-              inputElement.accept = '.depl,.bdengine'
-              inputElement.onchange = (evt) => {
-                const file = (evt.target as HTMLInputElement).files?.[0]
-                if (file == null) {
-                  return
-                }
-
-                openFromFile(file).catch(console.error)
-              }
-
-              inputElement.click()
-            }}
-          >
+          <DropdownMenuItem className="w-full" onClick={openFromFile}>
             <div className="flex w-full flex-row items-center gap-2 text-sm">
               <span className="grow">Open</span>
               <span className="text-xs text-neutral-500">Ctrl + O</span>
