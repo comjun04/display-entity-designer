@@ -1,3 +1,5 @@
+import { ToastContainer } from 'react-toastify'
+
 import Scene from './Scene'
 import Sidebar from './Sidebar'
 import LeftButtonPanel from './components/LeftButtonPanel'
@@ -12,6 +14,15 @@ function App() {
     <div className="flex h-full w-full flex-row">
       <div className="relative flex-1 overflow-hidden">
         <Scene />
+        <ToastContainer
+          position="bottom-right"
+          autoClose={5000}
+          newestOnTop
+          theme="dark"
+          pauseOnFocusLoss
+          pauseOnHover
+          closeOnClick
+        />
 
         {/* floating buttons */}
         <TopButtonPanel />
