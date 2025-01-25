@@ -1,5 +1,6 @@
 import { FC, useEffect } from 'react'
 
+import { toggleGroup } from '@/services/actions'
 import { openFromFile, saveToFile } from '@/services/fileService'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
@@ -32,24 +33,32 @@ const ShortcutHandler: FC = () => {
       // 단축키 처리
       switch (evt.key) {
         case 't':
-          setMode('translate')
+          if (!evt.ctrlKey && !evt.altKey && !evt.shiftKey) {
+            setMode('translate')
+          }
           break
         case 'r':
-          setMode('rotate')
+          if (!evt.ctrlKey && !evt.altKey && !evt.shiftKey) {
+            setMode('rotate')
+          }
           break
         case 's':
           if (evt.ctrlKey) {
             evt.preventDefault()
             saveToFile().catch(console.error)
-          } else {
+          } else if (!evt.altKey && !evt.shiftKey) {
             setMode('scale')
           }
-
           break
         case 'o':
           if (evt.ctrlKey) {
             evt.preventDefault()
             openFromFile()
+          }
+          break
+        case 'g':
+          if (!evt.ctrlKey && !evt.altKey && !evt.shiftKey) {
+            toggleGroup()
           }
           break
         case 'Delete':

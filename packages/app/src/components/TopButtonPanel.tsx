@@ -5,6 +5,7 @@ import { IoCubeOutline } from 'react-icons/io5'
 import { TbDiamondFilled } from 'react-icons/tb'
 import { useShallow } from 'zustand/shallow'
 
+import { toggleGroup } from '@/services/actions'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 
@@ -43,21 +44,7 @@ const TopButtonPanel: FC = () => {
 
         <div className="my-2 border-l border-gray-700" />
 
-        <FloatingButton
-          onClick={() => {
-            const { entities, groupSelected, ungroupSelected } =
-              useDisplayEntityStore.getState()
-
-            const alreadyGrouped =
-              selectedEntityIds.length === 1 &&
-              entities.get(selectedEntityIds[0])?.kind === 'group'
-            if (alreadyGrouped) {
-              ungroupSelected()
-            } else {
-              groupSelected()
-            }
-          }}
-        >
+        <FloatingButton onClick={toggleGroup}>
           <FaObjectGroup size={24} />
         </FloatingButton>
         <FloatingButton
