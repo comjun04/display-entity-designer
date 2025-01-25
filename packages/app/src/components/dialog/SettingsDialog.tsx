@@ -5,6 +5,7 @@ import {
   DialogTitle,
 } from '@headlessui/react'
 import { FC, useState } from 'react'
+import { toast } from 'react-toastify'
 import { useShallow } from 'zustand/shallow'
 
 import { useDialogStore } from '@/stores/dialogStore'
@@ -101,7 +102,7 @@ const SettingsDialog: FC = () => {
 
               {/* test page */}
               {selectedPage === 'test' && (
-                <div>
+                <div className="flex flex-col gap-2">
                   <div className="flex flex-row gap-2">
                     <input
                       type="checkbox"
@@ -114,6 +115,29 @@ const SettingsDialog: FC = () => {
                     <label htmlFor="settings_test_testoption">
                       Test Option
                     </label>
+                  </div>
+                  <div className="flex flex-row gap-2">
+                    <button
+                      className="rounded-md border border-gray-500 px-3 py-1"
+                      onClick={() => {
+                        toast.info('This is a test notification', {
+                          autoClose: 5000,
+                        })
+                      }}
+                    >
+                      Fire Toast
+                    </button>
+                    <button
+                      className="rounded-md border border-gray-500 px-3 py-1"
+                      onClick={() => {
+                        toast.info('This is a test notification', {
+                          autoClose: 5000,
+                        })
+                        setOpenedDialog(null)
+                      }}
+                    >
+                      Fire Toast + Close Dialog
+                    </button>
                   </div>
                 </div>
               )}
