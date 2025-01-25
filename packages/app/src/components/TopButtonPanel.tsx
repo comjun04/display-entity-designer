@@ -1,3 +1,4 @@
+import { Tooltip } from '@heroui/tooltip'
 import { FC } from 'react'
 import { FaObjectGroup } from 'react-icons/fa6'
 import { IoMdTrash } from 'react-icons/io'
@@ -27,33 +28,71 @@ const TopButtonPanel: FC = () => {
   return (
     <div className="absolute left-1/2 top-4 z-[5] -translate-x-1/2">
       <div className="flex flex-row rounded-lg bg-black">
-        <FloatingButton
-          onClick={() => {
-            setOpenedDialog('blockDisplaySelect')
-          }}
+        <Tooltip
+          content="Block Display"
+          placement="bottom"
+          size="sm"
+          offset={0}
+          delay={300}
+          closeDelay={0}
         >
-          <IoCubeOutline size={24} />
-        </FloatingButton>
-        <FloatingButton
-          onClick={() => {
-            setOpenedDialog('itemDisplaySelect')
-          }}
+          <FloatingButton
+            onClick={() => {
+              setOpenedDialog('blockDisplaySelect')
+            }}
+          >
+            <IoCubeOutline size={24} />
+          </FloatingButton>
+        </Tooltip>
+
+        <Tooltip
+          content="Item Display"
+          placement="bottom"
+          size="sm"
+          offset={0}
+          delay={300}
+          closeDelay={0}
         >
-          <TbDiamondFilled size={24} />
-        </FloatingButton>
+          <FloatingButton
+            onClick={() => {
+              setOpenedDialog('itemDisplaySelect')
+            }}
+          >
+            <TbDiamondFilled size={24} />
+          </FloatingButton>
+        </Tooltip>
 
         <div className="my-2 border-l border-gray-700" />
 
-        <FloatingButton onClick={toggleGroup}>
-          <FaObjectGroup size={24} />
-        </FloatingButton>
-        <FloatingButton
-          onClick={() => {
-            deleteEntities(selectedEntityIds)
-          }}
+        <Tooltip
+          content="Group/Ungroup"
+          placement="bottom"
+          size="sm"
+          offset={0}
+          delay={300}
+          closeDelay={0}
         >
-          <IoMdTrash size={24} />
-        </FloatingButton>
+          <FloatingButton onClick={toggleGroup}>
+            <FaObjectGroup size={24} />
+          </FloatingButton>
+        </Tooltip>
+
+        <Tooltip
+          content="Delete"
+          placement="bottom"
+          size="sm"
+          offset={0}
+          delay={300}
+          closeDelay={0}
+        >
+          <FloatingButton
+            onClick={() => {
+              deleteEntities(selectedEntityIds)
+            }}
+          >
+            <IoMdTrash size={24} />
+          </FloatingButton>
+        </Tooltip>
       </div>
     </div>
   )

@@ -1,3 +1,4 @@
+import { Tooltip } from '@heroui/tooltip'
 import { FC } from 'react'
 import { IoMove } from 'react-icons/io5'
 import { LuMenu, LuMoveDiagonal, LuRotate3D } from 'react-icons/lu'
@@ -90,26 +91,47 @@ const LeftButtonPanel: FC = () => {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <FloatingButton
-        active={mode === 'translate'}
-        onClick={() => setMode('translate')}
+      <Tooltip
+        content="Translate mode"
+        placement="right"
+        delay={300}
+        closeDelay={0}
       >
-        <IoMove size={24} />
-      </FloatingButton>
+        <FloatingButton
+          active={mode === 'translate'}
+          onClick={() => setMode('translate')}
+        >
+          <IoMove size={24} />
+        </FloatingButton>
+      </Tooltip>
 
-      <FloatingButton
-        active={mode === 'rotate'}
-        onClick={() => setMode('rotate')}
+      <Tooltip
+        content="Rotate mode"
+        placement="right"
+        delay={300}
+        closeDelay={0}
       >
-        <LuRotate3D size={24} />
-      </FloatingButton>
+        <FloatingButton
+          active={mode === 'rotate'}
+          onClick={() => setMode('rotate')}
+        >
+          <LuRotate3D size={24} />
+        </FloatingButton>
+      </Tooltip>
 
-      <FloatingButton
-        active={mode === 'scale'}
-        onClick={() => setMode('scale')}
+      <Tooltip
+        content="Scale mode"
+        placement="right"
+        delay={300}
+        closeDelay={0}
       >
-        <LuMoveDiagonal size={24} />
-      </FloatingButton>
+        <FloatingButton
+          active={mode === 'scale'}
+          onClick={() => setMode('scale')}
+        >
+          <LuMoveDiagonal size={24} />
+        </FloatingButton>
+      </Tooltip>
     </div>
   )
 }
