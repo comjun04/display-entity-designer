@@ -1,3 +1,5 @@
+import { toast } from 'react-toastify'
+
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { BDEngineSaveData, DisplayEntitySaveDataItem } from '@/types'
@@ -95,6 +97,8 @@ export async function saveToFile() {
   tempElement.href = objectUrl
   tempElement.download = 'project.depl'
   tempElement.click() // trigger download
+
+  toast.success('Project file saved to device')
 
   URL.revokeObjectURL(objectUrl)
 }
