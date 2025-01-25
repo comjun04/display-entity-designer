@@ -1,192 +1,106 @@
-import { FC, ReactNode, Suspense, useEffect, useState } from 'react'
-import useSWRImmutable from 'swr/immutable'
-import { MathUtils, Vector3 } from 'three'
+import { invalidate } from '@react-three/fiber'
+import { FC, useEffect, useRef, useState } from 'react'
+import { Group, MathUtils, Mesh, Vector3 } from 'three'
 import { useShallow } from 'zustand/shallow'
 
-import fetcher from '@/fetcher'
+import { loadModelMesh } from '@/services/resources/modelMesh'
 import { useCacheStore } from '@/stores/cacheStore'
-import {
-  CDNModelResponse,
-  ModelDisplayPositionKey,
-  ModelElement,
-  ModelFaceKey,
-  Number3Tuple,
-} from '@/types'
-import { generateBuiltinItemModel, stripMinecraftPrefix } from '@/utils'
+import { ModelDisplayPositionKey, Number3Tuple } from '@/types'
+import { stripMinecraftPrefix } from '@/utils'
 
-import BlockFace from './BlockFace'
-
-type ModelProps = {
+type ModelNewProps = {
   initialResourceLocation: string
   displayType?: ModelDisplayPositionKey
   xRotation?: number
   yRotation?: number
 }
 
-const Model: FC<ModelProps> = ({
+const ModelNew: FC<ModelNewProps> = ({
   initialResourceLocation,
   displayType,
   xRotation = 0,
   yRotation = 0,
 }) => {
-  const { cachedModelData } = useCacheStore(
+  const groupRef = useRef<Group>(null)
+  const mergedMeshRef = useRef<Mesh>()
+  const [meshLoaded, setMeshLoaded] = useState(false)
+
+  const { modelData: modelDataTemp, modelDataLoading } = useCacheStore(
     useShallow((state) => ({
-      cachedModelData: state.modelData[initialResourceLocation], // nullable
+      modelData: state.modelData[initialResourceLocation],
+      modelDataLoading: state.modelDataLoading.has(initialResourceLocation),
     })),
   )
 
   const isItemModel = stripMinecraftPrefix(initialResourceLocation).startsWith(
     'item/',
   )
-  const [isBlockShapedItemModel, setIsBlockShapedItemModel] = useState(false)
-  const [currentResourceLocation, setCurrentResourceLocation] = useState(
-    initialResourceLocation,
-  )
-
-  // textures, display, elements들은 캐싱된 데이터가 있을 경우 받아오고,
-  // 없을 경우 밑에서 연산하면서 데이터를 저장함
-  const [textures, setTextures] = useState<Record<string, string>>(
-    cachedModelData?.data.textures ?? {},
-  )
-  const [display, setDisplay] = useState(cachedModelData?.data.display ?? {})
-  const [elements, setElements] = useState<ModelElement[]>(
-    cachedModelData?.data.elements ?? [],
-  )
-
-  const [textureSize, setTextureSize] = useState<[number, number]>()
-
-  const [modelDataLoadFinished, setModelDataLoadFinished] = useState(false)
-
-  const { data } = useSWRImmutable<CDNModelResponse>(
-    currentResourceLocation.length > 0
-      ? `/assets/minecraft/models/${currentResourceLocation}.json`
-      : null,
-    fetcher,
-  )
 
   useEffect(() => {
-    // 모델 파일 데이터가 없거나, 캐싱된 데이터가 있다면 모델 데이터 계산을 수행하지 않음
-    if (data == null || cachedModelData != null || modelDataLoadFinished) return
+    if (modelDataTemp != null) return
 
-    // 불러온 model 데이터들을 합쳐서 state로 저장
-    setTextures((textures) => ({ ...data.textures, ...textures }))
-    setDisplay((display) => ({ ...data.display, ...display }))
+    const { modelDataLoading: latestModelDataLoading, loadModelData } =
+      useCacheStore.getState()
 
-    if (
-      elements.length < 1 &&
-      data.elements != null &&
-      data.elements.length > 0
-    ) {
-      setElements(data.elements)
-    }
+    if (latestModelDataLoading.has(initialResourceLocation)) return
 
-    if (data.texture_size != null && textureSize == null) {
-      setTextureSize(data.texture_size)
-    }
+    loadModelData(initialResourceLocation)
+  }, [initialResourceLocation, modelDataTemp, modelDataLoading])
 
-    // parent가 없으면 최상위 모델 파일이므로 로딩 완료 flag를 설정
-    if (data.parent == null) {
-      setModelDataLoadFinished(true)
-      return
-    }
+  useEffect(() => {
+    if (modelDataTemp == null) return
+    if (meshLoaded) return
 
-    // parent 값이 있다면 state에다 설정해서
-    // 다음 render할 떄 parent의 model 데이터를 불러오도록 처리
+    const { data: modelData, isBlockShapedItemModel } = modelDataTemp
 
-    if (data.parent === 'builtin/generated') {
-      // elements가 따로 정의되어 있지 않다면 아이템 모델 generate 수행
-      if (
-        elements.length < 1 &&
-        (data.elements == null || data.elements.length < 1)
-      ) {
-        // item display model 파일에 parent가 builtin/generated인 경우
-        // layer{n} 텍스쳐 이미지에서 모델 구조를 직접 생성
-        const textureLayerPromises = Object.keys(textures)
-          .filter((key) => /^layer\d{1,}$/.test(key))
-          .sort((a, b) => parseInt(a.slice(5)) - parseInt(b.slice(5)))
-          .map((key) =>
-            generateBuiltinItemModel(
-              stripMinecraftPrefix(textures[key]),
-              parseInt(key.slice(5)),
-            ),
-          )
-        Promise.all(textureLayerPromises)
-          .then((modelJsonList) => {
-            setElements(
-              modelJsonList.reduce<ModelElement[]>(
-                (acc, cur) => [...acc, ...cur.elements],
-                [],
-              ),
-            )
-          })
-          .catch(console.error)
+    const fn = async () => {
+      const loadResult = await loadModelMesh({
+        modelResourceLocation: initialResourceLocation,
+        elements: modelData.elements,
+        textures: modelData.textures,
+        textureSize: modelData.textureSize,
+        isItemModel,
+        isBlockShapedItemModel,
+      })
+
+      if (loadResult == null) {
+        console.error(
+          `Failed to load model mesh for ${initialResourceLocation}`,
+        )
+        return
       }
 
-      // parent가 builtin/generated이면 최상위 모델 파일과 다름없으므로 여기서 로딩 완료 flag를 설정
-      setModelDataLoadFinished(true)
+      mergedMeshRef.current = loadResult
+      setMeshLoaded(true)
+    }
+
+    fn().catch(console.error)
+  }, [initialResourceLocation, modelDataTemp, meshLoaded, isItemModel])
+
+  useEffect(() => {
+    if (mergedMeshRef.current == null) return
+
+    if (meshLoaded) {
+      groupRef.current?.add(mergedMeshRef.current)
     } else {
-      if (isItemModel && data.parent.startsWith('block/')) {
-        setIsBlockShapedItemModel(true)
-      }
-      setCurrentResourceLocation(stripMinecraftPrefix(data.parent))
+      groupRef.current?.remove(mergedMeshRef.current)
     }
-  }, [
-    data,
-    elements,
-    textures,
-    textureSize,
-    cachedModelData,
-    isItemModel,
-    modelDataLoadFinished,
-  ])
-
-  // 모델 데이터 로딩 및 계산이 완료되었고 elements 데이터가 있다면
-  // 다음에 로드 시 모델 데이터를 다시 계산할 필요가 없도록 캐싱
-  useEffect(() => {
-    if (!modelDataLoadFinished || elements.length < 1) return
-
-    useCacheStore.getState().setModelData(
-      initialResourceLocation,
-      {
-        elements,
-        textures,
-        display,
-      },
-      isBlockShapedItemModel,
-    )
-  }, [
-    display,
-    elements,
-    textures,
-    initialResourceLocation,
-    isBlockShapedItemModel,
-    modelDataLoadFinished,
-  ])
-
-  useEffect(() => {
-    if (cachedModelData?.isBlockShapedItemModel) {
-      setIsBlockShapedItemModel(true)
-    }
-  }, [cachedModelData, isBlockShapedItemModel])
+    invalidate()
+  }, [meshLoaded])
 
   // ==========
 
-  if (!isItemModel && (data == null || cachedModelData == null)) {
+  if (modelDataTemp == null) {
     return null
   }
+
+  const { data: modelData } = modelDataTemp
+
+  const { display, elements } = modelData
 
   // elements가 없을 경우 렌더링할 것이 없으므로 그냥 null을 리턴
   if (elements == null || elements.length < 1) {
     return null
-  }
-
-  const getTexture = (key: string) => {
-    if (key.startsWith('#')) return getTexture(key.slice(1))
-
-    if (!(key in textures)) return
-
-    if (textures[key].startsWith('#')) return getTexture(textures[key].slice(1))
-    else return stripMinecraftPrefix(textures[key])
   }
 
   // display info
@@ -220,105 +134,8 @@ const Model: FC<ModelProps> = ({
           <group position={[-0.5, -0.5, -0.5]}>
             {/* set display translation, rotation and scale */}
             <group rotation={displayRotation} scale={displayScale}>
-              <group position={displayTranslation}>
-                {elements.map((element, idx) => {
-                  const fromVec = new Vector3(...element.from).divideScalar(16)
-                  const toVec = new Vector3(...element.to).divideScalar(16)
-                  const centerVec = new Vector3()
-                    .addVectors(fromVec, toVec)
-                    .divideScalar(2)
-                  const sizeVec = new Vector3().add(toVec).sub(fromVec)
-
-                  const faces: ReactNode[] = []
-                  for (const faceKey in element.faces) {
-                    const face = faceKey as ModelFaceKey
-                    const faceData = element.faces[face]!
-                    const texture = getTexture(faceData.texture)
-                    if (texture == null) continue
-
-                    const textureLayer =
-                      isItemModel && /^#layer\d{1,}$/.test(faceData.texture)
-                        ? faceData.texture.slice(6)
-                        : undefined
-
-                    faces.push(
-                      <BlockFace
-                        key={face}
-                        modelResourceLocation={initialResourceLocation}
-                        textureResourceLocation={texture}
-                        faceName={face}
-                        uv={faceData.uv}
-                        textureLayer={textureLayer}
-                        textureSize={textureSize}
-                        rotation={faceData.rotation}
-                        tintindex={faceData.tintindex}
-                        parentElementSize={sizeVec.toArray()}
-                        parentElementFrom={element.from}
-                        parentElementTo={element.to}
-                      />,
-                    )
-                  }
-
-                  // element rotation
-                  let rotation = [0, 0, 0] satisfies Number3Tuple
-                  let groupScale = [1, 1, 1] satisfies Number3Tuple
-                  if (element.rotation != null) {
-                    const rad = MathUtils.degToRad(element.rotation.angle)
-
-                    switch (element.rotation.axis) {
-                      case 'x':
-                        rotation = [rad, 0, 0]
-                        break
-                      case 'y':
-                        rotation = [0, rad, 0]
-                        break
-                      case 'z':
-                        rotation = [0, 0, rad]
-                        break
-                    }
-
-                    if (element.rotation.rescale) {
-                      const scaleBy = 1 / Math.cos(rad)
-                      switch (element.rotation.axis) {
-                        case 'x':
-                          groupScale = [1, scaleBy, scaleBy]
-                          break
-                        case 'y':
-                          groupScale = [scaleBy, 1, scaleBy]
-                          break
-                        case 'z':
-                          groupScale = [scaleBy, scaleBy, 1]
-                          break
-                      }
-                    }
-                  }
-
-                  // 회전 중심 위치
-                  const rotationOriginVec = new Vector3(
-                    ...(element.rotation?.origin ?? ([0, 0, 0] as const)),
-                  ).divideScalar(16)
-
-                  const vec1 = centerVec.clone().sub(rotationOriginVec)
-                  const vec2 = rotationOriginVec
-                    .clone()
-                    .subScalar(isBlockShapedItemModel ? 0.5 : 0)
-
-                  // rotation origin 적용할 때
-                  // 1. centerVec - rotationOriginVec 위치로 이동 => 회전 중심위치가 (0,0,0)에 위치하도록 함
-                  // 2. 부모 group에서 rotation을 적용하고 원래 위치로 다시 움직임 (centerVec - rotationOriginVec + rotationOriginVec = centerVec)
-                  return (
-                    <group
-                      key={idx}
-                      rotation={rotation}
-                      position={vec2}
-                      scale={groupScale}
-                    >
-                      <group position={vec1}>
-                        <Suspense>{faces}</Suspense>
-                      </group>
-                    </group>
-                  )
-                })}
+              <group position={displayTranslation} ref={groupRef}>
+                {/* ref로 직접 mesh 추가 */}
               </group>
             </group>
           </group>
@@ -328,4 +145,4 @@ const Model: FC<ModelProps> = ({
   )
 }
 
-export default Model
+export default ModelNew

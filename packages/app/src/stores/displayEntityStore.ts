@@ -3,6 +3,7 @@ import { Box3, Euler, Matrix4, Quaternion, Vector3 } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
+import { preloadResources } from '@/services/resources/preload'
 import { useEntityRefStore } from '@/stores/entityRefStore'
 import {
   BDEngineSaveData,
@@ -65,8 +66,8 @@ export type DisplayEntityState = {
   ) => void
   deleteEntities: (entityIds: string[]) => void
 
-  bulkImport: (items: DisplayEntitySaveDataItem[]) => void
-  bulkImportFromBDE: (saveData: BDEngineSaveData) => void
+  bulkImport: (items: DisplayEntitySaveDataItem[]) => Promise<void>
+  bulkImportFromBDE: (saveData: BDEngineSaveData) => Promise<void>
   exportAll: () => DisplayEntitySaveDataItem[]
 
   clearEntities: () => void
@@ -323,190 +324,192 @@ export const useDisplayEntityStore = create(
         )
       }),
 
-    bulkImport: (items) =>
-      set((state) => {
-        const { createEntityRef } = useEntityRefStore.getState()
+    bulkImport: async (items) => {
+      const { createEntityRef } = useEntityRefStore.getState()
 
-        const entities = new Map<string, DisplayEntity>()
+      const entities = new Map<string, DisplayEntity>()
 
-        const tempMatrix4 = new Matrix4()
-        const tempPositionVec = new Vector3()
-        const tempScaleVec = new Vector3()
-        const tempQuaternion = new Quaternion()
-        const tempEuler = new Euler()
+      const tempMatrix4 = new Matrix4()
+      const tempPositionVec = new Vector3()
+      const tempScaleVec = new Vector3()
+      const tempQuaternion = new Quaternion()
+      const tempEuler = new Euler()
 
-        const f: (
-          itemList: DisplayEntitySaveDataItem[],
-          parentEntityId?: string,
-        ) => string[] = (itemList, parentEntityId) => {
-          return itemList.map((item) => {
-            const id = nanoid(16)
+      const f: (
+        itemList: DisplayEntitySaveDataItem[],
+        parentEntityId?: string,
+      ) => string[] = (itemList, parentEntityId) => {
+        return itemList.map((item) => {
+          const id = nanoid(16)
 
-            tempMatrix4.fromArray(item.transforms)
-            tempMatrix4.decompose(tempPositionVec, tempQuaternion, tempScaleVec)
-            const position = tempPositionVec.toArray()
-            const scale = tempScaleVec.toArray()
-            tempEuler.setFromQuaternion(tempQuaternion)
-            const rotation = [
-              tempEuler.x,
-              tempEuler.y,
-              tempEuler.z,
-            ] satisfies Number3Tuple
+          tempMatrix4.fromArray(item.transforms)
+          tempMatrix4.decompose(tempPositionVec, tempQuaternion, tempScaleVec)
+          const position = tempPositionVec.toArray()
+          const scale = tempScaleVec.toArray()
+          tempEuler.setFromQuaternion(tempQuaternion)
+          const rotation = [
+            tempEuler.x,
+            tempEuler.y,
+            tempEuler.z,
+          ] satisfies Number3Tuple
 
-            if (item.kind === 'group') {
-              const children = item.children ?? []
-              const childrenIds = f(children, id)
+          if (item.kind === 'group') {
+            const children = item.children ?? []
+            const childrenIds = f(children, id)
 
-              entities.set(id, {
-                kind: 'group',
-                id,
-                position,
-                rotation,
-                size: scale,
-                children: childrenIds,
-                parent: parentEntityId,
-              })
-            } else if (item.kind === 'block') {
+            entities.set(id, {
+              kind: 'group',
+              id,
+              position,
+              rotation,
+              size: scale,
+              children: childrenIds,
+              parent: parentEntityId,
+            })
+          } else if (item.kind === 'block') {
+            // blockstate가 없을 경우 empty string을 key로 사용하게 되어 들어가게 되므로 빼주기
+            const blockstatesCopy = Object.assign({}, item.blockstates)
+            delete blockstatesCopy['']
+
+            entities.set(id, {
+              kind: 'block',
+              id,
+              type: item.type,
+              position,
+              rotation,
+              size: scale,
+              parent: parentEntityId,
+              blockstates: item.blockstates,
+              display: item.display,
+            })
+          } else if (item.kind === 'item') {
+            entities.set(id, {
+              kind: 'item',
+              id,
+              type: item.type,
+              position,
+              rotation,
+              size: scale,
+              parent: parentEntityId,
+              display: item.display,
+            })
+          }
+
+          return id
+        })
+      }
+
+      f(items)
+
+      await preloadResources([...entities.values()])
+
+      entities.forEach((entity) => {
+        createEntityRef(entity.id)
+      })
+      set({ entities })
+    },
+    bulkImportFromBDE: async (saveData) => {
+      const entities = new Map<string, DisplayEntity>()
+
+      const tempMatrix4 = new Matrix4()
+      const tempPositionVec = new Vector3()
+      const tempScaleVec = new Vector3()
+      const tempQuaternion = new Quaternion()
+      const tempEuler = new Euler()
+
+      const f: (
+        items: BDEngineSaveDataItem[],
+        parentEntityId?: string,
+      ) => (string | null)[] = (items, parentEntityId) => {
+        return items.map((item) => {
+          const id = nanoid(16)
+
+          tempMatrix4.fromArray(item.transforms).transpose()
+          tempMatrix4.decompose(tempPositionVec, tempQuaternion, tempScaleVec)
+          const position = tempPositionVec.toArray()
+          const scale = tempScaleVec.toArray()
+          tempEuler.setFromQuaternion(tempQuaternion)
+          const rotation = [
+            tempEuler.x,
+            tempEuler.y,
+            tempEuler.z,
+          ] satisfies Number3Tuple
+
+          const itemType = item.name.split('[')[0] // block_type[some_blockstate=value,another_blockstate=value2]
+          const extraDataList = item.name
+            .slice(itemType.length + 1, -1)
+            .split(',')
+          const extraData: Record<string, string> = extraDataList.reduce(
+            (acc, cur) => {
+              const [k, v] = cur.split('=')
               // blockstate가 없을 경우 empty string을 key로 사용하게 되어 들어가게 되므로 빼주기
-              const blockstatesCopy = Object.assign({}, item.blockstates)
-              delete blockstatesCopy['']
+              if (k.length < 1) return acc
+              return { ...acc, [k]: v }
+            },
+            {},
+          )
 
-              entities.set(id, {
-                kind: 'block',
-                id,
-                type: item.type,
-                position,
-                rotation,
-                size: scale,
-                parent: parentEntityId,
-                blockstates: item.blockstates,
-                display: item.display,
-              })
-            } else if (item.kind === 'item') {
-              entities.set(id, {
-                kind: 'item',
-                id,
-                type: item.type,
-                position,
-                rotation,
-                size: scale,
-                parent: parentEntityId,
-                display: item.display,
-              })
-            }
+          if ('isCollection' in item && item.isCollection) {
+            // group
 
-            return id
-          })
-        }
+            const children = item.children ?? []
+            const childrenIds = f(children, id)
 
-        f(items)
+            entities.set(id, {
+              kind: 'group',
+              id,
+              position,
+              rotation,
+              size: scale,
+              children: childrenIds.filter((id) => id != null),
+              parent: parentEntityId,
+            })
+          } else if ('isBlockDisplay' in item && item.isBlockDisplay) {
+            // block display
 
-        entities.forEach((entity) => {
-          createEntityRef(entity.id)
+            entities.set(id, {
+              kind: 'block',
+              id,
+              type: itemType,
+              position,
+              rotation,
+              size: scale,
+              parent: parentEntityId,
+              blockstates: extraData,
+              display: extraData['display'] as ModelDisplayPositionKey,
+            })
+          } else if ('isItemDisplay' in item && item.isItemDisplay) {
+            // item display
+
+            entities.set(id, {
+              kind: 'item',
+              id,
+              type: itemType,
+              position,
+              rotation,
+              size: scale,
+              parent: parentEntityId,
+              display: extraData['display'] as ModelDisplayPositionKey,
+            })
+          } else {
+            return null
+          }
+
+          return id
         })
-        state.entities = entities
-      }),
-    bulkImportFromBDE: (saveData) =>
-      set((state) => {
-        const entities = new Map<string, DisplayEntity>()
+      }
 
-        const tempMatrix4 = new Matrix4()
-        const tempPositionVec = new Vector3()
-        const tempScaleVec = new Vector3()
-        const tempQuaternion = new Quaternion()
-        const tempEuler = new Euler()
+      // saveData[0]이 최상단 그룹으로 확인되어 이거만 처리함
+      f(saveData[0].children)
 
-        const f: (
-          items: BDEngineSaveDataItem[],
-          parentEntityId?: string,
-        ) => (string | null)[] = (items, parentEntityId) => {
-          return items.map((item) => {
-            const id = nanoid(16)
+      await preloadResources([...entities.values()])
 
-            tempMatrix4.fromArray(item.transforms).transpose()
-            tempMatrix4.decompose(tempPositionVec, tempQuaternion, tempScaleVec)
-            const position = tempPositionVec.toArray()
-            const scale = tempScaleVec.toArray()
-            tempEuler.setFromQuaternion(tempQuaternion)
-            const rotation = [
-              tempEuler.x,
-              tempEuler.y,
-              tempEuler.z,
-            ] satisfies Number3Tuple
-
-            const itemType = item.name.split('[')[0] // block_type[some_blockstate=value,another_blockstate=value2]
-            const extraDataList = item.name
-              .slice(itemType.length + 1, -1)
-              .split(',')
-            const extraData: Record<string, string> = extraDataList.reduce(
-              (acc, cur) => {
-                const [k, v] = cur.split('=')
-                // blockstate가 없을 경우 empty string을 key로 사용하게 되어 들어가게 되므로 빼주기
-                if (k.length < 1) return acc
-                return { ...acc, [k]: v }
-              },
-              {},
-            )
-
-            if ('isCollection' in item && item.isCollection) {
-              // group
-
-              const children = item.children ?? []
-              const childrenIds = f(children, id)
-
-              entities.set(id, {
-                kind: 'group',
-                id,
-                position,
-                rotation,
-                size: scale,
-                children: childrenIds.filter((id) => id != null),
-                parent: parentEntityId,
-              })
-            } else if ('isBlockDisplay' in item && item.isBlockDisplay) {
-              // block display
-
-              entities.set(id, {
-                kind: 'block',
-                id,
-                type: itemType,
-                position,
-                rotation,
-                size: scale,
-                parent: parentEntityId,
-                blockstates: extraData,
-                display: extraData['display'] as ModelDisplayPositionKey,
-              })
-            } else if ('isItemDisplay' in item && item.isItemDisplay) {
-              // item display
-
-              entities.set(id, {
-                kind: 'item',
-                id,
-                type: itemType,
-                position,
-                rotation,
-                size: scale,
-                parent: parentEntityId,
-                display: extraData['display'] as ModelDisplayPositionKey,
-              })
-            } else {
-              return null
-            }
-
-            return id
-          })
-        }
-
-        // saveData[0]이 최상단 그룹으로 확인되어 이거만 처리함
-        f(saveData[0].children)
-
-        const { createEntityRef } = useEntityRefStore.getState()
-        entities.forEach((entity) => {
-          createEntityRef(entity.id)
-        })
-        state.entities = entities
-      }),
+      const { createEntityRef } = useEntityRefStore.getState()
+      entities.forEach((entity) => {
+        createEntityRef(entity.id)
+      })
+      set({ entities })
+    },
     exportAll: () => {
       const { entities } = get()
       const { entityRefs } = useEntityRefStore.getState()

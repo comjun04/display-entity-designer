@@ -1,12 +1,12 @@
-import { Helper } from '@react-three/drei'
 import { ThreeEvent, useFrame } from '@react-three/fiber'
 import { FC, MutableRefObject, memo } from 'react'
-import { BoxHelper, Group } from 'three'
+import { Group } from 'three'
 import { useShallow } from 'zustand/shallow'
 
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { Number3Tuple } from '@/types'
 
+import BoundingBox from './BoundingBox'
 import Model from './Model'
 
 type ItemDisplayProps = {
@@ -30,19 +30,17 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
   onClick,
   objectRef: ref,
 }) => {
-  const { thisEntitySelected, thisEntityDisplay, selectedEntityIds } =
-    useDisplayEntityStore(
-      useShallow((state) => {
-        const thisEntity = state.entities.get(id)
+  const { thisEntitySelected, thisEntityDisplay } = useDisplayEntityStore(
+    useShallow((state) => {
+      const thisEntity = state.entities.get(id)
 
-        return {
-          thisEntitySelected: state.selectedEntityIds.includes(id),
-          thisEntityDisplay:
-            thisEntity?.kind === 'item' ? thisEntity.display : undefined,
-          selectedEntityIds: state.selectedEntityIds,
-        }
-      }),
-    )
+      return {
+        thisEntitySelected: state.selectedEntityIds.includes(id),
+        thisEntityDisplay:
+          thisEntity?.kind === 'item' ? thisEntity.display : undefined,
+      }
+    }),
+  )
 
   useFrame(() => {
     if (!thisEntitySelected) {
@@ -54,9 +52,12 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
 
   return (
     <object3D ref={ref}>
-      {selectedEntityIds.includes(id) && (
-        <Helper type={BoxHelper} args={['gold']} />
-      )}
+      {/* {thisEntitySelected && <Helper type={BoxHelper} args={['gold']} />} */}
+      <BoundingBox
+        object={ref?.current}
+        visible={thisEntitySelected}
+        color="#06b6d4" // tailwind v3 cyan-500
+      />
 
       <group onClick={onClick}>
         <MemoizedModel

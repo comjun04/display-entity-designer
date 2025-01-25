@@ -2,30 +2,20 @@ import { MeshStandardMaterial } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
-import {
-  BlockstatesData,
-  ModelDisplayPositionKey,
-  ModelElement,
-  Number3Tuple,
-} from '@/types'
+import { loadModel } from '@/services/resources/model'
+import { BlockstatesData, CDNModelResponse, ModelData } from '@/types'
 
 // ==========
-type ModelData = {
-  textures: Record<string, string>
-  textureSize?: [number, number]
-  display: Record<
-    ModelDisplayPositionKey,
-    {
-      rotation?: Number3Tuple
-      translation?: Number3Tuple
-      scale?: Number3Tuple
-    }
-  >
-  elements: ModelElement[]
-}
+
 type CacheStoreState = {
   blockstatesData: Record<string, BlockstatesData>
   setBlockstateData: (blockType: string, data: BlockstatesData) => void
+
+  modelJson: Record<string, CDNModelResponse>
+  setModelJson: (
+    resourceLocation: string,
+    jsonContent: CDNModelResponse,
+  ) => void
 
   modelData: Record<
     string,
@@ -34,6 +24,8 @@ type CacheStoreState = {
       isBlockShapedItemModel: boolean
     }
   >
+  modelDataLoading: Set<string>
+  loadModelData: (resourceLocation: string) => void
   setModelData: (
     resourceLocation: string,
     data: ModelData,
@@ -57,7 +49,32 @@ export const useCacheStore = create(
         state.blockstatesData[blockType] = blockstatesData
       }),
 
+    modelJson: {},
+    setModelJson: (resourceLocation, jsonContent) =>
+      set((state) => {
+        state.modelJson[resourceLocation] = jsonContent
+      }),
+
     modelData: {},
+    modelDataLoading: new Set(),
+    loadModelData: (resourceLocation) => {
+      set((state) => {
+        if (state.modelDataLoading.has(resourceLocation)) return
+        state.modelDataLoading = new Set(state.modelDataLoading)
+        state.modelDataLoading.add(resourceLocation)
+      })
+
+      loadModel(resourceLocation)
+        .then((modelData) => {
+          set((state) => {
+            state.modelData[resourceLocation] = modelData
+
+            state.modelDataLoading = new Set(state.modelDataLoading)
+            state.modelDataLoading.delete(resourceLocation)
+          })
+        })
+        .catch(console.error)
+    },
     setModelData: (resourceLocation, data, isBlockShapedItemModel) =>
       set((state) => {
         const modelData = state.modelData[resourceLocation]
