@@ -1,5 +1,6 @@
 import { FC, useEffect } from 'react'
 
+import { saveToFile } from '@/services/fileService'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
@@ -37,7 +38,13 @@ const ShortcutHandler: FC = () => {
           setMode('rotate')
           break
         case 's':
-          setMode('scale')
+          if (evt.ctrlKey) {
+            evt.preventDefault()
+            saveToFile().catch(console.error)
+          } else {
+            setMode('scale')
+          }
+
           break
         case 'Delete':
           deleteEntities(selectedEntityIds)
