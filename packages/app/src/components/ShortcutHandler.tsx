@@ -10,7 +10,7 @@ const ShortcutHandler: FC = () => {
   useEffect(() => {
     const focusableElements = ['input', 'textarea']
     const handler = (evt: KeyboardEvent) => {
-      const { openedDialog } = useDialogStore.getState()
+      const { openedDialog, setOpenedDialog } = useDialogStore.getState()
 
       // <input>이나 <textarea>에 focus가 잡혀 있다면 이벤트를 처리하지 않음
       if (
@@ -63,6 +63,11 @@ const ShortcutHandler: FC = () => {
           break
         case 'Delete':
           deleteEntities(selectedEntityIds)
+          break
+        case ',':
+          if (evt.ctrlKey) {
+            setOpenedDialog('settings')
+          }
       }
     }
 
