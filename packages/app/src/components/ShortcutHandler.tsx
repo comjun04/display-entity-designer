@@ -1,6 +1,6 @@
 import { FC, useEffect } from 'react'
 
-import { saveToFile } from '@/services/fileService'
+import { openFromFile, saveToFile } from '@/services/fileService'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
@@ -45,6 +45,12 @@ const ShortcutHandler: FC = () => {
             setMode('scale')
           }
 
+          break
+        case 'o':
+          if (evt.ctrlKey) {
+            evt.preventDefault()
+            openFromFile()
+          }
           break
         case 'Delete':
           deleteEntities(selectedEntityIds)
