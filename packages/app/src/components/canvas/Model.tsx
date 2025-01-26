@@ -70,11 +70,18 @@ const ModelNew: FC<ModelNewProps> = ({
         return
       }
 
+      if (mergedMeshRef.current != null) {
+        mergedMeshRef.current.geometry.dispose()
+      }
       mergedMeshRef.current = loadResult
       setMeshLoaded(true)
     }
 
     fn().catch(console.error)
+
+    return () => {
+      mergedMeshRef.current?.geometry.dispose()
+    }
   }, [initialResourceLocation, modelDataTemp, meshLoaded, isItemModel])
 
   useEffect(() => {
