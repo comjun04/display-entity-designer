@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  three-mesh-bvh: ^0.8.0
+
 importers:
 
   .: {}
@@ -3142,11 +3145,10 @@ packages:
   thenify@3.3.1:
     resolution: {integrity: sha512-RVZSIV5IG10Hk3enotrhvz0T9em6cyHBLkH/YAZuKqd8hRkKhSfCGIcP2KUY0EPxndzANBmNllzWPwak+bheSw==}
 
-  three-mesh-bvh@0.7.8:
-    resolution: {integrity: sha512-BGEZTOIC14U0XIRw3tO4jY7IjP7n7v24nv9JXS1CyeVRWOCkcOMhRnmENUjuV39gktAw4Ofhr0OvIAiTspQrrw==}
-    deprecated: Deprecated due to three.js version incompatibility. Please use v0.8.0, instead.
+  three-mesh-bvh@0.8.3:
+    resolution: {integrity: sha512-4G5lBaF+g2auKX3P0yqx+MJC6oVt6sB5k+CchS6Ob0qvH0YIhuUk1eYr7ktsIpY+albCqE80/FVQGV190PmiAg==}
     peerDependencies:
-      three: '>= 0.151.0'
+      three: '>= 0.159.0'
 
   three-stdlib@2.35.12:
     resolution: {integrity: sha512-3Mb3U7gtf1orCb6j2BBcc8BJsBVoCYUjFtwaq9KM8I7ippz4o9G+aDQdT5AF8Sg5FXXZfnPPccP6ufsP8bgG3g==}
@@ -4448,7 +4450,7 @@ snapshots:
       stats.js: 0.17.0
       suspend-react: 0.1.3(react@18.3.1)
       three: 0.169.0
-      three-mesh-bvh: 0.7.8(three@0.169.0)
+      three-mesh-bvh: 0.8.3(three@0.169.0)
       three-stdlib: 2.35.12(three@0.169.0)
       troika-three-text: 0.49.1(three@0.169.0)
       tunnel-rat: 0.1.2(@types/react@18.3.11)(immer@10.1.1)(react@18.3.1)
@@ -6520,7 +6522,7 @@ snapshots:
     dependencies:
       any-promise: 1.3.0
 
-  three-mesh-bvh@0.7.8(three@0.169.0):
+  three-mesh-bvh@0.8.3(three@0.169.0):
     dependencies:
       three: 0.169.0
 
