@@ -1,0 +1,36 @@
+import { JSX, forwardRef } from 'react'
+
+import { cn } from '@/utils'
+
+const SidePanel = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div']>(
+  ({ className, ...props }, ref) => {
+    return (
+      <div
+        {...props}
+        className={cn(
+          'flex select-none flex-col gap-1 rounded-lg bg-neutral-900 p-2 text-sm',
+          className,
+        )}
+        ref={ref}
+      />
+    )
+  },
+)
+SidePanel.displayName = 'SidePanel'
+
+const SidePanelTitle = forwardRef<HTMLDivElement, JSX.IntrinsicElements['div']>(
+  ({ className, ...props }, ref) => {
+    return <div {...props} className={cn('font-bold', className)} ref={ref} />
+  },
+)
+SidePanelTitle.displayName = 'SidePanelTitle'
+
+const SidePanelContent = forwardRef<
+  HTMLDivElement,
+  JSX.IntrinsicElements['div']
+>(({ className, ...props }, ref) => {
+  return <div {...props} className={cn('', className)} ref={ref} />
+})
+SidePanelContent.displayName = 'SidePanelContent'
+
+export { SidePanel, SidePanelTitle, SidePanelContent }

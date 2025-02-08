@@ -7,6 +7,8 @@ import { useShallow } from 'zustand/shallow'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { cn } from '@/utils'
 
+import { SidePanel, SidePanelContent, SidePanelTitle } from '../SidePanel'
+
 type ObjectItemProps = {
   id: string
 }
@@ -110,13 +112,14 @@ const ObjectsPanel: FC = () => {
   )
 
   return (
-    <div className="flex max-h-[50vh] select-none flex-col gap-[2px] overflow-y-auto rounded-lg bg-neutral-900 p-2 text-sm">
-      <span className="font-bold">Objects</span>
-
-      {rootEntityIds.map((id) => (
-        <ObjectItem key={id} id={id} />
-      ))}
-    </div>
+    <SidePanel className="max-h-[50vh] overflow-y-auto">
+      <SidePanelTitle>Objects</SidePanelTitle>
+      <SidePanelContent>
+        {rootEntityIds.map((id) => (
+          <ObjectItem key={id} id={id} />
+        ))}
+      </SidePanelContent>
+    </SidePanel>
   )
 }
 

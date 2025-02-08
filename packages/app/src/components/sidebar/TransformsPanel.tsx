@@ -7,6 +7,7 @@ import { useEditorStore } from '@/stores/editorStore'
 import { useEntityRefStore } from '@/stores/entityRefStore'
 import { PartialNumber3Tuple } from '@/types'
 
+import { SidePanel, SidePanelContent, SidePanelTitle } from '../SidePanel'
 import XYZInput from './XYZInput'
 
 const TransformsPanel: FC = () => {
@@ -209,37 +210,42 @@ const TransformsPanel: FC = () => {
   if (firstSelectedEntity == null) return null
 
   return (
-    <div className="flex select-none flex-col gap-[2px] rounded-lg bg-neutral-900 p-2 text-sm">
-      <span className="font-bold">Transforms</span>
-
-      {/* Translation */}
-      <div>
-        <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
-          Translation
+    <SidePanel>
+      <SidePanelTitle>Transforms</SidePanelTitle>
+      <SidePanelContent>
+        {/* Translation */}
+        <div>
+          <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
+            Translation
+          </div>
+          <XYZInput
+            allowNegative
+            value={translation}
+            onChange={translationUpdateFn}
+          />
         </div>
-        <XYZInput
-          allowNegative
-          value={translation}
-          onChange={translationUpdateFn}
-        />
-      </div>
 
-      <div className="mt-2">
-        <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
-          Rotation
+        <div className="mt-2">
+          <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
+            Rotation
+          </div>
+          {/* temp */}
+          <XYZInput
+            allowNegative
+            value={rotation}
+            onChange={rotationUpdateFn}
+          />
         </div>
-        {/* temp */}
-        <XYZInput allowNegative value={rotation} onChange={rotationUpdateFn} />
-      </div>
 
-      <div className="mt-2">
-        <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
-          Scale
+        <div className="mt-2">
+          <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
+            Scale
+          </div>
+          {/* temp */}
+          <XYZInput value={scale} onChange={scaleUpdateFn} />
         </div>
-        {/* temp */}
-        <XYZInput value={scale} onChange={scaleUpdateFn} />
-      </div>
-    </div>
+      </SidePanelContent>
+    </SidePanel>
   )
 }
 
