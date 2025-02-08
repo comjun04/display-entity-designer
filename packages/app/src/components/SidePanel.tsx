@@ -29,7 +29,9 @@ const SidePanelContent = forwardRef<
   HTMLDivElement,
   JSX.IntrinsicElements['div']
 >(({ className, ...props }, ref) => {
-  return <div {...props} className={cn('', className)} ref={ref} />
+  return (
+    <div {...props} className={cn('overflow-y-auto', className)} ref={ref} />
+  )
 })
 SidePanelContent.displayName = 'SidePanelContent'
 

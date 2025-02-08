@@ -112,7 +112,7 @@ const ObjectsPanel: FC = () => {
   )
 
   return (
-    <SidePanel className="max-h-[50vh] overflow-y-auto">
+    <SidePanel className="max-h-[50vh]">
       <SidePanelTitle>Objects</SidePanelTitle>
       <SidePanelContent>
         {rootEntityIds.map((id) => (
