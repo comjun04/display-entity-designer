@@ -205,3 +205,5 @@ export type BDEngineSaveDataItem = {
       children: BDEngineSaveDataItem[]
     }
 )
+
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error'

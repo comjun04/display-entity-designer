@@ -1,7 +1,7 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
-import { Number3Tuple, PartialNumber3Tuple } from '@/types'
+import { LogLevel, Number3Tuple, PartialNumber3Tuple } from '@/types'
 
 // ==========
 type EditorMode = 'translate' | 'rotate' | 'scale'
@@ -13,6 +13,7 @@ type TransformationData = {
 
 type Settings = {
   testOption: boolean
+  minLogLevel: LogLevel
 }
 
 type EditorState = {
@@ -54,6 +55,7 @@ export const useEditorStore = create(
   immer<EditorState>((set) => {
     const initialSettings = getStoredSettings() ?? {
       testOption: false,
+      minLogLevel: 'info',
     }
 
     return {
