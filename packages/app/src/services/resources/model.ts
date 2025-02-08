@@ -3,6 +3,10 @@ import { useCacheStore } from '@/stores/cacheStore'
 import { CDNModelResponse, ModelData, ModelElement } from '@/types'
 import { generateBuiltinItemModel, stripMinecraftPrefix } from '@/utils'
 
+import { getLogger } from '../loggerService'
+
+const logger = getLogger('ResourceLoader/model')
+
 export async function loadModel(resourceLocation: string) {
   const {
     modelData,
@@ -15,7 +19,7 @@ export async function loadModel(resourceLocation: string) {
     return cachedModelData
   }
 
-  console.log(`Loading model for ${resourceLocation}`)
+  logger.log(`Loading model for ${resourceLocation}`)
 
   const isItemModel = stripMinecraftPrefix(resourceLocation).startsWith('item/')
 
@@ -86,7 +90,7 @@ export async function loadModel(resourceLocation: string) {
           // parent가 builtin/generated이면 최상위 모델 파일과 다름없으므로 로딩 끝내기
           return
         } catch (err) {
-          console.error(err)
+          logger.error(err)
         }
       }
     } else {
@@ -99,7 +103,7 @@ export async function loadModel(resourceLocation: string) {
     }
   }
 
-  await f(resourceLocation).catch(console.error)
+  await f(resourceLocation).catch(logger.error)
 
   // 모델 데이터 로딩 및 계산이 완료되었고 elements 데이터가 있다면
   // 다음에 로드 시 모델 데이터를 다시 계산할 필요가 없도록 캐싱

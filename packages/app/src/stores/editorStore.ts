@@ -1,9 +1,13 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
+import { getLogger } from '@/services/loggerService'
 import { LogLevel, Number3Tuple, PartialNumber3Tuple } from '@/types'
 
+const logger = getLogger('editorStore')
+
 // ==========
+
 type EditorMode = 'translate' | 'rotate' | 'scale'
 type TransformationData = {
   position: Number3Tuple
@@ -46,7 +50,7 @@ function getStoredSettings() {
       ? (JSON.parse(settingsString) as Settings)
       : null
   } catch (err) {
-    console.error(err)
+    logger.error(err)
     return null
   }
 }
@@ -121,7 +125,7 @@ export const useEditorStore = create(
               JSON.stringify(state.settings),
             )
           } catch (err) {
-            console.error(err)
+            logger.error(err)
           }
         }),
 

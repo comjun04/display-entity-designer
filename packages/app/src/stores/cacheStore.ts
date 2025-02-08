@@ -2,8 +2,11 @@ import { MeshStandardMaterial } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
+import { getLogger } from '@/services/loggerService'
 import { loadModel } from '@/services/resources/model'
 import { BlockstatesData, CDNModelResponse, ModelData } from '@/types'
+
+const logger = getLogger('cacheStore')
 
 // ==========
 
@@ -73,7 +76,7 @@ export const useCacheStore = create(
             state.modelDataLoading.delete(resourceLocation)
           })
         })
-        .catch(console.error)
+        .catch(logger.error)
     },
     setModelData: (resourceLocation, data, isBlockShapedItemModel) =>
       set((state) => {

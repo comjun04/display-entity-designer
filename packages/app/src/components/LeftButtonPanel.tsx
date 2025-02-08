@@ -5,6 +5,7 @@ import { LuMenu, LuMoveDiagonal, LuRotate3D } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
 import { openFromFile, saveToFile } from '@/services/fileService'
+import { getLogger } from '@/services/loggerService'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useEditorStore } from '@/stores/editorStore'
 
@@ -19,6 +20,8 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from './ui/DropdownMenu'
+
+const logger = getLogger('LeftButtonPanel')
 
 const LeftButtonPanel: FC = () => {
   const { mode, setMode } = useEditorStore(
@@ -54,7 +57,9 @@ const LeftButtonPanel: FC = () => {
           <DropdownMenuItem
             className="w-full"
             onClick={() => {
-              saveToFile().catch(console.error)
+              saveToFile().catch((...err) => {
+                logger.error('Unexpected error when saving to file:', ...err)
+              })
             }}
           >
             <div className="flex w-full flex-row items-center gap-2 text-sm">

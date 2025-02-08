@@ -2,9 +2,12 @@ import { FC, useEffect } from 'react'
 
 import { toggleGroup } from '@/services/actions'
 import { openFromFile, saveToFile } from '@/services/fileService'
+import { getLogger } from '@/services/loggerService'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
+
+const logger = getLogger('ShortcutHandler')
 
 const ShortcutHandler: FC = () => {
   useEffect(() => {
@@ -45,7 +48,9 @@ const ShortcutHandler: FC = () => {
         case 's':
           if (evt.ctrlKey) {
             evt.preventDefault()
-            saveToFile().catch(console.error)
+            saveToFile().catch((...err) => {
+              logger.error('Unexpected error when saving to file:', ...err)
+            })
           } else if (!evt.altKey && !evt.shiftKey) {
             setMode('scale')
           }

@@ -2,6 +2,7 @@ import { FC, useCallback } from 'react'
 import { MathUtils } from 'three'
 import { useShallow } from 'zustand/shallow'
 
+import { getLogger } from '@/services/loggerService'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { useEntityRefStore } from '@/stores/entityRefStore'
@@ -9,6 +10,8 @@ import { PartialNumber3Tuple } from '@/types'
 
 import { SidePanel, SidePanelContent, SidePanelTitle } from '../SidePanel'
 import XYZInput from './XYZInput'
+
+const logger = getLogger('TransformsPanel')
 
 const TransformsPanel: FC = () => {
   const {
@@ -95,7 +98,7 @@ const TransformsPanel: FC = () => {
 
   const translationUpdateFn = useCallback(
     (xyz: PartialNumber3Tuple) => {
-      console.debug('TransformsPanel translateUpdateFn', xyz)
+      logger.debug('translateUpdateFn', xyz)
 
       // TODO: remove this
       setSelectionBaseTransformation({
@@ -134,7 +137,7 @@ const TransformsPanel: FC = () => {
   )
   const rotationUpdateFn = useCallback(
     (xyz: PartialNumber3Tuple) => {
-      console.debug('TransformsPanel rotateUpdateFn', xyz)
+      logger.debug('rotateUpdateFn', xyz)
 
       const radianRotation = xyz.map((d) =>
         d != null ? MathUtils.degToRad(d) : d,
@@ -172,7 +175,7 @@ const TransformsPanel: FC = () => {
   )
   const scaleUpdateFn = useCallback(
     (xyz: PartialNumber3Tuple) => {
-      console.debug('TransformsPanel scaleUpdateFn', xyz)
+      logger.debug('scaleUpdateFn', xyz)
 
       setSelectionBaseTransformation({
         size: xyz,

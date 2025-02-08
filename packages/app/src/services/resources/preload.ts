@@ -1,13 +1,16 @@
 import { BlockStateApplyModelInfo, DisplayEntity } from '@/types'
 
+import { getLogger } from '../loggerService'
 import { getMatchingBlockstateModel, loadBlockstates } from './blockstates'
 import { loadModel } from './model'
 import { loadModelMaterials } from './modelMesh'
 
+const logger = getLogger('ResourceLoader')
+
 export async function preloadResources(entities: DisplayEntity[]) {
   const applyModelInfoList: BlockStateApplyModelInfo[] = []
 
-  console.log('preLoadResources(): start preloading resources')
+  logger.log('preLoadResources(): start preloading resources')
 
   for (const entity of entities) {
     if (entity.kind === 'block') {
@@ -35,5 +38,5 @@ export async function preloadResources(entities: DisplayEntity[]) {
     })
   }
 
-  console.log('preLoadResources(): finish preloading resources')
+  logger.log('preLoadResources(): finish preloading resources')
 }

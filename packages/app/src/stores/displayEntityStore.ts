@@ -3,6 +3,7 @@ import { Box3, Euler, Matrix4, Quaternion, Vector3 } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
+import { getLogger } from '@/services/loggerService'
 import { preloadResources } from '@/services/resources/preload'
 import { useEntityRefStore } from '@/stores/entityRefStore'
 import {
@@ -17,6 +18,8 @@ import {
 } from '@/types'
 
 import { useEditorStore } from './editorStore'
+
+const logger = getLogger('displayEntityStore')
 
 const ENTITY_ID_LENGTH = 16
 
@@ -135,17 +138,11 @@ export const useDisplayEntityStore = create(
       }),
     setEntityTranslation: (id, translation) =>
       set((state) => {
-        console.debug(
-          'displayEntityStore setEntityTranslation',
-          id,
-          translation,
-        )
+        logger.debug('setEntityTranslation', id, translation)
 
         const entity = state.entities.get(id)
         if (entity == null) {
-          console.error(
-            `displayEntityStore.setEntityTranslation(): unknown entity ${id}`,
-          )
+          logger.error(`setEntityTranslation(): unknown entity ${id}`)
           return
         }
 
@@ -161,9 +158,7 @@ export const useDisplayEntityStore = create(
       set((state) => {
         const entity = state.entities.get(id)
         if (entity == null) {
-          console.error(
-            `displayEntityStore.setEntityRotation(): unknown entity ${id}`,
-          )
+          logger.error(`setEntityRotation(): unknown entity ${id}`)
           return
         }
 
@@ -177,13 +172,11 @@ export const useDisplayEntityStore = create(
       }),
     setEntityScale: (id, scale) =>
       set((state) => {
-        console.debug('displayEntityStore setEntityScale', id, scale)
+        logger.debug('setEntityScale', id, scale)
 
         const entity = state.entities.get(id)
         if (entity == null) {
-          console.error(
-            `displayEntityStore.setEntityScale(): unknown entity ${id}`,
-          )
+          logger.error(`setEntityScale(): unknown entity ${id}`)
           return
         }
 
@@ -197,7 +190,7 @@ export const useDisplayEntityStore = create(
       }),
     batchSetEntityTransformation: (data) =>
       set((state) => {
-        console.debug('displayEntityStore batchSetEntityTransformation', data)
+        logger.debug('batchSetEntityTransformation', data)
 
         data.forEach((item) => {
           const entity = state.entities.get(item.id)
@@ -236,12 +229,12 @@ export const useDisplayEntityStore = create(
       set((state) => {
         const entity = state.entities.get(id)
         if (entity == null) {
-          console.error(
+          logger.error(
             `Attempted to set display type for unknown display entity: ${id}`,
           )
           return
         } else if (entity.kind !== 'item') {
-          console.error(
+          logger.error(
             `Attempted to set display type for non-item display entity: ${id}, kind: ${entity.kind}`,
           )
           return
@@ -253,12 +246,12 @@ export const useDisplayEntityStore = create(
       set((state) => {
         const entity = state.entities.get(id)
         if (entity == null) {
-          console.error(
+          logger.error(
             `Attempted to set blockstates for unknown block display entity: ${id}`,
           )
           return
         } else if (entity.kind !== 'block') {
-          console.error(
+          logger.error(
             `Attempted to set blockstates for non-block display entity: ${id}, kind: ${entity.kind}`,
           )
           return
@@ -283,8 +276,8 @@ export const useDisplayEntityStore = create(
 
             const entity = state.entities.get(id)
             if (entity == null) {
-              console.error(
-                `displayEntityStore.deleteEntities(): Attempt to remove unknown entity with id ${id}`,
+              logger.error(
+                `deleteEntities(): Attempt to remove unknown entity with id ${id}`,
               )
               continue
             }
@@ -576,9 +569,7 @@ export const useDisplayEntityStore = create(
           state.selectedEntityIds.includes(e.id),
         )
         if (selectedEntities.length < 1) {
-          console.error(
-            'displayEntityStore.groupSelected(): no selected entities to group',
-          )
+          logger.error('groupSelected(): no selected entities to group')
           return
         }
 
@@ -588,8 +579,8 @@ export const useDisplayEntityStore = create(
             (e) => e.parent === firstSelectedEntityParentId,
           )
         ) {
-          console.error(
-            'displayEntityStore.groupSelected(): cannot group entities with different parent',
+          logger.error(
+            'groupSelected(): cannot group entities with different parent',
           )
           return
         }
@@ -648,8 +639,8 @@ export const useDisplayEntityStore = create(
     ungroupSelected: () =>
       set((state) => {
         if (state.selectedEntityIds.length !== 1) {
-          console.error(
-            `displayEntityStore.ungroupSelected(): Cannot ungroup ${state.selectedEntityIds.length} items; Only single group can be ungrouped.`,
+          logger.error(
+            `ungroupSelected(): Cannot ungroup ${state.selectedEntityIds.length} items; Only single group can be ungrouped.`,
           )
           return
         }
@@ -657,8 +648,8 @@ export const useDisplayEntityStore = create(
         const entityGroupId = state.selectedEntityIds[0]
         const selectedEntityGroup = state.entities.get(entityGroupId)
         if (selectedEntityGroup?.kind !== 'group') {
-          console.error(
-            `displayEntityStore.ungroupSelected(): selected entity ${entityGroupId} (kind: ${selectedEntityGroup?.kind}) is not a group`,
+          logger.error(
+            `ungroupSelected(): selected entity ${entityGroupId} (kind: ${selectedEntityGroup?.kind}) is not a group`,
           )
           return
         }

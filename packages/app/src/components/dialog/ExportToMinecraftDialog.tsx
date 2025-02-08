@@ -9,10 +9,13 @@ import { FC, JSX, useEffect, useState } from 'react'
 import { LuCopy, LuCopyCheck } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
+import { getLogger } from '@/services/loggerService'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEntityRefStore } from '@/stores/entityRefStore'
 import { cn } from '@/utils'
+
+const logger = getLogger('ExportToMinecraftDialog')
 
 type CopyButtonProps = JSX.IntrinsicElements['button'] & {
   valueToCopy: string
@@ -151,7 +154,7 @@ const ExportToMinecraftDialog: FC = () => {
 
           const refData = entityRefs.get(entity.id)
           if (refData == null || refData.objectRef.current == null) {
-            console.warn(
+            logger.warn(
               `entity ref of entity ${entity.id} not found, ignoring.`,
             )
             return

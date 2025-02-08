@@ -9,6 +9,10 @@ import {
 import { useCacheStore, useClassObjectCacheStore } from '@/stores/cacheStore'
 import { getTextureColor } from '@/utils'
 
+import { getLogger } from '../loggerService'
+
+const logger = getLogger('ResourceLoader/material')
+
 const materialLoadMutexMap = new Map<string, Mutex>()
 
 export type LoadMaterialArgs = {
@@ -52,7 +56,7 @@ export async function loadMaterial({
       return materials.get(key)!
     }
 
-    console.log(`Loading material for ${textureResourceLocation}`)
+    logger.log(`Loading material for ${textureResourceLocation}`)
 
     // process texture
 

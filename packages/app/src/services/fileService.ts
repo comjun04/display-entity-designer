@@ -2,6 +2,10 @@ import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { BDEngineSaveData, DisplayEntitySaveDataItem } from '@/types'
 
+import { getLogger } from './loggerService'
+
+const logger = getLogger('FileService')
+
 type DisplayEntitySaveData = {
   __version: number
   __program: string
@@ -34,7 +38,7 @@ export function openFromFile() {
       const isBDEProject = await importFromBDE(file)
       if (isBDEProject) return
     } catch (err) {
-      console.error(err)
+      logger.error(err)
     }
   }
 
@@ -43,7 +47,7 @@ export function openFromFile() {
 
 async function openProjectFile(file: File): Promise<boolean> {
   if (file.size < 10) {
-    console.error(
+    logger.error(
       'Cannot open project file: cannot extract file header, file too small',
     )
     return false
@@ -51,7 +55,7 @@ async function openProjectFile(file: File): Promise<boolean> {
 
   const magic = await file.slice(0, 4).text()
   if (magic !== FILE_MAGIC) {
-    console.error('Cannot open project file: project file magic does not match')
+    logger.error('Cannot open project file: project file magic does not match')
     return false
   }
 
@@ -59,7 +63,7 @@ async function openProjectFile(file: File): Promise<boolean> {
   const dataview = new DataView(versionArrayBuffer)
   const version = dataview.getUint32(0, false)
   if (version < FILE_VERSION) {
-    console.error(
+    logger.error(
       `Cannot open project file (version ${version}) higher than supported version ${FILE_VERSION}`,
     )
     return false
@@ -80,7 +84,7 @@ async function openProjectFile(file: File): Promise<boolean> {
   clearEntities()
   useEditorStore.getState().resetProject()
 
-  bulkImport(saveData.entities).catch(console.error)
+  bulkImport(saveData.entities).catch(logger.error)
 
   return true
 }
@@ -142,7 +146,7 @@ export async function importFromBDE(file: File): Promise<boolean> {
   clearEntities()
   useEditorStore.getState().resetProject()
 
-  bulkImportFromBDE(saveData).catch(console.error)
+  bulkImportFromBDE(saveData).catch(logger.error)
 
   return true
 }
