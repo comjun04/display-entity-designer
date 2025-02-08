@@ -22,18 +22,19 @@ export function getLogger(prefix: string) {
     if (logLevelIdx < minLogLevelIdx) return
 
     const bracketedPrefix = `[${prefix}]`
+    const bracketedLoglevel = `[${logLevel.toUpperCase()}]`
     switch (logLevel) {
       case 'debug':
-        console.debug(bracketedPrefix, ...content)
+        console.debug(bracketedPrefix, bracketedLoglevel, ...content)
         break
       case 'info':
-        console.log(bracketedPrefix, ...content)
+        console.log(bracketedPrefix, bracketedLoglevel, ...content)
         break
       case 'warn':
-        console.warn(bracketedPrefix, ...content)
+        console.warn(bracketedPrefix, bracketedLoglevel, ...content)
         break
       case 'error':
-        console.error(bracketedPrefix, ...content)
+        console.error(bracketedPrefix, bracketedLoglevel, ...content)
     }
   }
 
