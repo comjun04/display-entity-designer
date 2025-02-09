@@ -1,3 +1,4 @@
+import { z } from 'zod'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
@@ -15,10 +16,16 @@ type TransformationData = {
   size: Number3Tuple
 }
 
-type Settings = {
-  testOption: boolean
-  minLogLevel: LogLevel
-}
+const settingsSchema = z.object({
+  testOption: z.boolean().default(false),
+  minLogLevel: z
+    .enum<
+      LogLevel,
+      [LogLevel, ...LogLevel[]]
+    >(['error', 'warn', 'info', 'debug'])
+    .default('info'),
+})
+type Settings = z.infer<typeof settingsSchema>
 
 type EditorState = {
   mode: EditorMode
@@ -46,12 +53,15 @@ type EditorState = {
 function getStoredSettings() {
   try {
     const settingsString = window.localStorage.getItem('settings')
-    return settingsString != null
-      ? (JSON.parse(settingsString) as Settings)
-      : null
+    if (settingsString == null) return settingsSchema.parse({})
+
+    const jsonParsedData = JSON.parse(settingsString) as unknown
+    return settingsSchema.parse(jsonParsedData)
   } catch (err) {
-    logger.error(err)
-    return null
+    // logger.error()를 사용할 경우 settings 로드 과정에서 오류가 발생하면 순환참조 문제로 인해 로드 자체가 안되므로
+    // 여기서는 그냥 console.error 사용
+    console.error(err)
+    return settingsSchema.parse({})
   }
 }
 
