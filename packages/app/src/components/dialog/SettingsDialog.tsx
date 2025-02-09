@@ -9,6 +9,7 @@ import { useShallow } from 'zustand/shallow'
 
 import { useDialogStore } from '@/stores/dialogStore'
 import { useEditorStore } from '@/stores/editorStore'
+import { LogLevel } from '@/types'
 import { cn } from '@/utils'
 
 type SettingsPageType = 'hotkeys' | 'programInfo' | 'test'
@@ -185,7 +186,7 @@ const SettingsDialog: FC = () => {
               {/* test page */}
               {selectedPage === 'test' && (
                 <div>
-                  <div className="flex flex-row gap-2">
+                  <div className="flex flex-row items-center gap-2">
                     <input
                       type="checkbox"
                       id="settings_test_testoption"
@@ -197,6 +198,26 @@ const SettingsDialog: FC = () => {
                     <label htmlFor="settings_test_testoption">
                       Test Option
                     </label>
+                  </div>
+                  <div className="flex flex-row items-center gap-2">
+                    <label htmlFor="settings_test_minloglevel">
+                      Minimum Log Level
+                    </label>
+                    <select
+                      id="settings_test_minloglevel"
+                      className="flex-none rounded bg-neutral-800 px-2 py-1"
+                      value={settings.minLogLevel}
+                      onChange={(evt) => {
+                        setSettings({
+                          minLogLevel: evt.target.value as LogLevel,
+                        })
+                      }}
+                    >
+                      <option>error</option>
+                      <option>warn</option>
+                      <option>info</option>
+                      <option>debug</option>
+                    </select>
                   </div>
                 </div>
               )}
