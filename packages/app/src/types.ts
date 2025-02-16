@@ -144,6 +144,11 @@ export type ItemDisplayEntity = BaseDisplayEntity & {
   display: ModelDisplayPositionKey | null
 }
 
+export type TextDisplayEntity = BaseDisplayEntity & {
+  kind: 'text'
+  text: string
+}
+
 export type DisplayEntityGroup = BaseDisplayEntity & {
   kind: 'group'
   children: string[] // list of entity ids
@@ -152,6 +157,7 @@ export type DisplayEntityGroup = BaseDisplayEntity & {
 export type DisplayEntity =
   | BlockDisplayEntity
   | ItemDisplayEntity
+  | TextDisplayEntity
   | DisplayEntityGroup
 
 export type DisplayEntitySaveDataItemOld = Pick<DisplayEntity, 'kind'> &

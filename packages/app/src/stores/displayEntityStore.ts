@@ -45,7 +45,13 @@ export type DisplayEntityState = {
   entities: Map<string, DisplayEntity>
   selectedEntityIds: string[]
 
-  createNew: (kind: DisplayEntity['kind'], type: string) => string
+  /**
+   * 새로운 디스플레이 엔티티를 생성합니다.
+   * @param kind 디스플레이 엔티티의 종류. `block`, `item` 혹은 `text`
+   * @param typeOrText `kind`가 `block` 또는 `item`일 경우 블록/아이템 id, `text`일 경우 입력할 텍스트 (JSON Format)
+   * @returns 생성된 디스플레이 엔티티 데이터 id
+   */
+  createNew: (kind: DisplayEntity['kind'], typeOrText: string) => string
   setSelected: (ids: string[]) => void
   addToSelected: (id: string) => void
   setEntityTranslation: (id: string, translation: PartialNumber3Tuple) => void
@@ -84,7 +90,7 @@ export const useDisplayEntityStore = create(
     entities: new Map(),
     selectedEntityIds: [],
 
-    createNew: (kind, type) => {
+    createNew: (kind, typeOrText) => {
       const id = generateId(ENTITY_ID_LENGTH)
 
       set((state) => {
@@ -94,7 +100,7 @@ export const useDisplayEntityStore = create(
           state.entities.set(id, {
             kind: 'block',
             id,
-            type,
+            type: typeOrText,
             size: [1, 1, 1],
             position: [0, 0, 0],
             rotation: [0, 0, 0],
@@ -105,11 +111,20 @@ export const useDisplayEntityStore = create(
           state.entities.set(id, {
             kind: 'item',
             id,
-            type,
+            type: typeOrText,
             size: [1, 1, 1],
             position: [0, 0, 0],
             rotation: [0, 0, 0],
             display: null,
+          })
+        } else if (kind === 'text') {
+          state.entities.set(id, {
+            kind: 'text',
+            id,
+            text: typeOrText,
+            size: [1, 1, 1],
+            position: [0, 0, 0],
+            rotation: [0, 0, 0],
           })
         }
       })
