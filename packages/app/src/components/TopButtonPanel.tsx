@@ -73,7 +73,7 @@ const TopButtonPanel: FC = () => {
         >
           <FloatingButton
             onClick={() => {
-              useDisplayEntityStore.getState().createNew('text', '')
+              useDisplayEntityStore.getState().createNew('text', 'Enter Text')
             }}
           >
             <LuType size={24} />

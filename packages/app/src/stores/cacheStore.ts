@@ -40,6 +40,13 @@ type CacheStoreState = {
     resourceLocation: string,
     imageDataUrl: string,
   ) => void
+
+  // 폰트 데이터 캐시 (.png, unifont)
+  fontResources: Record<string, string> // png는 data url로 저장함
+  setFontResource: (key: string, data: string) => void
+
+  unifontHexData: Map<number, string>
+  setUnifontHexData: (data: Map<number, string>) => void
 }
 
 // 캐시 저장소
@@ -91,6 +98,18 @@ export const useCacheStore = create(
     setCroppedTextureDataUrl: (resourceLocation, imageDataUrl) =>
       set((state) => {
         state.croppedTextureDataUrls[resourceLocation] = imageDataUrl
+      }),
+
+    fontResources: {},
+    setFontResource: (key, data) =>
+      set((state) => {
+        state.fontResources[key] = data
+      }),
+
+    unifontHexData: new Map(),
+    setUnifontHexData: (data) =>
+      set((state) => {
+        state.unifontHexData = data
       }),
   })),
 )
