@@ -73,6 +73,7 @@ export type DisplayEntityState = {
     id: string,
     blockstates: Record<string, string>,
   ) => void
+  setTextDisplayText: (id: string, text: string) => void
   deleteEntities: (entityIds: string[]) => void
 
   bulkImport: (items: DisplayEntitySaveDataItem[]) => Promise<void>
@@ -278,6 +279,23 @@ export const useDisplayEntityStore = create(
         }
 
         entity.blockstates = { ...entity.blockstates, ...blockstates }
+      }),
+    setTextDisplayText: (id, text) =>
+      set((state) => {
+        const entity = state.entities.get(id)
+        if (entity == null) {
+          logger.error(
+            `Attempted to set text for unknown text displau entity: ${id}`,
+          )
+          return
+        } else if (entity.kind !== 'text') {
+          logger.error(
+            `Attempted to set text for non-text display entity: ${id}`,
+          )
+          return
+        }
+
+        entity.text = text
       }),
     deleteEntities: (entityIds) =>
       set((state) => {

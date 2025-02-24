@@ -105,6 +105,30 @@ const PropertiesPanel: FC = () => {
             </div>
           </div>
         )}
+
+        {singleSelectedEntity?.kind === 'text' && (
+          <div className="flex flex-col gap-2">
+            <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
+              Text
+            </div>
+
+            <div className="flex flex-row items-center gap-2">
+              <label className="flex-1 text-end">Text</label>
+              <input
+                className="grow rounded bg-neutral-800 py-1 pl-1 text-xs outline-none"
+                value={singleSelectedEntity.text}
+                onChange={(evt) => {
+                  useDisplayEntityStore
+                    .getState()
+                    .setTextDisplayText(
+                      singleSelectedEntity.id,
+                      evt.target.value,
+                    )
+                }}
+              />
+            </div>
+          </div>
+        )}
       </SidePanelContent>
     </SidePanel>
   )
