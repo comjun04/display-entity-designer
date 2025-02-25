@@ -147,6 +147,7 @@ export type ItemDisplayEntity = BaseDisplayEntity & {
 export type TextDisplayEntity = BaseDisplayEntity & {
   kind: 'text'
   text: string
+  lineLength: number
 }
 
 export type DisplayEntityGroup = BaseDisplayEntity & {

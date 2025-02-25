@@ -15,6 +15,7 @@ import {
   ModelDisplayPositionKey,
   Number3Tuple,
   PartialNumber3Tuple,
+  TextDisplayEntity,
 } from '@/types'
 
 import { useEditorStore } from './editorStore'
@@ -73,7 +74,15 @@ export type DisplayEntityState = {
     id: string,
     blockstates: Record<string, string>,
   ) => void
-  setTextDisplayText: (id: string, text: string) => void
+  setTextDisplayProperties: (
+    id: string,
+    properties: Partial<
+      Omit<
+        TextDisplayEntity,
+        'id' | 'kind' | 'position' | 'rotation' | 'size' | 'parent'
+      >
+    >,
+  ) => void
   deleteEntities: (entityIds: string[]) => void
 
   bulkImport: (items: DisplayEntitySaveDataItem[]) => Promise<void>
@@ -126,6 +135,7 @@ export const useDisplayEntityStore = create(
             size: [1, 1, 1],
             position: [0, 0, 0],
             rotation: [0, 0, 0],
+            lineLength: 200,
           })
         }
       })
@@ -280,22 +290,33 @@ export const useDisplayEntityStore = create(
 
         entity.blockstates = { ...entity.blockstates, ...blockstates }
       }),
-    setTextDisplayText: (id, text) =>
+    setTextDisplayProperties: (id, properties) =>
       set((state) => {
         const entity = state.entities.get(id)
         if (entity == null) {
           logger.error(
-            `Attempted to set text for unknown text displau entity: ${id}`,
+            `Attempted to set properties for unknown text displau entity: ${id}`,
           )
           return
         } else if (entity.kind !== 'text') {
           logger.error(
-            `Attempted to set text for non-text display entity: ${id}`,
+            `Attempted to set properties for non-text display entity: ${id}`,
           )
           return
         }
 
-        entity.text = text
+        if (
+          properties.lineLength != null &&
+          // TODO: specific type check (int)
+          (!isFinite(properties.lineLength) || properties.lineLength < 0)
+        ) {
+          logger.error(
+            `Text Display \`lineLength\` must be positive integer or zero, but tried to set ${properties.lineLength} to entity ${id}`,
+          )
+          return
+        }
+
+        Object.assign(entity, properties)
       }),
     deleteEntities: (entityIds) =>
       set((state) => {

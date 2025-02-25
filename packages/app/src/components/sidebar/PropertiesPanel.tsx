@@ -113,17 +113,35 @@ const PropertiesPanel: FC = () => {
             </div>
 
             <div className="flex flex-row items-center gap-2">
-              <label className="flex-1 text-end">Text</label>
+              <label className="flex-1 text-end">text</label>
               <input
                 className="grow rounded bg-neutral-800 py-1 pl-1 text-xs outline-none"
                 value={singleSelectedEntity.text}
                 onChange={(evt) => {
                   useDisplayEntityStore
                     .getState()
-                    .setTextDisplayText(
-                      singleSelectedEntity.id,
-                      evt.target.value,
-                    )
+                    .setTextDisplayProperties(singleSelectedEntity.id, {
+                      text: evt.target.value,
+                    })
+                }}
+              />
+            </div>
+            <div className="flex flex-row items-center gap-2">
+              <label className="flex-1 text-end">line_length</label>
+              <input
+                type="number"
+                min={0}
+                className="grow rounded bg-neutral-800 py-1 pl-1 text-xs outline-none"
+                value={singleSelectedEntity.lineLength}
+                onChange={(evt) => {
+                  const value = parseInt(evt.target.value)
+                  if (!isFinite(value) || value < 0) return
+
+                  useDisplayEntityStore
+                    .getState()
+                    .setTextDisplayProperties(singleSelectedEntity.id, {
+                      lineLength: value,
+                    })
                 }}
               />
             </div>
