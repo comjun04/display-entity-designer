@@ -10,6 +10,7 @@ import {
   PlaneGeometry,
 } from 'three'
 
+import { UnifontSizeOverrides } from '@/constants'
 import { useCacheStore } from '@/stores/cacheStore'
 
 const UNIFONT_FILENAME = 'unifont/unifont_all_no_pua-16.0.01.hex'
@@ -157,19 +158,34 @@ async function getCharPixels(char: string) {
   let totalLeft = width - 1
   let totalRight = 0
 
+  // size_overrides에 정의된 문자면 left랑 right 값을 바로 적용
+  const matchingSizeOverrideEntry = UnifontSizeOverrides.find(
+    (overrideEntry) => {
+      const from = overrideEntry.from.charCodeAt(0)
+      const to = overrideEntry.to.charCodeAt(0)
+      return from <= charCode && charCode <= to
+    },
+  )
+  if (matchingSizeOverrideEntry != null) {
+    totalLeft = matchingSizeOverrideEntry.left
+    totalRight = matchingSizeOverrideEntry.right
+  }
+
   const charsToRead = width / 4 // hex.length > 32 ? 4 : 2
   for (let i = 0; i < hex.length; i += charsToRead) {
     const chars = hex.slice(i, i + charsToRead)
     const num = parseInt(chars, 16)
 
     const binaryString = num.toString(2).padStart(width, '0')
-    const left = binaryString.indexOf('1')
-    if (left >= 0) {
-      totalLeft = Math.min(totalLeft, left)
-    }
-    const right = binaryString.lastIndexOf('1')
-    if (right >= 0) {
-      totalRight = Math.max(totalRight, right)
+    if (matchingSizeOverrideEntry == null) {
+      const left = binaryString.indexOf('1')
+      if (left >= 0) {
+        totalLeft = Math.min(totalLeft, left)
+      }
+      const right = binaryString.lastIndexOf('1')
+      if (right >= 0) {
+        totalRight = Math.max(totalRight, right)
+      }
     }
 
     const pixelsRow = binaryString.split('').map((d) => d === '1')
