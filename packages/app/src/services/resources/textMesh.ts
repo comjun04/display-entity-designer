@@ -61,7 +61,10 @@ export async function createTextMesh({ text }: CreateTextMeshArgs) {
     lineMesh.position.setX((maxLineWidth / 2) * -1),
   )
 
-  maxLineWidth += 0.0125 * 2 // 좌우 1픽셀 여백
+  // 텍스트가 아무것도 없을 경우 (최대 width가 0일 경우) 좌우 여백도 표시하지 않음
+  if (maxLineWidth > 0) {
+    maxLineWidth += 0.0125 * 2 // 좌우 1픽셀 여백
+  }
   const maxLineHeight = 0.0125 * 20 * lines.length
 
   const backgroundGeometry = new PlaneGeometry(1, 1)
