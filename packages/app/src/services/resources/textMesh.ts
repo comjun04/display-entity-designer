@@ -56,7 +56,7 @@ export async function createTextMesh({ text }: CreateTextMeshArgs) {
     textLinesGroup.add(lineGroup)
   }
 
-  maxLineWidth += 0.125 // 왼쪽 1픽셀 여백
+  maxLineWidth += 0.125 * 2 // 좌우 1픽셀 여백
   const maxLineHeight = 0.125 * 20 * lines.length
 
   const backgroundGeometry = new PlaneGeometry(1, 1)
@@ -135,21 +135,65 @@ async function getCharPixels(char: string) {
     throw new Error(`Unsupported character ${char[0]} (${charCode})!`)
   }
 
+  /**
+   * ## unifont 사용 시 (`unihex` provider)
+   * 모든 문자 세로 16픽셀 고정, 가로는 정의상 8/16/24/32픽셀일 수 있으나 렌더링 시 아래 규칙에 따라 실제 width가 조정될 수 있음
+   *
+   * 줄 여백: 좌우 1픽셀, 위아래 2픽셀
+   * 문자 여백:
+   * - 좌우: (1) 해당 문자에서 좌우 여백을 제거하고 (2) 가로 픽셀수를 세서
+   *   - 짝수면: 좌우에 여백 1픽셀 추가
+   *   - 홀수면: 왼쪽에만 여백 1픽셀 추가
+   *   - 단, unifont.json 파일에 `size_overrides`에 해당 문자가 포함되어 있을 경우 거기에 적힌 left와 right 값으로 width를 산출하고 여백 적용
+   *     (좌우여백 자르고 픽셀수 세는거보다 이게 우선)
+   */
+
+  // 마크에서 사용하는 unifont는 width가 8픽셀 아니면 16픽셀만 존재하므로 단순하게 핸들링
+  // TODO: 커스텀 리소스팩을 사용하는 경우 24, 32픽셀도 가능하므로 대응응
   const width = hex.length > 32 ? 16 : 8
   // const height = 16
   const pixels: boolean[][] = []
+
+  let totalLeft = width - 1
+  let totalRight = 0
 
   const charsToRead = width / 4 // hex.length > 32 ? 4 : 2
   for (let i = 0; i < hex.length; i += charsToRead) {
     const chars = hex.slice(i, i + charsToRead)
     const num = parseInt(chars, 16)
 
-    const pixelsRow: boolean[] = []
-    for (let j = width - 1; j >= 0; j--) {
-      pixelsRow.push(!!((num >> j) & 1))
+    const binaryString = num.toString(2).padStart(width, '0')
+    const left = binaryString.indexOf('1')
+    if (left >= 0) {
+      totalLeft = Math.min(totalLeft, left)
+    }
+    const right = binaryString.lastIndexOf('1')
+    if (right >= 0) {
+      totalRight = Math.max(totalRight, right)
     }
 
+    const pixelsRow = binaryString.split('').map((d) => d === '1')
     pixels.push(pixelsRow)
+  }
+
+  // SPACE 문자가 아니고 색칠된 픽셀이 하나라도 있다면
+  if (totalLeft <= totalRight && charCode !== 0x20) {
+    // 좌우 여백 다 자르고 남은 width
+    const trimmedWidth = totalRight - totalLeft + 1
+
+    for (let i = 0; i < pixels.length; i++) {
+      const row = pixels[i]
+      const newRow = row.slice(totalLeft, totalRight + 1)
+
+      // trimmedWidth의 홀짝 여부 상관없이 왼쪽 1픽셀 여백 추가
+      newRow.unshift(false)
+      if (trimmedWidth % 2 === 0) {
+        // trimmedWidth이 짝수일 경우 오른쪽 1픽셀 여백도 추가
+        newRow.push(false)
+      }
+
+      pixels[i] = newRow
+    }
   }
 
   return pixels
