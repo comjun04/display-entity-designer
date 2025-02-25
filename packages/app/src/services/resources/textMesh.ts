@@ -20,52 +20,79 @@ const unifontHexDataLoadMutex = new Mutex()
 
 type CreateTextMeshArgs = {
   text: string // TODO: handle Raw JSON Text Format
+  lineLength: number
   color: ColorRepresentation
   backgroundColor: ColorRepresentation
 }
 
-export async function createTextMesh({ text }: CreateTextMeshArgs) {
-  const lines = text.split('\n') // TODO: trim()?
+export async function createTextMesh({ text, lineLength }: CreateTextMeshArgs) {
   const textLinesGroup = new Group()
 
+  // 모든 줄 통틀어서 최대 width를 가진 줄의 width
   let maxLineWidth = 0
 
-  for (const [i, line] of lines.entries()) {
-    const lineGroup = new Group()
-    let offset = 0
+  let offset = 0
+  const tempCharMeshList: Mesh[] = []
+  for (const char of text.split('')) {
+    if (char === '\n') {
+      const lineGroup = new Group()
+      lineGroup.add(...tempCharMeshList)
+      textLinesGroup.add(lineGroup)
 
-    const chars = line.split('')
-    for (const ch of chars) {
-      const { mesh, width, height } = await createCharMesh(ch)
-
-      mesh.position.setX(offset)
-      offset += width
-      lineGroup.add(mesh)
+      tempCharMeshList.length = 0 // clear list
+      continue
     }
 
+    const { mesh, widthPixels } = await createCharMesh(char)
+    const width = widthPixels * 0.0125 // x0.0125 scale 적용용
+
+    const offsetPixels = offset / 0.0125
+
+    // 주어진 line length의 2배 값이 한 줄에 입력된 글자의 픽셀 수(여백 포함)보다 많으면
+    // 그 다음 글자부터 다음 줄로 내리기
+    if (offsetPixels + widthPixels > lineLength * 2) {
+      // 입력한 글자 전까지 한 줄로 묶기
+      if (tempCharMeshList.length > 0) {
+        const lineGroup = new Group()
+        lineGroup.add(...tempCharMeshList)
+        textLinesGroup.add(lineGroup)
+      }
+
+      // 입력한 글자는 다음 줄로 예약
+      tempCharMeshList.length = 0
+      tempCharMeshList.push(mesh)
+      offset = 0
+    } else {
+      tempCharMeshList.push(mesh)
+    }
+
+    mesh.position.setX(offset)
+    offset += width
     if (offset > maxLineWidth) {
       maxLineWidth = offset
     }
-
-    // line height calculation
-    lineGroup.position.set(
-      0.0125, // 왼쪽 1픽셀 여백
-      0.0125 * 20 * (lines.length - i - 1) + 2 * 0.0125, // 각 줄당 위아래 2픽셀 여백
-      0,
-    )
-
+  }
+  if (tempCharMeshList.length > 0) {
+    // 마지막 문자까지
+    const lineGroup = new Group()
+    lineGroup.add(...tempCharMeshList)
     textLinesGroup.add(lineGroup)
   }
 
-  textLinesGroup.children.forEach((lineMesh) =>
-    lineMesh.position.setX((maxLineWidth / 2) * -1),
-  )
+  for (const [i, lineGroup] of textLinesGroup.children.entries()) {
+    // line height calculation
+    lineGroup.position.set(
+      (maxLineWidth / 2) * -1, // 중앙에 위치하도록 조정
+      0.0125 * 20 * (textLinesGroup.children.length - i - 1) + 2 * 0.0125, // 각 줄당 위아래 2픽셀 여백
+      0,
+    )
+  }
 
   // 텍스트가 아무것도 없을 경우 (최대 width가 0일 경우) 좌우 여백도 표시하지 않음
   if (maxLineWidth > 0) {
     maxLineWidth += 0.0125 * 2 // 좌우 1픽셀 여백
   }
-  const maxLineHeight = 0.0125 * 20 * lines.length
+  const maxLineHeight = 0.0125 * 20 * textLinesGroup.children.length
 
   const backgroundGeometry = new PlaneGeometry(1, 1)
   const backgroundMaterial = new MeshBasicMaterial({
@@ -266,7 +293,6 @@ async function createCharMesh(char: string) {
   const mesh = new Mesh(geometry, material)
   return {
     mesh,
-    width: width * 0.0125, // x0.0125 scale 적용
-    height: height * 0.0125,
+    widthPixels: width,
   }
 }

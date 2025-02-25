@@ -28,10 +28,15 @@ const TextDisplay: FC<TextDisplayProps> = ({
   objectRef: ref,
   onClick,
 }) => {
-  const { thisEntitySelected } = useDisplayEntityStore(
-    useShallow((state) => ({
-      thisEntitySelected: state.selectedEntityIds.includes(id),
-    })),
+  const { thisEntityLineLength, thisEntitySelected } = useDisplayEntityStore(
+    useShallow((state) => {
+      const thisEntity = state.entities.get(id)
+      return {
+        thisEntityLineLength:
+          thisEntity?.kind === 'text' ? thisEntity.lineLength : undefined,
+        thisEntitySelected: state.selectedEntityIds.includes(id),
+      }
+    }),
   )
 
   const innerGroupRef = useRef<Group>(null)
@@ -39,10 +44,11 @@ const TextDisplay: FC<TextDisplayProps> = ({
 
   useEffect(() => {
     const asyncFn = async () => {
-      if (innerGroupRef.current == null) return
+      if (innerGroupRef.current == null || thisEntityLineLength == null) return
 
       const textModelGroup = await createTextMesh({
         text,
+        lineLength: thisEntityLineLength,
         backgroundColor: '#888888',
         color: '#dddddd',
       })
@@ -57,7 +63,7 @@ const TextDisplay: FC<TextDisplayProps> = ({
     }
 
     asyncFn().catch(console.error)
-  }, [text])
+  }, [id, text, thisEntityLineLength])
 
   useFrame(() => {
     if (!thisEntitySelected) {
