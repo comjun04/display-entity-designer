@@ -49,16 +49,20 @@ export async function createTextMesh({ text }: CreateTextMeshArgs) {
 
     // line height calculation
     lineGroup.position.set(
-      0.125, // 왼쪽 1픽셀 여백
-      0.125 * 20 * (lines.length - i - 1) + 2 * 0.125, // 각 줄당 위아래 2픽셀 여백
+      0.0125, // 왼쪽 1픽셀 여백
+      0.0125 * 20 * (lines.length - i - 1) + 2 * 0.0125, // 각 줄당 위아래 2픽셀 여백
       0,
     )
 
     textLinesGroup.add(lineGroup)
   }
 
-  maxLineWidth += 0.125 * 2 // 좌우 1픽셀 여백
-  const maxLineHeight = 0.125 * 20 * lines.length
+  textLinesGroup.children.forEach((lineMesh) =>
+    lineMesh.position.setX((maxLineWidth / 2) * -1),
+  )
+
+  maxLineWidth += 0.0125 * 2 // 좌우 1픽셀 여백
+  const maxLineHeight = 0.0125 * 20 * lines.length
 
   const backgroundGeometry = new PlaneGeometry(1, 1)
   const backgroundMaterial = new MeshBasicMaterial({
@@ -69,7 +73,7 @@ export async function createTextMesh({ text }: CreateTextMeshArgs) {
     alphaTest: 0.01,
   })
   const backgroundMesh = new Mesh(backgroundGeometry, backgroundMaterial)
-  backgroundMesh.position.set(maxLineWidth / 2, maxLineHeight / 2, 0)
+  backgroundMesh.position.set(0, maxLineHeight / 2, 0)
   backgroundMesh.scale.set(maxLineWidth, maxLineHeight, 1)
   textLinesGroup.add(backgroundMesh)
 
@@ -246,7 +250,7 @@ async function createCharMesh(char: string) {
 
   const geometry = new PlaneGeometry(width, height)
   geometry.translate(width / 2, height / 2, 0.1)
-  geometry.scale(0.125, 0.125, 0.125)
+  geometry.scale(0.0125, 0.0125, 0.0125)
 
   const material = new MeshBasicMaterial({
     map: texture,
@@ -259,7 +263,7 @@ async function createCharMesh(char: string) {
   const mesh = new Mesh(geometry, material)
   return {
     mesh,
-    width: width * 0.125, // x0.125 scale 적용
-    height: height * 0.125,
+    width: width * 0.0125, // x0.0125 scale 적용
+    height: height * 0.0125,
   }
 }
