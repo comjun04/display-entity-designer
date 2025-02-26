@@ -34,7 +34,7 @@ export async function createTextMesh({ text, lineLength }: CreateTextMeshArgs) {
   let lineLengthOverflowed = false
   const tempCharMeshList: Mesh[] = []
 
-  for (const char of text.split('')) {
+  for (const [charIdx, char] of text.split('').entries()) {
     if (char === '\n') {
       const lineGroup = new Group()
       lineGroup.add(...tempCharMeshList)
@@ -42,6 +42,14 @@ export async function createTextMesh({ text, lineLength }: CreateTextMeshArgs) {
 
       tempCharMeshList.length = 0 // clear list
       continue
+    }
+
+    // 텍스트 중간에 SPACE 문자가 2개 이상 연속으로 붙어 있더라도 최대 1개만 렌더링 (마크 동작)
+    if (char === ' ') {
+      const prevChar = text[charIdx - 1]
+      if (prevChar === ' ') {
+        continue
+      }
     }
 
     // TODO: mesh를 만들지 않고도 width를 구하는 함수 만들기
