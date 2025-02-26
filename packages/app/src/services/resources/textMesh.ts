@@ -30,9 +30,10 @@ export async function createTextMesh({ text, lineLength }: CreateTextMeshArgs) {
 
   // 모든 줄 통틀어서 최대 width를 가진 줄의 width
   let maxLineWidth = 0
-
   let offset = 0
+  let lineLengthOverflowed = false
   const tempCharMeshList: Mesh[] = []
+
   for (const char of text.split('')) {
     if (char === '\n') {
       const lineGroup = new Group()
@@ -43,8 +44,9 @@ export async function createTextMesh({ text, lineLength }: CreateTextMeshArgs) {
       continue
     }
 
+    // TODO: mesh를 만들지 않고도 width를 구하는 함수 만들기
     const { mesh, widthPixels } = await createCharMesh(char)
-    const width = widthPixels * 0.0125 // x0.0125 scale 적용용
+    const width = widthPixels * 0.0125 // x0.0125 scale 적용
 
     const offsetPixels = offset / 0.0125
 
@@ -60,17 +62,27 @@ export async function createTextMesh({ text, lineLength }: CreateTextMeshArgs) {
 
       // 입력한 글자는 다음 줄로 예약
       tempCharMeshList.length = 0
-      tempCharMeshList.push(mesh)
+      if (char !== ' ') {
+        // 다음 줄로 예약을 걸 경우 첫 문자가 `' '` (0x20)이 아닌 경우에만 새 줄에 넣기
+        tempCharMeshList.push(mesh)
+      }
+
       offset = 0
+      lineLengthOverflowed = true
     } else {
       tempCharMeshList.push(mesh)
     }
 
-    mesh.position.setX(offset)
-    offset += width
-    if (offset > maxLineWidth) {
-      maxLineWidth = offset
+    // lineLength 초과해서 다음 줄로 내려온 경우 첫 문자가 `' '` (0x20) 문자면 처리하지 않음음
+    if (!lineLengthOverflowed || char !== ' ') {
+      mesh.position.setX(offset)
+      offset += width
+      if (offset > maxLineWidth) {
+        maxLineWidth = offset
+      }
     }
+
+    lineLengthOverflowed = false
   }
   if (tempCharMeshList.length > 0) {
     // 마지막 문자까지
