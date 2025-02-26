@@ -136,6 +136,7 @@ export const useDisplayEntityStore = create(
             position: [0, 0, 0],
             rotation: [0, 0, 0],
             lineLength: 200,
+            backgroundColor: 0x00000000,
           })
         }
       })

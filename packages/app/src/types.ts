@@ -148,6 +148,7 @@ export type TextDisplayEntity = BaseDisplayEntity & {
   kind: 'text'
   text: string
   lineLength: number
+  backgroundColor: number // RGB
 }
 
 export type DisplayEntityGroup = BaseDisplayEntity & {

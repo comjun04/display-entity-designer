@@ -6,6 +6,7 @@ import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { ModelDisplayPositionKey } from '@/types'
 
 import { SidePanel, SidePanelContent, SidePanelTitle } from '../SidePanel'
+import { ColorPickerInput } from '../ui/ColorPicker'
 
 const displayValue: (ModelDisplayPositionKey | null)[] = [
   null,
@@ -141,6 +142,19 @@ const PropertiesPanel: FC = () => {
                     .getState()
                     .setTextDisplayProperties(singleSelectedEntity.id, {
                       lineLength: value,
+                    })
+                }}
+              />
+            </div>
+            <div className="flex flex-row items-center gap-2">
+              <label className="flex-1 text-end">background_color</label>
+              <ColorPickerInput
+                value={singleSelectedEntity.backgroundColor}
+                onValueChange={(num) => {
+                  useDisplayEntityStore
+                    .getState()
+                    .setTextDisplayProperties(singleSelectedEntity.id, {
+                      backgroundColor: num,
                     })
                 }}
               />

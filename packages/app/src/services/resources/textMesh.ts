@@ -25,7 +25,11 @@ type CreateTextMeshArgs = {
   backgroundColor: ColorRepresentation
 }
 
-export async function createTextMesh({ text, lineLength }: CreateTextMeshArgs) {
+export async function createTextMesh({
+  text,
+  lineLength,
+  backgroundColor,
+}: CreateTextMeshArgs) {
   const textLinesGroup = new Group()
 
   // 모든 줄 통틀어서 최대 width를 가진 줄의 width
@@ -116,7 +120,7 @@ export async function createTextMesh({ text, lineLength }: CreateTextMeshArgs) {
 
   const backgroundGeometry = new PlaneGeometry(1, 1)
   const backgroundMaterial = new MeshBasicMaterial({
-    color: 0x000000,
+    color: backgroundColor,
     side: FrontSide,
     opacity: 1,
     transparent: true,

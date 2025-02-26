@@ -28,12 +28,18 @@ const TextDisplay: FC<TextDisplayProps> = ({
   objectRef: ref,
   onClick,
 }) => {
-  const { thisEntityLineLength, thisEntitySelected } = useDisplayEntityStore(
+  const {
+    thisEntityLineLength,
+    thisEntityBackgroundColor,
+    thisEntitySelected,
+  } = useDisplayEntityStore(
     useShallow((state) => {
       const thisEntity = state.entities.get(id)
       return {
         thisEntityLineLength:
           thisEntity?.kind === 'text' ? thisEntity.lineLength : undefined,
+        thisEntityBackgroundColor:
+          thisEntity?.kind === 'text' ? thisEntity.backgroundColor : undefined,
         thisEntitySelected: state.selectedEntityIds.includes(id),
       }
     }),
@@ -44,12 +50,17 @@ const TextDisplay: FC<TextDisplayProps> = ({
 
   useEffect(() => {
     const asyncFn = async () => {
-      if (innerGroupRef.current == null || thisEntityLineLength == null) return
+      if (
+        innerGroupRef.current == null ||
+        thisEntityLineLength == null ||
+        thisEntityBackgroundColor == null
+      )
+        return
 
       const textModelGroup = await createTextMesh({
         text,
         lineLength: thisEntityLineLength,
-        backgroundColor: '#888888',
+        backgroundColor: thisEntityBackgroundColor,
         color: '#dddddd',
       })
 
@@ -63,7 +74,7 @@ const TextDisplay: FC<TextDisplayProps> = ({
     }
 
     asyncFn().catch(console.error)
-  }, [id, text, thisEntityLineLength])
+  }, [id, text, thisEntityLineLength, thisEntityBackgroundColor])
 
   useFrame(() => {
     if (!thisEntitySelected) {

@@ -5,11 +5,19 @@ import { cn } from '@/utils'
 const ColorPickerInput = forwardRef<
   HTMLDivElement,
   JSX.IntrinsicElements['div'] & {
+    value: number
     onValueChange?: (value: number) => void
   }
->(({ className, onValueChange: onChange, ...props }, ref) => {
-  const [localValue, setLocalValue] = useState('#000000')
-  const [acceptedValue, setAcceptedValue] = useState('#000000')
+>(({ className, value, onValueChange: onChange, ...props }, ref) => {
+  const propValueHexString = '#' + value.toString(16).padStart(6, '0')
+
+  const [localValue, setLocalValue] = useState(propValueHexString)
+  const [acceptedValue, setAcceptedValue] = useState(propValueHexString)
+
+  useEffect(() => {
+    const hexString = '#' + value.toString(16).padStart(6, '0')
+    setLocalValue(hexString)
+  }, [value])
 
   useEffect(() => {
     if (!/^#[0-9A-Fa-f]{6}$/.test(localValue)) return
