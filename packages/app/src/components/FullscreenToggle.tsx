@@ -29,7 +29,7 @@ const FullscreenToggle = () => {
 
   return (
     <button className="rounded-lg bg-black p-2" onClick={toggleFullscreen}>
-      {isFullscreen ? <LuMinimize size={24}/> : <LuMaximize size={24} />}
+      {isFullscreen ? <LuMinimize size={24} /> : <LuMaximize size={24} />}
     </button>
   )
 }

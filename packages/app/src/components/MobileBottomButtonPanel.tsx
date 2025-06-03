@@ -2,6 +2,7 @@ import { LuPanelRightOpen } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
 import { useEditorStore } from '@/stores/editorStore'
+
 import FullscreenToggle from './FullscreenToggle'
 
 const MobileBottomButtonPanel: FC = () => {
