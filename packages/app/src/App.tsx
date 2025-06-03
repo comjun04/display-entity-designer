@@ -1,6 +1,7 @@
 import Scene from './Scene'
 import Sidebar from './Sidebar'
 import LeftButtonPanel from './components/LeftButtonPanel'
+import MobileBottomButtonPanel from './components/MobileBottomButtonPanel'
 import TopButtonPanel from './components/TopButtonPanel'
 import BlockDisplaySelectDialog from './components/dialog/BlockDisplaySelectDialog'
 import ExportToMinecraftDialog from './components/dialog/ExportToMinecraftDialog'
@@ -9,13 +10,14 @@ import SettingsDialog from './components/dialog/SettingsDialog'
 
 function App() {
   return (
-    <div className="flex h-full w-full flex-row">
-      <div className="relative flex-1 overflow-hidden">
+    <div className="relative h-full w-full overflow-hidden xs:flex xs:flex-row">
+      <div className="relative h-full w-full flex-1">
         <Scene />
 
         {/* floating buttons */}
         <TopButtonPanel />
         <LeftButtonPanel />
+        <MobileBottomButtonPanel />
       </div>
 
       <Sidebar />

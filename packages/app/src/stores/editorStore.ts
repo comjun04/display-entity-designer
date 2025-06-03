@@ -31,6 +31,9 @@ type EditorState = {
   mode: EditorMode
   setMode: (newMode: EditorMode) => void
 
+  mobileSidebarOpened: boolean
+  setMobileSidebarOpened: (opened: boolean) => void
+
   usingTransformControl: boolean
   setUsingTransformControl: (value: boolean) => void
 
@@ -77,6 +80,12 @@ export const useEditorStore = create(
       setMode: (newMode) =>
         set((state) => {
           state.mode = newMode
+        }),
+
+      mobileSidebarOpened: false,
+      setMobileSidebarOpened: (opened) =>
+        set((state) => {
+          state.mobileSidebarOpened = opened
         }),
 
       usingTransformControl: false,

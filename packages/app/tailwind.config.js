@@ -11,7 +11,11 @@ export default {
     '../../node_modules/@heroui/theme/dist/components/popover.js',
   ],
   theme: {
-    extend: {},
+    extend: {
+      screens: {
+        'xs': '400px'
+      }
+    },
   },
   darkMode: 'class',
   plugins: [tailwindAnimate, heroui()],
