@@ -2,6 +2,7 @@ import { Grid, PerspectiveCamera } from '@react-three/drei'
 import { Canvas, invalidate } from '@react-three/fiber'
 import { FC } from 'react'
 import { Color } from 'three'
+import { Perf } from 'r3f-perf'
 
 import CustomCameraControls from './CustomCameraControls'
 import DisplayentitiesRootGroup from './components/DisplayEntitiesRootGroup'
@@ -13,7 +14,9 @@ import { useDisplayEntityStore } from './stores/displayEntityStore'
 const Scene: FC = () => {
   return (
     <Canvas
-      frameloop="demand"
+      // temporaily set to 'always' because r3f-perf requires to work properly
+      // TODO: make debug settings > show perf monitor option and change value according to that setting
+      frameloop="always"
       scene={{
         background: new Color(0x222222),
       }}
@@ -83,6 +86,8 @@ const Scene: FC = () => {
         sectionSize={1}
         infiniteGrid
       />
+
+      <Perf position="bottom-left"/>
     </Canvas>
   )
 }
