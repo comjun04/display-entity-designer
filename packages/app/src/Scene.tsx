@@ -1,8 +1,8 @@
 import { Grid, PerspectiveCamera } from '@react-three/drei'
 import { Canvas, invalidate } from '@react-three/fiber'
-import { FC } from 'react'
-import { Color } from 'three'
 import { Perf } from 'r3f-perf'
+import { FC, useEffect, useRef } from 'react'
+import { Color } from 'three'
 
 import CustomCameraControls from './CustomCameraControls'
 import DisplayentitiesRootGroup from './components/DisplayEntitiesRootGroup'
@@ -12,13 +12,34 @@ import TransformControls from './components/TransformControls'
 import { useDisplayEntityStore } from './stores/displayEntityStore'
 
 const Scene: FC = () => {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+
+  useEffect(() => {
+    const canvas = canvasRef.current
+    if (!canvas) return
+
+    const preventDefault = (e: TouchEvent) => e.preventDefault()
+
+    canvas.addEventListener('touchmove', preventDefault, { passive: false })
+    canvas.addEventListener('gesturestart', preventDefault, { passive: false }) // For Safari
+
+    return () => {
+      canvas.removeEventListener('touchmove', preventDefault)
+      canvas.removeEventListener('gesturestart', preventDefault)
+    }
+  }, [])
+
   return (
     <Canvas
+      ref={canvasRef}
       // temporaily set to 'always' because r3f-perf requires to work properly
       // TODO: make debug settings > show perf monitor option and change value according to that setting
       frameloop="always"
       scene={{
         background: new Color(0x222222),
+      }}
+      style={{
+        touchAction: 'none',
       }}
       onPointerDown={() => {
         // frameloop="demand"일 경우 가끔 TransformControls가 작동하지 않는 경우가 발생하는데
@@ -87,7 +108,7 @@ const Scene: FC = () => {
         infiniteGrid
       />
 
-      <Perf position="bottom-left"/>
+      <Perf position="bottom-left" />
     </Canvas>
   )
 }
