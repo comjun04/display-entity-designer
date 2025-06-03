@@ -6,7 +6,7 @@ import {
 } from '@headlessui/react'
 import { useDebouncedEffect } from '@react-hookz/web'
 import { FC, JSX, useEffect, useState } from 'react'
-import { LuCopy, LuCopyCheck } from 'react-icons/lu'
+import { LuCopy, LuCopyCheck, LuX } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
 import { getLogger } from '@/services/loggerService'
@@ -82,7 +82,7 @@ const TagValidatorInput: FC<TagValidatorInputProps> = ({ onChange }) => {
   const [hasValidationErrors, setHasValidationErrors] = useState(false)
 
   return (
-    <div className="flex flex-row items-center gap-2">
+    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
       <span>Base Tag</span>
       <input
         className="rounded p-1 text-sm outline-none"
@@ -125,6 +125,8 @@ const ExportToMinecraftDialog: FC = () => {
       entities: state.entities,
     })),
   )
+
+  const closeDialog = () => setOpenedDialog(null)
 
   const [baseTag, setBaseTag] = useState('')
   const [nbtDataGenerated, setNbtDataGenerated] = useState(false)
@@ -224,16 +226,22 @@ const ExportToMinecraftDialog: FC = () => {
     >
       <DialogBackdrop
         transition
-        className="fixed inset-0 backdrop-blur-sm duration-200 ease-out data-[closed]:opacity-0"
+        className="fixed inset-0 duration-200 ease-out data-[closed]:opacity-0 xs:backdrop-blur-sm"
       />
 
-      <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
+      <div className="fixed inset-0 flex w-screen items-center justify-center xs:p-4">
         <DialogPanel
           transition
-          className="flex max-h-[90vh] w-full max-w-screen-md select-none flex-col rounded-xl bg-neutral-800 p-4 duration-200 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
+          className="flex h-full w-full max-w-screen-md select-none flex-col bg-neutral-800 p-4 duration-200 ease-out data-[closed]:scale-95 data-[closed]:opacity-0 xs:max-h-[90vh] xs:rounded-xl"
         >
-          <DialogTitle className="text-2xl font-bold">
-            Export to Minecraft
+          <DialogTitle className="flex flex-row items-center">
+            <span className="grow text-2xl font-bold">
+              Export to Minecraft{' '}
+            </span>{' '}
+            <button onClick={closeDialog}>
+              {' '}
+              <LuX size={24} />{' '}
+            </button>
           </DialogTitle>
 
           <div className="mt-2 rounded-lg bg-neutral-700 p-2">

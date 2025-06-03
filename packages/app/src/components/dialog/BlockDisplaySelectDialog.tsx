@@ -5,6 +5,7 @@ import {
   DialogTitle,
 } from '@headlessui/react'
 import { FC, useEffect, useState } from 'react'
+import { LuX } from 'react-icons/lu'
 import useSWRImmutable from 'swr/immutable'
 import { useShallow } from 'zustand/shallow'
 
@@ -50,16 +51,19 @@ const BlockDisplaySelectDialog: FC = () => {
     <Dialog open={isOpen} onClose={closeDialog} className="relative z-50">
       <DialogBackdrop
         transition
-        className="fixed inset-0 backdrop-blur-sm duration-200 ease-out data-[closed]:opacity-0"
+        className="fixed inset-0 duration-200 ease-out data-[closed]:opacity-0 xs:backdrop-blur-sm"
       />
 
-      <div className="fixed inset-0 flex w-screen items-center justify-center p-4">
+      <div className="fixed inset-0 flex w-screen items-center justify-center xs:p-4">
         <DialogPanel
           transition
-          className="flex h-[75vh] w-full max-w-screen-md select-none flex-col gap-2 rounded-xl bg-neutral-800 p-4 duration-200 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
+          className="flex h-full w-full max-w-screen-md select-none flex-col gap-2 bg-neutral-800 p-4 duration-200 ease-out data-[closed]:scale-95 data-[closed]:opacity-0 xs:h-[75vh] xs:rounded-xl"
         >
-          <DialogTitle className="text-2xl font-bold">
-            Add Block Display
+          <DialogTitle className="flex flex-row items-center">
+            <span className="grow text-2xl font-bold">Add Block Display</span>
+            <button onClick={closeDialog}>
+              <LuX size={24} />
+            </button>
           </DialogTitle>
 
           <div className="flex flex-row items-center gap-4">
