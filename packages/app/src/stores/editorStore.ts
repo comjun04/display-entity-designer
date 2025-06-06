@@ -27,6 +27,7 @@ const settingsSchema = z.object({
           [LogLevel, ...LogLevel[]]
         >(['error', 'warn', 'info', 'debug'])
         .default('info'),
+      perfMonitorEnabled: z.boolean().default(false),
     })
     .default({}),
 })

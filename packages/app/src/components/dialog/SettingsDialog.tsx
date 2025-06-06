@@ -196,7 +196,7 @@ const SettingsDialog: FC = () => {
                 />
                 <label htmlFor="settings_debug_testoption">Test Option</label>
               </div>
-              <div className="flex flex-row items-center gap-2">
+              <div className="mt-4 flex flex-row items-center gap-2">
                 <label htmlFor="settings_debug_minloglevel">
                   Minimum Log Level
                 </label>
@@ -215,6 +215,21 @@ const SettingsDialog: FC = () => {
                   <option>info</option>
                   <option>debug</option>
                 </select>
+              </div>
+              <div className="mt-4 flex flex-row items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="settings_debug_perfMonitorEnabled"
+                  checked={settings.debug.perfMonitorEnabled}
+                  onChange={(evt) => {
+                    setSettings({
+                      debug: { perfMonitorEnabled: evt.target.checked },
+                    })
+                  }}
+                />
+                <label htmlFor="settings_debug_perfMonitorEnabled">
+                  Enable Performance Monitor
+                </label>
               </div>
             </div>
           )}

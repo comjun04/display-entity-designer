@@ -10,9 +10,14 @@ import DragSelectControl from './components/DragSelectControl'
 import ShortcutHandler from './components/ShortcutHandler'
 import TransformControls from './components/TransformControls'
 import { useDisplayEntityStore } from './stores/displayEntityStore'
+import { useEditorStore } from './stores/editorStore'
 
 const Scene: FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
+
+  const perfMonitorEnabled = useEditorStore(
+    (state) => state.settings.debug.perfMonitorEnabled,
+  )
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -32,9 +37,8 @@ const Scene: FC = () => {
   return (
     <Canvas
       ref={canvasRef}
-      // temporaily set to 'always' because r3f-perf requires to work properly
-      // TODO: make debug settings > show perf monitor option and change value according to that setting
-      frameloop="always"
+      // r3f-perf requires frameloop 'always' to work properly
+      frameloop={perfMonitorEnabled ? 'always' : 'demand'}
       scene={{
         background: new Color(0x222222),
       }}
@@ -108,7 +112,7 @@ const Scene: FC = () => {
         infiniteGrid
       />
 
-      <Perf position="bottom-left" />
+      {perfMonitorEnabled && <Perf position="bottom-left" />}
     </Canvas>
   )
 }
