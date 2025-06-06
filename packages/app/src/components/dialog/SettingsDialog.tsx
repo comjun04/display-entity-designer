@@ -191,7 +191,9 @@ const SettingsDialog: FC = () => {
                   id="settings_debug_testoption"
                   checked={settings.debug.testOption}
                   onChange={(evt) => {
-                    setSettings({ debug: { testOption: evt.target.checked } })
+                    setSettings({
+                      debug: { testOption: evt.target.checked },
+                    })
                   }}
                 />
                 <label htmlFor="settings_debug_testoption">Test Option</label>
@@ -229,6 +231,21 @@ const SettingsDialog: FC = () => {
                 />
                 <label htmlFor="settings_debug_perfMonitorEnabled">
                   Enable Performance Monitor
+                </label>
+              </div>
+              <div className="mt-4 flex flex-row items-center gap-2">
+                <input
+                  type="checkbox"
+                  id="settings_debug_alertUncaughtError"
+                  checked={settings.debug.alertUncaughtError}
+                  onChange={(evt) => {
+                    setSettings({
+                      debug: { alertUncaughtError: evt.target.checked },
+                    })
+                  }}
+                />
+                <label htmlFor="settings_debug_alertUncaughtError">
+                  Notify uncaught errors with window.alert()
                 </label>
               </div>
             </div>

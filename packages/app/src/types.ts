@@ -1,6 +1,12 @@
 import { MutableRefObject, RefCallback } from 'react'
 import { Matrix4Tuple } from 'three'
 
+declare global {
+  interface Window {
+    __depl_alertUncaughtError?: boolean
+  }
+}
+
 /**
  * ref에 커스텀 함수(callback)을 쓸 수 있으면서
  * 동시에 `current` 값도 사용할 수 있는 Ref

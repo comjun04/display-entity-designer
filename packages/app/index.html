@@ -16,6 +16,13 @@
         <span>Please enable Javascript for this page from your browser to use this app.</span>
       </div>
     </noscript>
+    <script>
+      window.onerror = (e) => {
+        if (globalThis.__depl_alertUncaughtError) {
+          window.alert(e.stack ?? e)
+        }
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

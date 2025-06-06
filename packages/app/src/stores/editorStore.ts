@@ -28,6 +28,7 @@ const settingsSchema = z.object({
         >(['error', 'warn', 'info', 'debug'])
         .default('info'),
       perfMonitorEnabled: z.boolean().default(false),
+      alertUncaughtError: z.boolean().default(false),
     })
     .default({}),
 })
@@ -80,6 +81,8 @@ export const useEditorStore = create(
       testOption: false,
       minLogLevel: 'info',
     }
+    globalThis.__depl_alertUncaughtError =
+      initialSettings.debug.alertUncaughtError
 
     return {
       mode: 'translate',
@@ -143,6 +146,11 @@ export const useEditorStore = create(
       setSettings: (newSettings) =>
         set((state) => {
           merge(state.settings, newSettings)
+
+          if (newSettings.debug.alertUncaughtError != null) {
+            globalThis.__depl_alertUncaughtError =
+              newSettings.debug.alertUncaughtError
+          }
 
           try {
             window.localStorage.setItem(
