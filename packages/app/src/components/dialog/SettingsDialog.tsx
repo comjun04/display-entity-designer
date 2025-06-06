@@ -9,9 +9,10 @@ import { cn } from '@/utils'
 import Dialog from './Dialog'
 import DebugOptionsPage from './settings/DebugOptionsPage'
 import HotkeysPage from './settings/HotkeysPage'
+import PerformancePage from './settings/PerformancePage'
 import ProgramInfoPage from './settings/ProgramInfoPage'
 
-type SettingsPageType = 'hotkeys' | 'programInfo' | 'debug'
+type SettingsPageType = 'performance' | 'hotkeys' | 'programInfo' | 'debug'
 
 const SettingsDialog: FC = () => {
   const { isOpen, setOpenedDialog } = useDialogStore(
@@ -43,6 +44,17 @@ const SettingsDialog: FC = () => {
         {/* Desktop - left side settings submenu list */}
         <div className="hidden w-[30%] border-r-2 border-neutral-700 p-4 xs:block">
           <div className="mt-2 flex flex-col gap-1">
+            <button
+              className={cn(
+                'w-full rounded px-2 py-1 text-start text-sm transition duration-150',
+                selectedPage === 'performance'
+                  ? 'bg-neutral-700'
+                  : 'hover:bg-neutral-700/50',
+              )}
+              onClick={() => setSelectedPage('performance')}
+            >
+              Performance
+            </button>
             <button
               className={cn(
                 'w-full rounded px-2 py-1 text-start text-sm transition duration-150',
@@ -85,6 +97,7 @@ const SettingsDialog: FC = () => {
             value={selectedPage}
             onChange={(evt) => setSelectedPage(evt.target.value)}
           >
+            <option value="performance">Performance</option>
             <option value="hotkeys">Hotkeys</option>
             <option value="programInfo">Program Info</option>
             <option value="debug">Debug Options</option>
@@ -92,6 +105,9 @@ const SettingsDialog: FC = () => {
         </div>
 
         <div className="h-full w-full py-4 xs:px-4">
+          {/* Hotkeys */}
+          {selectedPage === 'performance' && <PerformancePage />}
+
           {/* Hotkeys */}
           {selectedPage === 'hotkeys' && <HotkeysPage />}
 

@@ -18,6 +18,11 @@ type TransformationData = {
 }
 
 const settingsSchema = z.object({
+  performance: z
+    .object({
+      reducePixelRatio: z.boolean().default(false),
+    })
+    .default({}),
   debug: z
     .object({
       testOption: z.boolean().default(false),
@@ -82,7 +87,7 @@ export const useEditorStore = create(
       minLogLevel: 'info',
     }
     globalThis.__depl_alertUncaughtError =
-      initialSettings.debug.alertUncaughtError
+      initialSettings?.debug?.alertUncaughtErro
 
     return {
       mode: 'translate',
@@ -147,7 +152,7 @@ export const useEditorStore = create(
         set((state) => {
           merge(state.settings, newSettings)
 
-          if (newSettings.debug.alertUncaughtError != null) {
+          if (newSettings?.debug?.alertUncaughtError != null) {
             globalThis.__depl_alertUncaughtError =
               newSettings.debug.alertUncaughtError
           }

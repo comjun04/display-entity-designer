@@ -18,6 +18,9 @@ const Scene: FC = () => {
   const perfMonitorEnabled = useEditorStore(
     (state) => state.settings.debug.perfMonitorEnabled,
   )
+  const reducePixelRatio = useEditorStore(
+    (state) => state.settings.performance.reducePixelRatio,
+  )
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -45,6 +48,7 @@ const Scene: FC = () => {
       style={{
         touchAction: 'none',
       }}
+      dpr={reducePixelRatio ? Math.min(window.devicePixelRatio, 1) : undefined}
       onPointerDown={() => {
         // frameloop="demand"일 경우 가끔 TransformControls가 작동하지 않는 경우가 발생하는데
         // 이를 방지하기 위해 클릭 시 강제로 다음 프레임 렌더링하도록 하여 다시 작동하도록 고치기
