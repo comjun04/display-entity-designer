@@ -36,8 +36,9 @@ const SettingsDialog: FC = () => {
       onClose={closeDialog}
       className="relative z-50"
     >
-      <div className="flex h-full w-full flex-row">
-        <div className="w-[30%] p-4 border-r-2 border-neutral-700">
+      <div className="flex h-full w-full flex-col xs:flex-row">
+        {/* Desktop - left side settings submenu list */}
+        <div className="hidden w-[30%] border-r-2 border-neutral-700 p-4 xs:block">
           <div className="mt-2 flex flex-col gap-1">
             <button
               className={cn(
@@ -74,8 +75,20 @@ const SettingsDialog: FC = () => {
             </button>
           </div>
         </div>
+        {/* Mobile - submenu <select> element on top */}
+        <div className="xs:hidden">
+          <select
+            className="w-full rounded bg-neutral-900 p-2"
+            value={selectedPage}
+            onChange={(evt) => setSelectedPage(evt.target.value)}
+          >
+            <option value="hotkeys">Hotkeys</option>
+            <option value="programInfo">Program Info</option>
+            <option value="test">test</option>
+          </select>
+        </div>
 
-        <div className="h-full w-full p-6">
+        <div className="h-full w-full py-4 xs:px-4">
           {/* Hotkeys */}
           {selectedPage === 'hotkeys' && (
             <div>
@@ -188,7 +201,7 @@ const SettingsDialog: FC = () => {
                 </label>
                 <select
                   id="settings_test_minloglevel"
-                  className="flex-none rounded bg-neutral-800 px-2 py-1"
+                  className="flex-none rounded bg-neutral-900 px-2 py-1"
                   value={settings.minLogLevel}
                   onChange={(evt) => {
                     setSettings({
