@@ -112,7 +112,7 @@ const Scene: FC = () => {
         infiniteGrid
       />
 
-      {perfMonitorEnabled && <Perf position="bottom-left" />}
+      {perfMonitorEnabled && <Perf position="bottom-left" className="z-10" />}
     </Canvas>
   )
 }
