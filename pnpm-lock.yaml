@@ -58,6 +58,9 @@ importers:
       immer:
         specifier: ^10.1.1
         version: 10.1.1
+      lodash.merge:
+        specifier: ^4.6.2
+        version: 4.6.2
       nanoid:
         specifier: ^5.0.7
         version: 5.0.7

@@ -8,7 +8,7 @@ import { cn } from '@/utils'
 
 import Dialog from './Dialog'
 
-type SettingsPageType = 'hotkeys' | 'programInfo' | 'test'
+type SettingsPageType = 'hotkeys' | 'programInfo' | 'debug'
 
 const SettingsDialog: FC = () => {
   const { isOpen, setOpenedDialog } = useDialogStore(
@@ -65,13 +65,13 @@ const SettingsDialog: FC = () => {
             <button
               className={cn(
                 'w-full rounded px-2 py-1 text-start text-sm transition duration-150',
-                selectedPage === 'test'
+                selectedPage === 'debug'
                   ? 'bg-neutral-700'
                   : 'hover:bg-neutral-700/50',
               )}
-              onClick={() => setSelectedPage('test')}
+              onClick={() => setSelectedPage('debug')}
             >
-              test menu
+              Debug Options
             </button>
           </div>
         </div>
@@ -84,7 +84,7 @@ const SettingsDialog: FC = () => {
           >
             <option value="hotkeys">Hotkeys</option>
             <option value="programInfo">Program Info</option>
-            <option value="test">test</option>
+            <option value="debug">Debug Options</option>
           </select>
         </div>
 
@@ -181,31 +181,32 @@ const SettingsDialog: FC = () => {
             </div>
           )}
 
-          {/* test page */}
-          {selectedPage === 'test' && (
+          {/* Debug */}
+          {selectedPage === 'debug' && (
             <div>
-              <div className="flex flex-row items-center gap-2">
+              <h3 className="text-xl font-bold">Debug Options</h3>
+              <div className="mt-4 flex flex-row items-center gap-2">
                 <input
                   type="checkbox"
-                  id="settings_test_testoption"
-                  checked={settings.testOption}
+                  id="settings_debug_testoption"
+                  checked={settings.debug.testOption}
                   onChange={(evt) => {
-                    setSettings({ testOption: evt.target.checked })
+                    setSettings({ debug: { testOption: evt.target.checked } })
                   }}
                 />
-                <label htmlFor="settings_test_testoption">Test Option</label>
+                <label htmlFor="settings_debug_testoption">Test Option</label>
               </div>
               <div className="flex flex-row items-center gap-2">
-                <label htmlFor="settings_test_minloglevel">
+                <label htmlFor="settings_debug_minloglevel">
                   Minimum Log Level
                 </label>
                 <select
-                  id="settings_test_minloglevel"
+                  id="settings_debug_minloglevel"
                   className="flex-none rounded bg-neutral-900 px-2 py-1"
-                  value={settings.minLogLevel}
+                  value={settings.debug.minLogLevel}
                   onChange={(evt) => {
                     setSettings({
-                      minLogLevel: evt.target.value as LogLevel,
+                      debug: { minLogLevel: evt.target.value as LogLevel },
                     })
                   }}
                 >

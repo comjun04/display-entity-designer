@@ -1,3 +1,4 @@
+import merge from 'lodash.merge'
 import { z } from 'zod'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
@@ -17,13 +18,17 @@ type TransformationData = {
 }
 
 const settingsSchema = z.object({
-  testOption: z.boolean().default(false),
-  minLogLevel: z
-    .enum<
-      LogLevel,
-      [LogLevel, ...LogLevel[]]
-    >(['error', 'warn', 'info', 'debug'])
-    .default('info'),
+  debug: z
+    .object({
+      testOption: z.boolean().default(false),
+      minLogLevel: z
+        .enum<
+          LogLevel,
+          [LogLevel, ...LogLevel[]]
+        >(['error', 'warn', 'info', 'debug'])
+        .default('info'),
+    })
+    .default({}),
 })
 type Settings = z.infer<typeof settingsSchema>
 
@@ -136,7 +141,7 @@ export const useEditorStore = create(
       settings: initialSettings,
       setSettings: (newSettings) =>
         set((state) => {
-          state.settings = { ...state.settings, ...newSettings }
+          merge(state.settings, newSettings)
 
           try {
             window.localStorage.setItem(

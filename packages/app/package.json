@@ -26,6 +26,7 @@
     "clsx": "^2.1.1",
     "framer-motion": "^12.0.5",
     "immer": "^10.1.1",
+    "lodash.merge": "^4.6.2",
     "nanoid": "^5.0.7",
     "r3f-perf": "^7.2.3",
     "react": "^18.3.1",
