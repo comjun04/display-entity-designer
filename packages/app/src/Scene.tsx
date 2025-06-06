@@ -26,7 +26,7 @@ const Scene: FC = () => {
     const canvas = canvasRef.current
     if (!canvas) return
 
-    const preventDefault = (e: TouchEvent) => e.preventDefault()
+    const preventDefault = (e: Event) => e.preventDefault()
 
     canvas.addEventListener('touchmove', preventDefault, { passive: false })
     canvas.addEventListener('gesturestart', preventDefault, { passive: false }) // For Safari

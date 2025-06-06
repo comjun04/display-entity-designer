@@ -3,7 +3,6 @@ import { useShallow } from 'zustand/shallow'
 
 import { useEditorStore } from '@/stores/editorStore'
 import { LogLevel } from '@/types'
-import { cn } from '@/utils'
 
 const DebugOptionsPage: FC = () => {
   const { settings, setSettings } = useEditorStore(

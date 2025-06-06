@@ -1,6 +1,6 @@
 import { useDebouncedEffect } from '@react-hookz/web'
 import { FC, JSX, useEffect, useState } from 'react'
-import { LuCopy, LuCopyCheck, LuX } from 'react-icons/lu'
+import { LuCopy, LuCopyCheck } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
 import { getLogger } from '@/services/loggerService'
@@ -121,8 +121,6 @@ const ExportToMinecraftDialog: FC = () => {
       entities: state.entities,
     })),
   )
-
-  const closeDialog = () => setOpenedDialog(null)
 
   const [baseTag, setBaseTag] = useState('')
   const [nbtDataGenerated, setNbtDataGenerated] = useState(false)

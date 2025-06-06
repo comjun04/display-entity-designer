@@ -27,7 +27,7 @@ const Dialog: FC<DialogProps> = ({
   return (
     <OriginalDialog
       open={open}
-      onClose={onClose}
+      onClose={() => onClose?.()}
       className={cn('relative z-50', className)}
     >
       <DialogBackdrop

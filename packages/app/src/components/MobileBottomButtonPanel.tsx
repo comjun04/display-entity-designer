@@ -1,3 +1,5 @@
+import { FC } from 'react'
+
 import { LuPanelRightOpen } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
@@ -6,9 +8,8 @@ import { useEditorStore } from '@/stores/editorStore'
 import FullscreenToggle from './FullscreenToggle'
 
 const MobileBottomButtonPanel: FC = () => {
-  const { mobileSidebarOpened, setMobileSidebarOpened } = useEditorStore(
+  const { setMobileSidebarOpened } = useEditorStore(
     useShallow((state) => ({
-      mobileSidebarOpened: state.mobileSidebarOpened,
       setMobileSidebarOpened: state.setMobileSidebarOpened,
     })),
   )

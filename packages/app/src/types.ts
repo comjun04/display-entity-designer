@@ -2,10 +2,16 @@ import { MutableRefObject, RefCallback } from 'react'
 import { Matrix4Tuple } from 'three'
 
 declare global {
-  interface Window {
-    __depl_alertUncaughtError?: boolean
-  }
+  var __depl_alertUncaughtError: boolean | undefined
 }
+
+export type DeepPartial<T> = {
+  [P in keyof T]?: T[P] extends object
+    ? T[P] extends Function
+      ? T[P]
+      : DeepPartial<T[P]>
+    : T[P];
+};
 
 /**
  * ref에 커스텀 함수(callback)을 쓸 수 있으면서

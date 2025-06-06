@@ -2,8 +2,6 @@ import { FC, useState } from 'react'
 import { useShallow } from 'zustand/shallow'
 
 import { useDialogStore } from '@/stores/dialogStore'
-import { useEditorStore } from '@/stores/editorStore'
-import { LogLevel } from '@/types'
 import { cn } from '@/utils'
 
 import Dialog from './Dialog'
@@ -19,12 +17,6 @@ const SettingsDialog: FC = () => {
     useShallow((state) => ({
       isOpen: state.openedDialog === 'settings',
       setOpenedDialog: state.setOpenedDialog,
-    })),
-  )
-  const { settings, setSettings } = useEditorStore(
-    useShallow((state) => ({
-      settings: state.settings,
-      setSettings: state.setSettings,
     })),
   )
 
@@ -95,7 +87,7 @@ const SettingsDialog: FC = () => {
           <select
             className="w-full rounded bg-neutral-900 p-2"
             value={selectedPage}
-            onChange={(evt) => setSelectedPage(evt.target.value)}
+            onChange={(evt) => setSelectedPage(evt.target.value as SettingsPageType)}
           >
             <option value="performance">Performance</option>
             <option value="hotkeys">Hotkeys</option>

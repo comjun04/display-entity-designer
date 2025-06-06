@@ -1,5 +1,4 @@
 import { FC, useEffect, useState } from 'react'
-import { LuX } from 'react-icons/lu'
 import useSWRImmutable from 'swr/immutable'
 import { useShallow } from 'zustand/shallow'
 

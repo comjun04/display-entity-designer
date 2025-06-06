@@ -4,7 +4,7 @@ import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
 import { getLogger } from '@/services/loggerService'
-import { LogLevel, Number3Tuple, PartialNumber3Tuple } from '@/types'
+import { DeepPartial, LogLevel, Number3Tuple, PartialNumber3Tuple } from '@/types'
 
 const logger = getLogger('editorStore')
 
@@ -60,7 +60,7 @@ type EditorState = {
   }) => void
 
   settings: Settings
-  setSettings: (newSettings: Partial<Settings>) => void
+  setSettings: (newSettings: DeepPartial<Settings>) => void
 
   resetProject: () => void
 }
@@ -87,7 +87,7 @@ export const useEditorStore = create(
       minLogLevel: 'info',
     }
     globalThis.__depl_alertUncaughtError =
-      initialSettings?.debug?.alertUncaughtErro
+      initialSettings?.debug?.alertUncaughtError
 
     return {
       mode: 'translate',
