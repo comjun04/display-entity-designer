@@ -1,12 +1,12 @@
 import { Grid, PerspectiveCamera } from '@react-three/drei'
 import { Canvas, invalidate } from '@react-three/fiber'
-import { Perf } from 'r3f-perf'
 import { FC, useEffect, useRef } from 'react'
 import { Color } from 'three'
 
 import CustomCameraControls from './CustomCameraControls'
 import DisplayentitiesRootGroup from './components/DisplayEntitiesRootGroup'
 import DragSelectControl from './components/DragSelectControl'
+import Perf from './components/Perf'
 import ShortcutHandler from './components/ShortcutHandler'
 import TransformControls from './components/TransformControls'
 import { useDisplayEntityStore } from './stores/displayEntityStore'
@@ -40,8 +40,7 @@ const Scene: FC = () => {
   return (
     <Canvas
       ref={canvasRef}
-      // r3f-perf requires frameloop 'always' to work properly
-      frameloop={perfMonitorEnabled ? 'always' : 'demand'}
+      frameloop="demand"
       scene={{
         background: new Color(0x222222),
       }}
@@ -116,7 +115,7 @@ const Scene: FC = () => {
         infiniteGrid
       />
 
-      {perfMonitorEnabled && <Perf position="bottom-left" className="z-10" />}
+      {perfMonitorEnabled && <Perf />}
     </Canvas>
   )
 }
