@@ -53,8 +53,12 @@ const Scene: FC = () => {
         // 이를 방지하기 위해 클릭 시 강제로 다음 프레임 렌더링하도록 하여 다시 작동하도록 고치기
         invalidate()
       }}
-      onPointerMissed={() => {
-        useDisplayEntityStore.getState().setSelected([])
+      onPointerMissed={(evt) => {
+        // 모바일환경에서 TransformControls 잡은 상태로 꾹 누르고 있으면 contextmenu(우클릭) pointer event가 여기로 호출되는데
+        // 이때 TransformControls는 아직 잡혀 있는데 선택이 풀리면서 상태가 꼬여버리므로 이를 방지
+        if (evt.type !== 'contextmenu') {
+          useDisplayEntityStore.getState().setSelected([])
+        }
       }}
     >
       {/* Axis lines */}
