@@ -14,7 +14,9 @@ type LogFunction = ((logLevel: LogLevel, ...content: unknown[]) => void) & {
 export function getLogger(prefix: string) {
   const func: LogFunction = (logLevel, ...content) => {
     const {
-      settings: { debug: { minLogLevel } },
+      settings: {
+        debug: { minLogLevel },
+      },
     } = useEditorStore.getState()
 
     const logLevelIdx = logLevelOrder.findIndex((d) => d === logLevel)

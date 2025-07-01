@@ -4,7 +4,12 @@ import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
 import { getLogger } from '@/services/loggerService'
-import { DeepPartial, LogLevel, Number3Tuple, PartialNumber3Tuple } from '@/types'
+import {
+  DeepPartial,
+  LogLevel,
+  Number3Tuple,
+  PartialNumber3Tuple,
+} from '@/types'
 
 const logger = getLogger('editorStore')
 

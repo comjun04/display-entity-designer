@@ -87,7 +87,9 @@ const SettingsDialog: FC = () => {
           <select
             className="w-full rounded bg-neutral-900 p-2"
             value={selectedPage}
-            onChange={(evt) => setSelectedPage(evt.target.value as SettingsPageType)}
+            onChange={(evt) =>
+              setSelectedPage(evt.target.value as SettingsPageType)
+            }
           >
             <option value="performance">Performance</option>
             <option value="hotkeys">Hotkeys</option>

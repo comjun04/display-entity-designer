@@ -10,8 +10,8 @@ export type DeepPartial<T> = {
     ? T[P] extends Function
       ? T[P]
       : DeepPartial<T[P]>
-    : T[P];
-};
+    : T[P]
+}
 
 /**
  * ref에 커스텀 함수(callback)을 쓸 수 있으면서
