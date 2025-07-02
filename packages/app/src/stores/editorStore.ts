@@ -1,9 +1,15 @@
+import merge from 'lodash.merge'
 import { z } from 'zod'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
 import { getLogger } from '@/services/loggerService'
-import { LogLevel, Number3Tuple, PartialNumber3Tuple } from '@/types'
+import {
+  DeepPartial,
+  LogLevel,
+  Number3Tuple,
+  PartialNumber3Tuple,
+} from '@/types'
 
 const logger = getLogger('editorStore')
 
@@ -17,19 +23,36 @@ type TransformationData = {
 }
 
 const settingsSchema = z.object({
-  testOption: z.boolean().default(false),
-  minLogLevel: z
-    .enum<
-      LogLevel,
-      [LogLevel, ...LogLevel[]]
-    >(['error', 'warn', 'info', 'debug'])
-    .default('info'),
+  performance: z
+    .object({
+      reducePixelRatio: z.boolean().default(false),
+    })
+    .default({}),
+  debug: z
+    .object({
+      testOption: z.boolean().default(false),
+      minLogLevel: z
+        .enum<
+          LogLevel,
+          [LogLevel, ...LogLevel[]]
+        >(['error', 'warn', 'info', 'debug'])
+        .default('info'),
+      perfMonitorEnabled: z.boolean().default(false),
+      alertUncaughtError: z.boolean().default(false),
+    })
+    .default({}),
 })
 type Settings = z.infer<typeof settingsSchema>
 
 type EditorState = {
   mode: EditorMode
   setMode: (newMode: EditorMode) => void
+
+  mobileSidebarOpened: boolean
+  setMobileSidebarOpened: (opened: boolean) => void
+
+  mobileDragHoldButtonPressed: boolean
+  setMobileDragHoldButtonPressed: (pressed: boolean) => void
 
   usingTransformControl: boolean
   setUsingTransformControl: (value: boolean) => void
@@ -45,7 +68,7 @@ type EditorState = {
   }) => void
 
   settings: Settings
-  setSettings: (newSettings: Partial<Settings>) => void
+  setSettings: (newSettings: DeepPartial<Settings>) => void
 
   resetProject: () => void
 }
@@ -71,12 +94,26 @@ export const useEditorStore = create(
       testOption: false,
       minLogLevel: 'info',
     }
+    globalThis.__depl_alertUncaughtError =
+      initialSettings?.debug?.alertUncaughtError
 
     return {
       mode: 'translate',
       setMode: (newMode) =>
         set((state) => {
           state.mode = newMode
+        }),
+
+      mobileSidebarOpened: false,
+      setMobileSidebarOpened: (opened) =>
+        set((state) => {
+          state.mobileSidebarOpened = opened
+        }),
+
+      mobileDragHoldButtonPressed: false,
+      setMobileDragHoldButtonPressed: (pressed) =>
+        set((state) => {
+          state.mobileDragHoldButtonPressed = pressed
         }),
 
       usingTransformControl: false,
@@ -127,7 +164,12 @@ export const useEditorStore = create(
       settings: initialSettings,
       setSettings: (newSettings) =>
         set((state) => {
-          state.settings = { ...state.settings, ...newSettings }
+          merge(state.settings, newSettings)
+
+          if (newSettings?.debug?.alertUncaughtError != null) {
+            globalThis.__depl_alertUncaughtError =
+              newSettings.debug.alertUncaughtError
+          }
 
           try {
             window.localStorage.setItem(

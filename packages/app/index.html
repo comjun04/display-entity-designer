@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
     <title>Display Entity Platform</title>
 
     <meta name="og:title" content="Display Entity Platform" />
@@ -16,6 +16,13 @@
         <span>Please enable Javascript for this page from your browser to use this app.</span>
       </div>
     </noscript>
+    <script>
+      window.onerror = (e) => {
+        if (globalThis.__depl_alertUncaughtError) {
+          window.alert(e.stack ?? e)
+        }
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

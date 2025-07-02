@@ -4,3 +4,6 @@
 packages/asset-utils/hardcoded
 packages/asset-utils/output
 packages/asset-utils/workdir
+
+# editor temp files
+*.sw?

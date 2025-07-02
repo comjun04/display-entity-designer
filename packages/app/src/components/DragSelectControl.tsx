@@ -6,6 +6,7 @@ import { Group, Vector2, Vector3 } from 'three'
 import { shallow } from 'zustand/shallow'
 
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
+import { useEditorStore } from '@/stores/editorStore'
 import { useEntityRefStore } from '@/stores/entityRefStore'
 import { cn } from '@/utils'
 
@@ -74,7 +75,8 @@ const DragSelectControl: FC<DragSelectControlProps> = ({
     }
 
     const pointerDown = (evt: PointerEvent) => {
-      if (!evt.ctrlKey) return
+      const { mobileDragHoldButtonPressed } = useEditorStore.getState()
+      if (!evt.ctrlKey && !mobileDragHoldButtonPressed) return
 
       // canvas 공간 밖에서 드래그를 시작했을 경우 처리하지 않음
       const canvasElement = gl.domElement
