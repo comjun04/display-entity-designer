@@ -51,6 +51,9 @@ type EditorState = {
   mobileSidebarOpened: boolean
   setMobileSidebarOpened: (opened: boolean) => void
 
+  mobileDragHoldButtonPressed: boolean
+  setMobileDragHoldButtonPressed: (pressed: boolean) => void
+
   usingTransformControl: boolean
   setUsingTransformControl: (value: boolean) => void
 
@@ -105,6 +108,12 @@ export const useEditorStore = create(
       setMobileSidebarOpened: (opened) =>
         set((state) => {
           state.mobileSidebarOpened = opened
+        }),
+
+      mobileDragHoldButtonPressed: false,
+      setMobileDragHoldButtonPressed: (pressed) =>
+        set((state) => {
+          state.mobileDragHoldButtonPressed = pressed
         }),
 
       usingTransformControl: false,
