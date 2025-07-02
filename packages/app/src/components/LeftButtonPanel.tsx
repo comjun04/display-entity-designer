@@ -10,6 +10,7 @@ import { useDialogStore } from '@/stores/dialogStore'
 import { useEditorStore } from '@/stores/editorStore'
 
 import FloatingButton from './FloatingButton'
+import MobileDragHoldButton from './MobileDragHoldButton'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -136,6 +137,12 @@ const LeftButtonPanel: FC = () => {
         >
           <LuMoveDiagonal size={24} />
         </FloatingButton>
+      </Tooltip>
+
+      <div />
+
+      <Tooltip>
+        <MobileDragHoldButton />
       </Tooltip>
     </div>
   )
