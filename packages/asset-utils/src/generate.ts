@@ -58,7 +58,7 @@ console.log('Extracting asset files...')
 
 const filesToExtract = zip.files.filter(
   (f) =>
-    /^assets\/minecraft\/(blockstates|models|textures\/(block|colormap|font|item))\//.test(
+    /^assets\/minecraft\/(blockstates|models|font|textures\/(block|colormap|font|item))\//.test(
       f.path,
     ) || renderableBlockEntityModelTextures.includes(f.path),
 )
