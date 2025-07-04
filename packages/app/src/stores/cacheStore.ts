@@ -4,7 +4,12 @@ import { immer } from 'zustand/middleware/immer'
 
 import { getLogger } from '@/services/loggerService'
 import { loadModel } from '@/services/resources/model'
-import { BlockstatesData, CDNModelResponse, ModelData } from '@/types'
+import {
+  BlockstatesData,
+  CDNModelResponse,
+  FontProvider,
+  ModelData,
+} from '@/types'
 
 const logger = getLogger('cacheStore')
 
@@ -44,6 +49,9 @@ type CacheStoreState = {
   // 폰트 데이터 캐시 (.png, unifont)
   fontResources: Record<string, string> // png는 data url로 저장함
   setFontResource: (key: string, data: string) => void
+
+  fontProviders: Record<string, FontProvider[]>
+  setFontProviders: (key: string, data: FontProvider[]) => void
 
   unifontHexData: Map<number, string>
   setUnifontHexData: (data: Map<number, string>) => void
@@ -104,6 +112,12 @@ export const useCacheStore = create(
     setFontResource: (key, data) =>
       set((state) => {
         state.fontResources[key] = data
+      }),
+
+    fontProviders: {},
+    setFontProviders: (key, data) =>
+      set((state) => {
+        state.fontProviders[key] = data
       }),
 
     unifontHexData: new Map(),

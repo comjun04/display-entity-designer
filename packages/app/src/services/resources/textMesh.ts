@@ -8,18 +8,24 @@ import {
   MeshBasicMaterial,
   NearestFilter,
   PlaneGeometry,
+  Texture,
+  TextureLoader,
 } from 'three'
 
 import { UnifontSizeOverrides } from '@/constants'
+import fetcher from '@/fetcher'
 import { useCacheStore } from '@/stores/cacheStore'
+import { CDNFontProviderResponse } from '@/types'
 
-const UNIFONT_FILENAME = 'unifont/unifont_all_no_pua-16.0.01.hex'
+const UNIFONT_FILENAME = 'unifont/unifont_all_no_pua-15.1.05.hex'
 
 const fontAssetLoadMutexMap = new Map<string, Mutex>()
 const unifontHexDataLoadMutex = new Mutex()
 
+type Font = 'default' | 'uniform'
 type CreateTextMeshArgs = {
   text: string // TODO: handle Raw JSON Text Format
+  font: Font
   lineLength: number
   color: ColorRepresentation
   backgroundColor: ColorRepresentation
@@ -27,6 +33,7 @@ type CreateTextMeshArgs = {
 
 export async function createTextMesh({
   text,
+  font = 'default',
   lineLength,
   backgroundColor,
 }: CreateTextMeshArgs) {
@@ -57,7 +64,7 @@ export async function createTextMesh({
     }
 
     // TODO: mesh를 만들지 않고도 width를 구하는 함수 만들기
-    const { mesh, widthPixels } = await createCharMesh(char)
+    const { mesh, widthPixels } = await createCharMesh(char, font)
     const width = widthPixels * 0.0125 // x0.0125 scale 적용
 
     const offsetPixels = offset / 0.0125
@@ -178,7 +185,7 @@ async function loadUnifontHexFile(filePath: string) {
   useCacheStore.getState().setUnifontHexData(unifontHexDataNewMap)
 }
 
-async function getCharPixels(char: string) {
+async function getUnifontCharPixels(char: string) {
   const charCode = char.charCodeAt(0)
 
   if (!useCacheStore.getState().unifontHexData.has(charCode)) {
@@ -273,38 +280,103 @@ async function getCharPixels(char: string) {
   return pixels
 }
 
-async function createCharMesh(char: string) {
-  const pixels = await getCharPixels(char)
-  const height = pixels.length
-  const width = pixels[0].length
+async function getBitmapFontCharData(char: string) {
+  const { fontProviders, setFontProviders } = useCacheStore.getState()
 
-  const canvas = document.createElement('canvas')
-  canvas.width = width
-  canvas.height = height
-
-  const context = canvas.getContext('2d')
-  if (context == null) {
-    throw new Error('Cannot get canvas 2d context')
+  // load character providers
+  let defaultFontProviders = fontProviders['provider.default']
+  if (fontProviders['provider.default'] == null) {
+    const { providers } = (await fetcher(
+      '/assets/minecraft/font/include/default.json',
+    )) as CDNFontProviderResponse
+    setFontProviders('provider.default', providers)
+    defaultFontProviders = providers
   }
 
-  for (let row = 0; row < height; row++) {
-    for (let col = 0; col < width; col++) {
-      const pixelValue = pixels[row][col]
-      // 0x123456 형식 안먹힘, 'white'나 '#000000' 같이 css에서 사용 가능한 형식만 먹힘
-      const pixelColor = pixelValue ? '#ffffff' : '#00000000' // transparent if false
-
-      context.fillStyle = pixelColor
-      context.fillRect(col, row, 1, 1)
+  // find character
+  for (const provider of defaultFontProviders.filter(
+    (provider) => provider.type === 'bitmap',
+  )) {
+    for (let i = 0; i < provider.chars.length; i++) {
+      const idx = provider.chars[i].indexOf(char[0])
+      if (idx >= 0) {
+        return {
+          file: provider.file,
+          height: provider.height,
+          ascent: provider.ascent,
+          row: i,
+          col: idx, // \u0000 = 6 chars
+        }
+      }
     }
   }
+}
 
-  const texture = new CanvasTexture(canvas)
+const defaultFontTextureLoader = new TextureLoader()
+async function createCharMesh(char: string, font: Font) {
+  let texture!: Texture
+  let geometry!: PlaneGeometry
+  let width!: number
+
+  if (font === 'default') {
+    const fontCharData = await getBitmapFontCharData(char)
+    if (fontCharData == null) {
+      throw new Error('unsupported')
+    }
+
+    texture = await defaultFontTextureLoader.loadAsync(
+      `${import.meta.env.VITE_CDN_BASE_URL}/assets/minecraft/textures/font/ascii.png`,
+    )
+    texture.flipY = false
+
+    geometry = new PlaneGeometry(8, 8)
+    geometry.translate(4, 4, 0.1)
+    geometry.scale(0.0125, 0.0125, 0.0125)
+    width = 8
+
+    const u = fontCharData.col / 16
+    const v = fontCharData.row / 16 // flip Y
+    const uvSize = 1 / 16 // uvWidth, uvHeight
+
+    const uvAttr = geometry.attributes.uv
+    uvAttr.setXY(0, u, v)
+    uvAttr.setXY(1, u + uvSize, v)
+    uvAttr.setXY(2, u, v + uvSize)
+    uvAttr.setXY(3, u + uvSize, v + uvSize)
+  } else if (font === 'uniform') {
+    const pixels = await getUnifontCharPixels(char)
+    const height = pixels.length
+    width = pixels[0].length
+
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = height
+
+    const context = canvas.getContext('2d')
+    if (context == null) {
+      throw new Error('Cannot get canvas 2d context')
+    }
+
+    for (let row = 0; row < height; row++) {
+      for (let col = 0; col < width; col++) {
+        const pixelValue = pixels[row][col]
+        // 0x123456 형식 안먹힘, 'white'나 '#000000' 같이 css에서 사용 가능한 형식만 먹힘
+        const pixelColor = pixelValue ? '#ffffff' : '#00000000' // transparent if false
+
+        context.fillStyle = pixelColor
+        context.fillRect(col, row, 1, 1)
+      }
+    }
+
+    texture = new CanvasTexture(canvas)
+
+    geometry = new PlaneGeometry(width, height)
+    geometry.translate(width / 2, height / 2, 0.1)
+    geometry.scale(0.0125, 0.0125, 0.0125)
+  }
+
   texture.minFilter = NearestFilter
   texture.magFilter = NearestFilter
-
-  const geometry = new PlaneGeometry(width, height)
-  geometry.translate(width / 2, height / 2, 0.1)
-  geometry.scale(0.0125, 0.0125, 0.0125)
 
   const material = new MeshBasicMaterial({
     map: texture,

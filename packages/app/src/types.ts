@@ -135,6 +135,23 @@ export type CDNItemsListResponse = {
   items: string[]
 }
 
+export type FontProvider =
+  | {
+      type: 'bitmap'
+      ascent: number
+      chars: string[]
+      file: string
+      height: number
+    }
+  | {
+      type: 'space'
+      advances: Record<string, number>
+    }
+
+export type CDNFontProviderResponse = {
+  providers: FontProvider[]
+}
+
 export type BaseDisplayEntity = {
   id: string
   parent?: string

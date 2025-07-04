@@ -59,6 +59,7 @@ const TextDisplay: FC<TextDisplayProps> = ({
 
       const textModelGroup = await createTextMesh({
         text,
+        //font: 'uniform',
         lineLength: thisEntityLineLength,
         backgroundColor: thisEntityBackgroundColor,
         color: '#dddddd',
