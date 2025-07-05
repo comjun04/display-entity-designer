@@ -64,8 +64,11 @@ export async function createTextMesh({
     }
 
     // TODO: mesh를 만들지 않고도 width를 구하는 함수 만들기
-    const { mesh, widthPixels } = await createCharMesh(char, font)
-    const scale = 0.2 / 8
+    const { mesh, widthPixels, baseWidthPixels } = await createCharMesh(
+      char,
+      font,
+    )
+    const scale = 0.2 / baseWidthPixels
     const width = widthPixels * scale
 
     const offsetPixels = offset / scale
@@ -238,17 +241,6 @@ async function createBitmapFontCharTexture(char: string) {
     croppedWidth,
     canvas.height,
   )
-  console.log(
-    char,
-    croppedCanvas.width,
-    croppedCanvas.height,
-    croppedCanvasCtx.getImageData(
-      0,
-      0,
-      croppedCanvas.width,
-      croppedCanvas.height,
-    ).data,
-  )
 
   const texture = new CanvasTexture(croppedCanvas)
   return {
@@ -407,12 +399,14 @@ async function getBitmapFontCharData(char: string) {
 async function createCharMesh(char: string, font: Font) {
   let texture!: Texture
   let geometry!: PlaneGeometry
-  let width!: number
+  let width!: number // 애벽 자르고 난 뒤의 width
+  let baseWidth!: number // 여백 자르기 전 원래 width
 
   if (font === 'default') {
     const d = await createBitmapFontCharTexture(char)
     texture = d.texture
     width = d.width
+    baseWidth = 8
 
     geometry = new PlaneGeometry(width, d.height)
     geometry.translate(width / 2, d.height / 2, 0.1)
@@ -420,6 +414,7 @@ async function createCharMesh(char: string, font: Font) {
   } else if (font === 'uniform') {
     const pixels = await getUnifontCharPixels(char)
     const height = pixels.length
+    baseWidth = height // 여백 자르기 전에는 width와 height가 동일
     width = pixels[0].length
 
     const canvas = document.createElement('canvas')
@@ -464,5 +459,6 @@ async function createCharMesh(char: string, font: Font) {
   return {
     mesh,
     widthPixels: width,
+    baseWidthPixels: baseWidth,
   }
 }
