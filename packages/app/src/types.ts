@@ -141,7 +141,7 @@ export type FontProvider =
       ascent: number
       chars: string[]
       file: string
-      height: number
+      height?: number
     }
   | {
       type: 'space'

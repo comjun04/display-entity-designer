@@ -4,12 +4,12 @@ import {
   ColorRepresentation,
   FrontSide,
   Group,
+  ImageLoader,
   Mesh,
   MeshBasicMaterial,
   NearestFilter,
   PlaneGeometry,
   Texture,
-  TextureLoader,
 } from 'three'
 
 import { UnifontSizeOverrides } from '@/constants'
@@ -65,9 +65,10 @@ export async function createTextMesh({
 
     // TODO: mesh를 만들지 않고도 width를 구하는 함수 만들기
     const { mesh, widthPixels } = await createCharMesh(char, font)
-    const width = widthPixels * 0.0125 // x0.0125 scale 적용
+    const scale = 0.2 / 8
+    const width = widthPixels * scale
 
-    const offsetPixels = offset / 0.0125
+    const offsetPixels = offset / scale
 
     // 주어진 line length의 2배 값이 한 줄에 입력된 글자의 픽셀 수(여백 포함)보다 많으면
     // 그 다음 글자부터 다음 줄로 내리기
@@ -164,6 +165,97 @@ async function loadFontResource(filePath: string) {
     // implement png font later
     // const
   })
+}
+
+const imageLoader = new ImageLoader()
+imageLoader.setCrossOrigin('anonymous')
+async function createBitmapFontCharTexture(char: string) {
+  const fontCharData = await getBitmapFontCharData(char)
+  if (fontCharData == null) {
+    throw new Error('unsupported')
+  }
+
+  const img = await imageLoader.loadAsync(
+    `${import.meta.env.VITE_CDN_BASE_URL}/assets/minecraft/textures/font/ascii.png`,
+  )
+
+  const canvas = document.createElement('canvas')
+  canvas.width = 8
+  canvas.height = fontCharData.height
+
+  const ctx = canvas.getContext('2d')
+  if (ctx == null) {
+    throw new Error('Cannot get canvas 2d context')
+  }
+
+  ctx.drawImage(
+    img,
+    fontCharData.col * canvas.width,
+    fontCharData.row * canvas.height,
+    canvas.width,
+    canvas.height,
+    0,
+    0,
+    canvas.width,
+    canvas.height,
+  )
+  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+
+  // scan for non-transparent area
+  let minX = canvas.width
+  let maxX = 0
+  for (let y = 0; y < canvas.height; y++) {
+    for (let x = 0; x < canvas.width; x++) {
+      const idx = (y * canvas.width + x) * 4
+      const alpha = imgData.data[idx + 3]
+      if (alpha > 0) {
+        if (x < minX) minX = x
+        if (x > maxX) maxX = x
+      }
+    }
+  }
+
+  // if the character is blank (no pixels), use a fallbacl 1x1
+  if (minX > maxX) {
+    minX = 0
+    maxX = 0
+  }
+
+  const croppedWidth = maxX - minX + 1
+
+  const croppedCanvas = document.createElement('canvas')
+  croppedCanvas.width = croppedWidth
+  croppedCanvas.height = canvas.height
+  const croppedCanvasCtx = croppedCanvas.getContext('2d')!
+  croppedCanvasCtx.drawImage(
+    canvas,
+    minX,
+    0,
+    maxX + 1,
+    canvas.height,
+    0,
+    0,
+    croppedWidth,
+    canvas.height,
+  )
+  console.log(
+    char,
+    croppedCanvas.width,
+    croppedCanvas.height,
+    croppedCanvasCtx.getImageData(
+      0,
+      0,
+      croppedCanvas.width,
+      croppedCanvas.height,
+    ).data,
+  )
+
+  const texture = new CanvasTexture(croppedCanvas)
+  return {
+    texture,
+    width: croppedWidth,
+    height: canvas.height,
+  }
 }
 
 async function loadUnifontHexFile(filePath: string) {
@@ -302,47 +394,29 @@ async function getBitmapFontCharData(char: string) {
       if (idx >= 0) {
         return {
           file: provider.file,
-          height: provider.height,
+          height: provider.height ?? 8,
           ascent: provider.ascent,
           row: i,
-          col: idx, // \u0000 = 6 chars
+          col: idx,
         }
       }
     }
   }
 }
 
-const defaultFontTextureLoader = new TextureLoader()
 async function createCharMesh(char: string, font: Font) {
   let texture!: Texture
   let geometry!: PlaneGeometry
   let width!: number
 
   if (font === 'default') {
-    const fontCharData = await getBitmapFontCharData(char)
-    if (fontCharData == null) {
-      throw new Error('unsupported')
-    }
+    const d = await createBitmapFontCharTexture(char)
+    texture = d.texture
+    width = d.width
 
-    texture = await defaultFontTextureLoader.loadAsync(
-      `${import.meta.env.VITE_CDN_BASE_URL}/assets/minecraft/textures/font/ascii.png`,
-    )
-    texture.flipY = false
-
-    geometry = new PlaneGeometry(8, 8)
-    geometry.translate(4, 4, 0.1)
-    geometry.scale(0.0125, 0.0125, 0.0125)
-    width = 8
-
-    const u = fontCharData.col / 16
-    const v = fontCharData.row / 16 // flip Y
-    const uvSize = 1 / 16 // uvWidth, uvHeight
-
-    const uvAttr = geometry.attributes.uv
-    uvAttr.setXY(0, u, v)
-    uvAttr.setXY(1, u + uvSize, v)
-    uvAttr.setXY(2, u, v + uvSize)
-    uvAttr.setXY(3, u + uvSize, v + uvSize)
+    geometry = new PlaneGeometry(width, d.height)
+    geometry.translate(width / 2, d.height / 2, 0.1)
+    geometry.scale(0.025, 0.025, 0.025)
   } else if (font === 'uniform') {
     const pixels = await getUnifontCharPixels(char)
     const height = pixels.length
