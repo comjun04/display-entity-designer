@@ -14,7 +14,7 @@ import {
 
 import { UnifontSizeOverrides } from '@/constants'
 import fetcher from '@/fetcher'
-import { useCacheStore } from '@/stores/cacheStore'
+import { useCacheStore, useClassObjectCacheStore } from '@/stores/cacheStore'
 import { CDNFontProviderResponse } from '@/types'
 
 const UNIFONT_FILENAME = 'unifont/unifont_all_no_pua-15.1.05.hex'
@@ -411,61 +411,83 @@ async function getBitmapFontCharData(char: string) {
 async function createCharMesh(char: string, font: Font) {
   let texture!: Texture
   let geometry!: PlaneGeometry
+  let material!: MeshBasicMaterial
   let width!: number // 애벽 자르고 난 뒤의 width
   let baseWidth!: number // 여백 자르기 전 원래 width
 
-  if (font === 'default') {
-    const d = await createBitmapFontCharTexture(char)
-    texture = d.texture
-    width = d.width
-    baseWidth = 8
+  // check for cached glyph data
+  const { fontGlyphs: cache, setFontGlyph } =
+    useClassObjectCacheStore.getState()
+  const key = `${font};${char.charCodeAt(0).toString(16)}`
 
-    geometry = new PlaneGeometry(width, d.height)
-    geometry.translate(width / 2, d.height / 2, 0.1)
-    geometry.scale(0.025, 0.025, 0.025)
-  } else if (font === 'uniform') {
-    const pixels = await getUnifontCharPixels(char)
-    const height = pixels.length
-    baseWidth = height // 여백 자르기 전에는 width와 height가 동일
-    width = pixels[0].length
+  const d = cache.get(key)
+  if (d != null) {
+    geometry = d.geometry
+    material = d.material
+    width = d.widthPixels
+    baseWidth = d.baseWidthPixels
+  } else {
+    if (font === 'default') {
+      const d = await createBitmapFontCharTexture(char)
+      texture = d.texture
+      width = d.width
+      baseWidth = 8
 
-    const canvas = document.createElement('canvas')
-    canvas.width = width
-    canvas.height = height
+      geometry = new PlaneGeometry(width, d.height)
+      geometry.translate(width / 2, d.height / 2, 0.1)
+      geometry.scale(0.025, 0.025, 0.025)
+    } else if (font === 'uniform') {
+      const pixels = await getUnifontCharPixels(char)
+      const height = pixels.length
+      baseWidth = height // 여백 자르기 전에는 width와 height가 동일
+      width = pixels[0].length
 
-    const context = canvas.getContext('2d')
-    if (context == null) {
-      throw new Error('Cannot get canvas 2d context')
-    }
+      const canvas = document.createElement('canvas')
+      canvas.width = width
+      canvas.height = height
 
-    for (let row = 0; row < height; row++) {
-      for (let col = 0; col < width; col++) {
-        const pixelValue = pixels[row][col]
-        // 0x123456 형식 안먹힘, 'white'나 '#000000' 같이 css에서 사용 가능한 형식만 먹힘
-        const pixelColor = pixelValue ? '#ffffff' : '#00000000' // transparent if false
-
-        context.fillStyle = pixelColor
-        context.fillRect(col, row, 1, 1)
+      const context = canvas.getContext('2d')
+      if (context == null) {
+        throw new Error('Cannot get canvas 2d context')
       }
+
+      for (let row = 0; row < height; row++) {
+        for (let col = 0; col < width; col++) {
+          const pixelValue = pixels[row][col]
+          // 0x123456 형식 안먹힘, 'white'나 '#000000' 같이 css에서 사용 가능한 형식만 먹힘
+          const pixelColor = pixelValue ? '#ffffff' : '#00000000' // transparent if false
+
+          context.fillStyle = pixelColor
+          context.fillRect(col, row, 1, 1)
+        }
+      }
+
+      texture = new CanvasTexture(canvas)
+
+      geometry = new PlaneGeometry(width, height)
+      geometry.translate(width / 2, height / 2, 0.1)
+      geometry.scale(0.0125, 0.0125, 0.0125)
     }
 
-    texture = new CanvasTexture(canvas)
+    texture.minFilter = NearestFilter
+    texture.magFilter = NearestFilter
 
-    geometry = new PlaneGeometry(width, height)
-    geometry.translate(width / 2, height / 2, 0.1)
-    geometry.scale(0.0125, 0.0125, 0.0125)
+    material = new MeshBasicMaterial({
+      map: texture,
+      side: FrontSide,
+      transparent: true,
+      opacity: 1,
+      alphaTest: 0.01,
+    })
+
+    // cache glyph data
+    setFontGlyph(key, {
+      geometry,
+      material,
+      widthPixels: width,
+      baseWidthPixels: baseWidth,
+    })
   }
-
-  texture.minFilter = NearestFilter
-  texture.magFilter = NearestFilter
-
-  const material = new MeshBasicMaterial({
-    map: texture,
-    side: FrontSide,
-    transparent: true,
-    opacity: 1,
-    alphaTest: 0.01,
-  })
 
   const mesh = new Mesh(geometry, material)
   return {
