@@ -5,6 +5,7 @@ import { useShallow } from 'zustand/shallow'
 
 import { createTextMesh } from '@/services/resources/textMesh'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
+import { useEditorStore } from '@/stores/editorStore'
 import { Number3Tuple } from '@/types'
 
 import BoundingBox from './BoundingBox'
@@ -44,6 +45,9 @@ const TextDisplay: FC<TextDisplayProps> = ({
       }
     }),
   )
+  const forceUnifont = useEditorStore(
+    (state) => state.settings.general.forceUnifont,
+  )
 
   const innerGroupRef = useRef<Group>(null)
   const textModelGroupRef = useRef<Group>()
@@ -54,12 +58,13 @@ const TextDisplay: FC<TextDisplayProps> = ({
         innerGroupRef.current == null ||
         thisEntityLineLength == null ||
         thisEntityBackgroundColor == null
-      )
+      ) {
         return
+      }
 
       const textModelGroup = await createTextMesh({
         text,
-        //font: 'uniform',
+        font: forceUnifont ? 'uniform' : 'default',
         lineLength: thisEntityLineLength,
         backgroundColor: thisEntityBackgroundColor,
         color: '#dddddd',
@@ -75,7 +80,7 @@ const TextDisplay: FC<TextDisplayProps> = ({
     }
 
     asyncFn().catch(console.error)
-  }, [id, text, thisEntityLineLength, thisEntityBackgroundColor])
+  }, [id, text, thisEntityLineLength, thisEntityBackgroundColor, forceUnifont])
 
   useFrame(() => {
     if (!thisEntitySelected) {

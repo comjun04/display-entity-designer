@@ -23,6 +23,11 @@ type TransformationData = {
 }
 
 const settingsSchema = z.object({
+  general: z
+    .object({
+      forceUnifont: z.boolean().default(false),
+    })
+    .default({}),
   performance: z
     .object({
       reducePixelRatio: z.boolean().default(false),
