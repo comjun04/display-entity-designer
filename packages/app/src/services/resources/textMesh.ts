@@ -68,6 +68,9 @@ export async function createTextMesh({
       char,
       font,
     )
+    // scale, width of one pixel
+    // scale = 0.025 if baseWidthPixels = 8
+    // scale = 0.0125 if baseWidthPixels = 16
     const scale = 0.2 / baseWidthPixels
     const width = widthPixels * scale
 
@@ -96,8 +99,12 @@ export async function createTextMesh({
       tempCharMeshList.push(mesh)
     }
 
-    // lineLength 초과해서 다음 줄로 내려온 경우 첫 문자가 `' '` (0x20) 문자면 처리하지 않음음
+    // lineLength 초과해서 다음 줄로 내려온 경우 첫 문자가 `' '` (0x20) 문자면 처리하지 않음
     if (!lineLengthOverflowed || char !== ' ') {
+      // 각 줄 첫 글자 왼쪽에 spacing 넣을지 결정
+      if (font === 'uniform' || tempCharMeshList.length > 1) {
+        offset += scale
+      }
       mesh.position.setX(offset)
       offset += width
       if (offset > maxLineWidth) {
@@ -118,16 +125,19 @@ export async function createTextMesh({
     // line height calculation
     lineGroup.position.set(
       (maxLineWidth / 2) * -1, // 중앙에 위치하도록 조정
-      0.0125 * 20 * (textLinesGroup.children.length - i - 1) + 2 * 0.0125, // 각 줄당 위아래 2픽셀 여백
+      0.0125 * 20 * (textLinesGroup.children.length - i - 1) + // 각 줄당 위아래 2픽셀 여백
+        2 * (font === 'uniform' ? 0.0125 : 0.025), // 맨 하단에 2픽셀 여백
       0,
     )
   }
 
   // 텍스트가 아무것도 없을 경우 (최대 width가 0일 경우) 좌우 여백도 표시하지 않음
   if (maxLineWidth > 0) {
-    maxLineWidth += 0.0125 * 2 // 좌우 1픽셀 여백
+    maxLineWidth += (font === 'uniform' ? 0.0125 : 0.025) * 2 // 좌우 1픽셀 여백
   }
-  const maxLineHeight = 0.0125 * 20 * textLinesGroup.children.length
+  const maxLineHeight =
+    0.0125 * 20 * textLinesGroup.children.length +
+    (font !== 'unifont' ? 0.025 : 0)
 
   const backgroundGeometry = new PlaneGeometry(1, 1)
   const backgroundMaterial = new MeshBasicMaterial({
@@ -296,6 +306,8 @@ async function getUnifontCharPixels(char: string) {
    *   - 홀수면: 왼쪽에만 여백 1픽셀 추가
    *   - 단, unifont.json 파일에 `size_overrides`에 해당 문자가 포함되어 있을 경우 거기에 적힌 left와 right 값으로 width를 산출하고 여백 적용
    *     (좌우여백 자르고 픽셀수 세는거보다 이게 우선)
+   *
+   *   - 왼쪽 여백은 bitmap font 간격 조정과 통합하기 위해 여기서 처리하지 않음
    */
 
   // 마크에서 사용하는 unifont는 width가 8픽셀 아니면 16픽셀만 존재하므로 단순하게 핸들링
@@ -350,10 +362,10 @@ async function getUnifontCharPixels(char: string) {
       const row = pixels[i]
       const newRow = row.slice(totalLeft, totalRight + 1)
 
-      // trimmedWidth의 홀짝 여부 상관없이 왼쪽 1픽셀 여백 추가
-      newRow.unshift(false)
+      // 왼쪽 1픽셀 여백은 createTextMesh()에서 처리함
+
       if (trimmedWidth % 2 === 0) {
-        // trimmedWidth이 짝수일 경우 오른쪽 1픽셀 여백도 추가
+        // trimmedWidth이 짝수일 경우 오른쪽 1픽셀 여백 추가
         newRow.push(false)
       }
 
