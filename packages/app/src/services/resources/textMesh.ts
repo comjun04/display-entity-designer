@@ -16,6 +16,7 @@ import { UnifontSizeOverrides } from '@/constants'
 import fetcher from '@/fetcher'
 import { useCacheStore, useClassObjectCacheStore } from '@/stores/cacheStore'
 import { CDNFontProviderResponse } from '@/types'
+import { stripMinecraftPrefix } from '@/utils'
 
 const UNIFONT_FILENAME = 'unifont/unifont_all_no_pua-15.1.05.hex'
 
@@ -39,19 +40,25 @@ export async function createTextMesh({
 }: CreateTextMeshArgs) {
   const textLinesGroup = new Group()
 
+  const pixelSize = font === 'uniform' ? 0.0125 : 0.025
+
   // 모든 줄 통틀어서 최대 width를 가진 줄의 width
   let maxLineWidth = 0
+  let lineHeightPixels = 0
   let offset = 0
   let lineLengthOverflowed = false
   const tempCharMeshList: Mesh[] = []
+  const textLinesHeightPixelsList: number[] = []
 
   for (const [charIdx, char] of text.split('').entries()) {
     if (char === '\n') {
       const lineGroup = new Group()
       lineGroup.add(...tempCharMeshList)
       textLinesGroup.add(lineGroup)
+      textLinesHeightPixelsList.push(lineHeightPixels)
 
-      tempCharMeshList.length = 0 // clear list
+      tempCharMeshList.length = 0
+      lineHeightPixels = 0
       continue
     }
 
@@ -64,10 +71,8 @@ export async function createTextMesh({
     }
 
     // TODO: mesh를 만들지 않고도 width를 구하는 함수 만들기
-    const { mesh, widthPixels, baseWidthPixels } = await createCharMesh(
-      char,
-      font,
-    )
+    const { mesh, widthPixels, baseWidthPixels, heightPixels } =
+      await createCharMesh(char, font)
     // scale, width of one pixel
     // scale = 0.025 if baseWidthPixels = 8
     // scale = 0.0125 if baseWidthPixels = 16
@@ -84,19 +89,27 @@ export async function createTextMesh({
         const lineGroup = new Group()
         lineGroup.add(...tempCharMeshList)
         textLinesGroup.add(lineGroup)
+        textLinesHeightPixelsList.push(lineHeightPixels)
       }
 
       // 입력한 글자는 다음 줄로 예약
       tempCharMeshList.length = 0
+      lineHeightPixels = 0
       if (char !== ' ') {
         // 다음 줄로 예약을 걸 경우 첫 문자가 `' '` (0x20)이 아닌 경우에만 새 줄에 넣기
         tempCharMeshList.push(mesh)
+        if (lineHeightPixels < heightPixels) {
+          lineHeightPixels = heightPixels
+        }
       }
 
       offset = 0
       lineLengthOverflowed = true
     } else {
       tempCharMeshList.push(mesh)
+      if (lineHeightPixels < heightPixels) {
+        lineHeightPixels = heightPixels
+      }
     }
 
     // lineLength 초과해서 다음 줄로 내려온 경우 첫 문자가 `' '` (0x20) 문자면 처리하지 않음
@@ -119,25 +132,31 @@ export async function createTextMesh({
     const lineGroup = new Group()
     lineGroup.add(...tempCharMeshList)
     textLinesGroup.add(lineGroup)
+    textLinesHeightPixelsList.push(lineHeightPixels)
   }
 
-  for (const [i, lineGroup] of textLinesGroup.children.entries()) {
-    // line height calculation
+  let maxHeight = 0
+
+  for (const [i, lineGroup] of textLinesGroup.children.toReversed().entries()) {
+    const heightPixels =
+      textLinesHeightPixelsList[textLinesHeightPixelsList.length - i - 1]
+    const bottomSpacing = (font === 'uniform' ? 4 : 2) * pixelSize // 줄 하단 여백
+    const heightPixelsWithSpacing = heightPixels + (font === 'uniform' ? 4 : 2) // 각 줄당 아래 2픽셀 여백
     lineGroup.position.set(
       (maxLineWidth / 2) * -1, // 중앙에 위치하도록 조정
-      0.0125 * 20 * (textLinesGroup.children.length - i - 1) + // 각 줄당 위아래 2픽셀 여백
-        2 * (font === 'uniform' ? 0.0125 : 0.025), // 맨 하단에 2픽셀 여백
+      maxHeight + bottomSpacing,
       0,
     )
+
+    maxHeight += heightPixelsWithSpacing * pixelSize
   }
+
+  maxHeight += (font === 'uniform' ? 2 : 1) * pixelSize // 맨 위 여백
 
   // 텍스트가 아무것도 없을 경우 (최대 width가 0일 경우) 좌우 여백도 표시하지 않음
   if (maxLineWidth > 0) {
     maxLineWidth += (font === 'uniform' ? 0.0125 : 0.025) * 2 // 좌우 1픽셀 여백
   }
-  const maxLineHeight =
-    0.0125 * 20 * textLinesGroup.children.length +
-    (font !== 'unifont' ? 0.025 : 0)
 
   const backgroundGeometry = new PlaneGeometry(1, 1)
   const backgroundMaterial = new MeshBasicMaterial({
@@ -148,8 +167,8 @@ export async function createTextMesh({
     alphaTest: 0.01,
   })
   const backgroundMesh = new Mesh(backgroundGeometry, backgroundMaterial)
-  backgroundMesh.position.set(0, maxLineHeight / 2, 0)
-  backgroundMesh.scale.set(maxLineWidth, maxLineHeight, 1)
+  backgroundMesh.position.set(0, maxHeight / 2, 0)
+  backgroundMesh.scale.set(maxLineWidth, maxHeight, 1)
   textLinesGroup.add(backgroundMesh)
 
   return textLinesGroup
@@ -189,11 +208,11 @@ async function createBitmapFontCharTexture(char: string) {
   }
 
   const img = await imageLoader.loadAsync(
-    `${import.meta.env.VITE_CDN_BASE_URL}/assets/minecraft/textures/font/ascii.png`,
+    `${import.meta.env.VITE_CDN_BASE_URL}/assets/minecraft/textures/${stripMinecraftPrefix(fontCharData.file)}`,
   )
 
   const canvas = document.createElement('canvas')
-  canvas.width = 8
+  canvas.width = fontCharData.width
   canvas.height = fontCharData.height
 
   const ctx = canvas.getContext('2d')
@@ -256,6 +275,7 @@ async function createBitmapFontCharTexture(char: string) {
   return {
     texture,
     width: croppedWidth,
+    baseWidth: canvas.width,
     height: canvas.height,
   }
 }
@@ -396,9 +416,13 @@ async function getBitmapFontCharData(char: string) {
     for (let i = 0; i < provider.chars.length; i++) {
       const idx = provider.chars[i].indexOf(char[0])
       if (idx >= 0) {
+        const isAccentChar = provider.file.endsWith('/accented.png')
+
+        // accented characters use 12x9 pixels, others use 8x8 (vertical x horizontial)
         return {
           file: provider.file,
-          height: provider.height ?? 8,
+          width: isAccentChar ? 9 : 8,
+          height: (provider.height ?? isAccentChar) ? 12 : 8,
           ascent: provider.ascent,
           row: i,
           col: idx,
@@ -414,6 +438,7 @@ async function createCharMesh(char: string, font: Font) {
   let material!: MeshBasicMaterial
   let width!: number // 애벽 자르고 난 뒤의 width
   let baseWidth!: number // 여백 자르기 전 원래 width
+  let height!: number
 
   // check for cached glyph data
   const { fontGlyphs: cache, setFontGlyph } =
@@ -426,19 +451,21 @@ async function createCharMesh(char: string, font: Font) {
     material = d.material
     width = d.widthPixels
     baseWidth = d.baseWidthPixels
+    height = d.heightPixels
   } else {
     if (font === 'default') {
       const d = await createBitmapFontCharTexture(char)
       texture = d.texture
       width = d.width
-      baseWidth = 8
+      baseWidth = d.baseWidth
+      height = d.height
 
       geometry = new PlaneGeometry(width, d.height)
       geometry.translate(width / 2, d.height / 2, 0.1)
       geometry.scale(0.025, 0.025, 0.025)
     } else if (font === 'uniform') {
       const pixels = await getUnifontCharPixels(char)
-      const height = pixels.length
+      height = pixels.length
       baseWidth = height // 여백 자르기 전에는 width와 height가 동일
       width = pixels[0].length
 
@@ -486,6 +513,7 @@ async function createCharMesh(char: string, font: Font) {
       material,
       widthPixels: width,
       baseWidthPixels: baseWidth,
+      heightPixels: height,
     })
   }
 
@@ -494,5 +522,6 @@ async function createCharMesh(char: string, font: Font) {
     mesh,
     widthPixels: width,
     baseWidthPixels: baseWidth,
+    heightPixels: height,
   }
 }
