@@ -128,12 +128,12 @@ const PropertiesPanel: FC = () => {
               />
             </div>
             <div className="flex flex-row items-center gap-2">
-              <label className="flex-1 text-end">line_length</label>
+              <label className="flex-1 text-end">line_width</label>
               <input
                 type="number"
                 min={0}
                 className="min-w-0 flex-[2] rounded bg-neutral-800 py-1 pl-1 text-xs outline-none"
-                value={singleSelectedEntity.lineLength}
+                value={singleSelectedEntity.lineWidth}
                 onChange={(evt) => {
                   const value = parseInt(evt.target.value)
                   if (!isFinite(value) || value < 0) return
@@ -141,7 +141,7 @@ const PropertiesPanel: FC = () => {
                   useDisplayEntityStore
                     .getState()
                     .setTextDisplayProperties(singleSelectedEntity.id, {
-                      lineLength: value,
+                      lineWidth: value,
                     })
                 }}
               />

@@ -27,7 +27,7 @@ type Font = 'default' | 'uniform'
 type CreateTextMeshArgs = {
   text: string // TODO: handle Raw JSON Text Format
   font: Font
-  lineLength: number
+  lineWidth: number
   color: ColorRepresentation
   backgroundColor: ColorRepresentation
 }
@@ -36,7 +36,7 @@ const UNIT_PIXEL_SIZE = 0.0125
 export async function createTextMesh({
   text,
   font = 'default',
-  lineLength,
+  lineWidth,
   backgroundColor,
 }: CreateTextMeshArgs) {
   const textLinesGroup = new Group()
@@ -45,7 +45,7 @@ export async function createTextMesh({
   let maxLineWidth = 0
   let lineHeightPixels = 0
   let offset = 0
-  let lineLengthOverflowed = false
+  let lineWidthOverflowed = false
   let prevCharFont: Font = 'default'
   const tempCharMeshList: Mesh[] = []
   const textLinesHeightPixelsList: number[] = []
@@ -92,7 +92,7 @@ export async function createTextMesh({
 
     // 주어진 line length의 2배 값이 한 줄에 입력된 글자의 픽셀 수(여백 포함)보다 많으면
     // 그 다음 글자부터 다음 줄로 내리기
-    if (offsetPixels + widthPixels > lineLength * 2) {
+    if (offsetPixels + widthPixels > lineWidth * 2) {
       // 입력한 글자 전까지 한 줄로 묶기
       if (tempCharMeshList.length > 0) {
         const lineGroup = new Group()
@@ -118,7 +118,7 @@ export async function createTextMesh({
       }
 
       offset = 0
-      lineLengthOverflowed = true
+      lineWidthOverflowed = true
     } else {
       tempCharMeshList.push(mesh)
       if (lineHeightPixels < heightPixels) {
@@ -126,8 +126,8 @@ export async function createTextMesh({
       }
     }
 
-    // lineLength 초과해서 다음 줄로 내려온 경우 첫 문자가 `' '` (0x20) 문자면 처리하지 않음
-    if (!lineLengthOverflowed || char !== ' ') {
+    // lineWidth 초과해서 다음 줄로 내려온 경우 첫 문자가 `' '` (0x20) 문자면 처리하지 않음
+    if (!lineWidthOverflowed || char !== ' ') {
       // 글자 왼쪽 spacing 계산
       if (tempCharMeshList.length > 1) {
         if (prevCharFont !== charFont) {
@@ -148,7 +148,7 @@ export async function createTextMesh({
       }
     }
 
-    lineLengthOverflowed = false
+    lineWidthOverflowed = false
     prevCharFont = charFont
   }
   if (tempCharMeshList.length > 0) {

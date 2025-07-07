@@ -176,7 +176,7 @@ export type ItemDisplayEntity = BaseDisplayEntity & {
 export type TextDisplayEntity = BaseDisplayEntity & {
   kind: 'text'
   text: string
-  lineLength: number
+  lineWidth: number
   backgroundColor: number // RGB
 }
 

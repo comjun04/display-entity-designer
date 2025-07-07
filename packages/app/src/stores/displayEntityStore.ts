@@ -135,7 +135,7 @@ export const useDisplayEntityStore = create(
             size: [1, 1, 1],
             position: [0, 0, 0],
             rotation: [0, 0, 0],
-            lineLength: 200,
+            lineWidth: 200,
             backgroundColor: 0x00000000,
           })
         }
@@ -307,12 +307,12 @@ export const useDisplayEntityStore = create(
         }
 
         if (
-          properties.lineLength != null &&
+          properties.lineWidth != null &&
           // TODO: specific type check (int)
-          (!isFinite(properties.lineLength) || properties.lineLength < 0)
+          (!isFinite(properties.lineWidth) || properties.lineWidth < 0)
         ) {
           logger.error(
-            `Text Display \`lineLength\` must be positive integer or zero, but tried to set ${properties.lineLength} to entity ${id}`,
+            `Text Display \`lineWidth\` must be positive integer or zero, but tried to set ${properties.lineWidth} to entity ${id}`,
           )
           return
         }

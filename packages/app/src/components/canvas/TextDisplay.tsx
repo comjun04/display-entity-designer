@@ -29,22 +29,21 @@ const TextDisplay: FC<TextDisplayProps> = ({
   objectRef: ref,
   onClick,
 }) => {
-  const {
-    thisEntityLineLength,
-    thisEntityBackgroundColor,
-    thisEntitySelected,
-  } = useDisplayEntityStore(
-    useShallow((state) => {
-      const thisEntity = state.entities.get(id)
-      return {
-        thisEntityLineLength:
-          thisEntity?.kind === 'text' ? thisEntity.lineLength : undefined,
-        thisEntityBackgroundColor:
-          thisEntity?.kind === 'text' ? thisEntity.backgroundColor : undefined,
-        thisEntitySelected: state.selectedEntityIds.includes(id),
-      }
-    }),
-  )
+  const { thisEntityLineWidth, thisEntityBackgroundColor, thisEntitySelected } =
+    useDisplayEntityStore(
+      useShallow((state) => {
+        const thisEntity = state.entities.get(id)
+        return {
+          thisEntityLineWidth:
+            thisEntity?.kind === 'text' ? thisEntity.lineWidth : undefined,
+          thisEntityBackgroundColor:
+            thisEntity?.kind === 'text'
+              ? thisEntity.backgroundColor
+              : undefined,
+          thisEntitySelected: state.selectedEntityIds.includes(id),
+        }
+      }),
+    )
   const forceUnifont = useEditorStore(
     (state) => state.settings.general.forceUnifont,
   )
@@ -56,7 +55,7 @@ const TextDisplay: FC<TextDisplayProps> = ({
     const asyncFn = async () => {
       if (
         innerGroupRef.current == null ||
-        thisEntityLineLength == null ||
+        thisEntityLineWidth == null ||
         thisEntityBackgroundColor == null
       ) {
         return
@@ -65,7 +64,7 @@ const TextDisplay: FC<TextDisplayProps> = ({
       const textModelGroup = await createTextMesh({
         text,
         font: forceUnifont ? 'uniform' : 'default',
-        lineLength: thisEntityLineLength,
+        lineWidth: thisEntityLineWidth,
         backgroundColor: thisEntityBackgroundColor,
         color: '#dddddd',
       })
@@ -80,7 +79,7 @@ const TextDisplay: FC<TextDisplayProps> = ({
     }
 
     asyncFn().catch(console.error)
-  }, [id, text, thisEntityLineLength, thisEntityBackgroundColor, forceUnifont])
+  }, [id, text, thisEntityLineWidth, thisEntityBackgroundColor, forceUnifont])
 
   useFrame(() => {
     if (!thisEntitySelected) {
