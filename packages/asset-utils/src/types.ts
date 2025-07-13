@@ -28,3 +28,45 @@ export interface ModelFile {
   parent?: string
   elements?: unknown[]
 }
+
+// CDN files
+
+export interface CDNVersionManifest {
+  latest: {
+    release: string
+    snapshot: string
+  }
+  versions: {
+    id: string
+    type: 'release' | 'snapshot' | 'old_beta' | 'old_alpha'
+    url: string
+    time: string
+    releaseTime: string
+  }[]
+}
+
+export interface CDNClientJson {
+  assetIndex: {
+    id: string
+    sha1: string
+    size: number
+    totalSize: number
+    url: string
+  }
+  assets: string
+  downloads: {
+    // client.jar
+    client: {
+      sha1: string
+      size: number
+      url: string
+    }
+    // server.jar
+    server: {
+      sha1: string
+      size: number
+      url: string
+    }
+    id: string
+  }
+}
