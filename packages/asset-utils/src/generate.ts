@@ -13,15 +13,15 @@ import {
   blockstatesDefaultValues,
   renderableBlockEntityModelTextures,
 } from './constants'
+import { downloadAssets } from './cdn'
 
 // =====
 
 const args = process.argv
-const clientJarfilePath = args[2]
-const serverJarfilePath = args[3]
-const mcVersion = args[4]
+const mcVersion = args[2]
 
-const workdirFolderPath = pathJoin(pathResolve(), 'workdir')
+const workdirFolderRootPath = pathJoin(pathResolve(), 'workdir')
+const workdirFolderPath = pathJoin(workdirFolderRootPath, mcVersion)
 const outputFolderPath = pathJoin(pathResolve(), 'output', mcVersion)
 const assetsMinecraftFolderPath = pathJoin(
   outputFolderPath,
@@ -30,11 +30,19 @@ const assetsMinecraftFolderPath = pathJoin(
 )
 
 // workdir 폴더 미리 생성
-if (!existsSync(workdirFolderPath)) {
-  await mkdir(workdirFolderPath)
+if (!existsSync(workdirFolderRootPath)) {
+  await mkdir(workdirFolderRootPath)
 }
 
 // 버전 이름 폴더가 이미 있는지 확인
+if (
+  !existsSync(workdirFolderPath) ||
+  !(await lstat(workdirFolderPath)).isDirectory()
+) {
+  console.log(`workdir/${mcVersion} folder does not exist. Creating a new one.`)
+  await mkdir(workdirFolderPath, { recursive: true })
+} 
+
 if (
   !existsSync(outputFolderPath) ||
   !(await lstat(outputFolderPath)).isDirectory()
@@ -49,9 +57,11 @@ if (
 }
 
 console.log('Cleaning up previous server jar reports files')
-await cleanupWorkdir()
+await cleanupWorkdir(mcVersion)
 
-const jarfileAbsolutePath = pathJoin(pathResolve(), clientJarfilePath)
+await downloadAssets(mcVersion, workdirFolderPath)
+
+const jarfileAbsolutePath = pathJoin(workdirFolderPath, 'client.jar')
 const zip = await Open.file(jarfileAbsolutePath)
 
 console.log('Extracting asset files...')
@@ -84,16 +94,16 @@ await cp(pathJoin(pathResolve(), 'hardcoded'), assetsMinecraftFolderPath, {
 
 // generate server resource reports file to get blocks.json and items.json
 console.log('Generating server.jar resource reports...')
-const relativeServerJarfilePath = pathRelative(
+const serverJarfilePath = pathJoin(
   workdirFolderPath,
-  pathJoin(pathResolve(), serverJarfilePath),
+  'server.jar',
 )
 spawnSync(
   'java',
   [
     '-DbundlerMainClass=net.minecraft.data.Main',
     '-jar',
-    relativeServerJarfilePath,
+    serverJarfilePath,
     '--reports',
   ],
   {
@@ -195,8 +205,8 @@ console.log('Done')
 
 // ==========
 
-async function cleanupWorkdir() {
-  await rimraf('./workdir/{generated,libraries,logs,versions}', { glob: true })
+async function cleanupWorkdir(versionId: string) {
+  await rimraf(`./workdir/${versionId}/{generated,libraries,logs,versions}`, { glob: true })
 }
 
 function stripMinecraftPrefix(input: string) {
