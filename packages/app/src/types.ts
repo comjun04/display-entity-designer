@@ -173,11 +173,18 @@ export type ItemDisplayEntity = BaseDisplayEntity & {
   display: ModelDisplayPositionKey | null
 }
 
+export type TextDisplayAlignment = 'left' | 'center' | 'right'
+
 export type TextDisplayEntity = BaseDisplayEntity & {
   kind: 'text'
   text: string
-  lineWidth: number
+  alignment: TextDisplayAlignment
   backgroundColor: number // RGB
+  defaultBackground: boolean // default_background
+  lineWidth: number
+  seeThrough: boolean
+  shadow: boolean
+  textOpacity: number // 0 ~ 255
 }
 
 export type DisplayEntityGroup = BaseDisplayEntity & {
