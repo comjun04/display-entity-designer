@@ -125,6 +125,10 @@ const TextDisplayProperties: FC = () => {
 
   if (singleSelectedEntity == null) return null
 
+  const { backgroundColor: bgColorARGB } = singleSelectedEntity
+  const bgColorAlpha = bgColorARGB >>> 24 // get the first 2 bytes
+  const bgColorRGBA = (bgColorARGB << 8) + bgColorAlpha // shift 2 bytes left and add alpha
+
   return (
     <div className="flex flex-col gap-2">
       <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
@@ -188,6 +192,7 @@ const TextDisplayProperties: FC = () => {
         <ColorPickerInput
           className="flex-[2]"
           value={singleSelectedEntity.backgroundColor}
+          useARGB
           onValueChange={(num) => {
             useDisplayEntityStore
               .getState()
