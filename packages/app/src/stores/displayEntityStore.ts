@@ -136,7 +136,7 @@ export const useDisplayEntityStore = create(
             position: [0, 0, 0],
             rotation: [0, 0, 0],
             alignment: 'center',
-            backgroundColor: 0x00000000,
+            backgroundColor: 0xff000000, // #ff000000, black
             defaultBackground: false,
             lineWidth: 200,
             seeThrough: false,

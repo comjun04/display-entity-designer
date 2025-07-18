@@ -51,6 +51,7 @@ const ColorPickerInput = forwardRef<
             className="z-50 transition duration-200 data-[closed]:translate-y-1 data-[closed]:opacity-0"
           >
             <Sketch
+              color={transformedValueHex}
               presetColors={false}
               onChange={(color) => {
                 const newColorRGBA = parseInt(color.hexa.slice(1), 16)

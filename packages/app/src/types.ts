@@ -179,7 +179,7 @@ export type TextDisplayEntity = BaseDisplayEntity & {
   kind: 'text'
   text: string
   alignment: TextDisplayAlignment
-  backgroundColor: number // RGB
+  backgroundColor: number // ARGB
   defaultBackground: boolean // default_background
   lineWidth: number
   seeThrough: boolean
