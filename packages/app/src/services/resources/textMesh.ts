@@ -20,7 +20,7 @@ import { stripMinecraftPrefix } from '@/utils'
 
 const UNIFONT_FILENAME = 'unifont/unifont_all_no_pua-15.1.05.hex'
 
-const fontAssetLoadMutexMap = new Map<string, Mutex>()
+// const fontAssetLoadMutexMap = new Map<string, Mutex>()
 const unifontHexDataLoadMutex = new Mutex()
 
 type Font = 'default' | 'uniform'
@@ -29,7 +29,7 @@ type CreateTextMeshArgs = {
   font: Font
   lineWidth: number
   color: ColorRepresentation
-  backgroundColor: ColorRepresentation
+  backgroundColor: number
 }
 
 const UNIT_PIXEL_SIZE = 0.0125
@@ -187,7 +187,7 @@ export async function createTextMesh({
   const backgroundColorAlpha = ((backgroundColor >>> 24) & 0xff) / 0xff
   const backgroundColorRGB = (backgroundColor << 8) >>> 8 // ensure unsigned
   const backgroundMaterial = new MeshBasicMaterial({
-    color: backgroundColor,
+    color: backgroundColorRGB,
     side: FrontSide,
     opacity: backgroundColorAlpha,
     transparent: true,
@@ -201,6 +201,7 @@ export async function createTextMesh({
   return textLinesGroup
 }
 
+/*
 async function loadFontResource(filePath: string) {
   const { fontResources } = useCacheStore.getState()
   const fontResource = fontResources[filePath]
@@ -225,6 +226,7 @@ async function loadFontResource(filePath: string) {
     // const
   })
 }
+*/
 
 const imageLoader = new ImageLoader()
 imageLoader.setCrossOrigin('anonymous')

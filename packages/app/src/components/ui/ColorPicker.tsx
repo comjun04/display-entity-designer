@@ -1,6 +1,6 @@
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react'
 import Sketch from '@uiw/react-color-sketch'
-import { JSX, forwardRef, useEffect, useState } from 'react'
+import { JSX, forwardRef } from 'react'
 
 import '@/styles/colorpicker-darkmode.css'
 import { cn } from '@/utils'
@@ -59,9 +59,9 @@ const ColorPickerInput = forwardRef<
                   const alpha = newColorRGBA & 0xff
                   const rest = newColorRGBA >>> 8
                   const newColorARGB = (rest | (alpha << 24)) >>> 0
-                  onChange(newColorARGB)
+                  onChange?.(newColorARGB)
                 } else {
-                  onChange(newColorRGBA)
+                  onChange?.(newColorRGBA)
                 }
               }}
             />
