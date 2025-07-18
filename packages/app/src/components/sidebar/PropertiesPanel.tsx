@@ -133,8 +133,8 @@ const TextDisplayProperties: FC = () => {
 
       <div className="flex flex-row items-center gap-2">
         <label className="flex-1 text-end">text</label>
-        <input
-          className="min-w-0 flex-[2] rounded bg-neutral-800 py-1 pl-1 text-xs outline-none"
+        <textarea
+          className="min-h-24 min-w-0 flex-[2] rounded bg-neutral-800 py-1 pl-1 text-xs outline-none"
           value={singleSelectedEntity.text}
           onChange={(evt) => {
             useDisplayEntityStore

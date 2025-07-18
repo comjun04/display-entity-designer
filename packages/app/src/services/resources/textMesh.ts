@@ -59,6 +59,7 @@ export async function createTextMesh({
 
       tempCharMeshList.length = 0
       lineHeightPixels = 0
+      offset = 0
       continue
     }
 
