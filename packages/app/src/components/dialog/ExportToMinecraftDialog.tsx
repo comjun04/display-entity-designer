@@ -174,13 +174,38 @@ const ExportToMinecraftDialog: FC = () => {
 
             specificData = `block_state:{Name:"${entity.type}",Properties:{${propertiesText}}}`
           } else if (entity.kind === 'item') {
-            {
-              const displayText =
-                entity.display != null
-                  ? `,item_display:"${entity.display}"`
-                  : ''
-              specificData = `item:{id:"${entity.type}"}${displayText}`
+            const displayText =
+              entity.display != null ? `,item_display:"${entity.display}"` : ''
+            specificData = `item:{id:"${entity.type}"}${displayText}`
+          } else if (entity.kind === 'text') {
+            // text
+            const text = entity.text
+              .replaceAll('\n', '\\\\n')
+              .replaceAll('"', '"')
+            specificData = `text:'{"text":"${text}"}'`
+
+            // TODO: omit optional nbt data if data value is default value
+
+            // alignment
+            specificData += `,alignment:"${entity.alignment}"`
+            // background_color
+            specificData += `,background_color:${entity.backgroundColor}`
+            // default_background
+            if (entity.defaultBackground) {
+              specificData += ',default_background:true'
             }
+            // line_width
+            specificData += `,line_width:${entity.lineWidth}`
+            // see_through
+            if (entity.seeThrough) {
+              specificData += ',see_through:true'
+            }
+            // shadow
+            if (entity.shadow) {
+              specificData += ',shadow:true'
+            }
+            // text_opacity
+            specificData += `,text_opacity:${entity.textOpacity}`
           }
 
           return `{id:"${idText}",${tagString}${specificData},transformation:[${transformationString}]}`
