@@ -183,10 +183,13 @@ export async function createTextMesh({
   maxHeight += 2 * UNIT_PIXEL_SIZE // 맨 위 여백
 
   const backgroundGeometry = new PlaneGeometry(1, 1)
+
+  const backgroundColorAlpha = ((backgroundColor >>> 24) & 0xff) / 0xff
+  const backgroundColorRGB = (backgroundColor << 8) >>> 8 // ensure unsigned
   const backgroundMaterial = new MeshBasicMaterial({
     color: backgroundColor,
     side: FrontSide,
-    opacity: 1,
+    opacity: backgroundColorAlpha,
     transparent: true,
     alphaTest: 0.01,
   })
