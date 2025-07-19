@@ -13,7 +13,7 @@ type DisplayEntitySaveData = {
 }
 
 const FILE_MAGIC = 'DEPL'
-const FILE_VERSION = 0
+const FILE_VERSION = 1
 
 const fileVersionArrayBuffer = new ArrayBuffer(4)
 const fileVersionDataView = new DataView(fileVersionArrayBuffer)

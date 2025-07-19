@@ -446,6 +446,23 @@ export const useDisplayEntityStore = create(
               parent: parentEntityId,
               display: item.display,
             })
+          } else if (item.kind === 'text') {
+            entities.set(id, {
+              kind: 'text',
+              id,
+              position,
+              rotation,
+              size: scale,
+              parent: parentEntityId,
+              text: item.text,
+              alignment: item.alignment,
+              backgroundColor: item.backgroundColor,
+              defaultBackground: item.defaultBackground,
+              lineWidth: item.lineWidth,
+              seeThrough: item.seeThrough,
+              shadow: item.shadow,
+              textOpacity: item.textOpacity,
+            })
           }
 
           return id
@@ -587,6 +604,19 @@ export const useDisplayEntityStore = create(
             type: entity.type,
             transforms,
             display: entity.display,
+          }
+        } else if (entity.kind === 'text') {
+          return {
+            kind: entity.kind,
+            transforms,
+            text: entity.text,
+            alignment: entity.alignment,
+            backgroundColor: entity.backgroundColor,
+            defaultBackground: entity.defaultBackground,
+            lineWidth: entity.lineWidth,
+            seeThrough: entity.seeThrough,
+            shadow: entity.shadow,
+            textOpacity: entity.textOpacity,
           }
         } else if (entity.kind === 'group') {
           const children = entity.children.map((childrenEntityId) => {

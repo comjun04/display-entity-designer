@@ -209,6 +209,7 @@ export type DisplayEntitySaveDataItem = {
 } & (
   | Pick<BlockDisplayEntity, 'kind' | 'type' | 'blockstates' | 'display'>
   | Pick<ItemDisplayEntity, 'kind' | 'type' | 'display'>
+  | Omit<TextDisplayEntity, 'id' | 'parent' | 'position' | 'rotation' | 'size'>
   | (Pick<DisplayEntityGroup, 'kind'> & {
       children: DisplayEntitySaveDataItem[]
     })
