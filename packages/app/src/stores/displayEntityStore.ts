@@ -1,3 +1,4 @@
+import merge from 'lodash.merge'
 import { nanoid } from 'nanoid'
 import { Box3, Euler, Matrix4, Quaternion, Vector3 } from 'three'
 import { create } from 'zustand'
@@ -9,6 +10,7 @@ import { useEntityRefStore } from '@/stores/entityRefStore'
 import {
   BDEngineSaveData,
   BDEngineSaveDataItem,
+  DeepPartial,
   DisplayEntity,
   DisplayEntityGroup,
   DisplayEntitySaveDataItem,
@@ -76,7 +78,7 @@ export type DisplayEntityState = {
   ) => void
   setTextDisplayProperties: (
     id: string,
-    properties: Partial<
+    properties: DeepPartial<
       Omit<
         TextDisplayEntity,
         'id' | 'kind' | 'position' | 'rotation' | 'size' | 'parent'
@@ -132,6 +134,13 @@ export const useDisplayEntityStore = create(
             kind: 'text',
             id,
             text: typeOrText,
+            textEffects: {
+              bold: false,
+              italic: false,
+              underlined: false,
+              strikethrough: false,
+              obfuscated: false,
+            },
             size: [1, 1, 1],
             position: [0, 0, 0],
             rotation: [0, 0, 0],
@@ -322,7 +331,7 @@ export const useDisplayEntityStore = create(
           return
         }
 
-        Object.assign(entity, properties)
+        merge(entity, properties)
       }),
     deleteEntities: (entityIds) =>
       set((state) => {
@@ -455,6 +464,7 @@ export const useDisplayEntityStore = create(
               size: scale,
               parent: parentEntityId,
               text: item.text,
+              textEffects: item.textEffects,
               alignment: item.alignment,
               backgroundColor: item.backgroundColor,
               defaultBackground: item.defaultBackground,
@@ -610,6 +620,7 @@ export const useDisplayEntityStore = create(
             kind: entity.kind,
             transforms,
             text: entity.text,
+            textEffects: entity.textEffects,
             alignment: entity.alignment,
             backgroundColor: entity.backgroundColor,
             defaultBackground: entity.defaultBackground,

@@ -1,9 +1,17 @@
 import { FC } from 'react'
+import {
+  LuBold,
+  LuItalic,
+  LuShuffle,
+  LuStrikethrough,
+  LuUnderline,
+} from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
 import useBlockStates from '@/hooks/useBlockStates'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { ModelDisplayPositionKey, TextDisplayAlignment } from '@/types'
+import { cn } from '@/utils'
 
 import { SidePanel, SidePanelContent, SidePanelTitle } from '../SidePanel'
 import { ColorPickerInput } from '../ui/ColorPicker'
@@ -124,6 +132,8 @@ const TextDisplayProperties: FC = () => {
   })
 
   if (singleSelectedEntity == null) return null
+
+  const { textEffects } = singleSelectedEntity
 
   return (
     <div className="flex flex-col gap-2">
@@ -262,6 +272,97 @@ const TextDisplayProperties: FC = () => {
               })
           }}
         />
+      </div>
+
+      <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
+        Text Effects
+      </div>
+      <div className="flex w-full flex-row gap-1 rounded bg-neutral-800 p-1">
+        <button
+          className={cn(
+            'flex grow flex-row justify-center rounded p-1 transition duration-150',
+            textEffects.bold && 'bg-white/30',
+          )}
+          onClick={() =>
+            useDisplayEntityStore
+              .getState()
+              .setTextDisplayProperties(singleSelectedEntity.id, {
+                textEffects: {
+                  bold: !textEffects.bold,
+                },
+              })
+          }
+        >
+          <LuBold size={24} />
+        </button>
+        <button
+          className={cn(
+            'flex grow flex-row justify-center rounded p-1 transition duration-150',
+            textEffects.italic && 'bg-white/30',
+          )}
+          onClick={() =>
+            useDisplayEntityStore
+              .getState()
+              .setTextDisplayProperties(singleSelectedEntity.id, {
+                textEffects: {
+                  italic: !textEffects.italic,
+                },
+              })
+          }
+        >
+          <LuItalic size={24} />
+        </button>
+        <button
+          className={cn(
+            'flex grow flex-row justify-center rounded p-1 transition duration-150',
+            textEffects.underlined && 'bg-white/30',
+          )}
+          onClick={() =>
+            useDisplayEntityStore
+              .getState()
+              .setTextDisplayProperties(singleSelectedEntity.id, {
+                textEffects: {
+                  underlined: !textEffects.underlined,
+                },
+              })
+          }
+        >
+          <LuUnderline size={24} />
+        </button>
+        <button
+          className={cn(
+            'flex grow flex-row justify-center rounded p-1 transition duration-150',
+            textEffects.strikethrough && 'bg-white/30',
+          )}
+          onClick={() =>
+            useDisplayEntityStore
+              .getState()
+              .setTextDisplayProperties(singleSelectedEntity.id, {
+                textEffects: {
+                  strikethrough: !textEffects.strikethrough,
+                },
+              })
+          }
+        >
+          <LuStrikethrough size={24} />
+        </button>
+        <button
+          className={cn(
+            'flex grow flex-row justify-center rounded p-1 transition duration-150',
+            textEffects.obfuscated && 'bg-white/30',
+          )}
+          onClick={() =>
+            useDisplayEntityStore
+              .getState()
+              .setTextDisplayProperties(singleSelectedEntity.id, {
+                textEffects: {
+                  obfuscated: !textEffects.obfuscated,
+                },
+              })
+          }
+        >
+          <LuShuffle size={24} />
+        </button>
       </div>
     </div>
   )

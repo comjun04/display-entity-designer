@@ -178,6 +178,15 @@ export type TextDisplayAlignment = 'left' | 'center' | 'right'
 export type TextDisplayEntity = BaseDisplayEntity & {
   kind: 'text'
   text: string
+  // global text effects
+  // will be replaced with advanced text editor
+  textEffects: {
+    bold: boolean
+    italic: boolean
+    underlined: boolean
+    strikethrough: boolean
+    obfuscated: boolean
+  }
   alignment: TextDisplayAlignment
   backgroundColor: number // ARGB
   defaultBackground: boolean // default_background
