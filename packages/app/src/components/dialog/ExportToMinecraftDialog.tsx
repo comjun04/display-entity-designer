@@ -182,7 +182,14 @@ const ExportToMinecraftDialog: FC = () => {
             const text = entity.text
               .replaceAll('\n', '\\\\n')
               .replaceAll('"', '"')
-            specificData = `text:'{"text":"${text}"}'`
+            const enabledTextEffects = [
+              ...Object.keys(entity.textEffects),
+            ].filter((k) => entity.textEffects[k])
+            const enabledTextEffectsString =
+              enabledTextEffects.length > 0
+                ? ',' + enabledTextEffects.map((k) => `"${k}":true`).join(',')
+                : ''
+            specificData = `text:'{"text":"${text}"${enabledTextEffectsString}}'`
 
             // TODO: omit optional nbt data if data value is default value
 
