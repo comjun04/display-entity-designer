@@ -134,6 +134,7 @@ type FontGlyphData = {
   widthPixels: number
   baseWidthPixels: number
   heightPixels: number
+  advance: number
 }
 type ClassObjectCacheStoreState = {
   materials: Map<string, MeshStandardMaterial>

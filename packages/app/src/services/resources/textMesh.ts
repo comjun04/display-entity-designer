@@ -33,6 +33,7 @@ type CreateTextMeshArgs = {
 }
 
 const UNIT_PIXEL_SIZE = 0.0125
+const UNIT_PIXEL_SIZE_NEW = 0.025
 export async function createTextMesh({
   text,
   font = 'default',
@@ -74,26 +75,21 @@ export async function createTextMesh({
     // TODO: mesh를 만들지 않고도 width를 구하는 함수 만들기
     const {
       mesh,
-      widthPixels: widthRelativePixels,
-      baseWidthPixels: baseWidthRelativePixels,
-      heightPixels: heightRelativePixels,
+      widthPixels,
+      baseWidthPixels,
+      heightPixels,
+      advance,
       font: charFont,
     } = await createCharMesh(char, font)
-
-    const widthPixels = widthRelativePixels * (charFont === 'uniform' ? 1 : 2)
-    const heightPixels = heightRelativePixels * (charFont === 'uniform' ? 1 : 2)
 
     // scale, width of one pixel
     // scale = 0.025 if baseWidthPixels = 8
     // scale = 0.0125 if baseWidthPixels = 16
-    const scale = 0.2 / baseWidthRelativePixels
-    const width = widthRelativePixels * scale
+    const width = widthPixels
 
-    const offsetPixels = offset / scale
-
-    // 주어진 line length의 2배 값이 한 줄에 입력된 글자의 픽셀 수(여백 포함)보다 많으면
-    // 그 다음 글자부터 다음 줄로 내리기
-    if (offsetPixels + widthPixels > lineWidth * 2) {
+    // 주어진 line length보다 한 줄에 입력된 글자의 픽셀 수(여백 포함)가 크면
+    // 해당 글자부터 다음 줄로 내리기
+    if (offset + width > lineWidth) {
       // 입력한 글자 전까지 한 줄로 묶기
       if (tempCharMeshList.length > 0) {
         const lineGroup = new Group()
@@ -101,7 +97,7 @@ export async function createTextMesh({
         textLinesGroup.add(lineGroup)
         textLinesHeightPixelsList.push(lineHeightPixels)
 
-        offset += UNIT_PIXEL_SIZE * (charFont === 'uniform' ? 1 : 2)
+        offset += 1
         if (offset > maxLineWidth) {
           maxLineWidth = offset
         }
@@ -132,17 +128,18 @@ export async function createTextMesh({
       // 글자 왼쪽 spacing 계산
       if (tempCharMeshList.length > 1) {
         if (prevCharFont !== charFont) {
-          offset += UNIT_PIXEL_SIZE
+          // offset += UNIT_PIXEL_SIZE
+          // offset += 0.5
         } else if (charFont === 'default') {
-          offset += UNIT_PIXEL_SIZE * 2
+          // offset += UNIT_PIXEL_SIZE * 2
+          // offset += 1
         }
       } else {
-        offset += UNIT_PIXEL_SIZE * (charFont === 'uniform' ? 1 : 2)
+        offset += 1
       }
-      console.log(offset, width)
 
       mesh.position.setX(offset)
-      offset += width
+      offset += advance
 
       if (offset > maxLineWidth) {
         maxLineWidth = offset
@@ -159,7 +156,8 @@ export async function createTextMesh({
     textLinesGroup.add(lineGroup)
     textLinesHeightPixelsList.push(lineHeightPixels)
 
-    offset += UNIT_PIXEL_SIZE * (prevCharFont === 'uniform' ? 1 : 2)
+    // offset += UNIT_PIXEL_SIZE * (prevCharFont === 'uniform' ? 1 : 2)
+    offset += 1
     if (offset > maxLineWidth) {
       maxLineWidth = offset
     }
@@ -167,21 +165,14 @@ export async function createTextMesh({
 
   let maxHeight = 0
 
-  for (const [i, lineGroup] of textLinesGroup.children.toReversed().entries()) {
-    const heightPixels =
-      textLinesHeightPixelsList[textLinesHeightPixelsList.length - i - 1]
-    const bottomSpacing = 4 * UNIT_PIXEL_SIZE // 줄 하단 여백
-    const heightPixelsWithSpacing = heightPixels + 4 // 각 줄당 아래 2픽셀 여백
+  for (const lineGroup of textLinesGroup.children.toReversed()) {
     lineGroup.position.set(
       (maxLineWidth / 2) * -1, // 중앙에 위치하도록 조정
-      maxHeight + bottomSpacing,
+      maxHeight + 1, // 각 줄마다 하단 1픽셀씩 올리기
       0,
     )
-
-    maxHeight += heightPixelsWithSpacing * UNIT_PIXEL_SIZE
+    maxHeight += 10
   }
-
-  maxHeight += 2 * UNIT_PIXEL_SIZE // 맨 위 여백
 
   const backgroundGeometry = new PlaneGeometry(1, 1)
 
@@ -199,6 +190,11 @@ export async function createTextMesh({
   backgroundMesh.scale.set(maxLineWidth, maxHeight, 1)
   textLinesGroup.add(backgroundMesh)
 
+  textLinesGroup.scale.set(
+    UNIT_PIXEL_SIZE_NEW,
+    UNIT_PIXEL_SIZE_NEW,
+    UNIT_PIXEL_SIZE_NEW,
+  )
   return textLinesGroup
 }
 
@@ -307,6 +303,7 @@ async function createBitmapFontCharTexture(char: string) {
     width: croppedWidth,
     baseWidth: canvas.width,
     height: canvas.height,
+    advance: fontCharData.advance,
   }
 }
 
@@ -359,7 +356,7 @@ async function getUnifontCharPixels(char: string) {
    */
 
   // 마크에서 사용하는 unifont는 width가 8픽셀 아니면 16픽셀만 존재하므로 단순하게 핸들링
-  // TODO: 커스텀 리소스팩을 사용하는 경우 24, 32픽셀도 가능하므로 대응응
+  // TODO: 커스텀 리소스팩을 사용하는 경우 24, 32픽셀도 가능하므로 대응
   const width = hex.length > 32 ? 16 : 8
   // const height = 16
   const pixels: boolean[][] = []
@@ -411,10 +408,10 @@ async function getUnifontCharPixels(char: string) {
       const newRow = row.slice(totalLeft, totalRight + 1)
 
       // 왼쪽 여백은 항상 추가
-      newRow.unshift(false)
+      // newRow.unshift(false)
       if (trimmedWidth % 2 === 0) {
         // trimmedWidth이 짝수일 경우 오른쪽 1픽셀 여백 추가
-        newRow.push(false)
+        // newRow.push(false)
       }
 
       pixels[i] = newRow
@@ -444,13 +441,28 @@ async function getBitmapFontCharData(char: string) {
     for (let i = 0; i < provider.chars.length; i++) {
       const idx = provider.chars[i].indexOf(char[0])
       if (idx >= 0) {
-        const isAccentChar = provider.file.endsWith('/accented.png')
+        const img = await imageLoader.loadAsync(
+          `${import.meta.env.VITE_CDN_BASE_URL}/assets/minecraft/textures/${stripMinecraftPrefix(provider.file)}`,
+        )
 
-        // accented characters use 12x9 pixels, others use 8x8 (vertical x horizontial)
+        const width = img.width / provider.chars[0].length
+        const height = provider.height ?? 8
+        const actualCharHeight = img.height / provider.chars.length
+        // net.minecraft.client.gui.font.providers.BitmapProvider.Definition#load()
+        const heightRatio = height / actualCharHeight
+        const actualGlyphWidth = getBitmapFontActualGlyphWidth(
+          img,
+          idx,
+          i,
+          width,
+          actualCharHeight,
+        )
+
         return {
           file: provider.file,
-          width: isAccentChar ? 9 : 8,
-          height: (provider.height ?? isAccentChar) ? 12 : 8,
+          width,
+          height,
+          advance: Math.round(actualGlyphWidth * heightRatio) + 1,
           ascent: provider.ascent,
           row: i,
           col: idx,
@@ -460,13 +472,52 @@ async function getBitmapFontCharData(char: string) {
   }
 }
 
+function getBitmapFontActualGlyphWidth(
+  atlasImg: HTMLImageElement,
+  offsetX: number,
+  offsetY: number,
+  width: number,
+  height: number,
+) {
+  const canvas = document.createElement('canvas')
+  canvas.width = width
+  canvas.height = height
+
+  const ctx = canvas.getContext('2d')!
+  ctx.drawImage(
+    atlasImg,
+    offsetX * width,
+    offsetY * height,
+    width,
+    height,
+    0,
+    0,
+    width,
+    height,
+  )
+  const pixelData = ctx.getImageData(0, 0, width, height).data
+
+  for (let x = width - 1; x >= 0; x--) {
+    for (let y = height - 1; y >= 0; y--) {
+      const idx = y * width + x
+      const alpha = pixelData[idx * 4 + 3]
+      if (alpha !== 0) {
+        return x + 1
+      }
+    }
+  }
+
+  return 1
+}
+
 async function createCharMesh(char: string, preferFont: Font) {
   let texture!: Texture
   let geometry!: PlaneGeometry
   let material!: MeshBasicMaterial
-  let width!: number // 애벽 자르고 난 뒤의 width
+  let width!: number // 여백 자르고 난 뒤의 width
   let baseWidth!: number // 여백 자르기 전 원래 width
   let height!: number
+  let advance!: number
 
   // check for cached glyph data
   const { fontGlyphs: cache, setFontGlyph } =
@@ -480,6 +531,7 @@ async function createCharMesh(char: string, preferFont: Font) {
     width = d.widthPixels
     baseWidth = d.baseWidthPixels
     height = d.heightPixels
+    advance = d.advance
   } else {
     if (preferFont === 'default') {
       const d = await createBitmapFontCharTexture(char)
@@ -491,15 +543,17 @@ async function createCharMesh(char: string, preferFont: Font) {
       width = d.width
       baseWidth = d.baseWidth
       height = d.height
+      advance = d.advance
 
       geometry = new PlaneGeometry(width, d.height)
       geometry.translate(width / 2, d.height / 2, 0.1)
-      geometry.scale(0.025, 0.025, 0.025)
+      // geometry.scale(0.025, 0.025, 0.025)
     } else if (preferFont === 'uniform') {
       const pixels = await getUnifontCharPixels(char)
       height = pixels.length
       baseWidth = height // 여백 자르기 전에는 width와 height가 동일
       width = pixels[0].length
+      advance = Math.floor(width / 2) + 1
 
       const canvas = document.createElement('canvas')
       canvas.width = width
@@ -525,8 +579,11 @@ async function createCharMesh(char: string, preferFont: Font) {
 
       geometry = new PlaneGeometry(width, height)
       geometry.translate(width / 2, height / 2, 0.1)
-      geometry.scale(0.0125, 0.0125, 0.0125)
+      // geometry.scale(0.0125, 0.0125, 0.0125)
+      geometry.scale(0.5, 0.5, 0.5)
     }
+
+    height /= 2
 
     texture.minFilter = NearestFilter
     texture.magFilter = NearestFilter
@@ -546,6 +603,7 @@ async function createCharMesh(char: string, preferFont: Font) {
       widthPixels: width,
       baseWidthPixels: baseWidth,
       heightPixels: height,
+      advance,
     })
   }
 
@@ -555,6 +613,7 @@ async function createCharMesh(char: string, preferFont: Font) {
     widthPixels: width,
     baseWidthPixels: baseWidth,
     heightPixels: height,
+    advance,
     font: preferFont,
   }
 }
