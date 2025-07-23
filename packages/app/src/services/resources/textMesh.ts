@@ -1,10 +1,7 @@
-import { Mutex } from 'async-mutex'
 import {
-  CanvasTexture,
   ColorRepresentation,
   FrontSide,
   Group,
-  ImageLoader,
   Mesh,
   MeshBasicMaterial,
   NearestFilter,
@@ -12,16 +9,10 @@ import {
   Texture,
 } from 'three'
 
-import { UnifontSizeOverrides } from '@/constants'
-import fetcher from '@/fetcher'
-import { useCacheStore, useClassObjectCacheStore } from '@/stores/cacheStore'
-import { CDNFontProviderResponse } from '@/types'
-import { stripMinecraftPrefix } from '@/utils'
+import { useClassObjectCacheStore } from '@/stores/cacheStore'
 
-const UNIFONT_FILENAME = 'unifont/unifont_all_no_pua-15.1.05.hex'
-
-// const fontAssetLoadMutexMap = new Map<string, Mutex>()
-const unifontHexDataLoadMutex = new Mutex()
+import { createCharTexture as createBitmapFontCharTexture } from './font/bitmap'
+import { createCharTexture as createUnihexFontCharTexture } from './font/unihex'
 
 type Font = 'default' | 'uniform'
 type CreateTextMeshArgs = {
@@ -32,8 +23,7 @@ type CreateTextMeshArgs = {
   backgroundColor: number
 }
 
-const UNIT_PIXEL_SIZE = 0.0125
-const UNIT_PIXEL_SIZE_NEW = 0.025
+const UNIT_PIXEL_SIZE = 0.025
 export async function createTextMesh({
   text,
   font = 'default',
@@ -46,17 +36,13 @@ export async function createTextMesh({
   let maxLineWidth = 0
   let lineHeightPixels = 0
   let offset = 0
-  let lineWidthOverflowed = false
-  let prevCharFont: Font = 'default'
   const tempCharMeshList: Mesh[] = []
-  const textLinesHeightPixelsList: number[] = []
 
   for (const [charIdx, char] of text.split('').entries()) {
     if (char === '\n') {
       const lineGroup = new Group()
       lineGroup.add(...tempCharMeshList)
       textLinesGroup.add(lineGroup)
-      textLinesHeightPixelsList.push(lineHeightPixels)
 
       tempCharMeshList.length = 0
       lineHeightPixels = 0
@@ -76,15 +62,12 @@ export async function createTextMesh({
     const {
       mesh,
       widthPixels,
-      baseWidthPixels,
+      // baseWidthPixels,
       heightPixels,
       advance,
-      font: charFont,
+      // font: charFont,
     } = await createCharMesh(char, font)
 
-    // scale, width of one pixel
-    // scale = 0.025 if baseWidthPixels = 8
-    // scale = 0.0125 if baseWidthPixels = 16
     const width = widthPixels
 
     // 주어진 line length보다 한 줄에 입력된 글자의 픽셀 수(여백 포함)가 크면
@@ -95,9 +78,7 @@ export async function createTextMesh({
         const lineGroup = new Group()
         lineGroup.add(...tempCharMeshList)
         textLinesGroup.add(lineGroup)
-        textLinesHeightPixelsList.push(lineHeightPixels)
 
-        offset += 1
         if (offset > maxLineWidth) {
           maxLineWidth = offset
         }
@@ -106,61 +87,37 @@ export async function createTextMesh({
       // 입력한 글자는 다음 줄로 예약
       tempCharMeshList.length = 0
       lineHeightPixels = 0
-      if (char !== ' ') {
-        // 다음 줄로 예약을 걸 경우 첫 문자가 `' '` (0x20)이 아닌 경우에만 새 줄에 넣기
-        tempCharMeshList.push(mesh)
-        if (lineHeightPixels < heightPixels) {
-          lineHeightPixels = heightPixels
-        }
+
+      tempCharMeshList.push(mesh)
+      if (lineHeightPixels < heightPixels) {
+        lineHeightPixels = heightPixels
       }
 
-      offset = 0
-      lineWidthOverflowed = true
+      offset = 1
     } else {
+      // 각 줄의 첫 글자일 경우 왼쪽에 1픽셀 여백
+      if (tempCharMeshList.length < 1) {
+        offset = 1
+      }
+
       tempCharMeshList.push(mesh)
       if (lineHeightPixels < heightPixels) {
         lineHeightPixels = heightPixels
       }
     }
 
-    // lineWidth 초과해서 다음 줄로 내려온 경우 첫 문자가 `' '` (0x20) 문자면 처리하지 않음
-    if (!lineWidthOverflowed || char !== ' ') {
-      // 글자 왼쪽 spacing 계산
-      if (tempCharMeshList.length > 1) {
-        if (prevCharFont !== charFont) {
-          // offset += UNIT_PIXEL_SIZE
-          // offset += 0.5
-        } else if (charFont === 'default') {
-          // offset += UNIT_PIXEL_SIZE * 2
-          // offset += 1
-        }
-      } else {
-        offset += 1
-      }
+    mesh.position.setX(offset)
+    offset += advance
 
-      mesh.position.setX(offset)
-      offset += advance
-
-      if (offset > maxLineWidth) {
-        maxLineWidth = offset
-      }
+    if (offset > maxLineWidth) {
+      maxLineWidth = offset
     }
-
-    lineWidthOverflowed = false
-    prevCharFont = charFont
   }
   if (tempCharMeshList.length > 0) {
     // 마지막 문자까지
     const lineGroup = new Group()
     lineGroup.add(...tempCharMeshList)
     textLinesGroup.add(lineGroup)
-    textLinesHeightPixelsList.push(lineHeightPixels)
-
-    // offset += UNIT_PIXEL_SIZE * (prevCharFont === 'uniform' ? 1 : 2)
-    offset += 1
-    if (offset > maxLineWidth) {
-      maxLineWidth = offset
-    }
   }
 
   let maxHeight = 0
@@ -171,6 +128,9 @@ export async function createTextMesh({
       maxHeight + 1, // 각 줄마다 하단 1픽셀씩 올리기
       0,
     )
+
+    // 각 row 간 간격 고정값
+    // net.minecraft.client.renderer.entity.DisplayEntityRenderer.TextDisplayRenderer#renderInner()
     maxHeight += 10
   }
 
@@ -191,9 +151,9 @@ export async function createTextMesh({
   textLinesGroup.add(backgroundMesh)
 
   textLinesGroup.scale.set(
-    UNIT_PIXEL_SIZE_NEW,
-    UNIT_PIXEL_SIZE_NEW,
-    UNIT_PIXEL_SIZE_NEW,
+    UNIT_PIXEL_SIZE,
+    UNIT_PIXEL_SIZE,
+    UNIT_PIXEL_SIZE,
   )
   return textLinesGroup
 }
@@ -224,291 +184,6 @@ async function loadFontResource(filePath: string) {
   })
 }
 */
-
-const imageLoader = new ImageLoader()
-imageLoader.setCrossOrigin('anonymous')
-async function createBitmapFontCharTexture(char: string) {
-  const fontCharData = await getBitmapFontCharData(char)
-  if (fontCharData == null) {
-    return null
-  }
-
-  const img = await imageLoader.loadAsync(
-    `${import.meta.env.VITE_CDN_BASE_URL}/assets/minecraft/textures/${stripMinecraftPrefix(fontCharData.file)}`,
-  )
-
-  const canvas = document.createElement('canvas')
-  canvas.width = fontCharData.width
-  canvas.height = fontCharData.height
-
-  const ctx = canvas.getContext('2d')
-  if (ctx == null) {
-    throw new Error('Cannot get canvas 2d context')
-  }
-
-  ctx.drawImage(
-    img,
-    fontCharData.col * canvas.width,
-    fontCharData.row * canvas.height,
-    canvas.width,
-    canvas.height,
-    0,
-    0,
-    canvas.width,
-    canvas.height,
-  )
-  const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height)
-
-  // scan for non-transparent area
-  let minX = canvas.width
-  let maxX = 0
-  for (let y = 0; y < canvas.height; y++) {
-    for (let x = 0; x < canvas.width; x++) {
-      const idx = (y * canvas.width + x) * 4
-      const alpha = imgData.data[idx + 3]
-      if (alpha > 0) {
-        if (x < minX) minX = x
-        if (x > maxX) maxX = x
-      }
-    }
-  }
-
-  // if the character is blank (no pixels), use a fallbacl 1x1
-  if (minX > maxX) {
-    minX = 0
-    maxX = 0
-  }
-
-  const croppedWidth = maxX - minX + 1
-
-  const croppedCanvas = document.createElement('canvas')
-  croppedCanvas.width = croppedWidth
-  croppedCanvas.height = canvas.height
-  const croppedCanvasCtx = croppedCanvas.getContext('2d')!
-  croppedCanvasCtx.drawImage(
-    canvas,
-    minX,
-    0,
-    maxX + 1,
-    canvas.height,
-    0,
-    0,
-    croppedWidth,
-    canvas.height,
-  )
-
-  const texture = new CanvasTexture(croppedCanvas)
-  return {
-    texture,
-    width: croppedWidth,
-    baseWidth: canvas.width,
-    height: canvas.height,
-    advance: fontCharData.advance,
-  }
-}
-
-async function loadUnifontHexFile(filePath: string) {
-  const unifontHexFile = await fetch(
-    `${import.meta.env.VITE_CDN_BASE_URL}/font/${filePath}`,
-  ).then((res) => res.text())
-
-  const unifontHexDataNewMap = new Map<number, string>()
-
-  const lines = unifontHexFile.trim().split('\n')
-  for (const line of lines) {
-    const [charCodeStr, rawHex] = line.split(':')
-    const hex = rawHex.trim()
-
-    const charCode = parseInt(charCodeStr, 16)
-    unifontHexDataNewMap.set(charCode, hex)
-  }
-
-  useCacheStore.getState().setUnifontHexData(unifontHexDataNewMap)
-}
-
-async function getUnifontCharPixels(char: string) {
-  const charCode = char.charCodeAt(0)
-
-  if (!useCacheStore.getState().unifontHexData.has(charCode)) {
-    await unifontHexDataLoadMutex.runExclusive(async () => {
-      if (useCacheStore.getState().unifontHexData.size < 1) {
-        await loadUnifontHexFile(UNIFONT_FILENAME)
-      }
-    })
-  }
-
-  const hex = useCacheStore.getState().unifontHexData.get(charCode)
-  if (hex == null) {
-    throw new Error(`Unsupported character ${char[0]} (${charCode})!`)
-  }
-
-  /**
-   * ## unifont 사용 시 (`unihex` provider)
-   * 모든 문자 세로 16픽셀 고정, 가로는 정의상 8/16/24/32픽셀일 수 있으나 렌더링 시 아래 규칙에 따라 실제 width가 조정될 수 있음
-   *
-   * 줄 여백: 좌우 1픽셀, 위아래 2픽셀
-   * 문자 여백:
-   * - 좌우: (1) 해당 문자에서 좌우 여백을 제거하고 (2) 가로 픽셀수를 세서
-   *   - 짝수면: 좌우에 여백 1픽셀 추가
-   *   - 홀수면: 왼쪽에만 여백 1픽셀 추가
-   *   - 단, unifont.json 파일에 `size_overrides`에 해당 문자가 포함되어 있을 경우 거기에 적힌 left와 right 값으로 width를 산출하고 여백 적용
-   *     (좌우여백 자르고 픽셀수 세는거보다 이게 우선)
-   */
-
-  // 마크에서 사용하는 unifont는 width가 8픽셀 아니면 16픽셀만 존재하므로 단순하게 핸들링
-  // TODO: 커스텀 리소스팩을 사용하는 경우 24, 32픽셀도 가능하므로 대응
-  const width = hex.length > 32 ? 16 : 8
-  // const height = 16
-  const pixels: boolean[][] = []
-
-  let totalLeft = width - 1
-  let totalRight = 0
-
-  // size_overrides에 정의된 문자면 left랑 right 값을 바로 적용
-  const matchingSizeOverrideEntry = UnifontSizeOverrides.find(
-    (overrideEntry) => {
-      const from = overrideEntry.from.charCodeAt(0)
-      const to = overrideEntry.to.charCodeAt(0)
-      return from <= charCode && charCode <= to
-    },
-  )
-  if (matchingSizeOverrideEntry != null) {
-    totalLeft = matchingSizeOverrideEntry.left
-    totalRight = matchingSizeOverrideEntry.right
-  }
-
-  const charsToRead = width / 4 // hex.length > 32 ? 4 : 2
-  for (let i = 0; i < hex.length; i += charsToRead) {
-    const chars = hex.slice(i, i + charsToRead)
-    const num = parseInt(chars, 16)
-
-    const binaryString = num.toString(2).padStart(width, '0')
-    if (matchingSizeOverrideEntry == null) {
-      const left = binaryString.indexOf('1')
-      if (left >= 0) {
-        totalLeft = Math.min(totalLeft, left)
-      }
-      const right = binaryString.lastIndexOf('1')
-      if (right >= 0) {
-        totalRight = Math.max(totalRight, right)
-      }
-    }
-
-    const pixelsRow = binaryString.split('').map((d) => d === '1')
-    pixels.push(pixelsRow)
-  }
-
-  // SPACE 문자가 아니고 색칠된 픽셀이 하나라도 있다면
-  if (totalLeft <= totalRight && charCode !== 0x20) {
-    // 좌우 여백 다 자르고 남은 width
-    const trimmedWidth = totalRight - totalLeft + 1
-
-    for (let i = 0; i < pixels.length; i++) {
-      const row = pixels[i]
-      const newRow = row.slice(totalLeft, totalRight + 1)
-
-      // 왼쪽 여백은 항상 추가
-      // newRow.unshift(false)
-      if (trimmedWidth % 2 === 0) {
-        // trimmedWidth이 짝수일 경우 오른쪽 1픽셀 여백 추가
-        // newRow.push(false)
-      }
-
-      pixels[i] = newRow
-    }
-  }
-
-  return pixels
-}
-
-async function getBitmapFontCharData(char: string) {
-  const { fontProviders, setFontProviders } = useCacheStore.getState()
-
-  // load character providers
-  let defaultFontProviders = fontProviders['provider.default']
-  if (fontProviders['provider.default'] == null) {
-    const { providers } = (await fetcher(
-      '/assets/minecraft/font/include/default.json',
-    )) as CDNFontProviderResponse
-    setFontProviders('provider.default', providers)
-    defaultFontProviders = providers
-  }
-
-  // find character
-  for (const provider of defaultFontProviders.filter(
-    (provider) => provider.type === 'bitmap',
-  )) {
-    for (let i = 0; i < provider.chars.length; i++) {
-      const idx = provider.chars[i].indexOf(char[0])
-      if (idx >= 0) {
-        const img = await imageLoader.loadAsync(
-          `${import.meta.env.VITE_CDN_BASE_URL}/assets/minecraft/textures/${stripMinecraftPrefix(provider.file)}`,
-        )
-
-        const width = img.width / provider.chars[0].length
-        const height = provider.height ?? 8
-        const actualCharHeight = img.height / provider.chars.length
-        // net.minecraft.client.gui.font.providers.BitmapProvider.Definition#load()
-        const heightRatio = height / actualCharHeight
-        const actualGlyphWidth = getBitmapFontActualGlyphWidth(
-          img,
-          idx,
-          i,
-          width,
-          actualCharHeight,
-        )
-
-        return {
-          file: provider.file,
-          width,
-          height,
-          advance: Math.round(actualGlyphWidth * heightRatio) + 1,
-          ascent: provider.ascent,
-          row: i,
-          col: idx,
-        }
-      }
-    }
-  }
-}
-
-function getBitmapFontActualGlyphWidth(
-  atlasImg: HTMLImageElement,
-  offsetX: number,
-  offsetY: number,
-  width: number,
-  height: number,
-) {
-  const canvas = document.createElement('canvas')
-  canvas.width = width
-  canvas.height = height
-
-  const ctx = canvas.getContext('2d')!
-  ctx.drawImage(
-    atlasImg,
-    offsetX * width,
-    offsetY * height,
-    width,
-    height,
-    0,
-    0,
-    width,
-    height,
-  )
-  const pixelData = ctx.getImageData(0, 0, width, height).data
-
-  for (let x = width - 1; x >= 0; x--) {
-    for (let y = height - 1; y >= 0; y--) {
-      const idx = y * width + x
-      const alpha = pixelData[idx * 4 + 3]
-      if (alpha !== 0) {
-        return x + 1
-      }
-    }
-  }
-
-  return 1
-}
 
 async function createCharMesh(char: string, preferFont: Font) {
   let texture!: Texture
@@ -547,43 +222,19 @@ async function createCharMesh(char: string, preferFont: Font) {
 
       geometry = new PlaneGeometry(width, d.height)
       geometry.translate(width / 2, d.height / 2, 0.1)
-      // geometry.scale(0.025, 0.025, 0.025)
     } else if (preferFont === 'uniform') {
-      const pixels = await getUnifontCharPixels(char)
-      height = pixels.length
-      baseWidth = height // 여백 자르기 전에는 width와 height가 동일
-      width = pixels[0].length
-      advance = Math.floor(width / 2) + 1
+      const d = await createUnihexFontCharTexture(char)
 
-      const canvas = document.createElement('canvas')
-      canvas.width = width
-      canvas.height = height
-
-      const context = canvas.getContext('2d')
-      if (context == null) {
-        throw new Error('Cannot get canvas 2d context')
-      }
-
-      for (let row = 0; row < height; row++) {
-        for (let col = 0; col < width; col++) {
-          const pixelValue = pixels[row][col]
-          // 0x123456 형식 안먹힘, 'white'나 '#000000' 같이 css에서 사용 가능한 형식만 먹힘
-          const pixelColor = pixelValue ? '#ffffff' : '#00000000' // transparent if false
-
-          context.fillStyle = pixelColor
-          context.fillRect(col, row, 1, 1)
-        }
-      }
-
-      texture = new CanvasTexture(canvas)
+      texture = d.texture
+      width = d.width
+      baseWidth = d.baseWidth
+      height = d.height
+      advance = d.advance
 
       geometry = new PlaneGeometry(width, height)
       geometry.translate(width / 2, height / 2, 0.1)
-      // geometry.scale(0.0125, 0.0125, 0.0125)
-      geometry.scale(0.5, 0.5, 0.5)
+      geometry.scale(0.5, 0.5, 0.5) // unifont는 한 줄에 bitmap font보다 2배 많은 픽셀 수가 들어감
     }
-
-    height /= 2
 
     texture.minFilter = NearestFilter
     texture.magFilter = NearestFilter
