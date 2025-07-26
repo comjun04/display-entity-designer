@@ -45,14 +45,15 @@ export interface CDNVersionManifest {
   }[]
 }
 
+export interface AssetIndex {
+  id: string
+  sha1: string
+  size: number
+  totalSize: number
+  url: string
+}
 export interface CDNClientJson {
-  assetIndex: {
-    id: string
-    sha1: string
-    size: number
-    totalSize: number
-    url: string
-  }
+  assetIndex: AssetIndex
   assets: string
   downloads: {
     // client.jar
@@ -68,5 +69,14 @@ export interface CDNClientJson {
       url: string
     }
     id: string
+  }
+}
+
+export type CDNAssetIndexJson = {
+  objects: {
+    [x: string]: {
+      hash: string
+      size: number
+    }
   }
 }

@@ -4,6 +4,7 @@ import {
   join as pathJoin,
   resolve as pathResolve,
   relative as pathRelative,
+  dirname,
 } from 'path'
 import { Open } from 'unzipper'
 import { rimraf } from 'rimraf'
@@ -13,7 +14,7 @@ import {
   blockstatesDefaultValues,
   renderableBlockEntityModelTextures,
 } from './constants'
-import { downloadAssets } from './cdn'
+import { downloadAssets, downloadSharedAssets } from './cdn'
 
 // =====
 
@@ -22,7 +23,10 @@ const mcVersion = args[2]
 
 const workdirFolderRootPath = pathJoin(pathResolve(), 'workdir')
 const workdirFolderPath = pathJoin(workdirFolderRootPath, mcVersion)
-const outputFolderPath = pathJoin(pathResolve(), 'output', mcVersion)
+const workdirFolderSharedAssetsPath = pathJoin(workdirFolderRootPath, 'shared')
+const outputFolderRootPath = pathJoin(pathResolve(), 'output')
+const outputFolderPath = pathJoin(outputFolderRootPath, mcVersion)
+const outputFolderSharedAssetsPath = pathJoin(outputFolderRootPath, 'shared')
 const assetsMinecraftFolderPath = pathJoin(
   outputFolderPath,
   'assets',
@@ -41,7 +45,14 @@ if (
 ) {
   console.log(`workdir/${mcVersion} folder does not exist. Creating a new one.`)
   await mkdir(workdirFolderPath, { recursive: true })
-} 
+}
+if (
+  !existsSync(workdirFolderSharedAssetsPath) ||
+  !(await lstat(workdirFolderSharedAssetsPath)).isDirectory()
+) {
+  console.log('workdir/shared folder does not exist. Creating a new one.')
+  await mkdir(workdirFolderSharedAssetsPath, { recursive: true })
+}
 
 if (
   !existsSync(outputFolderPath) ||
@@ -55,16 +66,23 @@ if (
   )
   process.exit(1)
 }
+if (
+  !existsSync(outputFolderSharedAssetsPath) ||
+  !(await lstat(outputFolderSharedAssetsPath)).isDirectory()
+) {
+  console.log('output/shared folder does not exist. Creating a new one.')
+  await mkdir(outputFolderSharedAssetsPath, { recursive: true })
+}
 
 console.log('Cleaning up previous server jar reports files')
 await cleanupWorkdir(mcVersion)
 
-await downloadAssets(mcVersion, workdirFolderPath)
+const versionData = await downloadAssets(mcVersion, workdirFolderPath)
 
 const jarfileAbsolutePath = pathJoin(workdirFolderPath, 'client.jar')
 const zip = await Open.file(jarfileAbsolutePath)
 
-console.log('Extracting asset files...')
+console.log('Extracting version asset files...')
 
 const filesToExtract = zip.files.filter(
   (f) =>
@@ -94,10 +112,7 @@ await cp(pathJoin(pathResolve(), 'hardcoded'), assetsMinecraftFolderPath, {
 
 // generate server resource reports file to get blocks.json and items.json
 console.log('Generating server.jar resource reports...')
-const serverJarfilePath = pathJoin(
-  workdirFolderPath,
-  'server.jar',
-)
+const serverJarfilePath = pathJoin(workdirFolderPath, 'server.jar')
 spawnSync(
   'java',
   [
@@ -201,12 +216,42 @@ await writeFile(
   JSON.stringify({ items }),
 )
 
+// shared assets
+const workdirFolderSharedAssetsSubPath = pathJoin(
+  workdirFolderSharedAssetsPath,
+  versionData.assetIndex.id,
+)
+const outputFolderSharedAssetsSubPath = pathJoin(
+  outputFolderSharedAssetsPath,
+  versionData.assetIndex.id,
+)
+
+const sharedAssets = await downloadSharedAssets(
+  versionData.assetIndex,
+  workdirFolderRootPath,
+)
+for (const assetFilePath of sharedAssets) {
+  console.log('Copying shared asset file', assetFilePath)
+  const assetFileWorkdirAbsolutePath = pathJoin(
+    workdirFolderSharedAssetsSubPath,
+    assetFilePath,
+  )
+  const assetFileOutputAbsolutePath = pathJoin(
+    outputFolderSharedAssetsSubPath,
+    assetFilePath,
+  )
+  await mkdir(dirname(assetFileOutputAbsolutePath), { recursive: true })
+  await cp(assetFileWorkdirAbsolutePath, assetFileOutputAbsolutePath)
+}
+
 console.log('Done')
 
 // ==========
 
 async function cleanupWorkdir(versionId: string) {
-  await rimraf(`./workdir/${versionId}/{generated,libraries,logs,versions}`, { glob: true })
+  await rimraf(`./workdir/${versionId}/{generated,libraries,logs,versions}`, {
+    glob: true,
+  })
 }
 
 function stripMinecraftPrefix(input: string) {
