@@ -5,6 +5,7 @@ import {
   resolve as pathResolve,
   relative as pathRelative,
   dirname,
+  basename,
 } from 'path'
 import { Open } from 'unzipper'
 import { rimraf } from 'rimraf'
@@ -226,6 +227,8 @@ const outputFolderSharedAssetsSubPath = pathJoin(
   versionData.assetIndex.id,
 )
 
+let unifontHexFilePath = ''
+
 const sharedAssets = await downloadSharedAssets(
   versionData.assetIndex,
   workdirFolderRootPath,
@@ -242,7 +245,26 @@ for (const assetFilePath of sharedAssets) {
   )
   await mkdir(dirname(assetFileOutputAbsolutePath), { recursive: true })
   await cp(assetFileWorkdirAbsolutePath, assetFileOutputAbsolutePath)
+
+  // unifont_all_no_pua_<version>.hex
+  if (basename(assetFilePath).startsWith('unifont_all_')) {
+    unifontHexFilePath = assetFilePath
+  }
 }
+
+// write version metadata.json
+console.log('Writing metadata.json')
+const versionMetadata: VersionMetadata = {
+  mcVersion,
+  sharedAssets: {
+    assetIndex: parseInt(versionData.assetIndex.id),
+    unifontHexFilePath,
+  },
+}
+await writeFile(
+  pathJoin(outputFolderPath, 'metadata.json'),
+  JSON.stringify(versionMetadata),
+)
 
 console.log('Done')
 

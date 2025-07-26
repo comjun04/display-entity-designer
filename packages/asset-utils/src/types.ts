@@ -80,3 +80,11 @@ export type CDNAssetIndexJson = {
     }
   }
 }
+
+export type VersionMetadata = {
+  gameVersion: string // minecraft version
+  sharedAssets: {
+    assetIndex: number
+    unifontHexFilePath: string
+  }
+}
