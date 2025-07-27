@@ -17,11 +17,11 @@ export async function createCharTexture(char: string) {
     `${import.meta.env.VITE_CDN_BASE_URL}/assets/minecraft/textures/${stripMinecraftPrefix(glyphData.file)}`,
   )
 
-  const croppedCanvas = document.createElement('canvas')
-  croppedCanvas.width = glyphData.actualWidth
-  croppedCanvas.height = glyphData.height
-  const croppedCanvasCtx = croppedCanvas.getContext('2d')!
-  croppedCanvasCtx.drawImage(
+  const canvas = document.createElement('canvas')
+  canvas.width = glyphData.actualWidth
+  canvas.height = glyphData.height
+  const canvasCtx = canvas.getContext('2d')!
+  canvasCtx.drawImage(
     img,
     glyphData.width * glyphData.col,
     glyphData.height * glyphData.row,
@@ -33,7 +33,7 @@ export async function createCharTexture(char: string) {
     glyphData.height,
   )
 
-  const texture = new CanvasTexture(croppedCanvas)
+  const texture = new CanvasTexture(canvas)
   return {
     texture,
     width: glyphData.actualWidth,

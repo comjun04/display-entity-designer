@@ -150,11 +150,7 @@ export async function createTextMesh({
   backgroundMesh.scale.set(maxLineWidth, maxHeight, 1)
   textLinesGroup.add(backgroundMesh)
 
-  textLinesGroup.scale.set(
-    UNIT_PIXEL_SIZE,
-    UNIT_PIXEL_SIZE,
-    UNIT_PIXEL_SIZE,
-  )
+  textLinesGroup.scale.set(UNIT_PIXEL_SIZE, UNIT_PIXEL_SIZE, UNIT_PIXEL_SIZE)
   return textLinesGroup
 }
 
