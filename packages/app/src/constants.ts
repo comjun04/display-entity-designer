@@ -77,3 +77,6 @@ export const UnifontSizeOverrides = [
     right: 15,
   },
 ]
+
+// target minecraft version
+export const MCVersion = '1.21.1'
