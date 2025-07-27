@@ -4,6 +4,7 @@ import { FileLoader } from 'three'
 
 import { UnifontSizeOverrides } from '@/constants'
 import { useCacheStore } from '@/stores/cacheStore'
+import { VersionMetadata } from '@/types'
 
 const fileLoader = new FileLoader()
 fileLoader.setResponseType('json')
@@ -36,9 +37,9 @@ async function getCharPixels(char: string) {
     await unifontHexDataLoadMutex.runExclusive(async () => {
       if (useCacheStore.getState().unifontHexData.size < 1) {
         // TODO: Extract version manifest loading
-        const versionManifest = await fileLoader.loadAsync(
+        const versionManifest = (await fileLoader.loadAsync(
           `${import.meta.env.VITE_CDN_BASE_URL}/metadata.json`,
-        )
+        )) as unknown as VersionMetadata
         const { assetIndex, unifontHexFilePath } = versionManifest.sharedAssets
         const fullFilePath = `shared/${assetIndex}/${unifontHexFilePath}`
 

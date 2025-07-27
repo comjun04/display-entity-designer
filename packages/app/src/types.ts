@@ -27,6 +27,14 @@ export type PartialNumber3Tuple = [
   number | undefined,
 ]
 
+export type VersionMetadata = {
+  gameVersion: string // minecraft version
+  sharedAssets: {
+    assetIndex: number
+    unifontHexFilePath: string
+  }
+}
+
 export type CDNBlocksListResponse = {
   blocks: string[]
 }
