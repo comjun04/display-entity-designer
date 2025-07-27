@@ -181,7 +181,7 @@ const ExportToMinecraftDialog: FC = () => {
             // text
             const text = entity.text
               .replaceAll('\n', '\\\\n')
-              .replaceAll('"', '"')
+              .replaceAll('"', '\\"')
             const enabledTextEffects = (
               Object.keys(entity.textEffects) as Array<
                 keyof (typeof entity)['textEffects']
