@@ -7,6 +7,7 @@ import { getLogger } from '@/services/loggerService'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEntityRefStore } from '@/stores/entityRefStore'
+import { TextEffects } from '@/types'
 import { cn } from '@/utils'
 
 import Dialog from './Dialog'
@@ -183,9 +184,7 @@ const ExportToMinecraftDialog: FC = () => {
               .replaceAll('\n', '\\\\n')
               .replaceAll('"', '\\"')
             const enabledTextEffects = (
-              Object.keys(entity.textEffects) as Array<
-                keyof (typeof entity)['textEffects']
-              >
+              Object.keys(entity.textEffects) as Array<keyof TextEffects>
             ).filter((k) => entity.textEffects[k])
             const enabledTextEffectsString =
               enabledTextEffects.length > 0

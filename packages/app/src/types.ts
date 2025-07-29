@@ -182,19 +182,20 @@ export type ItemDisplayEntity = BaseDisplayEntity & {
 }
 
 export type TextDisplayAlignment = 'left' | 'center' | 'right'
+export type TextEffects = {
+  bold: boolean
+  italic: boolean
+  underlined: boolean
+  strikethrough: boolean
+  obfuscated: boolean
+}
 
 export type TextDisplayEntity = BaseDisplayEntity & {
   kind: 'text'
   text: string
   // global text effects
   // will be replaced with advanced text editor
-  textEffects: {
-    bold: boolean
-    italic: boolean
-    underlined: boolean
-    strikethrough: boolean
-    obfuscated: boolean
-  }
+  textEffects: TextEffects
   alignment: TextDisplayAlignment
   backgroundColor: number // ARGB
   defaultBackground: boolean // default_background
