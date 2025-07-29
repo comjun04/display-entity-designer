@@ -156,6 +156,21 @@ const TextDisplayProperties: FC = () => {
         />
       </div>
       <div className="flex flex-row items-center gap-2">
+        <label className="flex-1 text-end">text color</label>
+        <ColorPickerInput
+          className="flex-[2]"
+          value={singleSelectedEntity.textColor}
+          useARGB
+          onValueChange={(num) => {
+            useDisplayEntityStore
+              .getState()
+              .setTextDisplayProperties(singleSelectedEntity.id, {
+                textColor: num,
+              })
+          }}
+        />
+      </div>
+      <div className="flex flex-row items-center gap-2">
         <label className="flex-1 text-end">line_width</label>
         <input
           type="number"

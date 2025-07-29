@@ -159,7 +159,7 @@ const ExportToMinecraftDialog: FC = () => {
 
           const worldMatrix = refData.objectRef.current.matrixWorld
 
-          const idText = entity.kind + '_display' // block_display, item_display
+          const idText = entity.kind + '_display' // block_display, item_display, text_display
           const transformationString = worldMatrix
             .clone()
             .transpose()
@@ -190,7 +190,7 @@ const ExportToMinecraftDialog: FC = () => {
               enabledTextEffects.length > 0
                 ? ',' + enabledTextEffects.map((k) => `"${k}":true`).join(',')
                 : ''
-            specificData = `text:'{"text":"${text}"${enabledTextEffectsString}}'`
+            specificData = `text:'{"text":"${text}"${enabledTextEffectsString},"color":${entity.textColor}}'`
 
             // TODO: omit optional nbt data if data value is default value
 

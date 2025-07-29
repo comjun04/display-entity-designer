@@ -1,5 +1,4 @@
 import {
-  ColorRepresentation,
   FrontSide,
   Group,
   Mesh,
@@ -19,7 +18,7 @@ type CreateTextMeshArgs = {
   text: string // TODO: handle Raw JSON Text Format
   font: Font
   lineWidth: number
-  color: ColorRepresentation
+  textColor: number
   backgroundColor: number
 }
 
@@ -28,6 +27,7 @@ export async function createTextMesh({
   text,
   font = 'default',
   lineWidth,
+  textColor,
   backgroundColor,
 }: CreateTextMeshArgs) {
   const textLinesGroup = new Group()
@@ -65,7 +65,7 @@ export async function createTextMesh({
       advance,
       ascent,
       font: charFont,
-    } = await createCharMesh(char, font)
+    } = await createCharMesh(char, font, textColor)
 
     const width = widthPixels
 
@@ -175,10 +175,9 @@ async function loadFontResource(filePath: string) {
 }
 */
 
-async function createCharMesh(char: string, preferFont: Font) {
+async function createCharMesh(char: string, preferFont: Font, color: number) {
   let texture!: Texture
   let geometry!: PlaneGeometry
-  let material!: MeshBasicMaterial
   let width!: number // 여백 자르고 난 뒤의 width
   let baseWidth!: number // 여백 자르기 전 원래 width
   let height!: number
@@ -193,7 +192,7 @@ async function createCharMesh(char: string, preferFont: Font) {
   const d = cache.get(key)
   if (d != null) {
     geometry = d.geometry
-    material = d.material
+    texture = d.texture
     width = d.widthPixels
     baseWidth = d.baseWidthPixels
     height = d.heightPixels
@@ -203,7 +202,7 @@ async function createCharMesh(char: string, preferFont: Font) {
     if (preferFont === 'default') {
       const d = await createBitmapFontCharTexture(char)
       if (d == null) {
-        return await createCharMesh(char, 'uniform')
+        return await createCharMesh(char, 'uniform', color)
       }
 
       texture = d.texture
@@ -233,18 +232,10 @@ async function createCharMesh(char: string, preferFont: Font) {
     texture.minFilter = NearestFilter
     texture.magFilter = NearestFilter
 
-    material = new MeshBasicMaterial({
-      map: texture,
-      side: FrontSide,
-      transparent: true,
-      opacity: 1,
-      alphaTest: 0.01,
-    })
-
     // cache glyph data
     setFontGlyph(key, {
       geometry,
-      material,
+      texture,
       widthPixels: width,
       baseWidthPixels: baseWidth,
       heightPixels: height,
@@ -252,6 +243,15 @@ async function createCharMesh(char: string, preferFont: Font) {
       ascent,
     })
   }
+
+  const material = new MeshBasicMaterial({
+    map: texture,
+    color,
+    side: FrontSide,
+    transparent: true,
+    opacity: 1,
+    alphaTest: 0.01,
+  })
 
   const mesh = new Mesh(geometry, material)
   return {

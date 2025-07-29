@@ -29,21 +29,25 @@ const TextDisplay: FC<TextDisplayProps> = ({
   objectRef: ref,
   onClick,
 }) => {
-  const { thisEntityLineWidth, thisEntityBackgroundColor, thisEntitySelected } =
-    useDisplayEntityStore(
-      useShallow((state) => {
-        const thisEntity = state.entities.get(id)
-        return {
-          thisEntityLineWidth:
-            thisEntity?.kind === 'text' ? thisEntity.lineWidth : undefined,
-          thisEntityBackgroundColor:
-            thisEntity?.kind === 'text'
-              ? thisEntity.backgroundColor
-              : undefined,
-          thisEntitySelected: state.selectedEntityIds.includes(id),
-        }
-      }),
-    )
+  const {
+    thisEntityLineWidth,
+    thisEntityTextColor,
+    thisEntityBackgroundColor,
+    thisEntitySelected,
+  } = useDisplayEntityStore(
+    useShallow((state) => {
+      const thisEntity = state.entities.get(id)
+      return {
+        thisEntityLineWidth:
+          thisEntity?.kind === 'text' ? thisEntity.lineWidth : undefined,
+        thisEntityTextColor:
+          thisEntity?.kind === 'text' ? thisEntity.textColor : undefined,
+        thisEntityBackgroundColor:
+          thisEntity?.kind === 'text' ? thisEntity.backgroundColor : undefined,
+        thisEntitySelected: state.selectedEntityIds.includes(id),
+      }
+    }),
+  )
   const forceUnifont = useEditorStore(
     (state) => state.settings.general.forceUnifont,
   )
@@ -65,8 +69,8 @@ const TextDisplay: FC<TextDisplayProps> = ({
         text,
         font: forceUnifont ? 'uniform' : 'default',
         lineWidth: thisEntityLineWidth,
-        backgroundColor: thisEntityBackgroundColor,
-        color: '#dddddd',
+        backgroundColor: thisEntityBackgroundColor ?? 0xff000000,
+        textColor: thisEntityTextColor ?? 0xffffffff,
       })
 
       if (textModelGroupRef.current != null) {
@@ -79,7 +83,14 @@ const TextDisplay: FC<TextDisplayProps> = ({
     }
 
     asyncFn().catch(console.error)
-  }, [id, text, thisEntityLineWidth, thisEntityBackgroundColor, forceUnifont])
+  }, [
+    id,
+    text,
+    thisEntityLineWidth,
+    thisEntityBackgroundColor,
+    thisEntityTextColor,
+    forceUnifont,
+  ])
 
   useFrame(() => {
     if (!thisEntitySelected) {

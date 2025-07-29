@@ -1,4 +1,4 @@
-import { MeshBasicMaterial, MeshStandardMaterial, PlaneGeometry } from 'three'
+import { MeshStandardMaterial, PlaneGeometry, Texture } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
@@ -130,7 +130,7 @@ export const useCacheStore = create(
 
 type FontGlyphData = {
   geometry: PlaneGeometry
-  material: MeshBasicMaterial
+  texture: Texture
   widthPixels: number
   baseWidthPixels: number
   heightPixels: number

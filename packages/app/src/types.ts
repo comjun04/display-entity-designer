@@ -193,6 +193,9 @@ export type TextEffects = {
 export type TextDisplayEntity = BaseDisplayEntity & {
   kind: 'text'
   text: string
+  // global text color
+  // will be replaced with advanced text editor
+  textColor: number // ARGB
   // global text effects
   // will be replaced with advanced text editor
   textEffects: TextEffects

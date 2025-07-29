@@ -134,6 +134,7 @@ export const useDisplayEntityStore = create(
             kind: 'text',
             id,
             text: typeOrText,
+            textColor: 0xffffffff, // #ffffffff, white
             textEffects: {
               bold: false,
               italic: false,
@@ -464,6 +465,7 @@ export const useDisplayEntityStore = create(
               size: scale,
               parent: parentEntityId,
               text: item.text,
+              textColor: item.textColor,
               textEffects: item.textEffects,
               alignment: item.alignment,
               backgroundColor: item.backgroundColor,
@@ -620,6 +622,7 @@ export const useDisplayEntityStore = create(
             kind: entity.kind,
             transforms,
             text: entity.text,
+            textColor: entity.textColor,
             textEffects: entity.textEffects,
             alignment: entity.alignment,
             backgroundColor: entity.backgroundColor,
