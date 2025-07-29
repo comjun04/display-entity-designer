@@ -34,7 +34,6 @@ export async function createTextMesh({
 
   // 모든 줄 통틀어서 최대 width를 가진 줄의 width
   let maxLineWidth = 0
-  let lineHeightPixels = 0
   let offset = 0
   const tempCharMeshList: Mesh[] = []
 
@@ -45,7 +44,6 @@ export async function createTextMesh({
       textLinesGroup.add(lineGroup)
 
       tempCharMeshList.length = 0
-      lineHeightPixels = 0
       offset = 0
       continue
     }
@@ -87,12 +85,7 @@ export async function createTextMesh({
 
       // 입력한 글자는 다음 줄로 예약
       tempCharMeshList.length = 0
-      lineHeightPixels = 0
-
       tempCharMeshList.push(mesh)
-      if (lineHeightPixels < heightPixels) {
-        lineHeightPixels = heightPixels
-      }
 
       offset = 1
     } else {
@@ -102,9 +95,6 @@ export async function createTextMesh({
       }
 
       tempCharMeshList.push(mesh)
-      if (lineHeightPixels < heightPixels) {
-        lineHeightPixels = heightPixels
-      }
     }
 
     const height = heightPixels / (charFont === 'uniform' ? 2 : 1)
