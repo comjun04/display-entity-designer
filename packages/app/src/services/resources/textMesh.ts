@@ -65,7 +65,8 @@ export async function createTextMesh({
       // baseWidthPixels,
       heightPixels,
       advance,
-      // font: charFont,
+      ascent,
+      font: charFont,
     } = await createCharMesh(char, font)
 
     const width = widthPixels
@@ -106,7 +107,10 @@ export async function createTextMesh({
       }
     }
 
+    const height = heightPixels / (charFont === 'uniform' ? 2 : 1)
+
     mesh.position.setX(offset)
+    mesh.position.setY(1 - (height - ascent))
     offset += advance
 
     if (offset > maxLineWidth) {
@@ -189,6 +193,7 @@ async function createCharMesh(char: string, preferFont: Font) {
   let baseWidth!: number // 여백 자르기 전 원래 width
   let height!: number
   let advance!: number
+  let ascent!: number
 
   // check for cached glyph data
   const { fontGlyphs: cache, setFontGlyph } =
@@ -203,6 +208,7 @@ async function createCharMesh(char: string, preferFont: Font) {
     baseWidth = d.baseWidthPixels
     height = d.heightPixels
     advance = d.advance
+    ascent = d.ascent
   } else {
     if (preferFont === 'default') {
       const d = await createBitmapFontCharTexture(char)
@@ -215,6 +221,7 @@ async function createCharMesh(char: string, preferFont: Font) {
       baseWidth = d.baseWidth
       height = d.height
       advance = d.advance
+      ascent = d.ascent
 
       geometry = new PlaneGeometry(width, d.height)
       geometry.translate(width / 2, d.height / 2, 0.1)
@@ -226,6 +233,7 @@ async function createCharMesh(char: string, preferFont: Font) {
       baseWidth = d.baseWidth
       height = d.height
       advance = d.advance
+      ascent = 7 // temp value. unifont does not have ascent
 
       geometry = new PlaneGeometry(width, height)
       geometry.translate(width / 2, height / 2, 0.1)
@@ -251,6 +259,7 @@ async function createCharMesh(char: string, preferFont: Font) {
       baseWidthPixels: baseWidth,
       heightPixels: height,
       advance,
+      ascent,
     })
   }
 
@@ -261,6 +270,7 @@ async function createCharMesh(char: string, preferFont: Font) {
     baseWidthPixels: baseWidth,
     heightPixels: height,
     advance,
+    ascent,
     font: preferFont,
   }
 }

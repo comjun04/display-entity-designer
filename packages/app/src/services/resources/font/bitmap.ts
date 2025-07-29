@@ -40,6 +40,7 @@ export async function createCharTexture(char: string) {
     baseWidth: glyphData.width,
     height: glyphData.height,
     advance: glyphData.advance,
+    ascent: glyphData.ascent,
   }
 }
 
