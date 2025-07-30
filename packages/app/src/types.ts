@@ -195,7 +195,7 @@ export type TextDisplayEntity = BaseDisplayEntity & {
   text: string
   // global text color
   // will be replaced with advanced text editor
-  textColor: number // ARGB
+  textColor: number // RGB
   // global text effects
   // will be replaced with advanced text editor
   textEffects: TextEffects
@@ -261,7 +261,20 @@ export type BDEngineSaveDataItem = {
     }
   | {
       isTextDisplay: true
-      // TODO: implement
+      name: string // text
+      options: {
+        color: string // text color, #abcdef
+        alpha: number // text color alpha, 0 ~ 1
+        backgroundColor: string // #abcdef
+        backgroundColorAlpha: number // 0 ~ 1
+        bold: boolean
+        italic: boolean
+        underline: boolean
+        strikeThrough: boolean
+        obfuscated: boolean
+        lineLength: number
+        align: TextDisplayAlignment
+      }
     }
   | {
       isItemDisplay: true

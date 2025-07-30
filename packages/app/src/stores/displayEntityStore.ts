@@ -573,6 +573,44 @@ export const useDisplayEntityStore = create(
               parent: parentEntityId,
               display: extraData['display'] as ModelDisplayPositionKey,
             })
+          } else if ('isTextDisplay' in item && item.isTextDisplay) {
+            // text display
+
+            const textColorRGB = parseInt(item.options.color.slice(1), 16)
+            const backgroundColorRGB = parseInt(
+              item.options.backgroundColor.slice(1),
+              16,
+            )
+            const backgroundColorARGB =
+              (((item.options.backgroundColorAlpha * 255) << 24) |
+                backgroundColorRGB) >>>
+              0
+
+            entities.set(id, {
+              kind: 'text',
+              id,
+              position,
+              rotation,
+              size: scale,
+              parent: parentEntityId,
+
+              text: item.name,
+              textColor: textColorRGB,
+              textEffects: {
+                bold: item.options.bold,
+                italic: item.options.italic,
+                underlined: item.options.underline,
+                strikethrough: item.options.strikeThrough,
+                obfuscated: item.options.obfuscated,
+              },
+              alignment: item.options.align,
+              backgroundColor: backgroundColorARGB,
+              defaultBackground: false,
+              lineWidth: item.options.lineLength,
+              seeThrough: false,
+              shadow: false,
+              textOpacity: item.options.alpha * 255,
+            })
           } else {
             return null
           }
