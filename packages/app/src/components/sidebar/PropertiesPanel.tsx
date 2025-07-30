@@ -159,8 +159,8 @@ const TextDisplayProperties: FC = () => {
         <label className="flex-1 text-end">text color</label>
         <ColorPickerInput
           className="flex-[2]"
+          mode="rgb"
           value={singleSelectedEntity.textColor}
-          useARGB
           onValueChange={(num) => {
             useDisplayEntityStore
               .getState()
@@ -212,8 +212,8 @@ const TextDisplayProperties: FC = () => {
         <label className="flex-1 text-end">background_color</label>
         <ColorPickerInput
           className="flex-[2]"
+          mode="argb"
           value={singleSelectedEntity.backgroundColor}
-          useARGB
           onValueChange={(num) => {
             useDisplayEntityStore
               .getState()

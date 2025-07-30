@@ -190,7 +190,7 @@ const ExportToMinecraftDialog: FC = () => {
               enabledTextEffects.length > 0
                 ? ',' + enabledTextEffects.map((k) => `"${k}":true`).join(',')
                 : ''
-            specificData = `text:'{"text":"${text}"${enabledTextEffectsString},"color":${entity.textColor}}'`
+            specificData = `text:'{"text":"${text}"${enabledTextEffectsString},"color":"#${entity.textColor.toString(16)}"}'`
 
             // TODO: omit optional nbt data if data value is default value
 
