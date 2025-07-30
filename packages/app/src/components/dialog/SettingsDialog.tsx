@@ -6,11 +6,17 @@ import { cn } from '@/utils'
 
 import Dialog from './Dialog'
 import DebugOptionsPage from './settings/DebugOptionsPage'
+import GeneralPage from './settings/GeneralPage'
 import HotkeysPage from './settings/HotkeysPage'
 import PerformancePage from './settings/PerformancePage'
 import ProgramInfoPage from './settings/ProgramInfoPage'
 
-type SettingsPageType = 'performance' | 'hotkeys' | 'programInfo' | 'debug'
+type SettingsPageType =
+  | 'general'
+  | 'performance'
+  | 'hotkeys'
+  | 'programInfo'
+  | 'debug'
 
 const SettingsDialog: FC = () => {
   const { isOpen, setOpenedDialog } = useDialogStore(
@@ -20,8 +26,7 @@ const SettingsDialog: FC = () => {
     })),
   )
 
-  const [selectedPage, setSelectedPage] =
-    useState<SettingsPageType>('programInfo')
+  const [selectedPage, setSelectedPage] = useState<SettingsPageType>('general')
 
   const closeDialog = () => setOpenedDialog(null)
 
@@ -36,6 +41,18 @@ const SettingsDialog: FC = () => {
         {/* Desktop - left side settings submenu list */}
         <div className="hidden w-[30%] border-r-2 border-neutral-700 p-4 xs:block">
           <div className="mt-2 flex flex-col gap-1">
+            <button
+              className={cn(
+                'w-full rounded px-2 py-1 text-start text-sm transition duration-150',
+                selectedPage === 'general'
+                  ? 'bg-neutral-700'
+                  : 'hover:bg-neutral-700/50',
+              )}
+              onClick={() => setSelectedPage('general')}
+            >
+              General
+            </button>
+
             <button
               className={cn(
                 'w-full rounded px-2 py-1 text-start text-sm transition duration-150',
@@ -91,6 +108,7 @@ const SettingsDialog: FC = () => {
               setSelectedPage(evt.target.value as SettingsPageType)
             }
           >
+            <option value="general">General</option>
             <option value="performance">Performance</option>
             <option value="hotkeys">Hotkeys</option>
             <option value="programInfo">Program Info</option>
@@ -99,7 +117,10 @@ const SettingsDialog: FC = () => {
         </div>
 
         <div className="h-full w-full py-4 xs:px-4">
-          {/* Hotkeys */}
+          {/* General */}
+          {selectedPage === 'general' && <GeneralPage />}
+
+          {/* Performance */}
           {selectedPage === 'performance' && <PerformancePage />}
 
           {/* Hotkeys */}

@@ -1,1 +1,2 @@
 pnpm app husky:pre-commit
+pnpm asset-utils husky:pre-commit

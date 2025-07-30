@@ -9,6 +9,7 @@ import { useEntityRefStore } from '@/stores/entityRefStore'
 import BlockDisplay from './BlockDisplay'
 import DisplayEntityGroup from './DisplayEntityGroup'
 import ItemDisplay from './ItemDisplay'
+import TextDisplay from './TextDisplay'
 
 type DisplayEntityProps = {
   id: string
@@ -142,6 +143,18 @@ const DisplayEntity: FC<DisplayEntityProps> = ({ id }) => {
       <ItemDisplay
         id={id}
         type={thisEntity.type}
+        position={thisEntity.position}
+        rotation={thisEntity.rotation}
+        size={thisEntity.size}
+        onClick={handleClick}
+        objectRef={thisEntityRef?.objectRef}
+      />
+    )
+  } else if (thisEntity.kind === 'text') {
+    return (
+      <TextDisplay
+        id={id}
+        text={thisEntity.text}
         position={thisEntity.position}
         rotation={thisEntity.rotation}
         size={thisEntity.size}

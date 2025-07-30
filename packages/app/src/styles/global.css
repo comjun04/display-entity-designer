@@ -32,3 +32,20 @@ body,
   background-color: #222;
   color: white;
 }
+
+/* Remove border around `<input type="color" />` */
+/* https://stackoverflow.com/questions/38821432/remove-border-around-the-color-in-an-inputtype-color-in-firefox */
+
+input[type='color']::-moz-color-swatch {
+  border: none;
+  border-color: red;
+}
+
+input[type='color']::-webkit-color-swatch-wrapper {
+  padding: 0;
+  border-radius: 0;
+}
+
+input[type='color']::-webkit-color-swatch {
+  border: none;
+}

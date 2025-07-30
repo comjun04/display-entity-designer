@@ -7,6 +7,7 @@ import { getLogger } from '@/services/loggerService'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEntityRefStore } from '@/stores/entityRefStore'
+import { TextEffects } from '@/types'
 import { cn } from '@/utils'
 
 import Dialog from './Dialog'
@@ -158,7 +159,7 @@ const ExportToMinecraftDialog: FC = () => {
 
           const worldMatrix = refData.objectRef.current.matrixWorld
 
-          const idText = entity.kind + '_display' // block_display, item_display
+          const idText = entity.kind + '_display' // block_display, item_display, text_display
           const transformationString = worldMatrix
             .clone()
             .transpose()
@@ -174,13 +175,45 @@ const ExportToMinecraftDialog: FC = () => {
 
             specificData = `block_state:{Name:"${entity.type}",Properties:{${propertiesText}}}`
           } else if (entity.kind === 'item') {
-            {
-              const displayText =
-                entity.display != null
-                  ? `,item_display:"${entity.display}"`
-                  : ''
-              specificData = `item:{id:"${entity.type}"}${displayText}`
+            const displayText =
+              entity.display != null ? `,item_display:"${entity.display}"` : ''
+            specificData = `item:{id:"${entity.type}"}${displayText}`
+          } else if (entity.kind === 'text') {
+            // text
+            const text = entity.text
+              .replaceAll('\n', '\\\\n')
+              .replaceAll('"', '\\"')
+            const enabledTextEffects = (
+              Object.keys(entity.textEffects) as Array<keyof TextEffects>
+            ).filter((k) => entity.textEffects[k])
+            const enabledTextEffectsString =
+              enabledTextEffects.length > 0
+                ? ',' + enabledTextEffects.map((k) => `"${k}":true`).join(',')
+                : ''
+            specificData = `text:'{"text":"${text}"${enabledTextEffectsString},"color":"#${entity.textColor.toString(16)}"}'`
+
+            // TODO: omit optional nbt data if data value is default value
+
+            // alignment
+            specificData += `,alignment:"${entity.alignment}"`
+            // background_color
+            specificData += `,background_color:${entity.backgroundColor}`
+            // default_background
+            if (entity.defaultBackground) {
+              specificData += ',default_background:true'
             }
+            // line_width
+            specificData += `,line_width:${entity.lineWidth}`
+            // see_through
+            if (entity.seeThrough) {
+              specificData += ',see_through:true'
+            }
+            // shadow
+            if (entity.shadow) {
+              specificData += ',shadow:true'
+            }
+            // text_opacity
+            specificData += `,text_opacity:${entity.textOpacity}`
           }
 
           return `{id:"${idText}",${tagString}${specificData},transformation:[${transformationString}]}`

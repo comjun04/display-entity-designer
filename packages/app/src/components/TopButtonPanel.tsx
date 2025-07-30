@@ -3,6 +3,7 @@ import { FC } from 'react'
 import { FaObjectGroup } from 'react-icons/fa6'
 import { IoMdTrash } from 'react-icons/io'
 import { IoCubeOutline } from 'react-icons/io5'
+import { LuType } from 'react-icons/lu'
 import { TbDiamondFilled } from 'react-icons/tb'
 import { useShallow } from 'zustand/shallow'
 
@@ -59,6 +60,23 @@ const TopButtonPanel: FC = () => {
             }}
           >
             <TbDiamondFilled size={24} />
+          </FloatingButton>
+        </Tooltip>
+
+        <Tooltip
+          content="Text Display"
+          placement="bottom"
+          size="sm"
+          offset={0}
+          delay={300}
+          closeDelay={0}
+        >
+          <FloatingButton
+            onClick={() => {
+              useDisplayEntityStore.getState().createNew('text', 'Enter Text')
+            }}
+          >
+            <LuType size={24} />
           </FloatingButton>
         </Tooltip>
 
