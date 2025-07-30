@@ -23,6 +23,8 @@ type CreateTextMeshArgs = {
 }
 
 const UNIT_PIXEL_SIZE = 0.025
+const backgroundGeometry = new PlaneGeometry(1, 1)
+
 export async function createTextMesh({
   text,
   font = 'default',
@@ -127,8 +129,6 @@ export async function createTextMesh({
     // net.minecraft.client.renderer.entity.DisplayEntityRenderer.TextDisplayRenderer#renderInner()
     maxHeight += 10
   }
-
-  const backgroundGeometry = new PlaneGeometry(1, 1)
 
   const backgroundColorAlpha = ((backgroundColor >>> 24) & 0xff) / 0xff
   const backgroundColorRGB = (backgroundColor << 8) >>> 8 // ensure unsigned
