@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
+import { CDNVersionAssetsUrl } from './constants'
 import { ModelElement, ModelFaceKey } from './types'
 
 export function cn(...inputs: ClassValue[]) {
@@ -34,7 +35,7 @@ export async function generateBuiltinItemModel(
 
   const textureImage = new Image()
   textureImage.crossOrigin = 'anonymous'
-  textureImage.src = `${import.meta.env.VITE_CDN_BASE_URL}/assets/minecraft/textures/${textureResourceLocation}.png`
+  textureImage.src = `${CDNVersionAssetsUrl}/assets/minecraft/textures/${textureResourceLocation}.png`
   await new Promise((resolve) => {
     textureImage.onload = resolve
   })

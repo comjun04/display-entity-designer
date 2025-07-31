@@ -2,6 +2,7 @@ import { useTexture } from '@react-three/drei'
 import { useEffect, useRef, useState } from 'react'
 import { MeshStandardMaterial, NearestFilter } from 'three'
 
+import { CDNVersionAssetsUrl } from '@/constants'
 import { useCacheStore, useClassObjectCacheStore } from '@/stores/cacheStore'
 import { getTextureColor } from '@/utils'
 
@@ -26,7 +27,7 @@ const useCachedMaterial = ({
 
   const texture = useTexture(
     processedImageDataUrl ??
-      `${import.meta.env.VITE_CDN_BASE_URL}/assets/minecraft/textures/${textureResourceLocation}.png`,
+      `${CDNVersionAssetsUrl}/assets/minecraft/textures/${textureResourceLocation}.png`,
     (texture) => {
       // 텍스쳐 픽셀끼리 뭉쳐져서 blur되어 보이지 않게 설정
       // https://discourse.threejs.org/t/low-resolution-texture-is-very-blurry-how-can-i-get-around-this-issue/29948

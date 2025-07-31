@@ -6,6 +6,7 @@ import {
   TextureLoader,
 } from 'three'
 
+import { CDNVersionAssetsUrl } from '@/constants'
 import { useCacheStore, useClassObjectCacheStore } from '@/stores/cacheStore'
 import { getTextureColor } from '@/utils'
 
@@ -64,7 +65,7 @@ export async function loadMaterial({
       croppedTextureDataUrls[textureResourceLocation]
     if (cachedCroppedTextureDataUrl == null) {
       const img = await new ImageLoader().loadAsync(
-        `${import.meta.env.VITE_CDN_BASE_URL}/assets/minecraft/textures/${textureResourceLocation}.png`,
+        `${CDNVersionAssetsUrl}/assets/minecraft/textures/${textureResourceLocation}.png`,
       )
 
       const canvas = document.createElement('canvas')

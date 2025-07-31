@@ -1,5 +1,6 @@
 import { CanvasTexture, ImageLoader } from 'three'
 
+import { CDNVersionAssetsUrl } from '@/constants'
 import fetcher from '@/fetcher'
 import { useCacheStore } from '@/stores/cacheStore'
 import { CDNFontProviderResponse } from '@/types'
@@ -14,7 +15,7 @@ export async function createCharTexture(char: string) {
   }
 
   const img = await imageLoader.loadAsync(
-    `${import.meta.env.VITE_CDN_BASE_URL}/assets/minecraft/textures/${stripMinecraftPrefix(glyphData.file)}`,
+    `${CDNVersionAssetsUrl}/assets/minecraft/textures/${stripMinecraftPrefix(glyphData.file)}`,
   )
 
   const canvas = document.createElement('canvas')
@@ -65,7 +66,7 @@ async function getGlyphData(char: string) {
       const idx = provider.chars[i].indexOf(char[0])
       if (idx >= 0) {
         const img = await imageLoader.loadAsync(
-          `${import.meta.env.VITE_CDN_BASE_URL}/assets/minecraft/textures/${stripMinecraftPrefix(provider.file)}`,
+          `${CDNVersionAssetsUrl}/assets/minecraft/textures/${stripMinecraftPrefix(provider.file)}`,
         )
 
         const width = img.width / provider.chars[0].length
