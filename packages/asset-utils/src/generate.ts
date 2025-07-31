@@ -4,6 +4,8 @@ import {
   join as pathJoin,
   resolve as pathResolve,
   relative as pathRelative,
+  dirname,
+  basename,
 } from 'path'
 import { Open } from 'unzipper'
 import { rimraf } from 'rimraf'
@@ -13,16 +15,19 @@ import {
   blockstatesDefaultValues,
   renderableBlockEntityModelTextures,
 } from './constants'
+import { downloadAssets, downloadSharedAssets } from './cdn'
 
 // =====
 
 const args = process.argv
-const clientJarfilePath = args[2]
-const serverJarfilePath = args[3]
-const mcVersion = args[4]
+const mcVersion = args[2]
 
-const workdirFolderPath = pathJoin(pathResolve(), 'workdir')
-const outputFolderPath = pathJoin(pathResolve(), 'output', mcVersion)
+const workdirFolderRootPath = pathJoin(pathResolve(), 'workdir')
+const workdirFolderPath = pathJoin(workdirFolderRootPath, mcVersion)
+const workdirFolderSharedAssetsPath = pathJoin(workdirFolderRootPath, 'shared')
+const outputFolderRootPath = pathJoin(pathResolve(), 'output')
+const outputFolderPath = pathJoin(outputFolderRootPath, mcVersion)
+const outputFolderSharedAssetsPath = pathJoin(outputFolderRootPath, 'shared')
 const assetsMinecraftFolderPath = pathJoin(
   outputFolderPath,
   'assets',
@@ -30,11 +35,26 @@ const assetsMinecraftFolderPath = pathJoin(
 )
 
 // workdir 폴더 미리 생성
-if (!existsSync(workdirFolderPath)) {
-  await mkdir(workdirFolderPath)
+if (!existsSync(workdirFolderRootPath)) {
+  await mkdir(workdirFolderRootPath)
 }
 
 // 버전 이름 폴더가 이미 있는지 확인
+if (
+  !existsSync(workdirFolderPath) ||
+  !(await lstat(workdirFolderPath)).isDirectory()
+) {
+  console.log(`workdir/${mcVersion} folder does not exist. Creating a new one.`)
+  await mkdir(workdirFolderPath, { recursive: true })
+}
+if (
+  !existsSync(workdirFolderSharedAssetsPath) ||
+  !(await lstat(workdirFolderSharedAssetsPath)).isDirectory()
+) {
+  console.log('workdir/shared folder does not exist. Creating a new one.')
+  await mkdir(workdirFolderSharedAssetsPath, { recursive: true })
+}
+
 if (
   !existsSync(outputFolderPath) ||
   !(await lstat(outputFolderPath)).isDirectory()
@@ -47,18 +67,27 @@ if (
   )
   process.exit(1)
 }
+if (
+  !existsSync(outputFolderSharedAssetsPath) ||
+  !(await lstat(outputFolderSharedAssetsPath)).isDirectory()
+) {
+  console.log('output/shared folder does not exist. Creating a new one.')
+  await mkdir(outputFolderSharedAssetsPath, { recursive: true })
+}
 
 console.log('Cleaning up previous server jar reports files')
-await cleanupWorkdir()
+await cleanupWorkdir(mcVersion)
 
-const jarfileAbsolutePath = pathJoin(pathResolve(), clientJarfilePath)
+const versionData = await downloadAssets(mcVersion, workdirFolderPath)
+
+const jarfileAbsolutePath = pathJoin(workdirFolderPath, 'client.jar')
 const zip = await Open.file(jarfileAbsolutePath)
 
-console.log('Extracting asset files...')
+console.log('Extracting version asset files...')
 
 const filesToExtract = zip.files.filter(
   (f) =>
-    /^assets\/minecraft\/(blockstates|models|textures\/(block|colormap|font|item))\//.test(
+    /^assets\/minecraft\/(blockstates|models|font|textures\/(block|colormap|font|item))\//.test(
       f.path,
     ) || renderableBlockEntityModelTextures.includes(f.path),
 )
@@ -84,16 +113,13 @@ await cp(pathJoin(pathResolve(), 'hardcoded'), assetsMinecraftFolderPath, {
 
 // generate server resource reports file to get blocks.json and items.json
 console.log('Generating server.jar resource reports...')
-const relativeServerJarfilePath = pathRelative(
-  workdirFolderPath,
-  pathJoin(pathResolve(), serverJarfilePath),
-)
+const serverJarfilePath = pathJoin(workdirFolderPath, 'server.jar')
 spawnSync(
   'java',
   [
     '-DbundlerMainClass=net.minecraft.data.Main',
     '-jar',
-    relativeServerJarfilePath,
+    serverJarfilePath,
     '--reports',
   ],
   {
@@ -191,12 +217,63 @@ await writeFile(
   JSON.stringify({ items }),
 )
 
+// shared assets
+const workdirFolderSharedAssetsSubPath = pathJoin(
+  workdirFolderSharedAssetsPath,
+  versionData.assetIndex.id,
+)
+const outputFolderSharedAssetsSubPath = pathJoin(
+  outputFolderSharedAssetsPath,
+  versionData.assetIndex.id,
+)
+
+let unifontHexFilePath = ''
+
+const sharedAssets = await downloadSharedAssets(
+  versionData.assetIndex,
+  workdirFolderRootPath,
+)
+for (const assetFilePath of sharedAssets) {
+  console.log('Copying shared asset file', assetFilePath)
+  const assetFileWorkdirAbsolutePath = pathJoin(
+    workdirFolderSharedAssetsSubPath,
+    assetFilePath,
+  )
+  const assetFileOutputAbsolutePath = pathJoin(
+    outputFolderSharedAssetsSubPath,
+    assetFilePath,
+  )
+  await mkdir(dirname(assetFileOutputAbsolutePath), { recursive: true })
+  await cp(assetFileWorkdirAbsolutePath, assetFileOutputAbsolutePath)
+
+  // unifont_all_no_pua_<version>.hex
+  if (basename(assetFilePath).startsWith('unifont_all_')) {
+    unifontHexFilePath = assetFilePath
+  }
+}
+
+// write version metadata.json
+console.log('Writing metadata.json')
+const versionMetadata: VersionMetadata = {
+  mcVersion,
+  sharedAssets: {
+    assetIndex: parseInt(versionData.assetIndex.id),
+    unifontHexFilePath,
+  },
+}
+await writeFile(
+  pathJoin(outputFolderPath, 'metadata.json'),
+  JSON.stringify(versionMetadata),
+)
+
 console.log('Done')
 
 // ==========
 
-async function cleanupWorkdir() {
-  await rimraf('./workdir/{generated,libraries,logs,versions}', { glob: true })
+async function cleanupWorkdir(versionId: string) {
+  await rimraf(`./workdir/${versionId}/{generated,libraries,logs,versions}`, {
+    glob: true,
+  })
 }
 
 function stripMinecraftPrefix(input: string) {

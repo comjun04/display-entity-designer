@@ -5,11 +5,13 @@
   "type": "module",
   "scripts": {
     "generate": "tsx src/generate.ts",
-    "serve": "serve output"
+    "serve": "serve output",
+    "husky:pre-commit": "pretty-quick --staged --pattern \"packages/asset-utils/**/*.{js,ts,jsx,tsx,json}\""
   },
   "devDependencies": {
     "@types/node": "^22.7.5",
     "@types/unzipper": "^0.10.10",
+    "pretty-quick": "^4.2.2",
     "serve": "^14.2.3",
     "tsx": "^4.19.1"
   },

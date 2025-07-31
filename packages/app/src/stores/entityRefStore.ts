@@ -2,9 +2,13 @@ import { MutableRefObject } from 'react'
 import { Group } from 'three'
 import { create } from 'zustand'
 
+import { getLogger } from '@/services/loggerService'
 import { RefCallbackWithMutableRefObject } from '@/types'
 
+const logger = getLogger('entityRefStore')
+
 // ==========
+
 type EntityRefStoreState = {
   entityRefs: Map<
     string,
@@ -72,7 +76,7 @@ export const useEntityRefStore = create<EntityRefStoreState>((set, get) => {
         }) as RefCallbackWithMutableRefObject<Group>
 
         if (state.entityRefs.has(id)) {
-          console.warn(
+          logger.warn(
             `entityRefStore.createEntityRef(): creating entity ref data with entity id ${id} which already has one`,
           )
         }

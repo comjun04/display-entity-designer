@@ -2,6 +2,10 @@ import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { BDEngineSaveData, DisplayEntitySaveDataItem } from '@/types'
 
+import { getLogger } from './loggerService'
+
+const logger = getLogger('FileService')
+
 type DisplayEntitySaveData = {
   __version: number
   __program: string
@@ -9,29 +13,41 @@ type DisplayEntitySaveData = {
 }
 
 const FILE_MAGIC = 'DEPL'
-const FILE_VERSION = 0
+const FILE_VERSION = 1
 
 const fileVersionArrayBuffer = new ArrayBuffer(4)
 const fileVersionDataView = new DataView(fileVersionArrayBuffer)
 fileVersionDataView.setUint32(0, FILE_VERSION, false)
 
-export async function openFromFile(file: File) {
-  try {
-    // first try to open as depl project
-    const isDeplProject = await openProjectFile(file)
-    if (isDeplProject) return
+export function openFromFile() {
+  const inputElement = document.createElement('input')
+  inputElement.type = 'file'
+  inputElement.accept = '.depl,.bdengine'
+  inputElement.onchange = async (evt) => {
+    const file = (evt.target as HTMLInputElement).files?.[0]
+    if (file == null) {
+      return
+    }
 
-    // if not, try to open with bdengine file
-    const isBDEProject = await importFromBDE(file)
-    if (isBDEProject) return
-  } catch (err) {
-    console.error(err)
+    try {
+      // first try to open as depl project
+      const isDeplProject = await openProjectFile(file)
+      if (isDeplProject) return
+
+      // if not, try to open with bdengine file
+      const isBDEProject = await importFromBDE(file)
+      if (isBDEProject) return
+    } catch (err) {
+      logger.error(err)
+    }
   }
+
+  inputElement.click()
 }
 
 async function openProjectFile(file: File): Promise<boolean> {
   if (file.size < 10) {
-    console.error(
+    logger.error(
       'Cannot open project file: cannot extract file header, file too small',
     )
     return false
@@ -39,7 +55,7 @@ async function openProjectFile(file: File): Promise<boolean> {
 
   const magic = await file.slice(0, 4).text()
   if (magic !== FILE_MAGIC) {
-    console.error('Cannot open project file: project file magic does not match')
+    logger.error('Cannot open project file: project file magic does not match')
     return false
   }
 
@@ -47,7 +63,7 @@ async function openProjectFile(file: File): Promise<boolean> {
   const dataview = new DataView(versionArrayBuffer)
   const version = dataview.getUint32(0, false)
   if (version < FILE_VERSION) {
-    console.error(
+    logger.error(
       `Cannot open project file (version ${version}) higher than supported version ${FILE_VERSION}`,
     )
     return false
@@ -68,7 +84,7 @@ async function openProjectFile(file: File): Promise<boolean> {
   clearEntities()
   useEditorStore.getState().resetProject()
 
-  bulkImport(saveData.entities).catch(console.error)
+  bulkImport(saveData.entities).catch(logger.error)
 
   return true
 }
@@ -130,7 +146,7 @@ export async function importFromBDE(file: File): Promise<boolean> {
   clearEntities()
   useEditorStore.getState().resetProject()
 
-  bulkImportFromBDE(saveData).catch(console.error)
+  bulkImportFromBDE(saveData).catch(logger.error)
 
   return true
 }

@@ -1,9 +1,20 @@
+import merge from 'lodash.merge'
+import { z } from 'zod'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
-import { Number3Tuple, PartialNumber3Tuple } from '@/types'
+import { getLogger } from '@/services/loggerService'
+import {
+  DeepPartial,
+  LogLevel,
+  Number3Tuple,
+  PartialNumber3Tuple,
+} from '@/types'
+
+const logger = getLogger('editorStore')
 
 // ==========
+
 type EditorMode = 'translate' | 'rotate' | 'scale'
 type TransformationData = {
   position: Number3Tuple
@@ -11,13 +22,42 @@ type TransformationData = {
   size: Number3Tuple
 }
 
-type Settings = {
-  testOption: boolean
-}
+const settingsSchema = z.object({
+  general: z
+    .object({
+      forceUnifont: z.boolean().default(false),
+    })
+    .default({}),
+  performance: z
+    .object({
+      reducePixelRatio: z.boolean().default(false),
+    })
+    .default({}),
+  debug: z
+    .object({
+      testOption: z.boolean().default(false),
+      minLogLevel: z
+        .enum<
+          LogLevel,
+          [LogLevel, ...LogLevel[]]
+        >(['error', 'warn', 'info', 'debug'])
+        .default('info'),
+      perfMonitorEnabled: z.boolean().default(false),
+      alertUncaughtError: z.boolean().default(false),
+    })
+    .default({}),
+})
+type Settings = z.infer<typeof settingsSchema>
 
 type EditorState = {
   mode: EditorMode
   setMode: (newMode: EditorMode) => void
+
+  mobileSidebarOpened: boolean
+  setMobileSidebarOpened: (opened: boolean) => void
+
+  mobileDragHoldButtonPressed: boolean
+  setMobileDragHoldButtonPressed: (pressed: boolean) => void
 
   usingTransformControl: boolean
   setUsingTransformControl: (value: boolean) => void
@@ -33,7 +73,7 @@ type EditorState = {
   }) => void
 
   settings: Settings
-  setSettings: (newSettings: Partial<Settings>) => void
+  setSettings: (newSettings: DeepPartial<Settings>) => void
 
   resetProject: () => void
 }
@@ -41,12 +81,15 @@ type EditorState = {
 function getStoredSettings() {
   try {
     const settingsString = window.localStorage.getItem('settings')
-    return settingsString != null
-      ? (JSON.parse(settingsString) as Settings)
-      : null
+    if (settingsString == null) return settingsSchema.parse({})
+
+    const jsonParsedData = JSON.parse(settingsString) as unknown
+    return settingsSchema.parse(jsonParsedData)
   } catch (err) {
+    // logger.error()를 사용할 경우 settings 로드 과정에서 오류가 발생하면 순환참조 문제로 인해 로드 자체가 안되므로
+    // 여기서는 그냥 console.error 사용
     console.error(err)
-    return null
+    return settingsSchema.parse({})
   }
 }
 
@@ -54,13 +97,28 @@ export const useEditorStore = create(
   immer<EditorState>((set) => {
     const initialSettings = getStoredSettings() ?? {
       testOption: false,
+      minLogLevel: 'info',
     }
+    globalThis.__depl_alertUncaughtError =
+      initialSettings?.debug?.alertUncaughtError
 
     return {
       mode: 'translate',
       setMode: (newMode) =>
         set((state) => {
           state.mode = newMode
+        }),
+
+      mobileSidebarOpened: false,
+      setMobileSidebarOpened: (opened) =>
+        set((state) => {
+          state.mobileSidebarOpened = opened
+        }),
+
+      mobileDragHoldButtonPressed: false,
+      setMobileDragHoldButtonPressed: (pressed) =>
+        set((state) => {
+          state.mobileDragHoldButtonPressed = pressed
         }),
 
       usingTransformControl: false,
@@ -111,7 +169,12 @@ export const useEditorStore = create(
       settings: initialSettings,
       setSettings: (newSettings) =>
         set((state) => {
-          state.settings = { ...state.settings, ...newSettings }
+          merge(state.settings, newSettings)
+
+          if (newSettings?.debug?.alertUncaughtError != null) {
+            globalThis.__depl_alertUncaughtError =
+              newSettings.debug.alertUncaughtError
+          }
 
           try {
             window.localStorage.setItem(
@@ -119,7 +182,7 @@ export const useEditorStore = create(
               JSON.stringify(state.settings),
             )
           } catch (err) {
-            console.error(err)
+            logger.error(err)
           }
         }),
 

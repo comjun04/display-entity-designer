@@ -3,6 +3,7 @@ import { FC, useEffect, useRef, useState } from 'react'
 import { Group, MathUtils, Mesh, Vector3 } from 'three'
 import { useShallow } from 'zustand/shallow'
 
+import { getLogger } from '@/services/loggerService'
 import { loadModelMesh } from '@/services/resources/modelMesh'
 import { useCacheStore } from '@/stores/cacheStore'
 import { ModelDisplayPositionKey, Number3Tuple } from '@/types'
@@ -14,6 +15,8 @@ type ModelNewProps = {
   xRotation?: number
   yRotation?: number
 }
+
+const logger = getLogger('Model')
 
 const ModelNew: FC<ModelNewProps> = ({
   initialResourceLocation,
@@ -64,17 +67,22 @@ const ModelNew: FC<ModelNewProps> = ({
       })
 
       if (loadResult == null) {
-        console.error(
-          `Failed to load model mesh for ${initialResourceLocation}`,
-        )
+        logger.error(`Failed to load model mesh for ${initialResourceLocation}`)
         return
       }
 
+      if (mergedMeshRef.current != null) {
+        mergedMeshRef.current.geometry.dispose()
+      }
       mergedMeshRef.current = loadResult
       setMeshLoaded(true)
     }
 
-    fn().catch(console.error)
+    fn().catch(logger.error)
+
+    return () => {
+      mergedMeshRef.current?.geometry.dispose()
+    }
   }, [initialResourceLocation, modelDataTemp, meshLoaded, isItemModel])
 
   useEffect(() => {

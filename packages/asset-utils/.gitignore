@@ -134,3 +134,6 @@ dist
 workdir
 output/**/*
 !output/serve.json
+
+# vim swap files
+*.sw?

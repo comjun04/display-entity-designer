@@ -7,6 +7,10 @@ import {
 } from '@/types'
 import { stripMinecraftPrefix } from '@/utils'
 
+import { getLogger } from '../loggerService'
+
+const logger = getLogger('ResourceLoader/blockstates')
+
 export function getMatchingBlockstateModel(
   blockstatesData: BlockstatesData,
   blockstates: Record<string, string>,
@@ -48,7 +52,7 @@ export async function loadBlockstates(
     return directFetchedBlockstatesData
   }
 
-  console.log(`Loading blockstates for block ${blockType}`)
+  logger.log(`Loading blockstates for block ${blockType}`)
 
   const rawBlockstatesData = (await fetcher(
     `/assets/minecraft/blockstates/${blockType}.json`,

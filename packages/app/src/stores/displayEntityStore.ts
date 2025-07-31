@@ -1,22 +1,28 @@
+import merge from 'lodash.merge'
 import { nanoid } from 'nanoid'
 import { Box3, Euler, Matrix4, Quaternion, Vector3 } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
+import { getLogger } from '@/services/loggerService'
 import { preloadResources } from '@/services/resources/preload'
 import { useEntityRefStore } from '@/stores/entityRefStore'
 import {
   BDEngineSaveData,
   BDEngineSaveDataItem,
+  DeepPartial,
   DisplayEntity,
   DisplayEntityGroup,
   DisplayEntitySaveDataItem,
   ModelDisplayPositionKey,
   Number3Tuple,
   PartialNumber3Tuple,
+  TextDisplayEntity,
 } from '@/types'
 
 import { useEditorStore } from './editorStore'
+
+const logger = getLogger('displayEntityStore')
 
 const ENTITY_ID_LENGTH = 16
 
@@ -42,7 +48,13 @@ export type DisplayEntityState = {
   entities: Map<string, DisplayEntity>
   selectedEntityIds: string[]
 
-  createNew: (kind: DisplayEntity['kind'], type: string) => string
+  /**
+   * 새로운 디스플레이 엔티티를 생성합니다.
+   * @param kind 디스플레이 엔티티의 종류. `block`, `item` 혹은 `text`
+   * @param typeOrText `kind`가 `block` 또는 `item`일 경우 블록/아이템 id, `text`일 경우 입력할 텍스트 (JSON Format)
+   * @returns 생성된 디스플레이 엔티티 데이터 id
+   */
+  createNew: (kind: DisplayEntity['kind'], typeOrText: string) => string
   setSelected: (ids: string[]) => void
   addToSelected: (id: string) => void
   setEntityTranslation: (id: string, translation: PartialNumber3Tuple) => void
@@ -64,6 +76,15 @@ export type DisplayEntityState = {
     id: string,
     blockstates: Record<string, string>,
   ) => void
+  setTextDisplayProperties: (
+    id: string,
+    properties: DeepPartial<
+      Omit<
+        TextDisplayEntity,
+        'id' | 'kind' | 'position' | 'rotation' | 'size' | 'parent'
+      >
+    >,
+  ) => void
   deleteEntities: (entityIds: string[]) => void
 
   bulkImport: (items: DisplayEntitySaveDataItem[]) => Promise<void>
@@ -81,7 +102,7 @@ export const useDisplayEntityStore = create(
     entities: new Map(),
     selectedEntityIds: [],
 
-    createNew: (kind, type) => {
+    createNew: (kind, typeOrText) => {
       const id = generateId(ENTITY_ID_LENGTH)
 
       set((state) => {
@@ -91,7 +112,7 @@ export const useDisplayEntityStore = create(
           state.entities.set(id, {
             kind: 'block',
             id,
-            type,
+            type: typeOrText,
             size: [1, 1, 1],
             position: [0, 0, 0],
             rotation: [0, 0, 0],
@@ -102,11 +123,35 @@ export const useDisplayEntityStore = create(
           state.entities.set(id, {
             kind: 'item',
             id,
-            type,
+            type: typeOrText,
             size: [1, 1, 1],
             position: [0, 0, 0],
             rotation: [0, 0, 0],
             display: null,
+          })
+        } else if (kind === 'text') {
+          state.entities.set(id, {
+            kind: 'text',
+            id,
+            text: typeOrText,
+            textColor: 0xffffffff, // #ffffffff, white
+            textEffects: {
+              bold: false,
+              italic: false,
+              underlined: false,
+              strikethrough: false,
+              obfuscated: false,
+            },
+            size: [1, 1, 1],
+            position: [0, 0, 0],
+            rotation: [0, 0, 0],
+            alignment: 'center',
+            backgroundColor: 0xff000000, // #ff000000, black
+            defaultBackground: false,
+            lineWidth: 200,
+            seeThrough: false,
+            shadow: false,
+            textOpacity: 255,
           })
         }
       })
@@ -135,17 +180,11 @@ export const useDisplayEntityStore = create(
       }),
     setEntityTranslation: (id, translation) =>
       set((state) => {
-        console.debug(
-          'displayEntityStore setEntityTranslation',
-          id,
-          translation,
-        )
+        logger.debug('setEntityTranslation', id, translation)
 
         const entity = state.entities.get(id)
         if (entity == null) {
-          console.error(
-            `displayEntityStore.setEntityTranslation(): unknown entity ${id}`,
-          )
+          logger.error(`setEntityTranslation(): unknown entity ${id}`)
           return
         }
 
@@ -161,9 +200,7 @@ export const useDisplayEntityStore = create(
       set((state) => {
         const entity = state.entities.get(id)
         if (entity == null) {
-          console.error(
-            `displayEntityStore.setEntityRotation(): unknown entity ${id}`,
-          )
+          logger.error(`setEntityRotation(): unknown entity ${id}`)
           return
         }
 
@@ -177,13 +214,11 @@ export const useDisplayEntityStore = create(
       }),
     setEntityScale: (id, scale) =>
       set((state) => {
-        console.debug('displayEntityStore setEntityScale', id, scale)
+        logger.debug('setEntityScale', id, scale)
 
         const entity = state.entities.get(id)
         if (entity == null) {
-          console.error(
-            `displayEntityStore.setEntityScale(): unknown entity ${id}`,
-          )
+          logger.error(`setEntityScale(): unknown entity ${id}`)
           return
         }
 
@@ -197,7 +232,7 @@ export const useDisplayEntityStore = create(
       }),
     batchSetEntityTransformation: (data) =>
       set((state) => {
-        console.debug('displayEntityStore batchSetEntityTransformation', data)
+        logger.debug('batchSetEntityTransformation', data)
 
         data.forEach((item) => {
           const entity = state.entities.get(item.id)
@@ -236,12 +271,12 @@ export const useDisplayEntityStore = create(
       set((state) => {
         const entity = state.entities.get(id)
         if (entity == null) {
-          console.error(
+          logger.error(
             `Attempted to set display type for unknown display entity: ${id}`,
           )
           return
         } else if (entity.kind !== 'item') {
-          console.error(
+          logger.error(
             `Attempted to set display type for non-item display entity: ${id}, kind: ${entity.kind}`,
           )
           return
@@ -253,12 +288,12 @@ export const useDisplayEntityStore = create(
       set((state) => {
         const entity = state.entities.get(id)
         if (entity == null) {
-          console.error(
+          logger.error(
             `Attempted to set blockstates for unknown block display entity: ${id}`,
           )
           return
         } else if (entity.kind !== 'block') {
-          console.error(
+          logger.error(
             `Attempted to set blockstates for non-block display entity: ${id}, kind: ${entity.kind}`,
           )
           return
@@ -270,6 +305,34 @@ export const useDisplayEntityStore = create(
         }
 
         entity.blockstates = { ...entity.blockstates, ...blockstates }
+      }),
+    setTextDisplayProperties: (id, properties) =>
+      set((state) => {
+        const entity = state.entities.get(id)
+        if (entity == null) {
+          logger.error(
+            `Attempted to set properties for unknown text displau entity: ${id}`,
+          )
+          return
+        } else if (entity.kind !== 'text') {
+          logger.error(
+            `Attempted to set properties for non-text display entity: ${id}`,
+          )
+          return
+        }
+
+        if (
+          properties.lineWidth != null &&
+          // TODO: specific type check (int)
+          (!isFinite(properties.lineWidth) || properties.lineWidth < 0)
+        ) {
+          logger.error(
+            `Text Display \`lineWidth\` must be positive integer or zero, but tried to set ${properties.lineWidth} to entity ${id}`,
+          )
+          return
+        }
+
+        merge(entity, properties)
       }),
     deleteEntities: (entityIds) =>
       set((state) => {
@@ -283,8 +346,8 @@ export const useDisplayEntityStore = create(
 
             const entity = state.entities.get(id)
             if (entity == null) {
-              console.error(
-                `displayEntityStore.deleteEntities(): Attempt to remove unknown entity with id ${id}`,
+              logger.error(
+                `deleteEntities(): Attempt to remove unknown entity with id ${id}`,
               )
               continue
             }
@@ -393,6 +456,25 @@ export const useDisplayEntityStore = create(
               parent: parentEntityId,
               display: item.display,
             })
+          } else if (item.kind === 'text') {
+            entities.set(id, {
+              kind: 'text',
+              id,
+              position,
+              rotation,
+              size: scale,
+              parent: parentEntityId,
+              text: item.text,
+              textColor: item.textColor,
+              textEffects: item.textEffects,
+              alignment: item.alignment,
+              backgroundColor: item.backgroundColor,
+              defaultBackground: item.defaultBackground,
+              lineWidth: item.lineWidth,
+              seeThrough: item.seeThrough,
+              shadow: item.shadow,
+              textOpacity: item.textOpacity,
+            })
           }
 
           return id
@@ -491,6 +573,44 @@ export const useDisplayEntityStore = create(
               parent: parentEntityId,
               display: extraData['display'] as ModelDisplayPositionKey,
             })
+          } else if ('isTextDisplay' in item && item.isTextDisplay) {
+            // text display
+
+            const textColorRGB = parseInt(item.options.color.slice(1), 16)
+            const backgroundColorRGB = parseInt(
+              item.options.backgroundColor.slice(1),
+              16,
+            )
+            const backgroundColorARGB =
+              (((item.options.backgroundColorAlpha * 255) << 24) |
+                backgroundColorRGB) >>>
+              0
+
+            entities.set(id, {
+              kind: 'text',
+              id,
+              position,
+              rotation,
+              size: scale,
+              parent: parentEntityId,
+
+              text: item.name,
+              textColor: textColorRGB,
+              textEffects: {
+                bold: item.options.bold,
+                italic: item.options.italic,
+                underlined: item.options.underline,
+                strikethrough: item.options.strikeThrough,
+                obfuscated: item.options.obfuscated,
+              },
+              alignment: item.options.align,
+              backgroundColor: backgroundColorARGB,
+              defaultBackground: false,
+              lineWidth: item.options.lineLength,
+              seeThrough: false,
+              shadow: false,
+              textOpacity: item.options.alpha * 255,
+            })
           } else {
             return null
           }
@@ -535,6 +655,21 @@ export const useDisplayEntityStore = create(
             transforms,
             display: entity.display,
           }
+        } else if (entity.kind === 'text') {
+          return {
+            kind: entity.kind,
+            transforms,
+            text: entity.text,
+            textColor: entity.textColor,
+            textEffects: entity.textEffects,
+            alignment: entity.alignment,
+            backgroundColor: entity.backgroundColor,
+            defaultBackground: entity.defaultBackground,
+            lineWidth: entity.lineWidth,
+            seeThrough: entity.seeThrough,
+            shadow: entity.shadow,
+            textOpacity: entity.textOpacity,
+          }
         } else if (entity.kind === 'group') {
           const children = entity.children.map((childrenEntityId) => {
             const e = entities.get(childrenEntityId)!
@@ -576,9 +711,7 @@ export const useDisplayEntityStore = create(
           state.selectedEntityIds.includes(e.id),
         )
         if (selectedEntities.length < 1) {
-          console.error(
-            'displayEntityStore.groupSelected(): no selected entities to group',
-          )
+          logger.error('groupSelected(): no selected entities to group')
           return
         }
 
@@ -588,8 +721,8 @@ export const useDisplayEntityStore = create(
             (e) => e.parent === firstSelectedEntityParentId,
           )
         ) {
-          console.error(
-            'displayEntityStore.groupSelected(): cannot group entities with different parent',
+          logger.error(
+            'groupSelected(): cannot group entities with different parent',
           )
           return
         }
@@ -648,8 +781,8 @@ export const useDisplayEntityStore = create(
     ungroupSelected: () =>
       set((state) => {
         if (state.selectedEntityIds.length !== 1) {
-          console.error(
-            `displayEntityStore.ungroupSelected(): Cannot ungroup ${state.selectedEntityIds.length} items; Only single group can be ungrouped.`,
+          logger.error(
+            `ungroupSelected(): Cannot ungroup ${state.selectedEntityIds.length} items; Only single group can be ungrouped.`,
           )
           return
         }
@@ -657,8 +790,8 @@ export const useDisplayEntityStore = create(
         const entityGroupId = state.selectedEntityIds[0]
         const selectedEntityGroup = state.entities.get(entityGroupId)
         if (selectedEntityGroup?.kind !== 'group') {
-          console.error(
-            `displayEntityStore.ungroupSelected(): selected entity ${entityGroupId} (kind: ${selectedEntityGroup?.kind}) is not a group`,
+          logger.error(
+            `ungroupSelected(): selected entity ${entityGroupId} (kind: ${selectedEntityGroup?.kind}) is not a group`,
           )
           return
         }

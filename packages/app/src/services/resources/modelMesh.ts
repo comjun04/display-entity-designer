@@ -13,7 +13,10 @@ import { mergeBufferGeometries, mergeVertices } from 'three-stdlib'
 import { ModelElement, ModelFaceKey, Number3Tuple } from '@/types'
 import { stripMinecraftPrefix } from '@/utils'
 
+import { getLogger } from '../loggerService'
 import { loadMaterial } from './material'
+
+const logger = getLogger('ResourceLoader/modelMesh')
 
 const getTextureResourceLocation = (
   textureResourceLocationMap: Record<string, string>,
@@ -64,7 +67,7 @@ export async function loadModelMaterials({
         faceData.texture,
       )
       if (textureResourceLocation == null) {
-        console.warn(
+        logger.warn(
           `Cannot extract texture resource location from model face data. model: ${modelResourceLocation}, faceKey: ${faceKey}`,
         )
         return
@@ -131,7 +134,7 @@ export async function loadModelMesh({
         faceData.texture,
       )
       if (textureResourceLocation == null) {
-        console.warn(
+        logger.warn(
           `Cannot extract texture resource location from model face data. model: ${modelResourceLocation}, faceKey: ${faceKey}`,
         )
         return
@@ -287,7 +290,7 @@ export async function loadModelMesh({
 
     const mergedGeometry = mergeBufferGeometries(geometries, false)
     if (mergedGeometry == null) {
-      console.error(
+      logger.error(
         `Cannot merge model geometries for element ${elementIdx} of model ${modelResourceLocation}`,
       )
       continue
@@ -357,7 +360,7 @@ export async function loadModelMesh({
 
   const finalMergedGeometry = mergeBufferGeometries(mergedGeometries, false)
   if (finalMergedGeometry == null) {
-    console.error(
+    logger.error(
       `Cannot merge model geometries for element ${elementIdx} of model ${modelResourceLocation}`,
     )
     return

@@ -1,13 +1,16 @@
+import { Tooltip } from '@heroui/tooltip'
 import { FC } from 'react'
 import { IoMove } from 'react-icons/io5'
 import { LuMenu, LuMoveDiagonal, LuRotate3D } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
 import { openFromFile, saveToFile } from '@/services/fileService'
+import { getLogger } from '@/services/loggerService'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useEditorStore } from '@/stores/editorStore'
 
 import FloatingButton from './FloatingButton'
+import MobileDragHoldButton from './MobileDragHoldButton'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +21,8 @@ import {
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from './ui/DropdownMenu'
+
+const logger = getLogger('LeftButtonPanel')
 
 const LeftButtonPanel: FC = () => {
   const { mode, setMode } = useEditorStore(
@@ -42,26 +47,9 @@ const LeftButtonPanel: FC = () => {
           side="right"
           sideOffset={10}
           align="start"
-          className="data-[state=open]:slide-in-from-left-0 min-w-52 origin-top-left p-2"
+          className="min-w-52 origin-top-left p-2 data-[state=open]:slide-in-from-left-0"
         >
-          <DropdownMenuItem
-            className="w-full"
-            onClick={() => {
-              const inputElement = document.createElement('input')
-              inputElement.type = 'file'
-              inputElement.accept = '.depl,.bdengine'
-              inputElement.onchange = (evt) => {
-                const file = (evt.target as HTMLInputElement).files?.[0]
-                if (file == null) {
-                  return
-                }
-
-                openFromFile(file).catch(console.error)
-              }
-
-              inputElement.click()
-            }}
-          >
+          <DropdownMenuItem className="w-full" onClick={openFromFile}>
             <div className="flex w-full flex-row items-center gap-2 text-sm">
               <span className="grow">Open</span>
               <span className="text-xs text-neutral-500">Ctrl + O</span>
@@ -70,7 +58,9 @@ const LeftButtonPanel: FC = () => {
           <DropdownMenuItem
             className="w-full"
             onClick={() => {
-              saveToFile().catch(console.error)
+              saveToFile().catch((...err) => {
+                logger.error('Unexpected error when saving to file:', ...err)
+              })
             }}
           >
             <div className="flex w-full flex-row items-center gap-2 text-sm">
@@ -99,31 +89,61 @@ const LeftButtonPanel: FC = () => {
             className="w-full"
             onClick={() => setOpenedDialog('settings')}
           >
-            <div className="text-sm">Settings</div>
+            <div className="flex w-full flex-row items-center gap-2 text-sm">
+              <div className="grow">Settings</div>
+              <span className="text-xs text-neutral-500">Ctrl + ,</span>
+            </div>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <FloatingButton
-        active={mode === 'translate'}
-        onClick={() => setMode('translate')}
+      <Tooltip
+        content="Translate mode"
+        placement="right"
+        delay={300}
+        closeDelay={0}
       >
-        <IoMove size={24} />
-      </FloatingButton>
+        <FloatingButton
+          active={mode === 'translate'}
+          onClick={() => setMode('translate')}
+        >
+          <IoMove size={24} />
+        </FloatingButton>
+      </Tooltip>
 
-      <FloatingButton
-        active={mode === 'rotate'}
-        onClick={() => setMode('rotate')}
+      <Tooltip
+        content="Rotate mode"
+        placement="right"
+        delay={300}
+        closeDelay={0}
       >
-        <LuRotate3D size={24} />
-      </FloatingButton>
+        <FloatingButton
+          active={mode === 'rotate'}
+          onClick={() => setMode('rotate')}
+        >
+          <LuRotate3D size={24} />
+        </FloatingButton>
+      </Tooltip>
 
-      <FloatingButton
-        active={mode === 'scale'}
-        onClick={() => setMode('scale')}
+      <Tooltip
+        content="Scale mode"
+        placement="right"
+        delay={300}
+        closeDelay={0}
       >
-        <LuMoveDiagonal size={24} />
-      </FloatingButton>
+        <FloatingButton
+          active={mode === 'scale'}
+          onClick={() => setMode('scale')}
+        >
+          <LuMoveDiagonal size={24} />
+        </FloatingButton>
+      </Tooltip>
+
+      <div />
+
+      <Tooltip>
+        <MobileDragHoldButton />
+      </Tooltip>
     </div>
   )
 }

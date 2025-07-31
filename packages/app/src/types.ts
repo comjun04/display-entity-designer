@@ -1,6 +1,18 @@
 import { MutableRefObject, RefCallback } from 'react'
 import { Matrix4Tuple } from 'three'
 
+declare global {
+  var __depl_alertUncaughtError: boolean | undefined
+}
+
+export type DeepPartial<T> = {
+  [P in keyof T]?: T[P] extends object
+    ? T[P] extends Function
+      ? T[P]
+      : DeepPartial<T[P]>
+    : T[P]
+}
+
 /**
  * ref에 커스텀 함수(callback)을 쓸 수 있으면서
  * 동시에 `current` 값도 사용할 수 있는 Ref
@@ -14,6 +26,14 @@ export type PartialNumber3Tuple = [
   number | undefined,
   number | undefined,
 ]
+
+export type VersionMetadata = {
+  gameVersion: string // minecraft version
+  sharedAssets: {
+    assetIndex: number
+    unifontHexFilePath: string
+  }
+}
 
 export type CDNBlocksListResponse = {
   blocks: string[]
@@ -123,6 +143,23 @@ export type CDNItemsListResponse = {
   items: string[]
 }
 
+export type FontProvider =
+  | {
+      type: 'bitmap'
+      ascent: number
+      chars: string[]
+      file: string
+      height?: number
+    }
+  | {
+      type: 'space'
+      advances: Record<string, number>
+    }
+
+export type CDNFontProviderResponse = {
+  providers: FontProvider[]
+}
+
 export type BaseDisplayEntity = {
   id: string
   parent?: string
@@ -144,6 +181,33 @@ export type ItemDisplayEntity = BaseDisplayEntity & {
   display: ModelDisplayPositionKey | null
 }
 
+export type TextDisplayAlignment = 'left' | 'center' | 'right'
+export type TextEffects = {
+  bold: boolean
+  italic: boolean
+  underlined: boolean
+  strikethrough: boolean
+  obfuscated: boolean
+}
+
+export type TextDisplayEntity = BaseDisplayEntity & {
+  kind: 'text'
+  text: string
+  // global text color
+  // will be replaced with advanced text editor
+  textColor: number // RGB
+  // global text effects
+  // will be replaced with advanced text editor
+  textEffects: TextEffects
+  alignment: TextDisplayAlignment
+  backgroundColor: number // ARGB
+  defaultBackground: boolean // default_background
+  lineWidth: number
+  seeThrough: boolean
+  shadow: boolean
+  textOpacity: number // 0 ~ 255
+}
+
 export type DisplayEntityGroup = BaseDisplayEntity & {
   kind: 'group'
   children: string[] // list of entity ids
@@ -152,6 +216,7 @@ export type DisplayEntityGroup = BaseDisplayEntity & {
 export type DisplayEntity =
   | BlockDisplayEntity
   | ItemDisplayEntity
+  | TextDisplayEntity
   | DisplayEntityGroup
 
 export type DisplayEntitySaveDataItemOld = Pick<DisplayEntity, 'kind'> &
@@ -165,6 +230,7 @@ export type DisplayEntitySaveDataItem = {
 } & (
   | Pick<BlockDisplayEntity, 'kind' | 'type' | 'blockstates' | 'display'>
   | Pick<ItemDisplayEntity, 'kind' | 'type' | 'display'>
+  | Omit<TextDisplayEntity, 'id' | 'parent' | 'position' | 'rotation' | 'size'>
   | (Pick<DisplayEntityGroup, 'kind'> & {
       children: DisplayEntitySaveDataItem[]
     })
@@ -195,7 +261,20 @@ export type BDEngineSaveDataItem = {
     }
   | {
       isTextDisplay: true
-      // TODO: implement
+      name: string // text
+      options: {
+        color: string // text color, #abcdef
+        alpha: number // text color alpha, 0 ~ 1
+        backgroundColor: string // #abcdef
+        backgroundColorAlpha: number // 0 ~ 1
+        bold: boolean
+        italic: boolean
+        underline: boolean
+        strikeThrough: boolean
+        obfuscated: boolean
+        lineLength: number
+        align: TextDisplayAlignment
+      }
     }
   | {
       isItemDisplay: true
@@ -205,3 +284,5 @@ export type BDEngineSaveDataItem = {
       children: BDEngineSaveDataItem[]
     }
 )
+
+export type LogLevel = 'debug' | 'info' | 'warn' | 'error'

@@ -1,33 +1,43 @@
 import { FC } from 'react'
 import { IoCubeOutline } from 'react-icons/io5'
-import { LuChevronDown } from 'react-icons/lu'
+import { LuChevronDown, LuType } from 'react-icons/lu'
 import { TbDiamondFilled } from 'react-icons/tb'
 import { useShallow } from 'zustand/shallow'
 
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { cn } from '@/utils'
 
+import { SidePanel, SidePanelContent, SidePanelTitle } from '../SidePanel'
+
 type ObjectItemProps = {
   id: string
 }
 const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
-  const { kind, type, display, blockstates, selected, children } =
-    useDisplayEntityStore(
-      useShallow((state) => {
-        const entity = state.entities.get(id)!
+  const {
+    kind,
+    type,
+    textDisplayText,
+    display,
+    blockstates,
+    selected,
+    children,
+  } = useDisplayEntityStore(
+    useShallow((state) => {
+      const entity = state.entities.get(id)!
 
-        return {
-          kind: entity.kind,
-          type: 'type' in entity ? entity.type : undefined,
-          display: 'display' in entity ? entity.display : null,
-          blockstates: entity.kind === 'block' ? entity.blockstates : undefined,
-          selected: state.selectedEntityIds.includes(id),
+      return {
+        kind: entity.kind,
+        type: 'type' in entity ? entity.type : undefined,
+        textDisplayText: 'text' in entity ? entity.text : undefined,
+        display: 'display' in entity ? entity.display : null,
+        blockstates: entity.kind === 'block' ? entity.blockstates : undefined,
+        selected: state.selectedEntityIds.includes(id),
 
-          parent: entity.parent,
-          children: entity.kind === 'group' ? entity.children : null,
-        }
-      }),
-    )
+        parent: entity.parent,
+        children: entity.kind === 'group' ? entity.children : null,
+      }
+    }),
+  )
 
   const blockstateArr: string[] = []
   if (kind === 'block') {
@@ -75,10 +85,16 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
         <span className="flex-none">
           {kind === 'block' && <IoCubeOutline size={16} />}
           {kind === 'item' && <TbDiamondFilled size={16} />}
-
+          {kind === 'text' && <LuType size={16} />}
           {kind === 'group' && <LuChevronDown size={16} />}
         </span>
-        <span>{kind === 'group' ? 'Group' : type}</span>
+        <span>
+          {kind === 'group'
+            ? 'Group'
+            : kind === 'text'
+              ? textDisplayText
+              : type}
+        </span>
         {blockstateArr.length > 0 && (
           <span className="truncate opacity-50">
             [{blockstateArr.join(',')}]
@@ -110,13 +126,14 @@ const ObjectsPanel: FC = () => {
   )
 
   return (
-    <div className="flex max-h-[50vh] select-none flex-col gap-[2px] overflow-y-auto rounded-lg bg-neutral-900 p-2 text-sm">
-      <span className="font-bold">Objects</span>
-
-      {rootEntityIds.map((id) => (
-        <ObjectItem key={id} id={id} />
-      ))}
-    </div>
+    <SidePanel className="max-h-[50vh]">
+      <SidePanelTitle>Objects</SidePanelTitle>
+      <SidePanelContent>
+        {rootEntityIds.map((id) => (
+          <ObjectItem key={id} id={id} />
+        ))}
+      </SidePanelContent>
+    </SidePanel>
   )
 }
 

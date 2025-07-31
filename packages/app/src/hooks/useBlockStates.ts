@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react'
 
+import { getLogger } from '@/services/loggerService'
 import { loadBlockstates } from '@/services/resources/blockstates'
 import { BlockstatesData } from '@/types'
+
+const logger = getLogger('useBlockStates()')
 
 const useBlockStates = (blockString?: string) => {
   const [blockstatesData, setBlockstatesData] = useState<BlockstatesData>()
@@ -13,7 +16,7 @@ const useBlockStates = (blockString?: string) => {
       .then((data) => {
         setBlockstatesData(data)
       })
-      .catch(console.error)
+      .catch(logger.error)
   }, [blockString])
 
   return {

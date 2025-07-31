@@ -1,9 +1,17 @@
-import { MeshStandardMaterial } from 'three'
+import { MeshStandardMaterial, PlaneGeometry, Texture } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
+import { getLogger } from '@/services/loggerService'
 import { loadModel } from '@/services/resources/model'
-import { BlockstatesData, CDNModelResponse, ModelData } from '@/types'
+import {
+  BlockstatesData,
+  CDNModelResponse,
+  FontProvider,
+  ModelData,
+} from '@/types'
+
+const logger = getLogger('cacheStore')
 
 // ==========
 
@@ -37,6 +45,16 @@ type CacheStoreState = {
     resourceLocation: string,
     imageDataUrl: string,
   ) => void
+
+  // 폰트 데이터 캐시 (.png, unifont)
+  fontResources: Record<string, string> // png는 data url로 저장함
+  setFontResource: (key: string, data: string) => void
+
+  fontProviders: Record<string, FontProvider[]>
+  setFontProviders: (key: string, data: FontProvider[]) => void
+
+  unifontHexData: Map<number, string>
+  setUnifontHexData: (data: Map<number, string>) => void
 }
 
 // 캐시 저장소
@@ -73,7 +91,7 @@ export const useCacheStore = create(
             state.modelDataLoading.delete(resourceLocation)
           })
         })
-        .catch(console.error)
+        .catch(logger.error)
     },
     setModelData: (resourceLocation, data, isBlockShapedItemModel) =>
       set((state) => {
@@ -89,12 +107,42 @@ export const useCacheStore = create(
       set((state) => {
         state.croppedTextureDataUrls[resourceLocation] = imageDataUrl
       }),
+
+    fontResources: {},
+    setFontResource: (key, data) =>
+      set((state) => {
+        state.fontResources[key] = data
+      }),
+
+    fontProviders: {},
+    setFontProviders: (key, data) =>
+      set((state) => {
+        state.fontProviders[key] = data
+      }),
+
+    unifontHexData: new Map(),
+    setUnifontHexData: (data) =>
+      set((state) => {
+        state.unifontHexData = data
+      }),
   })),
 )
 
+type FontGlyphData = {
+  geometry: PlaneGeometry
+  texture: Texture
+  widthPixels: number
+  baseWidthPixels: number
+  heightPixels: number
+  advance: number
+  ascent: number
+}
 type ClassObjectCacheStoreState = {
   materials: Map<string, MeshStandardMaterial>
   setMaterial: (key: string, material: MeshStandardMaterial) => void
+
+  fontGlyphs: Map<string, FontGlyphData>
+  setFontGlyph: (key: string, data: FontGlyphData) => void
 }
 
 // DO NOT USE IMMER ON THIS STORE
@@ -106,6 +154,14 @@ export const useClassObjectCacheStore = create<ClassObjectCacheStoreState>(
         const newMap = new Map(state.materials)
         newMap.set(key, material)
         return { materials: newMap }
+      }),
+
+    fontGlyphs: new Map(),
+    setFontGlyph: (key, data) =>
+      set((state) => {
+        const newMap = new Map(state.fontGlyphs)
+        newMap.set(key, data)
+        return { fontGlyphs: newMap }
       }),
   }),
 )
