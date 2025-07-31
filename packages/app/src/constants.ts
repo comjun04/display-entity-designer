@@ -79,7 +79,7 @@ export const UnifontSizeOverrides = [
 ]
 
 // target minecraft version
-export const MCVersion = '1.21.1'
+export const MCVersion = '1.21'
 
 export const CDNBaseUrl = import.meta.env.VITE_CDN_BASE_URL
 export const CDNVersionAssetsUrl = `${CDNBaseUrl}/${MCVersion}`
