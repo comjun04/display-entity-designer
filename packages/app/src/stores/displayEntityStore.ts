@@ -125,7 +125,7 @@ export const useDisplayEntityStore = create(
             id,
             type: typeOrText,
             size: [1, 1, 1],
-            position: [0, 0, 0],
+            position: typeOrText === 'player_head' ? [0, 0.5, 0] : [0, 0, 0],
             rotation: [0, 0, 0],
             display: null,
           })
