@@ -17,7 +17,9 @@ import {
   ModelDisplayPositionKey,
   Number3Tuple,
   PartialNumber3Tuple,
+  PlayerHeadProperties,
   TextDisplayEntity,
+  isItemDisplayPlayerHead,
 } from '@/types'
 
 import { useEditorStore } from './editorStore'
@@ -85,6 +87,10 @@ export type DisplayEntityState = {
       >
     >,
   ) => void
+  setItemDisplayPlayerHeadProperties: (
+    entityId: string,
+    data: PlayerHeadProperties,
+  ) => void
   deleteEntities: (entityIds: string[]) => void
 
   bulkImport: (items: DisplayEntitySaveDataItem[]) => Promise<void>
@@ -129,6 +135,16 @@ export const useDisplayEntityStore = create(
             rotation: [0, 0, 0],
             display: null,
           })
+
+          const entity = state.entities.get(id)!
+          if (isItemDisplayPlayerHead(entity)) {
+            // is player_head
+            entity.playerHeadProperties = {
+              texture: {
+                baked: false,
+              },
+            }
+          }
         } else if (kind === 'text') {
           state.entities.set(id, {
             kind: 'text',
@@ -333,6 +349,23 @@ export const useDisplayEntityStore = create(
         }
 
         merge(entity, properties)
+      }),
+    setItemDisplayPlayerHeadProperties: (entityId, data) =>
+      set((state) => {
+        const entity = state.entities.get(entityId)
+        if (entity == null) {
+          console.error(
+            `Attempted to set player_head properties on entity which does not exist: ${entityId}`,
+          )
+          return
+        } else if (!isItemDisplayPlayerHead(entity)) {
+          console.error(
+            `Attempted to set player_head properties on non player_head display`,
+          )
+          return
+        }
+
+        entity.playerHeadProperties = data
       }),
     deleteEntities: (entityIds) =>
       set((state) => {

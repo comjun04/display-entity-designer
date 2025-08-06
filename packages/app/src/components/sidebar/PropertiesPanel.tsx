@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useState } from 'react'
 import {
   LuBold,
   LuItalic,
@@ -10,7 +10,11 @@ import { useShallow } from 'zustand/shallow'
 
 import useBlockStates from '@/hooks/useBlockStates'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
-import { ModelDisplayPositionKey, TextDisplayAlignment } from '@/types'
+import {
+  ModelDisplayPositionKey,
+  TextDisplayAlignment,
+  isItemDisplayPlayerHead,
+} from '@/types'
 import { cn } from '@/utils'
 
 import { SidePanel, SidePanelContent, SidePanelTitle } from '../SidePanel'
@@ -88,6 +92,14 @@ const ItemDisplayProperties: FC = () => {
     return entity?.kind === 'item' ? entity : null
   })
 
+  const [tempPlayerHeadTextureUrl, setTempPlayerHeadTextureUrl] = useState(
+    singleSelectedEntity != null &&
+      isItemDisplayPlayerHead(singleSelectedEntity) &&
+      singleSelectedEntity.playerHeadProperties.texture?.baked
+      ? singleSelectedEntity.playerHeadProperties.texture.url
+      : undefined,
+  )
+
   if (singleSelectedEntity == null) return null
 
   return (
@@ -118,6 +130,54 @@ const ItemDisplayProperties: FC = () => {
           ))}
         </select>
       </div>
+
+      {isItemDisplayPlayerHead(singleSelectedEntity) && (
+        <>
+          <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
+            Textures
+          </div>
+          <div className="flex flex-row items-center gap-2">
+            <label className="flex-none text-end">texture url</label>
+            <input
+              className="min-w-0 shrink rounded bg-neutral-800 py-1 pl-1 text-xs outline-none"
+              value={tempPlayerHeadTextureUrl}
+              onChange={(evt) => {
+                setTempPlayerHeadTextureUrl(evt.target.value)
+              }}
+            />
+
+            <button
+              className="rounded bg-neutral-800 p-1 text-xs"
+              onClick={() => {
+                if (tempPlayerHeadTextureUrl == null) {
+                  return
+                }
+                if (
+                  !/^http(s)?:\/\/textures.minecraft.net\/texture\/\w+$/g.test(
+                    tempPlayerHeadTextureUrl,
+                  )
+                ) {
+                  console.error(
+                    `Unsupported texture url ${tempPlayerHeadTextureUrl}`,
+                  )
+                  return
+                }
+
+                useDisplayEntityStore
+                  .getState()
+                  .setItemDisplayPlayerHeadProperties(singleSelectedEntity.id, {
+                    texture: {
+                      baked: true,
+                      url: tempPlayerHeadTextureUrl,
+                    },
+                  })
+              }}
+            >
+              Apply
+            </button>
+          </div>
+        </>
+      )}
     </div>
   )
 }

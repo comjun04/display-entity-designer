@@ -177,8 +177,39 @@ export type BlockDisplayEntity = BaseDisplayEntity & {
 
 export type ItemDisplayEntity = BaseDisplayEntity & {
   kind: 'item'
-  type: string
   display: ModelDisplayPositionKey | null
+} & (
+    | {
+        type: 'player_head'
+        playerHeadProperties: PlayerHeadProperties
+      }
+    | {
+        type: string
+      }
+  )
+
+export interface PlayerHeadProperties {
+  texture:
+    | {
+        baked: true
+        url: string
+      }
+    | {
+        baked: false
+      }
+    | null
+}
+
+// player head type guard
+export function isItemDisplayPlayerHead(
+  entity: DisplayEntity,
+): entity is ItemDisplayEntity & {
+  type: 'player_head'
+  playerHeadProperties: PlayerHeadProperties
+} {
+  if (entity.kind !== 'item') return false
+  else if (entity.type !== 'player_head') return false
+  return true
 }
 
 export type TextDisplayAlignment = 'left' | 'center' | 'right'
