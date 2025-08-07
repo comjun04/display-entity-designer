@@ -15,7 +15,7 @@ import {
   TextDisplayAlignment,
   isItemDisplayPlayerHead,
 } from '@/types'
-import { cn } from '@/utils'
+import { cn, isValidTextureUrl } from '@/utils'
 
 import { SidePanel, SidePanelContent, SidePanelTitle } from '../SidePanel'
 import { ColorPickerInput } from '../ui/ColorPicker'
@@ -152,11 +152,7 @@ const ItemDisplayProperties: FC = () => {
                 if (tempPlayerHeadTextureUrl == null) {
                   return
                 }
-                if (
-                  !/^http(s)?:\/\/textures.minecraft.net\/texture\/\w+$/g.test(
-                    tempPlayerHeadTextureUrl,
-                  )
-                ) {
+                if (!isValidTextureUrl(tempPlayerHeadTextureUrl)) {
                   console.error(
                     `Unsupported texture url ${tempPlayerHeadTextureUrl}`,
                   )

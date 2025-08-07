@@ -12,6 +12,10 @@ export function stripMinecraftPrefix(input: string) {
   return input.startsWith('minecraft:') ? input.slice(10) : input
 }
 
+export function isValidTextureUrl(url: string) {
+  return /^http(s)?:\/\/textures.minecraft.net\/texture\/[0-9a-f]+$/g.test(url)
+}
+
 export async function generateBuiltinItemModel(
   textureResourceLocation: string,
   layerNumber: number,

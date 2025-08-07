@@ -16,7 +16,7 @@ import {
   Number3Tuple,
   PlayerHeadProperties,
 } from '@/types'
-import { stripMinecraftPrefix } from '@/utils'
+import { isValidTextureUrl, stripMinecraftPrefix } from '@/utils'
 
 import { getLogger } from '../loggerService'
 import { loadMaterial } from './material'
@@ -162,7 +162,8 @@ export async function loadModelMesh({
 
       const material = await loadMaterial({
         textureData: isPlayerHead
-          ? playerHeadTextureData?.baked
+          ? playerHeadTextureData?.baked &&
+            isValidTextureUrl(playerHeadTextureData.url)
             ? {
                 // baked texture url
                 type: 'player_head',
