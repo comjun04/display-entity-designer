@@ -10,7 +10,12 @@ import {
 } from 'three'
 import { mergeBufferGeometries, mergeVertices } from 'three-stdlib'
 
-import { ModelElement, ModelFaceKey, Number3Tuple } from '@/types'
+import {
+  ModelElement,
+  ModelFaceKey,
+  Number3Tuple,
+  PlayerHeadProperties,
+} from '@/types'
 import { stripMinecraftPrefix } from '@/utils'
 
 import { getLogger } from '../loggerService'
@@ -79,7 +84,10 @@ export async function loadModelMaterials({
           : undefined
 
       const material = await loadMaterial({
-        textureResourceLocation,
+        textureData: {
+          type: 'vanilla',
+          resourceLocation: textureResourceLocation,
+        },
         modelResourceLocation,
         textureLayer,
         textureSize,
@@ -97,6 +105,7 @@ export type LoadModelMeshArgs = {
   textureSize?: [number, number]
   isItemModel: boolean
   isBlockShapedItemModel: boolean
+  playerHeadTextureData?: NonNullable<PlayerHeadProperties['texture']>
 }
 export async function loadModelMesh({
   modelResourceLocation,
@@ -105,10 +114,14 @@ export async function loadModelMesh({
   textureSize = [16, 16],
   isItemModel,
   isBlockShapedItemModel,
+  playerHeadTextureData,
 }: LoadModelMeshArgs) {
   const mergedGeometries: BufferGeometry[] = []
   const fullGeometryGroups: GeometryGroup[] = []
   const fullMaterials: Material[] = []
+
+  // player_head check
+  const isPlayerHead = modelResourceLocation === 'item/player_head'
 
   let elementIdx = 0
   for (const element of elements) {
@@ -148,7 +161,23 @@ export async function loadModelMesh({
       // BlockFace.tsx
 
       const material = await loadMaterial({
-        textureResourceLocation,
+        textureData: isPlayerHead
+          ? playerHeadTextureData?.baked
+            ? {
+                // baked texture url
+                type: 'player_head',
+                playerHeadTextureUrl: playerHeadTextureData.url,
+              }
+            : {
+                // not baked texture
+                type: 'vanilla',
+                resourceLocation: 'entity/player/slim/steve',
+              }
+          : {
+              // not player_head
+              type: 'vanilla',
+              resourceLocation: textureResourceLocation,
+            },
         modelResourceLocation,
         textureLayer,
         textureSize,

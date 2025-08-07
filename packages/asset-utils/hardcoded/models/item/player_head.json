@@ -1,8 +1,9 @@
 {
 	"textures": {
-		"0": "entity/player/slim/steve",
-		"particle": "entity/player/slim/steve"
+		"0": "entity/player/placeholder",
+		"particle": "entity/player/placeholder"
 	},
+  "texture_size": [64, 64],
 	"elements": [
 		{
 			"from": [-4, -8, -4],
