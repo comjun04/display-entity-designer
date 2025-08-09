@@ -5,6 +5,7 @@
   "scripts": {
     "app": "pnpm -F app",
     "asset-utils": "pnpm -F asset-utils",
+    "backend": "pnpm -F backend",
     "prepare": "husky"
   },
   "pnpm": {

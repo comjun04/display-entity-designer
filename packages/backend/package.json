@@ -1,0 +1,17 @@
+{
+  "name": "backend",
+  "private": true,
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "start": "tsx src/node-server.ts"
+  },
+  "dependencies": {
+    "hono": "^4.9.0"
+  },
+  "optionalDependencies": {
+    "@hono/node-server": "^1.18.1",
+    "dotenv": "^17.2.1",
+    "tsx": "^4.19.1"
+  }
+}

@@ -4,7 +4,7 @@ import { Group } from 'three'
 import { useShallow } from 'zustand/shallow'
 
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
-import { Number3Tuple } from '@/types'
+import { Number3Tuple, isItemDisplayPlayerHead } from '@/types'
 
 import BoundingBox from './BoundingBox'
 import Model from './Model'
@@ -30,7 +30,11 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
   onClick,
   objectRef: ref,
 }) => {
-  const { thisEntitySelected, thisEntityDisplay } = useDisplayEntityStore(
+  const {
+    thisEntitySelected,
+    thisEntityDisplay,
+    thisEntityPlayerHeadProperties,
+  } = useDisplayEntityStore(
     useShallow((state) => {
       const thisEntity = state.entities.get(id)
 
@@ -38,6 +42,10 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
         thisEntitySelected: state.selectedEntityIds.includes(id),
         thisEntityDisplay:
           thisEntity?.kind === 'item' ? thisEntity.display : undefined,
+        thisEntityPlayerHeadProperties:
+          thisEntity != null && isItemDisplayPlayerHead(thisEntity)
+            ? thisEntity.playerHeadProperties
+            : undefined,
       }
     }),
   )
@@ -63,6 +71,9 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
         <MemoizedModel
           initialResourceLocation={`item/${type}`}
           displayType={thisEntityDisplay ?? undefined}
+          playerHeadTextureData={
+            thisEntityPlayerHeadProperties?.texture ?? undefined
+          }
         />
       </group>
     </object3D>
