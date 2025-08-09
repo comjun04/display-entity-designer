@@ -1,4 +1,4 @@
-export interface ProfileLookupResult {
+export interface ProfileLookupData {
   id: string // player uuid
   name: string // player username
 }

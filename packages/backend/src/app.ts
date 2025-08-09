@@ -26,8 +26,18 @@ app.get('/v1/skin/:usernameOrUuid', async (c) => {
 
   let uuid: string
   if (type === 'username') {
-    const profileLookupResult = await fetch(`https://api.minecraftservices.com/minecraft/profile/lookup/name/${usernameOrUuid}`).then(res => res.json()) as ProfileLookupResult
-    uuid = profileLookupResult.id
+    const profileLookupResponse = await fetch(`https://api.minecraftservices.com/minecraft/profile/lookup/name/${usernameOrUuid}`)
+    if (profileLookupResponse.status === 404) {
+      c.status(404)
+      return c.json({ error: 'Player not found' })
+    } else if (!profileLookupResponse.ok) {
+      console.error(await profileLookupResponse.json())
+      throw new Error('Unexpected')
+    }
+
+    const profileLookupData = await profileLookupResponse.json() as ProfileLookupData
+    console.log(profileLookupData)
+    uuid = profileLookupData.id
   } else {
     uuid = usernameOrUuid
   }
