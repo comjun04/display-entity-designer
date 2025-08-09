@@ -317,3 +317,9 @@ export type BDEngineSaveDataItem = {
 )
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
+
+export interface BackendSkinQueryResponse {
+  id: string // player uuid
+  name: string // player username
+  skinUrl?: string
+}

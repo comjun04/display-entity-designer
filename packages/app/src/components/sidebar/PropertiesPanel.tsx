@@ -8,9 +8,11 @@ import {
 } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
+import { BackendHost } from '@/constants'
 import useBlockStates from '@/hooks/useBlockStates'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import {
+  BackendSkinQueryResponse,
   ModelDisplayPositionKey,
   TextDisplayAlignment,
   isItemDisplayPlayerHead,
@@ -99,6 +101,7 @@ const ItemDisplayProperties: FC = () => {
       ? singleSelectedEntity.playerHeadProperties.texture.url
       : undefined,
   )
+  const [tempPlayerName, setTempPlayerName] = useState('')
 
   if (singleSelectedEntity == null) return null
 
@@ -170,6 +173,59 @@ const ItemDisplayProperties: FC = () => {
               }}
             >
               Apply
+            </button>
+          </div>
+          <div className="flex flex-row items-center gap-2">
+            <label className="flex-none text-end">player username</label>
+            <input
+              className="min-w-0 shrink rounded bg-neutral-800 py-1 pl-1 text-xs outline-none"
+              maxLength={16}
+              onChange={(evt) => {
+                const str = evt.target.value
+                if (str.length <= 16) {
+                  setTempPlayerName(str)
+                }
+              }}
+            />
+
+            <button
+              className="rounded bg-neutral-800 p-1 text-xs"
+              onClick={async () => {
+                if (tempPlayerName.length < 3 || tempPlayerName.length > 16) {
+                  return
+                }
+
+                const skinQueryResponse = (await fetch(
+                  `${BackendHost}/v1/skin/${tempPlayerName}`,
+                )
+                  .then((res) => res.json())
+                  .catch(console.error)) as BackendSkinQueryResponse
+
+                const textureUrl = skinQueryResponse.skinUrl
+                if (textureUrl == null) {
+                  console.error(
+                    `Minecraft user ${skinQueryResponse.name} does not have a skin`,
+                  )
+                  return
+                } else if (!isValidTextureUrl(textureUrl)) {
+                  console.error(
+                    `Unsupported texture url ${textureUrl}. This should not happen`,
+                  )
+                  return
+                }
+
+                setTempPlayerHeadTextureUrl(textureUrl)
+                useDisplayEntityStore
+                  .getState()
+                  .setItemDisplayPlayerHeadProperties(singleSelectedEntity.id, {
+                    texture: {
+                      baked: true,
+                      url: textureUrl,
+                    },
+                  })
+              }}
+            >
+              Load
             </button>
           </div>
         </>
