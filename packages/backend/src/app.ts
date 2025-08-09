@@ -1,8 +1,15 @@
 import { Hono } from 'hono'
+import { cors } from 'hono/cors'
 
 import { PlayerSkinQueryResult, ProfileLookupResult, TextureValue } from './types'
 
 const app = new Hono()
+
+app.use('/*', cors({
+  origin: (process.env.CORS_ORIGINS ?? '').split(',').map(item => item.trim()),
+  allowMethods: ['GET'],
+  maxAge: 3600
+}))
 
 app.get('/v1/skin/:usernameOrUuid', async (c) => {
   const { usernameOrUuid } = c.req.param()
