@@ -62,7 +62,7 @@ async function openProjectFile(file: File): Promise<boolean> {
   const versionArrayBuffer = await file.slice(4, 8).arrayBuffer()
   const dataview = new DataView(versionArrayBuffer)
   const version = dataview.getUint32(0, false)
-  if (version < FILE_VERSION) {
+  if (version > FILE_VERSION) {
     logger.error(
       `Cannot open project file (version ${version}) higher than supported version ${FILE_VERSION}`,
     )
