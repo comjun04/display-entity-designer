@@ -309,12 +309,44 @@ export type BDEngineSaveDataItem = {
     }
   | {
       isItemDisplay: true
+
+      // below fields exist if type is player_head
+      tagHead?: {
+        Value: string
+      }
+      textureValueList?: string[] // maybe?
+      paintTexture?: unknown
+      defaultTextureValue?: string
     }
   | {
       isCollection: true
       children: BDEngineSaveDataItem[]
     }
 )
+
+export interface TextureValue {
+  timestamp: number
+  profileId: string // player uuid
+  profileName: string // player username
+  signatureRequired: boolean | undefined
+  textures: {
+    SKIN:
+      | {
+          url: string
+          metadata:
+            | {
+                model: 'slim' | undefined // wide skin = undefined
+              }
+            | undefined
+        }
+      | undefined
+    CAPE:
+      | {
+          url: string
+        }
+      | undefined
+  }
+}
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 

@@ -19,6 +19,7 @@ import {
   PartialNumber3Tuple,
   PlayerHeadProperties,
   TextDisplayEntity,
+  TextureValue,
   isItemDisplayPlayerHead,
 } from '@/types'
 
@@ -623,6 +624,29 @@ export const useDisplayEntityStore = create(
               parent: parentEntityId,
               display: extraData['display'] as ModelDisplayPositionKey,
             })
+
+            const entity = entities.get(id)!
+            if (isItemDisplayPlayerHead(entity)) {
+              let textureUrl: string | undefined
+              if (item.defaultTextureValue != null) {
+                const decodedTextureValue = JSON.parse(
+                  atob(item.defaultTextureValue),
+                ) as TextureValue
+                textureUrl = decodedTextureValue.textures.SKIN?.url
+              }
+
+              entity.playerHeadProperties = {
+                texture:
+                  textureUrl != null
+                    ? {
+                        baked: true,
+                        url: textureUrl,
+                      }
+                    : {
+                        baked: false,
+                      },
+              }
+            }
           } else if ('isTextDisplay' in item && item.isTextDisplay) {
             // text display
 
