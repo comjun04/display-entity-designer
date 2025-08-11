@@ -11,6 +11,7 @@
   "devDependencies": {
     "@types/node": "^22.7.5",
     "@types/unzipper": "^0.10.10",
+    "prettier": "^3.3.3",
     "pretty-quick": "^4.2.2",
     "serve": "^14.2.4",
     "tsx": "^4.20.3"
