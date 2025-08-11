@@ -17,7 +17,15 @@ const logger = getLogger('ResourceLoader/material')
 const materialLoadMutexMap = new Map<string, Mutex>()
 
 export type LoadMaterialArgs = {
-  textureResourceLocation: string
+  textureData:
+    | {
+        type: 'vanilla'
+        resourceLocation: string
+      }
+    | {
+        type: 'player_head'
+        playerHeadTextureUrl: string
+      }
   modelResourceLocation: string
   textureLayer?: string
   textureSize?: [number, number]
@@ -25,7 +33,7 @@ export type LoadMaterialArgs = {
 }
 
 export async function loadMaterial({
-  textureResourceLocation,
+  textureData,
   modelResourceLocation,
   textureLayer,
   textureSize = [16, 16],
@@ -43,29 +51,37 @@ export async function loadMaterial({
     tintindex,
   )
 
-  const key = `${textureResourceLocation};${textureColor}`
+  const textureKey =
+    textureData.type === 'player_head'
+      ? `#player_head;${textureData.playerHeadTextureUrl.split('/').slice(-1)[0]}`
+      : textureData.resourceLocation
+  const materialKey =
+    textureData.type === 'player_head'
+      ? textureKey
+      : `${textureData.resourceLocation};${textureColor}`
 
   // 동시에 여러 번 로딩하지 않도록 key값을 기준으로 lock을 구현
-  if (!materialLoadMutexMap.has(key)) {
-    materialLoadMutexMap.set(key, new Mutex())
+  if (!materialLoadMutexMap.has(materialKey)) {
+    materialLoadMutexMap.set(materialKey, new Mutex())
   }
-  const mutex = materialLoadMutexMap.get(key)!
+  const mutex = materialLoadMutexMap.get(materialKey)!
   return await mutex.runExclusive(async () => {
     // check for cached
     const { materials } = useClassObjectCacheStore.getState()
-    if (materials.has(key)) {
-      return materials.get(key)!
+    if (materials.has(materialKey)) {
+      return materials.get(materialKey)!
     }
 
-    logger.log(`Loading material for ${textureResourceLocation}`)
+    logger.log(`Loading material for ${textureKey}`)
 
     // process texture
 
-    let cachedCroppedTextureDataUrl =
-      croppedTextureDataUrls[textureResourceLocation]
+    let cachedCroppedTextureDataUrl = croppedTextureDataUrls[textureKey]
     if (cachedCroppedTextureDataUrl == null) {
       const img = await new ImageLoader().loadAsync(
-        `${CDNVersionAssetsUrl}/assets/minecraft/textures/${textureResourceLocation}.png`,
+        textureData.type === 'player_head'
+          ? textureData.playerHeadTextureUrl
+          : `${CDNVersionAssetsUrl}/assets/minecraft/textures/${textureData.resourceLocation}.png`,
       )
 
       const canvas = document.createElement('canvas')
@@ -79,7 +95,7 @@ export async function loadMaterial({
 
       const croppedTextureDataUrl = canvas.toDataURL()
       cachedCroppedTextureDataUrl = croppedTextureDataUrl
-      setCroppedTextureDataUrl(textureResourceLocation, croppedTextureDataUrl)
+      setCroppedTextureDataUrl(textureKey, croppedTextureDataUrl)
     }
 
     const texture = await new TextureLoader().loadAsync(
@@ -103,7 +119,7 @@ export async function loadMaterial({
       color: textureColor,
     })
 
-    setMaterial(key, material)
+    setMaterial(materialKey, material)
     return material
   })
 }

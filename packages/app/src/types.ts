@@ -177,8 +177,39 @@ export type BlockDisplayEntity = BaseDisplayEntity & {
 
 export type ItemDisplayEntity = BaseDisplayEntity & {
   kind: 'item'
-  type: string
   display: ModelDisplayPositionKey | null
+} & (
+    | {
+        type: 'player_head'
+        playerHeadProperties: PlayerHeadProperties
+      }
+    | {
+        type: string
+      }
+  )
+
+export interface PlayerHeadProperties {
+  texture:
+    | {
+        baked: true
+        url: string
+      }
+    | {
+        baked: false
+      }
+    | null
+}
+
+// player head type guard
+export function isItemDisplayPlayerHead(
+  entity: DisplayEntity,
+): entity is ItemDisplayEntity & {
+  type: 'player_head'
+  playerHeadProperties: PlayerHeadProperties
+} {
+  if (entity.kind !== 'item') return false
+  else if (entity.type !== 'player_head') return false
+  return true
 }
 
 export type TextDisplayAlignment = 'left' | 'center' | 'right'
@@ -229,7 +260,7 @@ export type DisplayEntitySaveDataItem = {
   transforms: Matrix4Tuple
 } & (
   | Pick<BlockDisplayEntity, 'kind' | 'type' | 'blockstates' | 'display'>
-  | Pick<ItemDisplayEntity, 'kind' | 'type' | 'display'>
+  | Omit<ItemDisplayEntity, 'id' | 'parent' | 'position' | 'rotation' | 'size'>
   | Omit<TextDisplayEntity, 'id' | 'parent' | 'position' | 'rotation' | 'size'>
   | (Pick<DisplayEntityGroup, 'kind'> & {
       children: DisplayEntitySaveDataItem[]
@@ -278,6 +309,14 @@ export type BDEngineSaveDataItem = {
     }
   | {
       isItemDisplay: true
+
+      // below fields exist if type is player_head
+      tagHead?: {
+        Value: string
+      }
+      textureValueList?: string[] // maybe?
+      paintTexture?: unknown
+      defaultTextureValue?: string
     }
   | {
       isCollection: true
@@ -285,4 +324,34 @@ export type BDEngineSaveDataItem = {
     }
 )
 
+export interface TextureValue {
+  timestamp: number
+  profileId: string // player uuid
+  profileName: string // player username
+  signatureRequired: boolean | undefined
+  textures: {
+    SKIN:
+      | {
+          url: string
+          metadata:
+            | {
+                model: 'slim' | undefined // wide skin = undefined
+              }
+            | undefined
+        }
+      | undefined
+    CAPE:
+      | {
+          url: string
+        }
+      | undefined
+  }
+}
+
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
+
+export interface BackendSkinQueryResponse {
+  id: string // player uuid
+  name: string // player username
+  skinUrl?: string
+}

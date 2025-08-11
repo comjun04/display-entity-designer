@@ -17,7 +17,10 @@ import {
   ModelDisplayPositionKey,
   Number3Tuple,
   PartialNumber3Tuple,
+  PlayerHeadProperties,
   TextDisplayEntity,
+  TextureValue,
+  isItemDisplayPlayerHead,
 } from '@/types'
 
 import { useEditorStore } from './editorStore'
@@ -85,6 +88,10 @@ export type DisplayEntityState = {
       >
     >,
   ) => void
+  setItemDisplayPlayerHeadProperties: (
+    entityId: string,
+    data: PlayerHeadProperties,
+  ) => void
   deleteEntities: (entityIds: string[]) => void
 
   bulkImport: (items: DisplayEntitySaveDataItem[]) => Promise<void>
@@ -125,10 +132,20 @@ export const useDisplayEntityStore = create(
             id,
             type: typeOrText,
             size: [1, 1, 1],
-            position: [0, 0, 0],
+            position: typeOrText === 'player_head' ? [0, 0.5, 0] : [0, 0, 0],
             rotation: [0, 0, 0],
             display: null,
           })
+
+          const entity = state.entities.get(id)!
+          if (isItemDisplayPlayerHead(entity)) {
+            // is player_head
+            entity.playerHeadProperties = {
+              texture: {
+                baked: false,
+              },
+            }
+          }
         } else if (kind === 'text') {
           state.entities.set(id, {
             kind: 'text',
@@ -334,6 +351,23 @@ export const useDisplayEntityStore = create(
 
         merge(entity, properties)
       }),
+    setItemDisplayPlayerHeadProperties: (entityId, data) =>
+      set((state) => {
+        const entity = state.entities.get(entityId)
+        if (entity == null) {
+          console.error(
+            `Attempted to set player_head properties on entity which does not exist: ${entityId}`,
+          )
+          return
+        } else if (!isItemDisplayPlayerHead(entity)) {
+          console.error(
+            `Attempted to set player_head properties on non player_head display`,
+          )
+          return
+        }
+
+        entity.playerHeadProperties = data
+      }),
     deleteEntities: (entityIds) =>
       set((state) => {
         const deletePendingEntityIds = new Set<string>()
@@ -456,6 +490,23 @@ export const useDisplayEntityStore = create(
               parent: parentEntityId,
               display: item.display,
             })
+
+            const entity = entities.get(id)!
+            if (isItemDisplayPlayerHead(entity)) {
+              if ('playerHeadProperties' in item) {
+                // is player_head
+                entity.playerHeadProperties =
+                  item.playerHeadProperties as PlayerHeadProperties
+              } else {
+                // savefile v1 -> v2
+                // fill default playerHeadProperties if not exist
+                entity.playerHeadProperties = {
+                  texture: {
+                    baked: false,
+                  },
+                }
+              }
+            }
           } else if (item.kind === 'text') {
             entities.set(id, {
               kind: 'text',
@@ -573,6 +624,29 @@ export const useDisplayEntityStore = create(
               parent: parentEntityId,
               display: extraData['display'] as ModelDisplayPositionKey,
             })
+
+            const entity = entities.get(id)!
+            if (isItemDisplayPlayerHead(entity)) {
+              let textureUrl: string | undefined
+              if (item.defaultTextureValue != null) {
+                const decodedTextureValue = JSON.parse(
+                  atob(item.defaultTextureValue),
+                ) as TextureValue
+                textureUrl = decodedTextureValue.textures.SKIN?.url
+              }
+
+              entity.playerHeadProperties = {
+                texture:
+                  textureUrl != null
+                    ? {
+                        baked: true,
+                        url: textureUrl,
+                      }
+                    : {
+                        baked: false,
+                      },
+              }
+            }
           } else if ('isTextDisplay' in item && item.isTextDisplay) {
             // text display
 
@@ -654,6 +728,10 @@ export const useDisplayEntityStore = create(
             type: entity.type,
             transforms,
             display: entity.display,
+            playerHeadProperties:
+              'playerHeadProperties' in entity
+                ? entity.playerHeadProperties
+                : undefined,
           }
         } else if (entity.kind === 'text') {
           return {

@@ -83,3 +83,5 @@ export const MCVersion = '1.21'
 
 export const CDNBaseUrl = import.meta.env.VITE_CDN_BASE_URL
 export const CDNVersionAssetsUrl = `${CDNBaseUrl}/${MCVersion}`
+
+export const BackendHost = import.meta.env.VITE_BACKEND_HOST

@@ -6,7 +6,11 @@ import { useShallow } from 'zustand/shallow'
 import { getLogger } from '@/services/loggerService'
 import { loadModelMesh } from '@/services/resources/modelMesh'
 import { useCacheStore } from '@/stores/cacheStore'
-import { ModelDisplayPositionKey, Number3Tuple } from '@/types'
+import {
+  ModelDisplayPositionKey,
+  Number3Tuple,
+  PlayerHeadProperties,
+} from '@/types'
 import { stripMinecraftPrefix } from '@/utils'
 
 type ModelNewProps = {
@@ -14,6 +18,7 @@ type ModelNewProps = {
   displayType?: ModelDisplayPositionKey
   xRotation?: number
   yRotation?: number
+  playerHeadTextureData?: NonNullable<PlayerHeadProperties['texture']>
 }
 
 const logger = getLogger('Model')
@@ -23,6 +28,7 @@ const ModelNew: FC<ModelNewProps> = ({
   displayType,
   xRotation = 0,
   yRotation = 0,
+  playerHeadTextureData,
 }) => {
   const groupRef = useRef<Group>(null)
   const mergedMeshRef = useRef<Mesh>()
@@ -51,6 +57,10 @@ const ModelNew: FC<ModelNewProps> = ({
   }, [initialResourceLocation, modelDataTemp, modelDataLoading])
 
   useEffect(() => {
+    setMeshLoaded(false)
+  }, [playerHeadTextureData])
+
+  useEffect(() => {
     if (modelDataTemp == null) return
     if (meshLoaded) return
 
@@ -64,6 +74,7 @@ const ModelNew: FC<ModelNewProps> = ({
         textureSize: modelData.textureSize,
         isItemModel,
         isBlockShapedItemModel,
+        playerHeadTextureData,
       })
 
       if (loadResult == null) {
@@ -83,7 +94,13 @@ const ModelNew: FC<ModelNewProps> = ({
     return () => {
       mergedMeshRef.current?.geometry.dispose()
     }
-  }, [initialResourceLocation, modelDataTemp, meshLoaded, isItemModel])
+  }, [
+    initialResourceLocation,
+    modelDataTemp,
+    meshLoaded,
+    isItemModel,
+    playerHeadTextureData,
+  ])
 
   useEffect(() => {
     if (mergedMeshRef.current == null) return
