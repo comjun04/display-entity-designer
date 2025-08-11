@@ -260,7 +260,7 @@ export type DisplayEntitySaveDataItem = {
   transforms: Matrix4Tuple
 } & (
   | Pick<BlockDisplayEntity, 'kind' | 'type' | 'blockstates' | 'display'>
-  | Pick<ItemDisplayEntity, 'kind' | 'type' | 'display'>
+  | Omit<ItemDisplayEntity, 'id' | 'parent' | 'position' | 'rotation' | 'size'>
   | Omit<TextDisplayEntity, 'id' | 'parent' | 'position' | 'rotation' | 'size'>
   | (Pick<DisplayEntityGroup, 'kind'> & {
       children: DisplayEntitySaveDataItem[]

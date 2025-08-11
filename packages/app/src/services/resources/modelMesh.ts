@@ -46,6 +46,7 @@ export type LoadModelMaterialsArgs = {
   textures: Record<string, string>
   textureSize?: [number, number]
   isItemModel: boolean
+  playerHeadTextureData?: NonNullable<PlayerHeadProperties['texture']>
 }
 
 /**
@@ -60,10 +61,12 @@ export async function loadModelMaterials({
   textures,
   textureSize = [16, 16],
   isItemModel,
+  playerHeadTextureData,
 }: LoadModelMaterialsArgs) {
-  for (const element of elements) {
-    const materials: Material[] = []
+  // player_head check
+  const isPlayerHead = modelResourceLocation === 'item/player_head'
 
+  for (const element of elements) {
     for (const faceKey in element.faces) {
       const face = faceKey as ModelFaceKey
       const faceData = element.faces[face]!
@@ -83,17 +86,30 @@ export async function loadModelMaterials({
           ? faceData.texture.slice(6)
           : undefined
 
-      const material = await loadMaterial({
-        textureData: {
-          type: 'vanilla',
-          resourceLocation: textureResourceLocation,
-        },
+      await loadMaterial({
+        textureData: isPlayerHead
+          ? playerHeadTextureData?.baked &&
+            isValidTextureUrl(playerHeadTextureData.url)
+            ? {
+                // baked texture url
+                type: 'player_head',
+                playerHeadTextureUrl: playerHeadTextureData.url,
+              }
+            : {
+                // not baked texture
+                type: 'vanilla',
+                resourceLocation: 'entity/player/slim/steve',
+              }
+          : {
+              // not player_head
+              type: 'vanilla',
+              resourceLocation: textureResourceLocation,
+            },
         modelResourceLocation,
         textureLayer,
         textureSize,
         tintindex: faceData.tintindex,
       })
-      materials.push(material)
     }
   }
 }

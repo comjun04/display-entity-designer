@@ -489,6 +489,23 @@ export const useDisplayEntityStore = create(
               parent: parentEntityId,
               display: item.display,
             })
+
+            const entity = entities.get(id)!
+            if (isItemDisplayPlayerHead(entity)) {
+              if ('playerHeadProperties' in item) {
+                // is player_head
+                entity.playerHeadProperties =
+                  item.playerHeadProperties as PlayerHeadProperties
+              } else {
+                // savefile v1 -> v2
+                // fill default playerHeadProperties if not exist
+                entity.playerHeadProperties = {
+                  texture: {
+                    baked: false,
+                  },
+                }
+              }
+            }
           } else if (item.kind === 'text') {
             entities.set(id, {
               kind: 'text',
@@ -687,6 +704,10 @@ export const useDisplayEntityStore = create(
             type: entity.type,
             transforms,
             display: entity.display,
+            playerHeadProperties:
+              'playerHeadProperties' in entity
+                ? entity.playerHeadProperties
+                : undefined,
           }
         } else if (entity.kind === 'text') {
           return {

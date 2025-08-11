@@ -1,4 +1,9 @@
-import { BlockStateApplyModelInfo, DisplayEntity } from '@/types'
+import {
+  BlockStateApplyModelInfo,
+  DisplayEntity,
+  PlayerHeadProperties,
+  isItemDisplayPlayerHead,
+} from '@/types'
 
 import { getLogger } from '../loggerService'
 import { getMatchingBlockstateModel, loadBlockstates } from './blockstates'
@@ -8,7 +13,9 @@ import { loadModelMaterials } from './modelMesh'
 const logger = getLogger('ResourceLoader')
 
 export async function preloadResources(entities: DisplayEntity[]) {
-  const applyModelInfoList: BlockStateApplyModelInfo[] = []
+  const applyModelInfoList: (BlockStateApplyModelInfo & {
+    playerHeadTextureData?: NonNullable<PlayerHeadProperties['texture']>
+  })[] = []
 
   logger.log('preLoadResources(): start preloading resources')
 
@@ -21,6 +28,9 @@ export async function preloadResources(entities: DisplayEntity[]) {
     } else if (entity.kind === 'item') {
       applyModelInfoList.push({
         model: `item/${entity.type}`,
+        playerHeadTextureData: isItemDisplayPlayerHead(entity)
+          ? (entity.playerHeadProperties.texture ?? undefined)
+          : undefined,
       })
     }
   }
@@ -35,6 +45,7 @@ export async function preloadResources(entities: DisplayEntity[]) {
       textures: data.textures,
       textureSize: data.textureSize,
       isItemModel: false,
+      playerHeadTextureData: applyModelInfo.playerHeadTextureData,
     })
   }
 
