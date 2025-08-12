@@ -71,7 +71,7 @@ const Scene: FC = () => {
             itemSize={3}
           />
         </bufferGeometry>
-        <lineBasicMaterial color={0xff0000} />
+        <lineBasicMaterial color={0xdc2626 /* tailwind v3 red-600 */} />
       </line>
       <line>
         <bufferGeometry>
@@ -82,7 +82,7 @@ const Scene: FC = () => {
             itemSize={3}
           />
         </bufferGeometry>
-        <lineBasicMaterial color={0x00ff00} />
+        <lineBasicMaterial color={0x16a34a /* tailwind v3 green-600 */} />
       </line>
       <line>
         <bufferGeometry>
@@ -93,7 +93,7 @@ const Scene: FC = () => {
             itemSize={3}
           />
         </bufferGeometry>
-        <lineBasicMaterial color={0x0000ff} />
+        <lineBasicMaterial color={0x2563eb /* tailwind v3 blue-600 */} />
       </line>
 
       <DisplayentitiesRootGroup />
