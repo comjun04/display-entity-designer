@@ -1,7 +1,7 @@
 import { Grid, PerspectiveCamera } from '@react-three/drei'
 import { Canvas, invalidate } from '@react-three/fiber'
 import { FC, useEffect, useRef } from 'react'
-import { Color } from 'three'
+import { Color, DoubleSide } from 'three'
 
 import CustomCameraControls from './CustomCameraControls'
 import DisplayentitiesRootGroup from './components/DisplayEntitiesRootGroup'
@@ -117,6 +117,7 @@ const Scene: FC = () => {
         sectionColor={0x333333}
         sectionSize={1}
         infiniteGrid
+        side={DoubleSide}
       />
 
       {perfMonitorEnabled && <Perf />}
