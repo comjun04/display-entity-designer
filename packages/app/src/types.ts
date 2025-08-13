@@ -250,12 +250,6 @@ export type DisplayEntity =
   | TextDisplayEntity
   | DisplayEntityGroup
 
-export type DisplayEntitySaveDataItemOld = Pick<DisplayEntity, 'kind'> &
-  Partial<Pick<BlockDisplayEntity, 'type'>> & {
-    transforms: Matrix4Tuple
-    children?: DisplayEntitySaveDataItem[]
-  }
-
 export type DisplayEntitySaveDataItem = {
   transforms: Matrix4Tuple
 } & (
@@ -276,7 +270,7 @@ export type BDEngineSaveData = {
   children: BDEngineSaveDataItem[]
   settings: { defaultBrightness: boolean }
   mainNBT: string
-}[] // 왜 얘내들 최상단 Project group을 배열에 넣어둠???
+}[]
 
 export type BDEngineSaveDataItem = {
   name: string
