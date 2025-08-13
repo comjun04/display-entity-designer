@@ -347,6 +347,13 @@ export interface TextureValue {
       | undefined
   }
 }
+export interface MinimalTextureValue {
+  textures: {
+    SKIN: {
+      url: string
+    }
+  }
+}
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
