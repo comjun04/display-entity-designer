@@ -104,7 +104,9 @@ export async function saveToFile() {
     .stream()
     .pipeThrough(new CompressionStream('gzip'))
   const blob = await new Response(gzipCompressionStream).blob()
-  const newBlob = new Blob([FILE_MAGIC, fileVersionArrayBuffer, blob])
+  const newBlob = new Blob([FILE_MAGIC, fileVersionArrayBuffer, blob], {
+    type: 'application/octet-stream', // prevent chrome mobile from downloading as `project.depl.txt`
+  })
 
   const objectUrl = URL.createObjectURL(newBlob)
   const tempElement = document.createElement('a')
