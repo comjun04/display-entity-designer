@@ -209,9 +209,9 @@ console.log('Generating items list')
 const generatedItemsJson = JSON.parse(
   await readFile(pathJoin(reportsPath, 'items.json'), 'utf8'),
 )
-const items = [...Object.keys(generatedItemsJson)].map(
-  (k) => k.match(/^minecraft:(.+)$/)![1],
-)
+const items = [...Object.keys(generatedItemsJson)]
+  .map((k) => k.match(/^minecraft:(.+)$/)![1])
+  .filter((i) => i !== 'air')
 await writeFile(
   pathJoin(assetsMinecraftFolderPath, 'items.json'),
   JSON.stringify({ items }),
