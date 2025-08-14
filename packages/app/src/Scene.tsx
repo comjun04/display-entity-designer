@@ -1,4 +1,9 @@
-import { Grid, PerspectiveCamera } from '@react-three/drei'
+import {
+  GizmoHelper,
+  GizmoViewport,
+  Grid,
+  PerspectiveCamera,
+} from '@react-three/drei'
 import { Canvas, invalidate } from '@react-three/fiber'
 import { FC, useEffect, useRef } from 'react'
 import { Color, DoubleSide } from 'three'
@@ -119,6 +124,9 @@ const Scene: FC = () => {
         infiniteGrid
         side={DoubleSide}
       />
+      <GizmoHelper alignment="bottom-left" margin={[60, 60]}>
+        <GizmoViewport />
+      </GizmoHelper>
 
       {perfMonitorEnabled && <Perf />}
     </Canvas>
