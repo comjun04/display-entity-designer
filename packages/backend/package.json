@@ -8,7 +8,8 @@
     "husky:pre-commit": "pretty-quick --staged --pattern \"packages/backend/**/*.{js,ts,jsx,tsx}\""
   },
   "dependencies": {
-    "hono": "^4.9.0"
+    "hono": "^4.9.0",
+    "nanoid": "^5.1.5"
   },
   "optionalDependencies": {
     "@hono/node-server": "^1.18.1",
