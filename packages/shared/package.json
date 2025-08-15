@@ -1,0 +1,18 @@
+{
+  "name": "@depl/shared",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "husky:pre-commit": "pretty-quick --staged --pattern \"packages/shared/**/*.{js,ts,jsx,tsx,json}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "pretty-quick": "^4.2.2"
+  }
+}
