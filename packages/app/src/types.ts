@@ -1,5 +1,13 @@
+import { BlockStateApplyModelInfo } from '@depl/shared'
 import { MutableRefObject, RefCallback } from 'react'
 import { Matrix4Tuple } from 'three'
+
+// re-export imported types from shared package
+export type { BlockStateApplyModelInfo }
+
+export type { VersionMetadata } from '@depl/shared'
+
+// ===========
 
 declare global {
   var __depl_alertUncaughtError: boolean | undefined
@@ -27,23 +35,8 @@ export type PartialNumber3Tuple = [
   number | undefined,
 ]
 
-export type VersionMetadata = {
-  gameVersion: string // minecraft version
-  sharedAssets: {
-    assetIndex: number
-    unifontHexFilePath: string
-  }
-}
-
 export type CDNBlocksListResponse = {
   blocks: string[]
-}
-
-export type BlockStateApplyModelInfo = {
-  model: string
-  uvlock?: boolean
-  x?: number
-  y?: number
 }
 
 export type CDNBlockStatesResponse =

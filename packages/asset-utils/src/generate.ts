@@ -11,6 +11,7 @@ import { Open } from 'unzipper'
 import { rimraf } from 'rimraf'
 import { spawnSync } from 'child_process'
 import { BlockstatesFile, ModelFile } from './types'
+import { VersionMetadata } from '@depl/shared'
 import {
   blockstatesDefaultValues,
   renderableBlockEntityModelTextures,

@@ -1,8 +1,6 @@
 // TODO: app에서 선언된 타입이랑 중복되는거 같으니 common 패키지로 추출하기
 
-export interface BlockStateApplyModelInfo {
-  model: string
-}
+import { BlockStateApplyModelInfo } from '@depl/shared'
 
 export type BlockstatesFile =
   | {
@@ -78,13 +76,5 @@ export type CDNAssetIndexJson = {
       hash: string
       size: number
     }
-  }
-}
-
-export type VersionMetadata = {
-  gameVersion: string // minecraft version
-  sharedAssets: {
-    assetIndex: number
-    unifontHexFilePath: string
   }
 }
