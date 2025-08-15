@@ -3,12 +3,14 @@
   "private": true,
   "version": "1.0.0",
   "description": "",
+  "type": "module",
   "scripts": {
     "start": "tsx src/node-server.ts",
     "husky:pre-commit": "pretty-quick --staged --pattern \"packages/backend/**/*.{js,ts,jsx,tsx}\""
   },
   "dependencies": {
     "hono": "^4.9.0",
+    "hono-rate-limiter": "^0.4.2",
     "nanoid": "^5.1.5"
   },
   "optionalDependencies": {

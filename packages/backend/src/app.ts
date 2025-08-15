@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
+import { rateLimiter } from 'hono-rate-limiter'
 import { requestId } from 'hono/request-id'
 import { nanoid } from 'nanoid'
 
@@ -11,6 +12,8 @@ import {
 } from './types'
 import { getConnInfoFn } from './platform-dependent'
 
+const getConnInfo = await getConnInfoFn()
+
 const app = new Hono()
 
 app.use(
@@ -19,7 +22,6 @@ app.use(
   }),
 )
 app.use(async (c, next) => {
-  const getConnInfo = await getConnInfoFn()
   const conninfo = await getConnInfo(c)
 
   const origFn = logger((msg, ...rest) => {
@@ -31,6 +33,15 @@ app.use(async (c, next) => {
   })
   await origFn(c, next)
 })
+
+app.use(
+  rateLimiter({
+    windowMs: 60 * 1000,
+    limit: 60, // 60 requests in 60 seconds (1 minute)
+    standardHeaders: 'draft-6',
+    keyGenerator: (c) => getConnInfo(c).remote.address,
+  }),
+)
 
 app.use(
   '/*',
