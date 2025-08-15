@@ -1,4 +1,4 @@
-import { Hono } from 'hono'
+import { Hono, Context } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { rateLimiter } from 'hono-rate-limiter'
@@ -15,6 +15,21 @@ import {
 import { getConnInfoFn } from './platform-dependent'
 
 const getConnInfo = await getConnInfoFn()
+function getRemoteIp(c: Context) {
+  if (
+    typeof process.env.CLIENT_IP_HEADER === 'string' &&
+    process.env.CLIENT_IP_HEADER.length > 0
+  ) {
+    // check client ip from header
+    const value = c.req.header(process.env.CLIENT_IP_HEADER)
+    if (value != null) {
+      return value
+    }
+  }
+
+  // fallback to remote.address
+  return getConnInfo(c).remote.address
+}
 
 const cache = new TTLCache<string, APIGetPlayerSkinResponse>({
   ttl: 1000 * 60 * 10, // 10min
@@ -30,14 +45,10 @@ app.use(
   }),
 )
 app.use(async (c, next) => {
-  const conninfo = await getConnInfo(c)
+  const clientIp = getRemoteIp(c)
 
   const origFn = logger((msg, ...rest) => {
-    console.log(
-      msg,
-      { reqId: c.get('requestId'), remote: conninfo.remote.address },
-      ...rest,
-    )
+    console.log(msg, { reqId: c.get('requestId'), remote: clientIp }, ...rest)
   })
   await origFn(c, next)
 })
