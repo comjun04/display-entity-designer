@@ -20,14 +20,26 @@ export interface TextureValue {
   profileName: string // player username
   signatureRequired: boolean | undefined
   textures: {
-    SKIN: {
-      url: string
-      metadata: {
-        model: 'slim' | undefined // wide skin = undefined
-      } | undefined
-    } | undefined
-    CAPE: {
-      url: string
-    } | undefined
+    SKIN:
+      | {
+          url: string
+          metadata:
+            | {
+                model: 'slim' | undefined // wide skin = undefined
+              }
+            | undefined
+        }
+      | undefined
+    CAPE:
+      | {
+          url: string
+        }
+      | undefined
   }
+}
+
+export interface APIGetPlayerSkinResponse {
+  id: string // player uuid
+  name: string // player username
+  skinUrl: string | null
 }

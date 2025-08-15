@@ -4,15 +4,23 @@ import { logger } from 'hono/logger'
 import { rateLimiter } from 'hono-rate-limiter'
 import { requestId } from 'hono/request-id'
 import { nanoid } from 'nanoid'
+import TTLCache from '@isaacs/ttlcache'
 
 import {
   PlayerSkinQueryResult,
   ProfileLookupResult,
   TextureValue,
+  APIGetPlayerSkinResponse,
 } from './types'
 import { getConnInfoFn } from './platform-dependent'
 
 const getConnInfo = await getConnInfoFn()
+
+const cache = new TTLCache<string, APIGetPlayerSkinResponse>({
+  ttl: 1000 * 60 * 10, // 10min
+  updateAgeOnGet: true,
+  checkAgeOnGet: true,
+})
 
 const app = new Hono()
 
@@ -71,6 +79,11 @@ app.get('/v1/skin/:usernameOrUuid', async (c) => {
     return c.json({ error: 'Invalid username or uuid' })
   }
 
+  // try to get from cache
+  if (cache.has(usernameOrUuid.replaceAll('-', ''))) {
+    return c.json(cache.get(usernameOrUuid)!)
+  }
+
   let uuid: string
   if (type === 'username') {
     const profileLookupResponse = await fetch(
@@ -101,11 +114,20 @@ app.get('/v1/skin/:usernameOrUuid', async (c) => {
     Buffer.from(skinQueryResult.properties[0].value, 'base64').toString(),
   ) as TextureValue
 
+  const finalData = {
+    id: skinQueryResult.id,
+    name: skinQueryResult.name,
+    skinUrl: textureValue.textures.SKIN?.url ?? null,
+  } satisfies APIGetPlayerSkinResponse
+  // cache both username and uuid
+  cache.set(finalData.id, finalData)
+  cache.set(finalData.name, finalData)
+
   return c.json({
     id: skinQueryResult.id,
     name: skinQueryResult.name,
     skinUrl: textureValue.textures.SKIN?.url ?? null,
-  })
+  } satisfies APIGetPlayerSkinResponse)
 })
 
 export default app

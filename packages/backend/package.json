@@ -9,6 +9,7 @@
     "husky:pre-commit": "pretty-quick --staged --pattern \"packages/backend/**/*.{js,ts,jsx,tsx}\""
   },
   "dependencies": {
+    "@isaacs/ttlcache": "^1.4.1",
     "hono": "^4.9.0",
     "hono-rate-limiter": "^0.4.2",
     "nanoid": "^5.1.5"
