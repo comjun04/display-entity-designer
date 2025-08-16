@@ -3,7 +3,6 @@ import { cp, lstat, mkdir, readdir, readFile, writeFile } from 'fs/promises'
 import {
   join as pathJoin,
   resolve as pathResolve,
-  relative as pathRelative,
   dirname,
   basename,
 } from 'path'
@@ -256,7 +255,7 @@ for (const assetFilePath of sharedAssets) {
 // write version metadata.json
 console.log('Writing metadata.json')
 const versionMetadata: VersionMetadata = {
-  mcVersion,
+  gameVersion: mcVersion,
   sharedAssets: {
     assetIndex: parseInt(versionData.assetIndex.id),
     unifontHexFilePath,

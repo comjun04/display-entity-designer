@@ -8,7 +8,7 @@ import TTLCache from '@isaacs/ttlcache'
 
 import {
   PlayerSkinQueryResult,
-  ProfileLookupResult,
+  ProfileLookupData,
   TextureValue,
   APIGetPlayerSkinResponse,
 } from './types'
@@ -58,7 +58,7 @@ app.use(
     windowMs: 60 * 1000,
     limit: 60, // 60 requests in 60 seconds (1 minute)
     standardHeaders: 'draft-6',
-    keyGenerator: (c) => getConnInfo(c).remote.address,
+    keyGenerator: (c) => getConnInfo(c).remote.address!,
   }),
 )
 

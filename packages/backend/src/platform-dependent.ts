@@ -2,12 +2,15 @@ export type Runtime = 'bun' | 'deno' | 'cloudflare-workers' | 'node' | 'unknown'
 
 export function detectRuntime(): Runtime {
   // Bun
+  // @ts-expect-error may be null on non-bun environments
   if (typeof Bun !== 'undefined') return 'bun'
 
   // Deno
+  // @ts-expect-error may be null on non-deno environments
   if (typeof Deno !== 'undefined') return 'deno'
 
   // Cloudflare Workers or similar Edge runtime
+  // @ts-expect-error may be null on other environments
   if (typeof WebSocketPair !== 'undefined' && typeof caches !== 'undefined') {
     return 'cloudflare-workers'
   }
