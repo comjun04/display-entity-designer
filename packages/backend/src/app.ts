@@ -10,7 +10,7 @@ import {
   PlayerSkinQueryResult,
   ProfileLookupData,
   TextureValue,
-  APIGetPlayerSkinResponse,
+  BackendAPIV1GetPlayerSkinResponse,
 } from './types'
 import { getConnInfoFn } from './platform-dependent'
 
@@ -31,7 +31,7 @@ function getRemoteIp(c: Context) {
   return getConnInfo(c).remote.address
 }
 
-const cache = new TTLCache<string, APIGetPlayerSkinResponse>({
+const cache = new TTLCache<string, BackendAPIV1GetPlayerSkinResponse>({
   ttl: 1000 * 60 * 10, // 10min
   updateAgeOnGet: true,
   checkAgeOnGet: true,
@@ -129,7 +129,7 @@ app.get('/v1/skin/:usernameOrUuid', async (c) => {
     id: skinQueryResult.id,
     name: skinQueryResult.name,
     skinUrl: textureValue.textures.SKIN?.url ?? null,
-  } satisfies APIGetPlayerSkinResponse
+  } satisfies BackendAPIV1GetPlayerSkinResponse
   // cache both username and uuid
   cache.set(finalData.id, finalData)
   cache.set(finalData.name, finalData)
@@ -138,7 +138,7 @@ app.get('/v1/skin/:usernameOrUuid', async (c) => {
     id: skinQueryResult.id,
     name: skinQueryResult.name,
     skinUrl: textureValue.textures.SKIN?.url ?? null,
-  } satisfies APIGetPlayerSkinResponse)
+  } satisfies BackendAPIV1GetPlayerSkinResponse)
 })
 
 export default app

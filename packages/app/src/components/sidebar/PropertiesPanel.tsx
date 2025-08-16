@@ -12,7 +12,7 @@ import { BackendHost } from '@/constants'
 import useBlockStates from '@/hooks/useBlockStates'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import {
-  BackendSkinQueryResponse,
+  BackendAPIV1GetPlayerSkinResponse,
   ModelDisplayPositionKey,
   TextDisplayAlignment,
   isItemDisplayPlayerHead,
@@ -199,7 +199,7 @@ const ItemDisplayProperties: FC = () => {
                   `${BackendHost}/v1/skin/${tempPlayerName}`,
                 )
                   .then((res) => res.json())
-                  .catch(console.error)) as BackendSkinQueryResponse
+                  .catch(console.error)) as BackendAPIV1GetPlayerSkinResponse
 
                 const textureUrl = skinQueryResponse.skinUrl
                 if (textureUrl == null) {

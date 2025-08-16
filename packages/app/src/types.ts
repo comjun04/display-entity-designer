@@ -1,11 +1,29 @@
-import { BlockStateApplyModelInfo } from '@depl/shared'
+import {
+  BlockStateApplyModelInfo,
+  BlockStatesFile,
+  ModelDisplayPositionKey,
+  ModelElement,
+  Number3Tuple,
+} from '@depl/shared'
 import { MutableRefObject, RefCallback } from 'react'
 import { Matrix4Tuple } from 'three'
 
 // re-export imported types from shared package
-export type { BlockStateApplyModelInfo }
+export type {
+  BlockStateApplyModelInfo,
+  BlockStatesFile,
+  ModelDisplayPositionKey,
+  ModelElement,
+  Number3Tuple,
+}
 
-export type { VersionMetadata } from '@depl/shared'
+export type {
+  BackendAPIV1GetPlayerSkinResponse,
+  ModelFaceKey,
+  ModelFile,
+  TextureValue,
+  VersionMetadata,
+} from '@depl/shared'
 
 // ===========
 
@@ -28,7 +46,6 @@ export type DeepPartial<T> = {
 export type RefCallbackWithMutableRefObject<T> = RefCallback<T> &
   MutableRefObject<T>
 
-export type Number3Tuple = [number, number, number]
 export type PartialNumber3Tuple = [
   number | undefined,
   number | undefined,
@@ -38,26 +55,6 @@ export type PartialNumber3Tuple = [
 export type CDNBlocksListResponse = {
   blocks: string[]
 }
-
-export type CDNBlockStatesResponse =
-  | {
-      variants:
-        | Record<string, BlockStateApplyModelInfo>
-        | Record<string, BlockStateApplyModelInfo[]>
-    }
-  | {
-      multipart: {
-        apply: BlockStateApplyModelInfo | BlockStateApplyModelInfo[]
-        when?:
-          | {
-              AND: Record<string, string>[]
-            }
-          | {
-              OR: Record<string, string>[]
-            }
-          | Record<string, string>
-      }[]
-    }
 
 export type BlockstatesData = {
   blockstates: Map<
@@ -73,17 +70,6 @@ export type BlockstatesData = {
   }[]
 }
 
-export type ModelDisplayPositionKey =
-  | 'thirdperson_righthand'
-  | 'thirdperson_lefthand'
-  | 'firstperson_righthand'
-  | 'firstperson_lefthand'
-  | 'gui'
-  | 'head'
-  | 'ground'
-  | 'fixed'
-export type ModelFaceKey = 'up' | 'down' | 'north' | 'south' | 'west' | 'east'
-
 export type ModelData = {
   textures: Record<string, string>
   textureSize?: [number, number]
@@ -96,40 +82,6 @@ export type ModelData = {
     }
   >
   elements: ModelElement[]
-}
-
-export type ModelElement = {
-  __comment?: string
-  from: Number3Tuple
-  to: Number3Tuple
-  faces: {
-    [x in ModelFaceKey]?: {
-      uv?: [number, number, number, number]
-      texture: string
-      rotation?: 0 | 90 | 180 | 270
-      tintindex?: number
-    }
-  }
-  rotation?: {
-    origin: Number3Tuple
-    axis: 'x' | 'y' | 'z'
-    angle: number
-    rescale?: boolean
-  }
-}
-
-export type CDNModelResponse = {
-  parent?: string
-  display?: {
-    [x in ModelDisplayPositionKey]?: {
-      rotation: Number3Tuple
-      translation: Number3Tuple
-      scale: Number3Tuple
-    }
-  }
-  elements?: ModelElement[]
-  textures?: Record<string, string>
-  texture_size?: [number, number]
 }
 
 export type CDNItemsListResponse = {
@@ -311,29 +263,6 @@ export type BDEngineSaveDataItem = {
     }
 )
 
-export interface TextureValue {
-  timestamp: number
-  profileId: string // player uuid
-  profileName: string // player username
-  signatureRequired: boolean | undefined
-  textures: {
-    SKIN:
-      | {
-          url: string
-          metadata:
-            | {
-                model: 'slim' | undefined // wide skin = undefined
-              }
-            | undefined
-        }
-      | undefined
-    CAPE:
-      | {
-          url: string
-        }
-      | undefined
-  }
-}
 export interface MinimalTextureValue {
   textures: {
     SKIN: {
@@ -343,9 +272,3 @@ export interface MinimalTextureValue {
 }
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
-
-export interface BackendSkinQueryResponse {
-  id: string // player uuid
-  name: string // player username
-  skinUrl?: string
-}

@@ -9,7 +9,7 @@ import {
 import { Open } from 'unzipper'
 import { rimraf } from 'rimraf'
 import { spawnSync } from 'child_process'
-import { BlockstatesFile, ModelFile } from './types'
+import { BlockStatesFile, ModelFile } from './types'
 import { VersionMetadata } from '@depl/shared'
 import {
   blockstatesDefaultValues,
@@ -147,7 +147,7 @@ for await (const blockNameWithPrefix of [...Object.keys(generatedBlocksJson)]) {
       pathJoin(assetsMinecraftFolderPath, 'blockstates', `${blockName}.json`),
       'utf8',
     ),
-  ) as BlockstatesFile
+  ) as BlockStatesFile
 
   let canRender: boolean = false
   if ('variants' in blockstateFile) {

@@ -4,12 +4,7 @@ import { immer } from 'zustand/middleware/immer'
 
 import { getLogger } from '@/services/loggerService'
 import { loadModel } from '@/services/resources/model'
-import {
-  BlockstatesData,
-  CDNModelResponse,
-  FontProvider,
-  ModelData,
-} from '@/types'
+import { BlockstatesData, FontProvider, ModelData, ModelFile } from '@/types'
 
 const logger = getLogger('cacheStore')
 
@@ -19,11 +14,8 @@ type CacheStoreState = {
   blockstatesData: Record<string, BlockstatesData>
   setBlockstateData: (blockType: string, data: BlockstatesData) => void
 
-  modelJson: Record<string, CDNModelResponse>
-  setModelJson: (
-    resourceLocation: string,
-    jsonContent: CDNModelResponse,
-  ) => void
+  modelJson: Record<string, ModelFile>
+  setModelJson: (resourceLocation: string, jsonContent: ModelFile) => void
 
   modelData: Record<
     string,
