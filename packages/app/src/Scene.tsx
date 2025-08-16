@@ -1,7 +1,12 @@
-import { Grid, PerspectiveCamera } from '@react-three/drei'
+import {
+  GizmoHelper,
+  GizmoViewport,
+  Grid,
+  PerspectiveCamera,
+} from '@react-three/drei'
 import { Canvas, invalidate } from '@react-three/fiber'
 import { FC, useEffect, useRef } from 'react'
-import { Color } from 'three'
+import { Color, DoubleSide } from 'three'
 
 import CustomCameraControls from './CustomCameraControls'
 import DisplayentitiesRootGroup from './components/DisplayEntitiesRootGroup'
@@ -71,7 +76,7 @@ const Scene: FC = () => {
             itemSize={3}
           />
         </bufferGeometry>
-        <lineBasicMaterial color={0xff0000} />
+        <lineBasicMaterial color={0xdc2626 /* tailwind v3 red-600 */} />
       </line>
       <line>
         <bufferGeometry>
@@ -82,7 +87,7 @@ const Scene: FC = () => {
             itemSize={3}
           />
         </bufferGeometry>
-        <lineBasicMaterial color={0x00ff00} />
+        <lineBasicMaterial color={0x16a34a /* tailwind v3 green-600 */} />
       </line>
       <line>
         <bufferGeometry>
@@ -93,7 +98,7 @@ const Scene: FC = () => {
             itemSize={3}
           />
         </bufferGeometry>
-        <lineBasicMaterial color={0x0000ff} />
+        <lineBasicMaterial color={0x2563eb /* tailwind v3 blue-600 */} />
       </line>
 
       <DisplayentitiesRootGroup />
@@ -117,7 +122,11 @@ const Scene: FC = () => {
         sectionColor={0x333333}
         sectionSize={1}
         infiniteGrid
+        side={DoubleSide}
       />
+      <GizmoHelper alignment="bottom-left" margin={[60, 60]}>
+        <GizmoViewport />
+      </GizmoHelper>
 
       {perfMonitorEnabled && <Perf />}
     </Canvas>

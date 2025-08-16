@@ -3,7 +3,7 @@ import { FC } from 'react'
 import { FaObjectGroup } from 'react-icons/fa6'
 import { IoMdTrash } from 'react-icons/io'
 import { IoCubeOutline } from 'react-icons/io5'
-import { LuType } from 'react-icons/lu'
+import { LuSmile, LuType } from 'react-icons/lu'
 import { TbDiamondFilled } from 'react-icons/tb'
 import { useShallow } from 'zustand/shallow'
 
@@ -77,6 +77,25 @@ const TopButtonPanel: FC = () => {
             }}
           >
             <LuType size={24} />
+          </FloatingButton>
+        </Tooltip>
+
+        <div className="my-2 border-l border-gray-700" />
+
+        <Tooltip
+          content="Add Player Head"
+          placement="bottom"
+          size="sm"
+          offset={0}
+          delay={300}
+          closeDelay={0}
+        >
+          <FloatingButton
+            onClick={() => {
+              useDisplayEntityStore.getState().createNew('item', 'player_head')
+            }}
+          >
+            <LuSmile size={24} />
           </FloatingButton>
         </Tooltip>
 

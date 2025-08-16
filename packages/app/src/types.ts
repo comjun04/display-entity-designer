@@ -1,5 +1,31 @@
+import {
+  BlockStateApplyModelInfo,
+  BlockStatesFile,
+  ModelDisplayPositionKey,
+  ModelElement,
+  Number3Tuple,
+} from '@depl/shared'
 import { MutableRefObject, RefCallback } from 'react'
 import { Matrix4Tuple } from 'three'
+
+// re-export imported types from shared package
+export type {
+  BlockStateApplyModelInfo,
+  BlockStatesFile,
+  ModelDisplayPositionKey,
+  ModelElement,
+  Number3Tuple,
+}
+
+export type {
+  BackendAPIV1GetPlayerSkinResponse,
+  ModelFaceKey,
+  ModelFile,
+  TextureValue,
+  VersionMetadata,
+} from '@depl/shared'
+
+// ===========
 
 declare global {
   var __depl_alertUncaughtError: boolean | undefined
@@ -20,51 +46,15 @@ export type DeepPartial<T> = {
 export type RefCallbackWithMutableRefObject<T> = RefCallback<T> &
   MutableRefObject<T>
 
-export type Number3Tuple = [number, number, number]
 export type PartialNumber3Tuple = [
   number | undefined,
   number | undefined,
   number | undefined,
 ]
 
-export type VersionMetadata = {
-  gameVersion: string // minecraft version
-  sharedAssets: {
-    assetIndex: number
-    unifontHexFilePath: string
-  }
-}
-
 export type CDNBlocksListResponse = {
   blocks: string[]
 }
-
-export type BlockStateApplyModelInfo = {
-  model: string
-  uvlock?: boolean
-  x?: number
-  y?: number
-}
-
-export type CDNBlockStatesResponse =
-  | {
-      variants:
-        | Record<string, BlockStateApplyModelInfo>
-        | Record<string, BlockStateApplyModelInfo[]>
-    }
-  | {
-      multipart: {
-        apply: BlockStateApplyModelInfo | BlockStateApplyModelInfo[]
-        when?:
-          | {
-              AND: Record<string, string>[]
-            }
-          | {
-              OR: Record<string, string>[]
-            }
-          | Record<string, string>
-      }[]
-    }
 
 export type BlockstatesData = {
   blockstates: Map<
@@ -80,17 +70,6 @@ export type BlockstatesData = {
   }[]
 }
 
-export type ModelDisplayPositionKey =
-  | 'thirdperson_righthand'
-  | 'thirdperson_lefthand'
-  | 'firstperson_righthand'
-  | 'firstperson_lefthand'
-  | 'gui'
-  | 'head'
-  | 'ground'
-  | 'fixed'
-export type ModelFaceKey = 'up' | 'down' | 'north' | 'south' | 'west' | 'east'
-
 export type ModelData = {
   textures: Record<string, string>
   textureSize?: [number, number]
@@ -103,40 +82,6 @@ export type ModelData = {
     }
   >
   elements: ModelElement[]
-}
-
-export type ModelElement = {
-  __comment?: string
-  from: Number3Tuple
-  to: Number3Tuple
-  faces: {
-    [x in ModelFaceKey]?: {
-      uv?: [number, number, number, number]
-      texture: string
-      rotation?: 0 | 90 | 180 | 270
-      tintindex?: number
-    }
-  }
-  rotation?: {
-    origin: Number3Tuple
-    axis: 'x' | 'y' | 'z'
-    angle: number
-    rescale?: boolean
-  }
-}
-
-export type CDNModelResponse = {
-  parent?: string
-  display?: {
-    [x in ModelDisplayPositionKey]?: {
-      rotation: Number3Tuple
-      translation: Number3Tuple
-      scale: Number3Tuple
-    }
-  }
-  elements?: ModelElement[]
-  textures?: Record<string, string>
-  texture_size?: [number, number]
 }
 
 export type CDNItemsListResponse = {
@@ -177,8 +122,39 @@ export type BlockDisplayEntity = BaseDisplayEntity & {
 
 export type ItemDisplayEntity = BaseDisplayEntity & {
   kind: 'item'
-  type: string
   display: ModelDisplayPositionKey | null
+} & (
+    | {
+        type: 'player_head'
+        playerHeadProperties: PlayerHeadProperties
+      }
+    | {
+        type: string
+      }
+  )
+
+export interface PlayerHeadProperties {
+  texture:
+    | {
+        baked: true
+        url: string
+      }
+    | {
+        baked: false
+      }
+    | null
+}
+
+// player head type guard
+export function isItemDisplayPlayerHead(
+  entity: DisplayEntity,
+): entity is ItemDisplayEntity & {
+  type: 'player_head'
+  playerHeadProperties: PlayerHeadProperties
+} {
+  if (entity.kind !== 'item') return false
+  else if (entity.type !== 'player_head') return false
+  return true
 }
 
 export type TextDisplayAlignment = 'left' | 'center' | 'right'
@@ -219,17 +195,11 @@ export type DisplayEntity =
   | TextDisplayEntity
   | DisplayEntityGroup
 
-export type DisplayEntitySaveDataItemOld = Pick<DisplayEntity, 'kind'> &
-  Partial<Pick<BlockDisplayEntity, 'type'>> & {
-    transforms: Matrix4Tuple
-    children?: DisplayEntitySaveDataItem[]
-  }
-
 export type DisplayEntitySaveDataItem = {
   transforms: Matrix4Tuple
 } & (
   | Pick<BlockDisplayEntity, 'kind' | 'type' | 'blockstates' | 'display'>
-  | Pick<ItemDisplayEntity, 'kind' | 'type' | 'display'>
+  | Omit<ItemDisplayEntity, 'id' | 'parent' | 'position' | 'rotation' | 'size'>
   | Omit<TextDisplayEntity, 'id' | 'parent' | 'position' | 'rotation' | 'size'>
   | (Pick<DisplayEntityGroup, 'kind'> & {
       children: DisplayEntitySaveDataItem[]
@@ -245,7 +215,7 @@ export type BDEngineSaveData = {
   children: BDEngineSaveDataItem[]
   settings: { defaultBrightness: boolean }
   mainNBT: string
-}[] // 왜 얘내들 최상단 Project group을 배열에 넣어둠???
+}[]
 
 export type BDEngineSaveDataItem = {
   name: string
@@ -278,11 +248,27 @@ export type BDEngineSaveDataItem = {
     }
   | {
       isItemDisplay: true
+
+      // below fields exist if type is player_head
+      tagHead?: {
+        Value: string
+      }
+      textureValueList?: string[] // maybe?
+      paintTexture?: unknown
+      defaultTextureValue?: string
     }
   | {
       isCollection: true
       children: BDEngineSaveDataItem[]
     }
 )
+
+export interface MinimalTextureValue {
+  textures: {
+    SKIN: {
+      url: string
+    }
+  }
+}
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error'

@@ -10,8 +10,13 @@ import {
 } from 'three'
 import { mergeBufferGeometries, mergeVertices } from 'three-stdlib'
 
-import { ModelElement, ModelFaceKey, Number3Tuple } from '@/types'
-import { stripMinecraftPrefix } from '@/utils'
+import {
+  ModelElement,
+  ModelFaceKey,
+  Number3Tuple,
+  PlayerHeadProperties,
+} from '@/types'
+import { isValidTextureUrl, stripMinecraftPrefix } from '@/utils'
 
 import { getLogger } from '../loggerService'
 import { loadMaterial } from './material'
@@ -41,6 +46,7 @@ export type LoadModelMaterialsArgs = {
   textures: Record<string, string>
   textureSize?: [number, number]
   isItemModel: boolean
+  playerHeadTextureData?: NonNullable<PlayerHeadProperties['texture']>
 }
 
 /**
@@ -55,10 +61,12 @@ export async function loadModelMaterials({
   textures,
   textureSize = [16, 16],
   isItemModel,
+  playerHeadTextureData,
 }: LoadModelMaterialsArgs) {
-  for (const element of elements) {
-    const materials: Material[] = []
+  // player_head check
+  const isPlayerHead = modelResourceLocation === 'item/player_head'
 
+  for (const element of elements) {
     for (const faceKey in element.faces) {
       const face = faceKey as ModelFaceKey
       const faceData = element.faces[face]!
@@ -78,14 +86,30 @@ export async function loadModelMaterials({
           ? faceData.texture.slice(6)
           : undefined
 
-      const material = await loadMaterial({
-        textureResourceLocation,
+      await loadMaterial({
+        textureData: isPlayerHead
+          ? playerHeadTextureData?.baked &&
+            isValidTextureUrl(playerHeadTextureData.url)
+            ? {
+                // baked texture url
+                type: 'player_head',
+                playerHeadTextureUrl: playerHeadTextureData.url,
+              }
+            : {
+                // not baked texture
+                type: 'vanilla',
+                resourceLocation: 'entity/player/slim/steve',
+              }
+          : {
+              // not player_head
+              type: 'vanilla',
+              resourceLocation: textureResourceLocation,
+            },
         modelResourceLocation,
         textureLayer,
         textureSize,
         tintindex: faceData.tintindex,
       })
-      materials.push(material)
     }
   }
 }
@@ -97,6 +121,7 @@ export type LoadModelMeshArgs = {
   textureSize?: [number, number]
   isItemModel: boolean
   isBlockShapedItemModel: boolean
+  playerHeadTextureData?: NonNullable<PlayerHeadProperties['texture']>
 }
 export async function loadModelMesh({
   modelResourceLocation,
@@ -105,10 +130,14 @@ export async function loadModelMesh({
   textureSize = [16, 16],
   isItemModel,
   isBlockShapedItemModel,
+  playerHeadTextureData,
 }: LoadModelMeshArgs) {
   const mergedGeometries: BufferGeometry[] = []
   const fullGeometryGroups: GeometryGroup[] = []
   const fullMaterials: Material[] = []
+
+  // player_head check
+  const isPlayerHead = modelResourceLocation === 'item/player_head'
 
   let elementIdx = 0
   for (const element of elements) {
@@ -148,7 +177,24 @@ export async function loadModelMesh({
       // BlockFace.tsx
 
       const material = await loadMaterial({
-        textureResourceLocation,
+        textureData: isPlayerHead
+          ? playerHeadTextureData?.baked &&
+            isValidTextureUrl(playerHeadTextureData.url)
+            ? {
+                // baked texture url
+                type: 'player_head',
+                playerHeadTextureUrl: playerHeadTextureData.url,
+              }
+            : {
+                // not baked texture
+                type: 'vanilla',
+                resourceLocation: 'entity/player/slim/steve',
+              }
+          : {
+              // not player_head
+              type: 'vanilla',
+              resourceLocation: textureResourceLocation,
+            },
         modelResourceLocation,
         textureLayer,
         textureSize,

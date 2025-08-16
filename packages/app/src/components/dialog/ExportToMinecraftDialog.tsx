@@ -7,7 +7,11 @@ import { getLogger } from '@/services/loggerService'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEntityRefStore } from '@/stores/entityRefStore'
-import { TextEffects } from '@/types'
+import {
+  MinimalTextureValue,
+  TextEffects,
+  isItemDisplayPlayerHead,
+} from '@/types'
 import { cn } from '@/utils'
 
 import Dialog from './Dialog'
@@ -177,7 +181,23 @@ const ExportToMinecraftDialog: FC = () => {
           } else if (entity.kind === 'item') {
             const displayText =
               entity.display != null ? `,item_display:"${entity.display}"` : ''
-            specificData = `item:{id:"${entity.type}"}${displayText}`
+
+            let itemExtraData = ''
+            if (isItemDisplayPlayerHead(entity)) {
+              const textureData = entity.playerHeadProperties.texture
+              if (textureData?.baked) {
+                const o = {
+                  textures: {
+                    SKIN: {
+                      url: textureData.url,
+                    },
+                  },
+                } satisfies MinimalTextureValue
+                const textureValueString = btoa(JSON.stringify(o))
+                itemExtraData = `,components:{"minecraft:profile":{properties:[{name:"textures",value:"${textureValueString}"}]}}`
+              }
+            }
+            specificData = `item:{id:"${entity.type}"${itemExtraData}}${displayText}`
           } else if (entity.kind === 'text') {
             // text
             const text = entity.text
