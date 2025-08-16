@@ -2,8 +2,8 @@ import fetcher from '@/fetcher'
 import { useCacheStore } from '@/stores/cacheStore'
 import {
   BlockStateApplyModelInfo,
+  BlockStatesFile,
   BlockstatesData,
-  CDNBlockStatesResponse,
 } from '@/types'
 import { stripMinecraftPrefix } from '@/utils'
 
@@ -56,7 +56,7 @@ export async function loadBlockstates(
 
   const rawBlockstatesData = (await fetcher(
     `/assets/minecraft/blockstates/${blockType}.json`,
-  )) as CDNBlockStatesResponse
+  )) as BlockStatesFile
 
   const blockDefaultValues: Record<string, string> =
     blockString != null

@@ -1,6 +1,6 @@
 import fetcher from '@/fetcher'
 import { useCacheStore } from '@/stores/cacheStore'
-import { CDNModelResponse, ModelData, ModelElement } from '@/types'
+import { ModelData, ModelElement, ModelFile } from '@/types'
 import { generateBuiltinItemModel, stripMinecraftPrefix } from '@/utils'
 
 import { getLogger } from '../loggerService'
@@ -38,7 +38,7 @@ export async function loadModel(resourceLocation: string) {
     if (resourceLocationData == null) {
       resourceLocationData = (await fetcher(
         `/assets/minecraft/models/${currentResourceLocation}.json`,
-      )) as CDNModelResponse
+      )) as ModelFile
       setModelJson(currentResourceLocation, resourceLocationData)
     }
 

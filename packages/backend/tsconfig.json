@@ -5,6 +5,8 @@
     "module": "ESNext",
     "skipLibCheck": true,
 
+    "noEmit": true,
+
     /* Bundler mode */
     "moduleResolution": "Bundler",
     "isolatedModules": true,

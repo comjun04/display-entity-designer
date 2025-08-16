@@ -3,14 +3,14 @@ import { cp, lstat, mkdir, readdir, readFile, writeFile } from 'fs/promises'
 import {
   join as pathJoin,
   resolve as pathResolve,
-  relative as pathRelative,
   dirname,
   basename,
 } from 'path'
 import { Open } from 'unzipper'
 import { rimraf } from 'rimraf'
 import { spawnSync } from 'child_process'
-import { BlockstatesFile, ModelFile } from './types'
+import { BlockStatesFile, ModelFile } from './types'
+import { VersionMetadata } from '@depl/shared'
 import {
   blockstatesDefaultValues,
   renderableBlockEntityModelTextures,
@@ -147,7 +147,7 @@ for await (const blockNameWithPrefix of [...Object.keys(generatedBlocksJson)]) {
       pathJoin(assetsMinecraftFolderPath, 'blockstates', `${blockName}.json`),
       'utf8',
     ),
-  ) as BlockstatesFile
+  ) as BlockStatesFile
 
   let canRender: boolean = false
   if ('variants' in blockstateFile) {
@@ -255,7 +255,7 @@ for (const assetFilePath of sharedAssets) {
 // write version metadata.json
 console.log('Writing metadata.json')
 const versionMetadata: VersionMetadata = {
-  mcVersion,
+  gameVersion: mcVersion,
   sharedAssets: {
     assetIndex: parseInt(versionData.assetIndex.id),
     unifontHexFilePath,

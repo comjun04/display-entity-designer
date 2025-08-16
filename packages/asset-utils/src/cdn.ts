@@ -41,11 +41,7 @@ async function calculateFileHash(filePath: string) {
   return hash
 }
 
-export async function downloadAssets(
-  versionId: string,
-  baseDirPath: string,
-  sharedAssetsBaseDir: string,
-) {
+export async function downloadAssets(versionId: string, baseDirPath: string) {
   // First fetch client.json to check the data of that version
   const versionData = await fetchVersionData(versionId)
 
@@ -61,7 +57,7 @@ export async function downloadAssets(
     const clientJarWriteStream = createWriteStream(clientJarFilePath)
     const clientJarFetchResponse = await fetch(versionData.downloads.client.url)
     await finished(
-      Readable.fromWeb(clientJarFetchResponse.body).pipe(clientJarWriteStream),
+      Readable.fromWeb(clientJarFetchResponse.body!).pipe(clientJarWriteStream),
     )
   }
 
@@ -76,7 +72,7 @@ export async function downloadAssets(
     const serverJarWriteStream = createWriteStream(serverJarFilePath)
     const serverJarFetchResponse = await fetch(versionData.downloads.server.url)
     await finished(
-      Readable.fromWeb(serverJarFetchResponse.body).pipe(serverJarWriteStream),
+      Readable.fromWeb(serverJarFetchResponse.body!).pipe(serverJarWriteStream),
     )
   }
 
@@ -119,7 +115,7 @@ export async function downloadSharedAssets(
     const fetchResponse = await fetch(
       `https://resources.download.minecraft.net/${obj.hash.slice(0, 2)}/${obj.hash}`,
     )
-    await finished(Readable.fromWeb(fetchResponse.body).pipe(writeStream))
+    await finished(Readable.fromWeb(fetchResponse.body!).pipe(writeStream))
 
     if (key.endsWith('.zip')) {
       // extract zip file contents

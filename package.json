@@ -6,6 +6,7 @@
     "app": "pnpm -F app",
     "asset-utils": "pnpm -F asset-utils",
     "backend": "pnpm -F backend",
+    "shared": "pnpm -F @depl/shared",
     "prepare": "husky"
   },
   "pnpm": {

@@ -3,7 +3,7 @@ import 'dotenv/config'
 import { serve } from '@hono/node-server'
 import app from './app'
 
-const port = process.env.PORT ?? 3001
+const port = parseInt(process.env.PORT ?? '3001')
 
 const server = serve(
   {
