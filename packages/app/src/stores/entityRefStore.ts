@@ -22,7 +22,7 @@ type EntityRefStoreState = {
     objectRef: MutableRefObject<Group>
   }
 
-  createEntityRef: (id: string) => void
+  createEntityRefs: (entityIds: string[]) => void
   deleteEntityRefs: (entityIds: string[]) => void
   clearEntityRefs: () => void
 }
@@ -49,21 +49,22 @@ export const useEntityRefStore = create<EntityRefStoreState>((set) => {
       objectRef: rootGroupRef,
     },
 
-    createEntityRef: (id) =>
+    createEntityRefs: (entityIds) =>
       set((state) => {
-        const ref = createRef<Group>() as unknown as MutableRefObject<Group>
-
-        if (state.entityRefs.has(id)) {
-          logger.warn(
-            `entityRefStore.createEntityRef(): creating entity ref data with entity id ${id} which already has one`,
-          )
-        }
-
         const newMap = new Map(state.entityRefs)
-        newMap.set(id, {
-          id,
-          objectRef: ref,
-        })
+        for (const id of entityIds) {
+          if (newMap.has(id)) {
+            logger.warn(
+              `entityRefStore.createEntityRefs(): creating entity ref data with entity id ${id} which already has one`,
+            )
+          }
+
+          const ref = createRef<Group>() as unknown as MutableRefObject<Group>
+          newMap.set(id, {
+            id,
+            objectRef: ref,
+          })
+        }
         return { entityRefs: newMap }
       }),
     deleteEntityRefs: (entityIds) =>
