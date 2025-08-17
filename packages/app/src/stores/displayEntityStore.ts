@@ -301,7 +301,12 @@ export const useDisplayEntityStore = create(
 
         entity.display = display
       }),
-    setBDEntityBlockstates: (id, blockstates) =>
+    setBDEntityBlockstates: (id, blockstates) => {
+      // 변경할 게 없으면 그냥 종료
+      if (Object.keys(blockstates).length < 1) {
+        return
+      }
+
       set((state) => {
         const entity = state.entities.get(id)
         if (entity == null) {
@@ -316,13 +321,9 @@ export const useDisplayEntityStore = create(
           return
         }
 
-        // 변경할 게 없으면 그냥 종료
-        if ([...Object.keys(blockstates)].length < 1) {
-          return
-        }
-
         entity.blockstates = { ...entity.blockstates, ...blockstates }
-      }),
+      })
+    },
     setTextDisplayProperties: (id, properties) =>
       set((state) => {
         const entity = state.entities.get(id)
