@@ -35,7 +35,6 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
     useShallow((state) => ({
       thisEntity: state.entities.get(id),
       thisEntitySelected: state.selectedEntityIds.includes(id),
-      setBDEntityBlockstates: state.setBDEntityBlockstates,
     })),
   )
 
