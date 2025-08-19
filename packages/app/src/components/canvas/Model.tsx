@@ -21,6 +21,10 @@ type ModelNewProps = {
   playerHeadTextureData?: NonNullable<PlayerHeadProperties['texture']>
 }
 
+const DisplayTranslationMinVec = new Vector3(-80, -80, -80)
+const DisplayTranslationMaxVec = new Vector3(80, 80, 80)
+const DisplayScaleMaxVec = new Vector3(4, 4, 4)
+
 const logger = getLogger('Model')
 
 const ModelNew: FC<ModelNewProps> = ({
@@ -137,11 +141,11 @@ const ModelNew: FC<ModelNewProps> = ({
   const displayTranslation = new Vector3(
     ...(displayInfo.translation ?? [0, 0, 0]),
   )
-    .max(new Vector3(-80, -80, -80))
-    .min(new Vector3(80, 80, 80))
+    .max(DisplayTranslationMinVec)
+    .min(DisplayTranslationMaxVec)
     .divideScalar(16)
   const displayScale = new Vector3(...(displayInfo.scale ?? [1, 1, 1])).min(
-    new Vector3(4, 4, 4),
+    DisplayScaleMaxVec,
   )
 
   return (
