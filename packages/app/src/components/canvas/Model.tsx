@@ -1,6 +1,14 @@
 import { invalidate } from '@react-three/fiber'
 import { FC, useEffect, useRef, useState } from 'react'
-import { Group, MathUtils, Mesh, Vector3 } from 'three'
+import {
+  Euler,
+  Group,
+  MathUtils,
+  Matrix4,
+  Mesh,
+  Quaternion,
+  Vector3,
+} from 'three'
 import { useShallow } from 'zustand/shallow'
 
 import { getLogger } from '@/services/loggerService'
@@ -21,9 +29,17 @@ type ModelNewProps = {
   playerHeadTextureData?: NonNullable<PlayerHeadProperties['texture']>
 }
 
+const OriginVec = new Vector3()
 const DisplayTranslationMinVec = new Vector3(-80, -80, -80)
 const DisplayTranslationMaxVec = new Vector3(80, 80, 80)
 const DisplayScaleMaxVec = new Vector3(4, 4, 4)
+
+const HalfBlockTranslatedMatrix = new Matrix4().makeTranslation(0.5, 0.5, 0.5)
+const ReverseHalfBlockTranslatedMatrix = new Matrix4().makeTranslation(
+  -0.5,
+  -0.5,
+  -0.5,
+)
 
 const logger = getLogger('Model')
 
@@ -71,7 +87,7 @@ const ModelNew: FC<ModelNewProps> = ({
     const { data: modelData, isBlockShapedItemModel } = modelDataTemp
 
     const fn = async () => {
-      const loadResult = await loadModelMesh({
+      const loadedMesh = await loadModelMesh({
         modelResourceLocation: initialResourceLocation,
         elements: modelData.elements,
         textures: modelData.textures,
@@ -81,7 +97,7 @@ const ModelNew: FC<ModelNewProps> = ({
         playerHeadTextureData,
       })
 
-      if (loadResult == null) {
+      if (loadedMesh == null) {
         logger.error(`Failed to load model mesh for ${initialResourceLocation}`)
         return
       }
@@ -89,7 +105,61 @@ const ModelNew: FC<ModelNewProps> = ({
       if (mergedMeshRef.current != null) {
         mergedMeshRef.current.geometry.dispose()
       }
-      mergedMeshRef.current = loadResult
+
+      mergedMeshRef.current = loadedMesh
+
+      // display info
+      const { display } = modelData
+      const displayInfo =
+        displayType != null ? (display[displayType] ?? {}) : {}
+      const displayRotation = (displayInfo.rotation ?? [0, 0, 0]).map((d) =>
+        MathUtils.degToRad(d),
+      ) as Number3Tuple
+      const displayTranslation = new Vector3(
+        ...(displayInfo.translation ?? [0, 0, 0]),
+      )
+        .max(DisplayTranslationMinVec)
+        .min(DisplayTranslationMaxVec)
+        .divideScalar(16)
+      const displayScale = new Vector3(...(displayInfo.scale ?? [1, 1, 1])).min(
+        DisplayScaleMaxVec,
+      )
+
+      loadedMesh.matrixAutoUpdate = false
+      loadedMesh.matrix
+        .makeTranslation(displayTranslation) // set display translation first
+        .premultiply(
+          // set display rotation and scale
+          new Matrix4().compose(
+            OriginVec,
+            new Quaternion().setFromEuler(new Euler(...displayRotation)),
+            displayScale,
+          ),
+        )
+        .premultiply(ReverseHalfBlockTranslatedMatrix)
+        .premultiply(
+          // set x rotation
+          new Matrix4().makeRotationFromQuaternion(
+            new Quaternion().setFromEuler(
+              new Euler(MathUtils.degToRad(-xRotation), 0, 0),
+            ),
+          ),
+        )
+        .premultiply(
+          // set y rotation
+          new Matrix4().makeRotationFromQuaternion(
+            new Quaternion().setFromEuler(
+              new Euler(0, MathUtils.degToRad(-yRotation), 0),
+            ),
+          ),
+        )
+        .premultiply(HalfBlockTranslatedMatrix)
+      loadedMesh.matrix.decompose(
+        loadedMesh.position,
+        loadedMesh.quaternion,
+        loadedMesh.scale,
+      )
+
       setMeshLoaded(true)
     }
 
@@ -124,54 +194,14 @@ const ModelNew: FC<ModelNewProps> = ({
   }
 
   const { data: modelData } = modelDataTemp
-
-  const { display, elements } = modelData
+  const { elements } = modelData
 
   // elements가 없을 경우 렌더링할 것이 없으므로 그냥 null을 리턴
   if (elements == null || elements.length < 1) {
     return null
   }
 
-  // display info
-
-  const displayInfo = displayType != null ? (display[displayType] ?? {}) : {}
-  const displayRotation = (displayInfo.rotation ?? [0, 0, 0]).map((d) =>
-    MathUtils.degToRad(d),
-  ) as Number3Tuple
-  const displayTranslation = new Vector3(
-    ...(displayInfo.translation ?? [0, 0, 0]),
-  )
-    .max(DisplayTranslationMinVec)
-    .min(DisplayTranslationMaxVec)
-    .divideScalar(16)
-  const displayScale = new Vector3(...(displayInfo.scale ?? [1, 1, 1])).min(
-    DisplayScaleMaxVec,
-  )
-
-  return (
-    // set y rotation
-    <group
-      rotation={[0, MathUtils.degToRad(-yRotation), 0]}
-      position={[0.5, 0.5, 0.5]}
-    >
-      <group position={[-0.5, -0.5, -0.5]}>
-        {/* set x rotation */}
-        <group
-          rotation={[MathUtils.degToRad(-xRotation), 0, 0]}
-          position={[0.5, 0.5, 0.5]}
-        >
-          <group position={[-0.5, -0.5, -0.5]}>
-            {/* set display translation, rotation and scale */}
-            <group rotation={displayRotation} scale={displayScale}>
-              <group position={displayTranslation} ref={groupRef}>
-                {/* ref로 직접 mesh 추가 */}
-              </group>
-            </group>
-          </group>
-        </group>
-      </group>
-    </group>
-  )
+  return <group ref={groupRef}>{/* ref로 직접 mesh 추가 */}</group>
 }
 
 export default ModelNew
