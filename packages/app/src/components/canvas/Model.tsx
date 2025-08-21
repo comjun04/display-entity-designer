@@ -1,14 +1,6 @@
 import { invalidate } from '@react-three/fiber'
 import { FC, useEffect, useRef, useState } from 'react'
-import {
-  Euler,
-  Group,
-  MathUtils,
-  Matrix4,
-  Mesh,
-  Quaternion,
-  Vector3,
-} from 'three'
+import { Euler, MathUtils, Matrix4, Mesh, Quaternion, Vector3 } from 'three'
 import { useShallow } from 'zustand/shallow'
 
 import { getLogger } from '@/services/loggerService'
@@ -50,7 +42,6 @@ const ModelNew: FC<ModelNewProps> = ({
   yRotation = 0,
   playerHeadTextureData,
 }) => {
-  const groupRef = useRef<Group>(null)
   const mergedMeshRef = useRef<Mesh>()
   const [meshLoaded, setMeshLoaded] = useState(false)
 
@@ -177,12 +168,8 @@ const ModelNew: FC<ModelNewProps> = ({
   ])
 
   useEffect(() => {
-    if (mergedMeshRef.current == null) return
-
     if (meshLoaded) {
-      groupRef.current?.add(mergedMeshRef.current)
-    } else {
-      groupRef.current?.remove(mergedMeshRef.current)
+      invalidate()
     }
     invalidate()
   }, [meshLoaded])
@@ -201,7 +188,9 @@ const ModelNew: FC<ModelNewProps> = ({
     return null
   }
 
-  return <group ref={groupRef}>{/* ref로 직접 mesh 추가 */}</group>
+  if (!meshLoaded) return null
+
+  return <primitive object={mergedMeshRef.current!} />
 }
 
 export default ModelNew
