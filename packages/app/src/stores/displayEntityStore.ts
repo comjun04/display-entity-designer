@@ -113,7 +113,7 @@ export const useDisplayEntityStore = create(
       const id = generateId(ENTITY_ID_LENGTH)
 
       set((state) => {
-        useEntityRefStore.getState().createEntityRef(id)
+        useEntityRefStore.getState().createEntityRefs([id])
 
         if (kind === 'block') {
           state.entities.set(id, {
@@ -301,7 +301,12 @@ export const useDisplayEntityStore = create(
 
         entity.display = display
       }),
-    setBDEntityBlockstates: (id, blockstates) =>
+    setBDEntityBlockstates: (id, blockstates) => {
+      // 변경할 게 없으면 그냥 종료
+      if (Object.keys(blockstates).length < 1) {
+        return
+      }
+
       set((state) => {
         const entity = state.entities.get(id)
         if (entity == null) {
@@ -316,13 +321,9 @@ export const useDisplayEntityStore = create(
           return
         }
 
-        // 변경할 게 없으면 그냥 종료
-        if ([...Object.keys(blockstates)].length < 1) {
-          return
-        }
-
         entity.blockstates = { ...entity.blockstates, ...blockstates }
-      }),
+      })
+    },
     setTextDisplayProperties: (id, properties) =>
       set((state) => {
         const entity = state.entities.get(id)
@@ -422,7 +423,7 @@ export const useDisplayEntityStore = create(
       }),
 
     bulkImport: async (items) => {
-      const { createEntityRef } = useEntityRefStore.getState()
+      const { createEntityRefs } = useEntityRefStore.getState()
 
       const entities = new Map<string, DisplayEntity>()
 
@@ -536,9 +537,7 @@ export const useDisplayEntityStore = create(
 
       await preloadResources([...entities.values()])
 
-      entities.forEach((entity) => {
-        createEntityRef(entity.id)
-      })
+      createEntityRefs([...entities.keys()])
       set({ entities })
     },
     bulkImportFromBDE: async (saveData) => {
@@ -698,10 +697,9 @@ export const useDisplayEntityStore = create(
 
       await preloadResources([...entities.values()])
 
-      const { createEntityRef } = useEntityRefStore.getState()
-      entities.forEach((entity) => {
-        createEntityRef(entity.id)
-      })
+      const { createEntityRefs } = useEntityRefStore.getState()
+
+      createEntityRefs([...entities.keys()])
       set({ entities })
     },
     exportAll: () => {
@@ -836,7 +834,7 @@ export const useDisplayEntityStore = create(
           selectedEntity.position[2] -= box3.min.z
         }
 
-        useEntityRefStore.getState().createEntityRef(groupId)
+        useEntityRefStore.getState().createEntityRefs([groupId])
 
         // unshift 이제 더 이상 안됨 흑흑
         state.entities.set(groupId, {

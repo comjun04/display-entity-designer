@@ -1,4 +1,4 @@
-import { MutableRefObject } from 'react'
+import { MutableRefObject, createRef } from 'react'
 import { Group } from 'three'
 import { create } from 'zustand'
 
@@ -14,7 +14,6 @@ type EntityRefStoreState = {
     string,
     {
       id: string
-      refAvailable: boolean
       objectRef: MutableRefObject<Group>
     }
   >
@@ -23,7 +22,7 @@ type EntityRefStoreState = {
     objectRef: MutableRefObject<Group>
   }
 
-  createEntityRef: (id: string) => void
+  createEntityRefs: (entityIds: string[]) => void
   deleteEntityRefs: (entityIds: string[]) => void
   clearEntityRefs: () => void
 }
@@ -31,7 +30,7 @@ type EntityRefStoreState = {
 // immer middleware로 전체 적용하지 않고 필요한 부분만 produce로 따로 적용
 // DO NOT USE IMMER ON THIS STORE
 
-export const useEntityRefStore = create<EntityRefStoreState>((set, get) => {
+export const useEntityRefStore = create<EntityRefStoreState>((set) => {
   const rootGroupRef = ((node: Group) => {
     rootGroupRef.current = node
 
@@ -50,43 +49,22 @@ export const useEntityRefStore = create<EntityRefStoreState>((set, get) => {
       objectRef: rootGroupRef,
     },
 
-    createEntityRef: (id) =>
+    createEntityRefs: (entityIds) =>
       set((state) => {
-        const ref = ((node: Group) => {
-          ref.current = node
-
-          const refAvailable = node != null
-
-          // console.log(`id: ${id}, refAvailable: ${refAvailable}`, node)
-
-          // entity ref 데이터가 이미 삭제된 경우 다시 추가하지 말고 중단
-          // 엔티티 삭제할 때 필요없는 데이터 재추가를 막아서 삭제 처리 시간을 줄임
-          if (!get().entityRefs.has(id)) return
-
-          set((state) => {
-            if (state.entityRefs.has(id)) {
-              const existingData = state.entityRefs.get(id)!
-              const newMap = new Map(state.entityRefs)
-              newMap.set(id, { ...existingData, refAvailable })
-              return { entityRefs: newMap }
-            }
-
-            return {}
-          })
-        }) as RefCallbackWithMutableRefObject<Group>
-
-        if (state.entityRefs.has(id)) {
-          logger.warn(
-            `entityRefStore.createEntityRef(): creating entity ref data with entity id ${id} which already has one`,
-          )
-        }
-
         const newMap = new Map(state.entityRefs)
-        newMap.set(id, {
-          id,
-          refAvailable: false,
-          objectRef: ref,
-        })
+        for (const id of entityIds) {
+          if (newMap.has(id)) {
+            logger.warn(
+              `entityRefStore.createEntityRefs(): creating entity ref data with entity id ${id} which already has one`,
+            )
+          }
+
+          const ref = createRef<Group>() as unknown as MutableRefObject<Group>
+          newMap.set(id, {
+            id,
+            objectRef: ref,
+          })
+        }
         return { entityRefs: newMap }
       }),
     deleteEntityRefs: (entityIds) =>

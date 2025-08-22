@@ -42,18 +42,14 @@ const TransformControls: FC = () => {
   const firstSelectedEntityId =
     selectedEntityIds.length > 0 ? selectedEntityIds[0] : null
 
-  const { firstSelectedEntityRefData, selectedEntityRefAllAvailable } =
-    useEntityRefStore(
-      useShallow((state) => ({
-        firstSelectedEntityRefData:
-          firstSelectedEntityId != null
-            ? state.entityRefs.get(firstSelectedEntityId)
-            : undefined,
-        selectedEntityRefAllAvailable: selectedEntityIds.every(
-          (id) => state.entityRefs.get(id)?.refAvailable,
-        ),
-      })),
-    )
+  const { firstSelectedEntityRefData } = useEntityRefStore(
+    useShallow((state) => ({
+      firstSelectedEntityRefData:
+        firstSelectedEntityId != null
+          ? state.entityRefs.get(firstSelectedEntityId)
+          : undefined,
+    })),
+  )
   const { mode, setUsingTransformControl, setSelectionBaseTransformation } =
     useEditorStore(
       useShallow((state) => ({
@@ -80,17 +76,18 @@ const TransformControls: FC = () => {
   >([])
 
   const updateBoundingBox = useCallback(() => {
-    if (boundingBoxHelperRef.current == null || !selectedEntityRefAllAvailable)
-      return
+    if (boundingBoxHelperRef.current == null) return
 
     const box = boundingBoxHelperRef.current.box
     box.set(infinityVector.clone(), minusInfinityVector.clone()) // 넓이 초기화
 
     selectedEntityIds.forEach((entityId) => {
       const refData = useEntityRefStore.getState().entityRefs.get(entityId)!
-      box.expandByObject(refData.objectRef.current)
+      if (refData.objectRef.current != null) {
+        box.expandByObject(refData.objectRef.current)
+      }
     })
-  }, [selectedEntityIds, selectedEntityRefAllAvailable])
+  }, [selectedEntityIds])
 
   useEffect(() => {
     if (pivotRef.current == null) return
@@ -120,8 +117,6 @@ const TransformControls: FC = () => {
     )
 
     selectedEntityInitialTransformations.current = []
-
-    if (!selectedEntityRefAllAvailable) return
 
     for (const entity of selectedEntities) {
       const refData = useEntityRefStore.getState().entityRefs.get(entity.id)!
@@ -154,13 +149,7 @@ const TransformControls: FC = () => {
     if (selectedEntityIds.length > 1) {
       updateBoundingBox()
     }
-  }, [
-    entities,
-    selectedEntityIds,
-    firstSelectedEntityId,
-    updateBoundingBox,
-    selectedEntityRefAllAvailable,
-  ])
+  }, [entities, selectedEntityIds, firstSelectedEntityId, updateBoundingBox])
 
   useEffect(() => {
     const handler = (evt: KeyboardEvent) => {

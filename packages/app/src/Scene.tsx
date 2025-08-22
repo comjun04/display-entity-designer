@@ -49,6 +49,10 @@ const Scene: FC = () => {
       scene={{
         background: new Color(0x222222),
       }}
+      gl={{
+        antialias: false,
+        alpha: false,
+      }}
       style={{
         touchAction: 'none',
       }}
