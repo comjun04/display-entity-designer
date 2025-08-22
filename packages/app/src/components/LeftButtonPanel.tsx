@@ -47,7 +47,7 @@ const LeftButtonPanel: FC = () => {
           side="right"
           sideOffset={10}
           align="start"
-          className="min-w-52 origin-top-left p-2 data-[state=open]:slide-in-from-left-0"
+          className="origin-top-left data-[state=open]:slide-in-from-left-0 sm:min-w-52"
         >
           <DropdownMenuItem className="w-full" onClick={openFromFile}>
             <div className="flex w-full flex-row items-center gap-2 text-sm">
