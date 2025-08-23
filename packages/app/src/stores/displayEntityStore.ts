@@ -6,7 +6,6 @@ import { immer } from 'zustand/middleware/immer'
 
 import { getLogger } from '@/services/loggerService'
 import { preloadResources } from '@/services/resources/preload'
-import { useEntityRefStore } from '@/stores/entityRefStore'
 import {
   BDEngineSaveData,
   BDEngineSaveDataItem,
@@ -26,6 +25,8 @@ import {
 } from '@/types'
 
 import { useEditorStore } from './editorStore'
+import { useEntityRefStore } from './entityRefStore'
+import { useHistoryStore } from './historyStore'
 
 const logger = getLogger('displayEntityStore')
 
@@ -127,6 +128,7 @@ export const useDisplayEntityStore = create(
       set((state) => {
         for (const param of params) {
           const id = param.id ?? generateId(ENTITY_ID_LENGTH)
+          entityIds.push(id)
 
           if (param.kind === 'block') {
             state.entities.set(id, {
@@ -186,9 +188,20 @@ export const useDisplayEntityStore = create(
               textOpacity: param.textOpacity ?? 255,
             })
           }
-        }
 
-        useEntityRefStore.getState().createEntityRefs(entityIds)
+          useEntityRefStore.getState().createEntityRefs(entityIds)
+
+          if (!skipHistoryAdd) {
+            const createdEntities = entityIds.map(
+              (id) => state.entities.get(id)!,
+            )
+            useHistoryStore.getState().addHistory({
+              type: 'createEntities',
+              beforeState: {},
+              afterState: { entities: createdEntities },
+            })
+          }
+        }
       })
     },
     setSelected: (ids) =>

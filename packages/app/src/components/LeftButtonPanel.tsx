@@ -14,6 +14,7 @@ import { openFromFile, saveToFile } from '@/services/fileService'
 import { getLogger } from '@/services/loggerService'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useEditorStore } from '@/stores/editorStore'
+import { useHistoryStore } from '@/stores/historyStore'
 
 import FloatingButton from './FloatingButton'
 import MobileDragHoldButton from './MobileDragHoldButton'
@@ -31,16 +32,20 @@ import {
 const logger = getLogger('LeftButtonPanel')
 
 const LeftButtonPanel: FC = () => {
-  const { mode, setMode, undoHistory, redoHistory } = useEditorStore(
+  const { mode, setMode } = useEditorStore(
     useShallow((state) => ({
       mode: state.mode,
       setMode: state.setMode,
-      undoHistory: state.undoHistory,
-      redoHistory: state.redoHistory,
     })),
   )
   const { setOpenedDialog } = useDialogStore(
     useShallow((state) => ({ setOpenedDialog: state.setOpenedDialog })),
+  )
+  const { undoHistory, redoHistory } = useHistoryStore(
+    useShallow((state) => ({
+      undoHistory: state.undoHistory,
+      redoHistory: state.redoHistory,
+    })),
   )
 
   return (
@@ -111,7 +116,7 @@ const LeftButtonPanel: FC = () => {
             <LuUndo size={24} />
           </FloatingButton>
         </Tooltip>
-        <Tooltip content="Rndo" placement="right" delay={300} closeDelay={0}>
+        <Tooltip content="Redo" placement="right" delay={300} closeDelay={0}>
           <FloatingButton onClick={() => redoHistory()}>
             <LuRedo size={24} />
           </FloatingButton>
