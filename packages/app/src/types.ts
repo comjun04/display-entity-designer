@@ -272,3 +272,19 @@ export interface MinimalTextureValue {
 }
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
+
+export type History =
+  | {
+      type: 'createEntities'
+      beforeState: Record<string, never>
+      afterState: {
+        entities: DisplayEntity[]
+      }
+    }
+  | {
+      type: 'deleteEntities'
+      beforeState: {
+        entities: DisplayEntity[]
+      }
+      afterState: Record<string, never>
+    }

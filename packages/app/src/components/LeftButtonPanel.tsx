@@ -1,7 +1,13 @@
 import { Tooltip } from '@heroui/tooltip'
 import { FC } from 'react'
 import { IoMove } from 'react-icons/io5'
-import { LuMenu, LuMoveDiagonal, LuRotate3D } from 'react-icons/lu'
+import {
+  LuMenu,
+  LuMoveDiagonal,
+  LuRedo,
+  LuRotate3D,
+  LuUndo,
+} from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
 import { openFromFile, saveToFile } from '@/services/fileService'
@@ -25,10 +31,12 @@ import {
 const logger = getLogger('LeftButtonPanel')
 
 const LeftButtonPanel: FC = () => {
-  const { mode, setMode } = useEditorStore(
+  const { mode, setMode, undoHistory, redoHistory } = useEditorStore(
     useShallow((state) => ({
       mode: state.mode,
       setMode: state.setMode,
+      undoHistory: state.undoHistory,
+      redoHistory: state.redoHistory,
     })),
   )
   const { setOpenedDialog } = useDialogStore(
@@ -36,7 +44,7 @@ const LeftButtonPanel: FC = () => {
   )
 
   return (
-    <div className="absolute left-0 top-0 z-[5] ml-4 mt-4 flex flex-col gap-2">
+    <div className="absolute left-0 top-0 z-[5] ml-4 mt-4 flex flex-col items-start gap-2">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <FloatingButton>
@@ -96,6 +104,19 @@ const LeftButtonPanel: FC = () => {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <div className="flex flex-row gap-2">
+        <Tooltip content="Undo" placement="right" delay={300} closeDelay={0}>
+          <FloatingButton onClick={() => undoHistory()}>
+            <LuUndo size={24} />
+          </FloatingButton>
+        </Tooltip>
+        <Tooltip content="Rndo" placement="right" delay={300} closeDelay={0}>
+          <FloatingButton onClick={() => redoHistory()}>
+            <LuRedo size={24} />
+          </FloatingButton>
+        </Tooltip>
+      </div>
 
       <Tooltip
         content="Translate mode"

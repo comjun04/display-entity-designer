@@ -6,6 +6,7 @@ import { immer } from 'zustand/middleware/immer'
 import { getLogger } from '@/services/loggerService'
 import {
   DeepPartial,
+  History,
   LogLevel,
   Number3Tuple,
   PartialNumber3Tuple,
@@ -74,6 +75,12 @@ type EditorState = {
 
   settings: Settings
   setSettings: (newSettings: DeepPartial<Settings>) => void
+
+  historyUndoStack: History[]
+  historyRedoStack: History[]
+  addHistory: (history: History) => void
+  undoHistory: () => void
+  redoHistory: () => void
 
   resetProject: () => void
 }
@@ -184,6 +191,32 @@ export const useEditorStore = create(
           } catch (err) {
             logger.error(err)
           }
+        }),
+
+      historyUndoStack: [],
+      historyRedoStack: [],
+      addHistory: (history) =>
+        set((state) => {
+          state.historyUndoStack.push(history)
+          state.historyRedoStack.length = 0
+        }),
+      undoHistory: () =>
+        set((state) => {
+          const history = state.historyUndoStack.pop()
+          if (history == null) return
+
+          // TODO: apply beforeState
+
+          state.historyRedoStack.push(history)
+        }),
+      redoHistory: () =>
+        set((state) => {
+          const history = state.historyRedoStack.pop()
+          if (history == null) return
+
+          // TODO: apply afterState
+
+          state.historyUndoStack.push(history)
         }),
 
       resetProject: () =>
