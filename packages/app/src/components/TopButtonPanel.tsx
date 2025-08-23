@@ -73,7 +73,9 @@ const TopButtonPanel: FC = () => {
         >
           <FloatingButton
             onClick={() => {
-              useDisplayEntityStore.getState().createNew('text', 'Enter Text')
+              useDisplayEntityStore
+                .getState()
+                .createNew([{ kind: 'text', text: 'Enter Text' }])
             }}
           >
             <LuType size={24} />
@@ -92,7 +94,9 @@ const TopButtonPanel: FC = () => {
         >
           <FloatingButton
             onClick={() => {
-              useDisplayEntityStore.getState().createNew('item', 'player_head')
+              useDisplayEntityStore
+                .getState()
+                .createNew([{ kind: 'item', type: 'player_head' }])
             }}
           >
             <LuSmile size={24} />

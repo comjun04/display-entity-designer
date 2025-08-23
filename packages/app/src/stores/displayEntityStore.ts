@@ -10,10 +10,12 @@ import { useEntityRefStore } from '@/stores/entityRefStore'
 import {
   BDEngineSaveData,
   BDEngineSaveDataItem,
+  BlockDisplayEntity,
   DeepPartial,
   DisplayEntity,
   DisplayEntityGroup,
   DisplayEntitySaveDataItem,
+  ItemDisplayEntity,
   ModelDisplayPositionKey,
   Number3Tuple,
   PartialNumber3Tuple,
@@ -57,7 +59,17 @@ export type DisplayEntityState = {
    * @param typeOrText `kind`가 `block` 또는 `item`일 경우 블록/아이템 id, `text`일 경우 입력할 텍스트 (JSON Format)
    * @returns 생성된 디스플레이 엔티티 데이터 id
    */
-  createNew: (kind: DisplayEntity['kind'], typeOrText: string) => string
+  createNew: (
+    params: (
+      | (Pick<BlockDisplayEntity, 'kind' | 'type'> &
+          Partial<Omit<BlockDisplayEntity, 'kind' | 'type'>>)
+      | (Pick<ItemDisplayEntity, 'kind' | 'type'> &
+          Partial<Omit<ItemDisplayEntity, 'kind' | 'type'>>)
+      | (Pick<TextDisplayEntity, 'kind' | 'text'> &
+          Partial<Omit<TextDisplayEntity, 'kind' | 'text'>>)
+    )[],
+    skipHistoryAdd?: boolean,
+  ) => void
   setSelected: (ids: string[]) => void
   addToSelected: (id: string) => void
   setEntityTranslation: (id: string, translation: PartialNumber3Tuple) => void
@@ -109,71 +121,75 @@ export const useDisplayEntityStore = create(
     entities: new Map(),
     selectedEntityIds: [],
 
-    createNew: (kind, typeOrText) => {
-      const id = generateId(ENTITY_ID_LENGTH)
+    createNew: (params, skipHistoryAdd) => {
+      const entityIds: string[] = []
 
       set((state) => {
-        useEntityRefStore.getState().createEntityRefs([id])
+        for (const param of params) {
+          const id = param.id ?? generateId(ENTITY_ID_LENGTH)
 
-        if (kind === 'block') {
-          state.entities.set(id, {
-            kind: 'block',
-            id,
-            type: typeOrText,
-            size: [1, 1, 1],
-            position: [0, 0, 0],
-            rotation: [0, 0, 0],
-            display: null,
-            blockstates: {},
-          })
-        } else if (kind === 'item') {
-          state.entities.set(id, {
-            kind: 'item',
-            id,
-            type: typeOrText,
-            size: [1, 1, 1],
-            position: typeOrText === 'player_head' ? [0, 0.5, 0] : [0, 0, 0],
-            rotation: [0, 0, 0],
-            display: null,
-          })
+          if (param.kind === 'block') {
+            state.entities.set(id, {
+              kind: 'block',
+              id,
+              type: param.type,
+              size: param.size ?? [1, 1, 1],
+              position: param.position ?? [0, 0, 0],
+              rotation: param.rotation ?? [0, 0, 0],
+              display: param.display ?? null,
+              blockstates: param.blockstates ?? {},
+            })
+          } else if (param.kind === 'item') {
+            state.entities.set(id, {
+              kind: 'item',
+              id,
+              type: param.type,
+              size: param.size ?? [1, 1, 1],
+              position:
+                param.position ??
+                (param.type === 'player_head' ? [0, 0.5, 0] : [0, 0, 0]),
+              rotation: param.rotation ?? [0, 0, 0],
+              display: param.display ?? null,
+            })
 
-          const entity = state.entities.get(id)!
-          if (isItemDisplayPlayerHead(entity)) {
-            // is player_head
-            entity.playerHeadProperties = {
-              texture: {
-                baked: false,
-              },
+            const entity = state.entities.get(id)!
+            if (isItemDisplayPlayerHead(entity)) {
+              // is player_head
+              entity.playerHeadProperties = {
+                texture: {
+                  baked: false,
+                },
+              }
             }
+          } else if (param.kind === 'text') {
+            state.entities.set(id, {
+              kind: 'text',
+              id,
+              text: param.text,
+              textColor: param.textColor ?? 0xffffffff, // #ffffffff, white
+              textEffects: param.textEffects ?? {
+                bold: false,
+                italic: false,
+                underlined: false,
+                strikethrough: false,
+                obfuscated: false,
+              },
+              size: param.size ?? [1, 1, 1],
+              position: param.position ?? [0, 0, 0],
+              rotation: param.rotation ?? [0, 0, 0],
+              alignment: param.alignment ?? 'center',
+              backgroundColor: param.backgroundColor ?? 0xff000000, // #ff000000, black
+              defaultBackground: param.defaultBackground ?? false,
+              lineWidth: param.lineWidth ?? 200,
+              seeThrough: param.seeThrough ?? false,
+              shadow: param.shadow ?? false,
+              textOpacity: param.textOpacity ?? 255,
+            })
           }
-        } else if (kind === 'text') {
-          state.entities.set(id, {
-            kind: 'text',
-            id,
-            text: typeOrText,
-            textColor: 0xffffffff, // #ffffffff, white
-            textEffects: {
-              bold: false,
-              italic: false,
-              underlined: false,
-              strikethrough: false,
-              obfuscated: false,
-            },
-            size: [1, 1, 1],
-            position: [0, 0, 0],
-            rotation: [0, 0, 0],
-            alignment: 'center',
-            backgroundColor: 0xff000000, // #ff000000, black
-            defaultBackground: false,
-            lineWidth: 200,
-            seeThrough: false,
-            shadow: false,
-            textOpacity: 255,
-          })
         }
-      })
 
-      return id
+        useEntityRefStore.getState().createEntityRefs(entityIds)
+      })
     },
     setSelected: (ids) =>
       set((state) => {
@@ -535,7 +551,9 @@ export const useDisplayEntityStore = create(
 
       f(items)
 
-      await preloadResources([...entities.values()])
+      const entitiesArr = [...entities.values()]
+
+      await preloadResources(entitiesArr)
 
       createEntityRefs([...entities.keys()])
       set({ entities })
