@@ -130,7 +130,6 @@ export const useDisplayEntityStore = create(
       set((state) => {
         for (const param of params) {
           const id = param.id ?? generateId(ENTITY_ID_LENGTH)
-          entityIds.push(id)
 
           if (param.kind === 'block') {
             state.entities.set(id, {
@@ -189,7 +188,22 @@ export const useDisplayEntityStore = create(
               shadow: param.shadow ?? false,
               textOpacity: param.textOpacity ?? 255,
             })
+          } else if (param.kind === 'group') {
+            if (param.children.length < 1) {
+              continue
+            }
+
+            state.entities.set(id, {
+              kind: 'group',
+              id,
+              children: param.children,
+              size: param.size ?? [1, 1, 1],
+              position: param.position ?? [0, 0, 0],
+              rotation: param.rotation ?? [1, 1, 1],
+            })
           }
+
+          entityIds.push(id)
         }
 
         useEntityRefStore.getState().createEntityRefs(entityIds)
