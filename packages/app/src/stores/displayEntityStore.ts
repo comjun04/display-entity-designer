@@ -68,6 +68,8 @@ export type DisplayEntityState = {
           Partial<Omit<ItemDisplayEntity, 'kind' | 'type'>>)
       | (Pick<TextDisplayEntity, 'kind' | 'text'> &
           Partial<Omit<TextDisplayEntity, 'kind' | 'text'>>)
+      | (Pick<DisplayEntityGroup, 'kind' | 'children'> &
+          Partial<Omit<DisplayEntityGroup, 'kind' | 'children'>>)
     )[],
     skipHistoryAdd?: boolean,
   ) => void
@@ -105,7 +107,7 @@ export type DisplayEntityState = {
     entityId: string,
     data: PlayerHeadProperties,
   ) => void
-  deleteEntities: (entityIds: string[]) => void
+  deleteEntities: (entityIds: string[], skipHistoryAdd?: boolean) => void
 
   bulkImport: (items: DisplayEntitySaveDataItem[]) => Promise<void>
   bulkImportFromBDE: (saveData: BDEngineSaveData) => Promise<void>
@@ -398,11 +400,11 @@ export const useDisplayEntityStore = create(
 
         entity.playerHeadProperties = data
       }),
-    deleteEntities: (entityIds) =>
+    deleteEntities: (entityIds, skipHistoryAdd) =>
       set((state) => {
         const deletePendingEntityIds = new Set<string>()
 
-        const recursivelyDelete = (ids: string[]) => {
+        const recursivelyFlagForDeletion = (ids: string[]) => {
           for (const id of ids) {
             // 이미 삭제 대상인 entity일 경우 스킵
             // 이 entity의 parent entity가 삭제 대상이라 이미 처리한 경우임
@@ -431,18 +433,33 @@ export const useDisplayEntityStore = create(
             if (entity.kind === 'group') {
               // children entity에서 parent entity의 children id 배열을 건드릴 경우 for ... of 배열 순환에 문제가 생김
               // index가 하나씩 앞으로 당겨지면서 일부 엔티티가 삭제 처리가 안됨
-              recursivelyDelete(entity.children.slice())
+              recursivelyFlagForDeletion(entity.children.slice())
             }
 
             deletePendingEntityIds.add(id)
           }
         }
 
-        recursivelyDelete(entityIds)
+        recursivelyFlagForDeletion(entityIds)
 
         useEntityRefStore
           .getState()
           .deleteEntityRefs([...deletePendingEntityIds.values()])
+
+        // add history
+        if (!skipHistoryAdd) {
+          // get the non-proxied entities
+          const { entities } = get()
+          const deletedEntities = [...deletePendingEntityIds].map(
+            (id) => entities.get(id)!,
+          )
+          useHistoryStore.getState().addHistory({
+            type: 'deleteEntities',
+            beforeState: { entities: deletedEntities },
+            afterState: {},
+          })
+        }
+
         for (const entityIdToDelete of deletePendingEntityIds) {
           state.entities.delete(entityIdToDelete)
         }

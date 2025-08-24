@@ -34,7 +34,8 @@ export const useHistoryStore = create(
 
             state.undoStack.pop()
 
-            const { deleteEntities } = useDisplayEntityStore.getState()
+            const { createNew, deleteEntities } =
+              useDisplayEntityStore.getState()
 
             // TODO: apply beforeState
             switch (history.type) {
@@ -45,6 +46,7 @@ export const useHistoryStore = create(
                 break
               }
               case 'deleteEntities': {
+                createNew(history.beforeState.entities, true)
                 break
               }
             }
@@ -66,7 +68,8 @@ export const useHistoryStore = create(
 
             state.redoStack.pop()
 
-            const { createNew } = useDisplayEntityStore.getState()
+            const { createNew, deleteEntities } =
+              useDisplayEntityStore.getState()
 
             // TODO: apply afterState
             switch (history.type) {
@@ -75,6 +78,10 @@ export const useHistoryStore = create(
                 break
               }
               case 'deleteEntities': {
+                deleteEntities(
+                  history.beforeState.entities.map((entity) => entity.id),
+                  true,
+                )
                 break
               }
             }
