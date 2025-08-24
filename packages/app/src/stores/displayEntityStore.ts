@@ -136,6 +136,7 @@ export const useDisplayEntityStore = create(
               kind: 'block',
               id,
               type: param.type,
+              parent: param.parent,
               size: param.size ?? [1, 1, 1],
               position: param.position ?? [0, 0, 0],
               rotation: param.rotation ?? [0, 0, 0],
@@ -147,6 +148,7 @@ export const useDisplayEntityStore = create(
               kind: 'item',
               id,
               type: param.type,
+              parent: param.parent,
               size: param.size ?? [1, 1, 1],
               position:
                 param.position ??
@@ -168,6 +170,7 @@ export const useDisplayEntityStore = create(
             state.entities.set(id, {
               kind: 'text',
               id,
+              parent: param.parent,
               text: param.text,
               textColor: param.textColor ?? 0xffffffff, // #ffffffff, white
               textEffects: param.textEffects ?? {
@@ -196,6 +199,7 @@ export const useDisplayEntityStore = create(
             state.entities.set(id, {
               kind: 'group',
               id,
+              parent: param.parent,
               children: param.children,
               size: param.size ?? [1, 1, 1],
               position: param.position ?? [0, 0, 0],
@@ -416,7 +420,10 @@ export const useDisplayEntityStore = create(
       set((state) => {
         const deletePendingEntityIds = new Set<string>()
 
-        const recursivelyFlagForDeletion = (ids: string[]) => {
+        const recursivelyFlagForDeletion = (
+          ids: string[],
+          excludeChildren?: boolean,
+        ) => {
           for (const id of ids) {
             // 이미 삭제 대상인 entity일 경우 스킵
             // 이 entity의 parent entity가 삭제 대상이라 이미 처리한 경우임
@@ -438,11 +445,15 @@ export const useDisplayEntityStore = create(
                 if (idx >= 0) {
                   parentElement.children.splice(idx, 1)
                 }
+                // parent entity의 children이 더 이상 없을 경우 같이 삭제
+                if (parentElement.children.length < 1) {
+                  recursivelyFlagForDeletion([parentElement.id], true)
+                }
               }
             }
 
             // children으로 등록된 entity들이 있다면 같이 삭제
-            if (entity.kind === 'group') {
+            if (entity.kind === 'group' && !excludeChildren) {
               // children entity에서 parent entity의 children id 배열을 건드릴 경우 for ... of 배열 순환에 문제가 생김
               // index가 하나씩 앞으로 당겨지면서 일부 엔티티가 삭제 처리가 안됨
               recursivelyFlagForDeletion(entity.children.slice())
