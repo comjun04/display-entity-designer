@@ -10,6 +10,7 @@ interface HistoryStoreState {
   addHistory: (history: History) => void
   undoHistory: () => void
   redoHistory: () => void
+  clearHistory: () => void
 }
 
 export const useHistoryStore = create(
@@ -92,5 +93,10 @@ export const useHistoryStore = create(
         })
         .catch(console.error)
     },
+    clearHistory: () =>
+      set((state) => {
+        state.undoStack.length = 0
+        state.redoStack.length = 0
+      }),
   })),
 )

@@ -610,6 +610,8 @@ export const useDisplayEntityStore = create(
 
       createEntityRefs([...entities.keys()])
       set({ entities })
+
+      useHistoryStore.getState().clearHistory()
     },
     bulkImportFromBDE: async (saveData) => {
       const entities = new Map<string, DisplayEntity>()
@@ -772,6 +774,8 @@ export const useDisplayEntityStore = create(
 
       createEntityRefs([...entities.keys()])
       set({ entities })
+
+      useHistoryStore.getState().clearHistory()
     },
     exportAll: () => {
       const { entities } = get()
