@@ -190,19 +190,17 @@ export const useDisplayEntityStore = create(
               textOpacity: param.textOpacity ?? 255,
             })
           }
+        }
 
-          useEntityRefStore.getState().createEntityRefs(entityIds)
+        useEntityRefStore.getState().createEntityRefs(entityIds)
 
-          if (!skipHistoryAdd) {
-            const createdEntities = entityIds.map(
-              (id) => state.entities.get(id)!,
-            )
-            useHistoryStore.getState().addHistory({
-              type: 'createEntities',
-              beforeState: {},
-              afterState: { entities: createdEntities },
-            })
-          }
+        if (!skipHistoryAdd) {
+          const createdEntities = entityIds.map((id) => state.entities.get(id)!)
+          useHistoryStore.getState().addHistory({
+            type: 'createEntities',
+            beforeState: {},
+            afterState: { entities: createdEntities },
+          })
         }
       })
     },
