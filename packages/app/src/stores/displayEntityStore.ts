@@ -50,6 +50,32 @@ const generateId = (
   return id
 }
 
+// player_head type guard
+function isCreateNewEntityActionParamIsPlayerHead(
+  param: CreateNewEntityActionParam,
+): param is Pick<
+  ItemDisplayEntity & {
+    type: 'player_head'
+    playerHeadProperties: PlayerHeadProperties
+  },
+  'kind' | 'type' | 'playerHeadProperties'
+> &
+  Partial<Omit<ItemDisplayEntity, 'kind' | 'type'>> {
+  if (param.kind !== 'item') return false
+  else if (param.type !== 'player_head') return false
+  return true
+}
+
+type CreateNewEntityActionParam =
+  | (Pick<BlockDisplayEntity, 'kind' | 'type'> &
+      Partial<Omit<BlockDisplayEntity, 'kind' | 'type'>>)
+  | (Pick<ItemDisplayEntity, 'kind' | 'type'> &
+      Partial<Omit<ItemDisplayEntity, 'kind' | 'type'>>)
+  | (Pick<TextDisplayEntity, 'kind' | 'text'> &
+      Partial<Omit<TextDisplayEntity, 'kind' | 'text'>>)
+  | (Pick<DisplayEntityGroup, 'kind' | 'children'> &
+      Partial<Omit<DisplayEntityGroup, 'kind' | 'children'>>)
+
 export type DisplayEntityState = {
   entities: Map<string, DisplayEntity>
   selectedEntityIds: string[]
@@ -61,16 +87,7 @@ export type DisplayEntityState = {
    * @returns 생성된 디스플레이 엔티티 데이터 id
    */
   createNew: (
-    params: (
-      | (Pick<BlockDisplayEntity, 'kind' | 'type'> &
-          Partial<Omit<BlockDisplayEntity, 'kind' | 'type'>>)
-      | (Pick<ItemDisplayEntity, 'kind' | 'type'> &
-          Partial<Omit<ItemDisplayEntity, 'kind' | 'type'>>)
-      | (Pick<TextDisplayEntity, 'kind' | 'text'> &
-          Partial<Omit<TextDisplayEntity, 'kind' | 'text'>>)
-      | (Pick<DisplayEntityGroup, 'kind' | 'children'> &
-          Partial<Omit<DisplayEntityGroup, 'kind' | 'children'>>)
-    )[],
+    params: CreateNewEntityActionParam[],
     skipHistoryAdd?: boolean,
   ) => void
   setSelected: (ids: string[]) => void
@@ -160,11 +177,15 @@ export const useDisplayEntityStore = create(
             const entity = state.entities.get(id)!
             if (isItemDisplayPlayerHead(entity)) {
               // is player_head
-              entity.playerHeadProperties = {
-                texture: {
-                  baked: false,
-                },
-              }
+              entity.playerHeadProperties =
+                isCreateNewEntityActionParamIsPlayerHead(param) &&
+                param.playerHeadProperties != null
+                  ? param.playerHeadProperties
+                  : {
+                      texture: {
+                        baked: false,
+                      },
+                    }
             }
           } else if (param.kind === 'text') {
             state.entities.set(id, {
