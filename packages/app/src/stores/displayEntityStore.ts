@@ -132,8 +132,12 @@ export type DisplayEntityState = {
 
   clearEntities: () => void
 
-  groupEntities: (entityIds: string[]) => void
-  ungroupEntityGroup: (entityGroupId: string) => void
+  groupEntities: (
+    entityIds: string[],
+    groupIdToSet?: string,
+    skipHistoryAdd?: boolean,
+  ) => void
+  ungroupEntityGroup: (entityGroupId: string, skipHistoryAdd?: boolean) => void
 }
 
 export const useDisplayEntityStore = create(
@@ -875,9 +879,9 @@ export const useDisplayEntityStore = create(
         useEntityRefStore.getState().clearEntityRefs()
       }),
 
-    groupEntities: (entityIds) =>
+    groupEntities: (entityIds, groupIdToSet, skipHistoryAdd) =>
       set((state) => {
-        const groupId = nanoid(16)
+        const groupId = groupIdToSet ?? nanoid(16)
 
         const entities = entityIds.map((id) => state.entities.get(id)!)
 
@@ -936,8 +940,16 @@ export const useDisplayEntityStore = create(
 
         // 선택된 디스플레이 엔티티를 방금 생성한 그룹으로 설정
         state.selectedEntityIds = [groupId]
+
+        if (!skipHistoryAdd) {
+          useHistoryStore.getState().addHistory({
+            type: 'group',
+            parentGroupId: groupId,
+            childrenEntityIds: entityIds,
+          })
+        }
       }),
-    ungroupEntityGroup: (entityGroupId) =>
+    ungroupEntityGroup: (entityGroupId, skipHistoryAdd) =>
       set((state) => {
         const selectedEntityGroup = state.entities.get(entityGroupId)
         if (selectedEntityGroup?.kind !== 'group') {
@@ -994,6 +1006,14 @@ export const useDisplayEntityStore = create(
             e.rotation = [newRotation.x, newRotation.y, newRotation.z]
             e.size = newScale.toArray()
           })
+
+        if (!skipHistoryAdd) {
+          useHistoryStore.getState().addHistory({
+            type: 'ungroup',
+            parentGroupId: entityGroupId,
+            childrenEntityIds: selectedEntityGroup.children.slice(), // get the non-proxied array
+          })
+        }
 
         // 그룹의 children을 비우기
         // 그룹 삭제는 DisplayEntity.tsx의 useEffect()에서 수행 (그룹에 children이 비어있을 경우 삭제)

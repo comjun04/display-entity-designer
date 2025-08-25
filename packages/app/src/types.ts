@@ -288,3 +288,8 @@ export type History =
       }
       afterState: Record<string, never>
     }
+  | {
+      type: 'group' | 'ungroup'
+      parentGroupId: string
+      childrenEntityIds: string[]
+    }

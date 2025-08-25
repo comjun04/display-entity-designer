@@ -35,8 +35,12 @@ export const useHistoryStore = create(
 
             state.undoStack.pop()
 
-            const { createNew, deleteEntities } =
-              useDisplayEntityStore.getState()
+            const {
+              createNew,
+              deleteEntities,
+              groupEntities,
+              ungroupEntityGroup,
+            } = useDisplayEntityStore.getState()
 
             // TODO: apply beforeState
             switch (history.type) {
@@ -48,6 +52,18 @@ export const useHistoryStore = create(
               }
               case 'deleteEntities': {
                 createNew(history.beforeState.entities, true)
+                break
+              }
+              case 'group': {
+                ungroupEntityGroup(history.parentGroupId, true)
+                break
+              }
+              case 'ungroup': {
+                groupEntities(
+                  history.childrenEntityIds,
+                  history.parentGroupId,
+                  true,
+                )
                 break
               }
             }
@@ -69,8 +85,12 @@ export const useHistoryStore = create(
 
             state.redoStack.pop()
 
-            const { createNew, deleteEntities } =
-              useDisplayEntityStore.getState()
+            const {
+              createNew,
+              deleteEntities,
+              groupEntities,
+              ungroupEntityGroup,
+            } = useDisplayEntityStore.getState()
 
             // TODO: apply afterState
             switch (history.type) {
@@ -83,6 +103,18 @@ export const useHistoryStore = create(
                   history.beforeState.entities.map((entity) => entity.id),
                   true,
                 )
+                break
+              }
+              case 'group': {
+                groupEntities(
+                  history.childrenEntityIds,
+                  history.parentGroupId,
+                  true,
+                )
+                break
+              }
+              case 'ungroup': {
+                ungroupEntityGroup(history.parentGroupId, true)
                 break
               }
             }
