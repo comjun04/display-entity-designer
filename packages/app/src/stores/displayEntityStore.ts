@@ -132,8 +132,8 @@ export type DisplayEntityState = {
 
   clearEntities: () => void
 
-  groupSelected: () => void
-  ungroupSelected: () => void
+  groupEntities: (entityIds: string[]) => void
+  ungroupEntityGroup: (entityGroupId: string) => void
 }
 
 export const useDisplayEntityStore = create(
@@ -875,72 +875,59 @@ export const useDisplayEntityStore = create(
         useEntityRefStore.getState().clearEntityRefs()
       }),
 
-    groupSelected: () =>
+    groupEntities: (entityIds) =>
       set((state) => {
         const groupId = nanoid(16)
 
-        const selectedEntities = [...state.entities.values()].filter((e) =>
-          state.selectedEntityIds.includes(e.id),
-        )
-        if (selectedEntities.length < 1) {
-          logger.error('groupSelected(): no selected entities to group')
-          return
-        }
+        const entities = entityIds.map((id) => state.entities.get(id)!)
 
-        const firstSelectedEntityParentId = selectedEntities[0].parent
-        if (
-          !selectedEntities.every(
-            (e) => e.parent === firstSelectedEntityParentId,
-          )
-        ) {
+        const firstEntityParentId = entities[0].parent
+        if (!entities.every((e) => e.parent === firstEntityParentId)) {
           logger.error(
-            'groupSelected(): cannot group entities with different parent',
+            'groupEntities(): cannot group entities with different parent',
           )
           return
         }
 
         const previousParentGroup =
-          firstSelectedEntityParentId != null
-            ? (state.entities.get(
-                firstSelectedEntityParentId,
-              ) as DisplayEntityGroup) // WritableDraft<DisplayEntityGroup>
+          firstEntityParentId != null
+            ? (state.entities.get(firstEntityParentId) as DisplayEntityGroup) // WritableDraft<DisplayEntityGroup>
             : undefined
 
         // box3로 그룹 안에 포함될 모든 entity들을 포함하도록 늘려서 측정
         const box3 = new Box3()
         const entityRefs = useEntityRefStore.getState().entityRefs
-        for (const selectedEntity of selectedEntities) {
-          const entityRefData = entityRefs.get(selectedEntity.id)!
+        for (const entity of entities) {
+          const entityRefData = entityRefs.get(entity.id)!
           box3.expandByObject(entityRefData.objectRef.current)
 
-          selectedEntity.parent = groupId
+          entity.parent = groupId
           if (previousParentGroup != null) {
             // group하기 전 엔티티가 다른 그룹에 속해 있었다면 children 목록에서 제거
             const idx = previousParentGroup.children.findIndex(
-              (id) => id === selectedEntity.id,
+              (id) => id === entity.id,
             )
             if (idx >= 0) {
               previousParentGroup.children.splice(idx, 1)
             }
           }
         }
-        for (const selectedEntity of selectedEntities) {
-          selectedEntity.position[0] -= box3.min.x
-          selectedEntity.position[1] -= box3.min.y
-          selectedEntity.position[2] -= box3.min.z
+        for (const entity of entities) {
+          entity.position[0] -= box3.min.x
+          entity.position[1] -= box3.min.y
+          entity.position[2] -= box3.min.z
         }
 
         useEntityRefStore.getState().createEntityRefs([groupId])
 
-        // unshift 이제 더 이상 안됨 흑흑
         state.entities.set(groupId, {
           kind: 'group',
           id: groupId,
           position: box3.min.toArray(),
           rotation: [0, 0, 0],
           size: [1, 1, 1],
-          parent: firstSelectedEntityParentId,
-          children: [...state.selectedEntityIds],
+          parent: firstEntityParentId,
+          children: entityIds,
         } satisfies DisplayEntityGroup)
         if (previousParentGroup != null) {
           // 새로 만들어진 그룹을 기존에 엔티티들이 있었던 그룹의 children으로 추가
@@ -950,20 +937,12 @@ export const useDisplayEntityStore = create(
         // 선택된 디스플레이 엔티티를 방금 생성한 그룹으로 설정
         state.selectedEntityIds = [groupId]
       }),
-    ungroupSelected: () =>
+    ungroupEntityGroup: (entityGroupId) =>
       set((state) => {
-        if (state.selectedEntityIds.length !== 1) {
-          logger.error(
-            `ungroupSelected(): Cannot ungroup ${state.selectedEntityIds.length} items; Only single group can be ungrouped.`,
-          )
-          return
-        }
-
-        const entityGroupId = state.selectedEntityIds[0]
         const selectedEntityGroup = state.entities.get(entityGroupId)
         if (selectedEntityGroup?.kind !== 'group') {
           logger.error(
-            `ungroupSelected(): selected entity ${entityGroupId} (kind: ${selectedEntityGroup?.kind}) is not a group`,
+            `ungroupEntityGroup(): selected entity ${entityGroupId} is not a group but ${selectedEntityGroup?.kind}`,
           )
           return
         }
