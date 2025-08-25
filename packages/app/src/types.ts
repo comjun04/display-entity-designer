@@ -293,3 +293,22 @@ export type History =
       parentGroupId: string
       childrenEntityIds: string[]
     }
+  | {
+      type: 'changeProperties'
+      entities: {
+        id: string
+        beforeState: HistoryChangePropertiesState
+        afterState: HistoryChangePropertiesState
+      }[]
+    }
+
+type HistoryChangePropertiesStateCommonOmitKeys = 'kind' | 'id' | 'parent'
+type HistoryChangePropertiesState = Partial<
+  | Omit<BlockDisplayEntity, HistoryChangePropertiesStateCommonOmitKeys>
+  | Omit<ItemDisplayEntity, HistoryChangePropertiesStateCommonOmitKeys>
+  | Omit<TextDisplayEntity, HistoryChangePropertiesStateCommonOmitKeys>
+  | Omit<
+      DisplayEntityGroup,
+      HistoryChangePropertiesStateCommonOmitKeys | 'children'
+    >
+>

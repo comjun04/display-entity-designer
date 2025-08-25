@@ -102,6 +102,7 @@ export type DisplayEntityState = {
       rotation?: PartialNumber3Tuple
       scale?: PartialNumber3Tuple
     }[],
+    skipHistoryAdd?: boolean,
   ) => void
   setEntityDisplayType: (
     id: string,
@@ -319,9 +320,22 @@ export const useDisplayEntityStore = create(
         })
         entity.size = scaleDraft
       }),
-    batchSetEntityTransformation: (data) =>
+    batchSetEntityTransformation: (data, skipHistoryAdd) =>
       set((state) => {
         logger.debug('batchSetEntityTransformation', data)
+
+        const positionChanges = new Map<
+          string,
+          { beforeState: Number3Tuple; afterState: Number3Tuple }
+        >()
+        const rotationChanges = new Map<
+          string,
+          { beforeState: Number3Tuple; afterState: Number3Tuple }
+        >()
+        const scaleChanges = new Map<
+          string,
+          { beforeState: Number3Tuple; afterState: Number3Tuple }
+        >()
 
         data.forEach((item) => {
           const entity = state.entities.get(item.id)
@@ -334,6 +348,12 @@ export const useDisplayEntityStore = create(
                 positionDraft[idx] = d
               }
             })
+
+            positionChanges.set(item.id, {
+              beforeState: entity.position.slice() as Number3Tuple,
+              afterState: positionDraft,
+            })
+
             entity.position = positionDraft
           }
           if (item.rotation != null) {
@@ -343,6 +363,12 @@ export const useDisplayEntityStore = create(
                 rotationDraft[idx] = d
               }
             })
+
+            rotationChanges.set(item.id, {
+              beforeState: entity.rotation.slice() as Number3Tuple,
+              afterState: rotationDraft,
+            })
+
             entity.rotation = rotationDraft
           }
           if (item.scale != null) {
@@ -352,9 +378,50 @@ export const useDisplayEntityStore = create(
                 scaleDraft[idx] = d
               }
             })
+
+            scaleChanges.set(item.id, {
+              beforeState: entity.size.slice() as Number3Tuple,
+              afterState: scaleDraft,
+            })
+
             entity.size = scaleDraft
           }
         })
+
+        if (!skipHistoryAdd) {
+          const records = data.map(({ id }) => {
+            const positionChange = positionChanges.get(id)
+            const rotationChange = rotationChanges.get(id)
+            const scaleChange = scaleChanges.get(id)
+
+            const beforeState: Partial<
+              Pick<DisplayEntity, 'position' | 'rotation' | 'size'>
+            > = {}
+            const afterState: Partial<
+              Pick<DisplayEntity, 'position' | 'rotation' | 'size'>
+            > = {}
+
+            if (positionChange != null) {
+              beforeState.position = positionChange.beforeState
+              afterState.position = positionChange.afterState
+            }
+            if (rotationChange != null) {
+              beforeState.rotation = rotationChange.beforeState
+              afterState.rotation = rotationChange.afterState
+            }
+            if (scaleChange != null) {
+              beforeState.size = scaleChange.beforeState
+              afterState.size = scaleChange.afterState
+            }
+
+            return { id, beforeState, afterState }
+          })
+
+          useHistoryStore.getState().addHistory({
+            type: 'changeProperties',
+            entities: records,
+          })
+        }
       }),
     setEntityDisplayType: (id, display) =>
       set((state) => {

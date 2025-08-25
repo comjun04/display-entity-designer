@@ -1,7 +1,10 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
-import { History } from '@/types'
+import { getLogger } from '@/services/loggerService'
+import { History, Number3Tuple } from '@/types'
+
+const logger = getLogger('historyStore')
 
 interface HistoryStoreState {
   undoStack: History[]
@@ -66,6 +69,13 @@ export const useHistoryStore = create(
                 )
                 break
               }
+              case 'changeProperties': {
+                applyHistoryPropertyChange(
+                  history,
+                  'undo',
+                  useDisplayEntityStore,
+                )
+              }
             }
 
             // push non-proxied history to prevent errors
@@ -117,6 +127,13 @@ export const useHistoryStore = create(
                 ungroupEntityGroup(history.parentGroupId, true)
                 break
               }
+              case 'changeProperties': {
+                applyHistoryPropertyChange(
+                  history,
+                  'redo',
+                  useDisplayEntityStore,
+                )
+              }
             }
             // push non-proxied history to prevent errors
             // from proxy revocation
@@ -132,3 +149,60 @@ export const useHistoryStore = create(
       }),
   })),
 )
+
+function applyHistoryPropertyChange(
+  history: History,
+  type: 'undo' | 'redo',
+  displayEntityStore: (typeof import('./displayEntityStore'))['useDisplayEntityStore'],
+) {
+  if (history.type !== 'changeProperties') {
+    logger.warn(
+      `applyHistoryPropertyChange(): Expected history type 'changeProperties' but got ${history.type}. Skipping.`,
+    )
+    return
+  }
+
+  const { batchSetEntityTransformation } = displayEntityStore.getState()
+
+  const transformationChanges = new Map<
+    string,
+    { id: string } & Partial<{
+      translation: Number3Tuple
+      rotation: Number3Tuple
+      scale: Number3Tuple
+    }>
+  >()
+
+  for (const record of history.entities) {
+    // check for transformation change
+    const transformationChange: Partial<{
+      translation: Number3Tuple
+      rotation: Number3Tuple
+      scale: Number3Tuple
+    }> = {}
+
+    const stateToUse = type === 'redo' ? record.afterState : record.beforeState
+
+    if ('position' in stateToUse) {
+      transformationChange.translation = stateToUse.position
+    }
+    if ('rotation' in stateToUse) {
+      transformationChange.rotation = stateToUse.rotation
+    }
+    if ('size' in stateToUse) {
+      transformationChange.scale = stateToUse.size
+    }
+
+    if (Object.keys(transformationChange).length > 0) {
+      transformationChanges.set(record.id, {
+        id: record.id,
+        ...transformationChange,
+      })
+    }
+  }
+
+  // apply transformation change
+  if (transformationChanges.size > 0) {
+    batchSetEntityTransformation([...transformationChanges.values()], true)
+  }
+}
