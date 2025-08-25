@@ -3,6 +3,7 @@ import { FC, useCallback, useEffect } from 'react'
 import { useShallow } from 'zustand/shallow'
 
 import useEntityRefObject from '@/hooks/useEntityRefObject'
+import { getLogger } from '@/services/loggerService'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { useEntityRefStore } from '@/stores/entityRefStore'
@@ -11,6 +12,8 @@ import BlockDisplay from './BlockDisplay'
 import DisplayEntityGroup from './DisplayEntityGroup'
 import ItemDisplay from './ItemDisplay'
 import TextDisplay from './TextDisplay'
+
+const logger = getLogger('DisplayEntity')
 
 type DisplayEntityProps = {
   id: string
@@ -49,6 +52,8 @@ const DisplayEntity: FC<DisplayEntityProps> = ({ id }) => {
   useEffect(() => {
     if (thisEntityRefObj == null) return
 
+    logger.debug('reparenting')
+
     // parent group의 ref가 연결되지 않은 경우
     // (임시로) root group ref를 사용
     const parentGroup =
@@ -60,6 +65,7 @@ const DisplayEntity: FC<DisplayEntityProps> = ({ id }) => {
   // 내가 group 안에 children이 더 이상 없으면 나 자신도 삭제
   useEffect(() => {
     if (thisEntity?.kind === 'group' && thisEntity.children.length < 1) {
+      logger.debug('detected no children in group, deleting itself')
       useDisplayEntityStore.getState().deleteEntities([id], true)
     }
   }, [id, thisEntity])
