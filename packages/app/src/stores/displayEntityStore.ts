@@ -391,17 +391,21 @@ export const useDisplayEntityStore = create(
         })
 
         if (!skipHistoryAdd) {
+          const { entities } = get()
           const records = data.map(({ id }) => {
             const positionChange = positionChanges.get(id)
             const rotationChange = rotationChanges.get(id)
             const scaleChange = scaleChanges.get(id)
 
-            const beforeState: Partial<
-              Pick<DisplayEntity, 'position' | 'rotation' | 'size'>
-            > = {}
-            const afterState: Partial<
-              Pick<DisplayEntity, 'position' | 'rotation' | 'size'>
-            > = {}
+            const { kind } = entities.get(id)!
+            const beforeState: Pick<DisplayEntity, 'kind'> &
+              Partial<Pick<DisplayEntity, 'position' | 'rotation' | 'size'>> = {
+              kind,
+            }
+            const afterState: Pick<DisplayEntity, 'kind'> &
+              Partial<Pick<DisplayEntity, 'position' | 'rotation' | 'size'>> = {
+              kind,
+            }
 
             if (positionChange != null) {
               beforeState.position = positionChange.beforeState
@@ -446,8 +450,8 @@ export const useDisplayEntityStore = create(
             entities: [
               {
                 id,
-                beforeState: { display: entity.display },
-                afterState: { display },
+                beforeState: { kind: entity.kind, display: entity.display },
+                afterState: { kind: entity.kind, display },
               },
             ],
           })
@@ -482,8 +486,8 @@ export const useDisplayEntityStore = create(
             entities: [
               {
                 id,
-                beforeState: { blockstates: oldBlockstates },
-                afterState: { blockstates },
+                beforeState: { kind: entity.kind, blockstates: oldBlockstates },
+                afterState: { kind: entity.kind, blockstates },
               },
             ],
           })

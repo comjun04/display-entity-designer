@@ -303,12 +303,23 @@ export type History =
     }
 
 type HistoryChangePropertiesStateCommonOmitKeys = 'kind' | 'id' | 'parent'
-type HistoryChangePropertiesState = Partial<
-  | Omit<BlockDisplayEntity, HistoryChangePropertiesStateCommonOmitKeys>
-  | Omit<ItemDisplayEntity, HistoryChangePropertiesStateCommonOmitKeys>
-  | Omit<TextDisplayEntity, HistoryChangePropertiesStateCommonOmitKeys>
-  | Omit<
-      DisplayEntityGroup,
-      HistoryChangePropertiesStateCommonOmitKeys | 'children'
-    >
->
+type HistoryChangePropertiesState =
+  | (Pick<BlockDisplayEntity, 'kind'> &
+      Partial<
+        Omit<BlockDisplayEntity, HistoryChangePropertiesStateCommonOmitKeys>
+      >)
+  | (Pick<ItemDisplayEntity, 'kind'> &
+      Partial<
+        Omit<ItemDisplayEntity, HistoryChangePropertiesStateCommonOmitKeys>
+      >)
+  | (Pick<TextDisplayEntity, 'kind'> &
+      Partial<
+        Omit<TextDisplayEntity, HistoryChangePropertiesStateCommonOmitKeys>
+      >)
+  | (Pick<DisplayEntityGroup, 'kind'> &
+      Partial<
+        Omit<
+          DisplayEntityGroup,
+          HistoryChangePropertiesStateCommonOmitKeys | 'children'
+        >
+      >)

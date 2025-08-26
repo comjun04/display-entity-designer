@@ -210,12 +210,12 @@ function applyHistoryPropertyChange(
     }
 
     // apply item_display display property
-    if ('display' in stateToUse && stateToUse.display !== undefined) {
+    if (stateToUse.kind === 'item' && stateToUse.display !== undefined) {
       setEntityDisplayType(record.id, stateToUse.display, true)
     }
 
     // apply block_display blockstates
-    if ('blockstates' in stateToUse && stateToUse.blockstates != null) {
+    if (stateToUse.kind === 'block' && stateToUse.blockstates != null) {
       setBDEntityBlockstates(record.id, stateToUse.blockstates, true)
     }
   }
