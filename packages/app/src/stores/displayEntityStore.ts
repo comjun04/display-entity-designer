@@ -107,10 +107,12 @@ export type DisplayEntityState = {
   setEntityDisplayType: (
     id: string,
     display: ModelDisplayPositionKey | null,
+    skipHistoryAdd?: boolean,
   ) => void
   setBDEntityBlockstates: (
     id: string,
     blockstates: Record<string, string>,
+    skipHistoryAdd?: boolean,
   ) => void
   setTextDisplayProperties: (
     id: string,
@@ -423,7 +425,7 @@ export const useDisplayEntityStore = create(
           })
         }
       }),
-    setEntityDisplayType: (id, display) =>
+    setEntityDisplayType: (id, display, skipHistoryAdd) =>
       set((state) => {
         const entity = state.entities.get(id)
         if (entity == null) {
@@ -438,9 +440,22 @@ export const useDisplayEntityStore = create(
           return
         }
 
+        if (!skipHistoryAdd) {
+          useHistoryStore.getState().addHistory({
+            type: 'changeProperties',
+            entities: [
+              {
+                id,
+                beforeState: { display: entity.display },
+                afterState: { display },
+              },
+            ],
+          })
+        }
+
         entity.display = display
       }),
-    setBDEntityBlockstates: (id, blockstates) => {
+    setBDEntityBlockstates: (id, blockstates, skipHistoryAdd) => {
       // 변경할 게 없으면 그냥 종료
       if (Object.keys(blockstates).length < 1) {
         return
@@ -458,6 +473,20 @@ export const useDisplayEntityStore = create(
             `Attempted to set blockstates for non-block display entity: ${id}, kind: ${entity.kind}`,
           )
           return
+        }
+
+        if (!skipHistoryAdd) {
+          const oldBlockstates = Object.assign({}, entity.blockstates)
+          useHistoryStore.getState().addHistory({
+            type: 'changeProperties',
+            entities: [
+              {
+                id,
+                beforeState: { blockstates: oldBlockstates },
+                afterState: { blockstates },
+              },
+            ],
+          })
         }
 
         entity.blockstates = { ...entity.blockstates, ...blockstates }

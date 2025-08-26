@@ -25,6 +25,7 @@ export const useHistoryStore = create(
 
     addHistory: (history) =>
       set((state) => {
+        logger.debug('addHistory():', history)
         state.undoStack.push(history)
         state.redoStack.length = 0
       }),
@@ -35,6 +36,8 @@ export const useHistoryStore = create(
             // get the last non-proxied history
             const history = get().undoStack.slice(-1)[0]
             if (history == null) return
+
+            logger.debug('undoHistory():', history)
 
             state.undoStack.pop()
 
@@ -92,6 +95,8 @@ export const useHistoryStore = create(
             // get the last non-proxied history
             const history = get().redoStack.slice(-1)[0]
             if (history == null) return
+
+            logger.debug('redoHistory():', history)
 
             state.redoStack.pop()
 
@@ -162,7 +167,11 @@ function applyHistoryPropertyChange(
     return
   }
 
-  const { batchSetEntityTransformation } = displayEntityStore.getState()
+  const {
+    batchSetEntityTransformation,
+    setEntityDisplayType,
+    setBDEntityBlockstates,
+  } = displayEntityStore.getState()
 
   const transformationChanges = new Map<
     string,
@@ -198,6 +207,16 @@ function applyHistoryPropertyChange(
         id: record.id,
         ...transformationChange,
       })
+    }
+
+    // apply item_display display property
+    if ('display' in stateToUse && stateToUse.display !== undefined) {
+      setEntityDisplayType(record.id, stateToUse.display, true)
+    }
+
+    // apply block_display blockstates
+    if ('blockstates' in stateToUse && stateToUse.blockstates != null) {
+      setBDEntityBlockstates(record.id, stateToUse.blockstates, true)
     }
   }
 
