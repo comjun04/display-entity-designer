@@ -1,3 +1,4 @@
+import cloneDeep from 'lodash.clonedeep'
 import merge from 'lodash.merge'
 import { nanoid } from 'nanoid'
 import { Box3, Euler, Matrix4, Quaternion, Vector3 } from 'three'
@@ -6,14 +7,15 @@ import { immer } from 'zustand/middleware/immer'
 
 import { getLogger } from '@/services/loggerService'
 import { preloadResources } from '@/services/resources/preload'
-import { useEntityRefStore } from '@/stores/entityRefStore'
 import {
   BDEngineSaveData,
   BDEngineSaveDataItem,
+  BlockDisplayEntity,
   DeepPartial,
   DisplayEntity,
   DisplayEntityGroup,
   DisplayEntitySaveDataItem,
+  ItemDisplayEntity,
   ModelDisplayPositionKey,
   Number3Tuple,
   PartialNumber3Tuple,
@@ -24,6 +26,8 @@ import {
 } from '@/types'
 
 import { useEditorStore } from './editorStore'
+import { useEntityRefStore } from './entityRefStore'
+import { useHistoryStore } from './historyStore'
 
 const logger = getLogger('displayEntityStore')
 
@@ -47,6 +51,32 @@ const generateId = (
   return id
 }
 
+// player_head type guard
+function isCreateNewEntityActionParamIsPlayerHead(
+  param: CreateNewEntityActionParam,
+): param is Pick<
+  ItemDisplayEntity & {
+    type: 'player_head'
+    playerHeadProperties: PlayerHeadProperties
+  },
+  'kind' | 'type' | 'playerHeadProperties'
+> &
+  Partial<Omit<ItemDisplayEntity, 'kind' | 'type'>> {
+  if (param.kind !== 'item') return false
+  else if (param.type !== 'player_head') return false
+  return true
+}
+
+type CreateNewEntityActionParam =
+  | (Pick<BlockDisplayEntity, 'kind' | 'type'> &
+      Partial<Omit<BlockDisplayEntity, 'kind' | 'type'>>)
+  | (Pick<ItemDisplayEntity, 'kind' | 'type'> &
+      Partial<Omit<ItemDisplayEntity, 'kind' | 'type'>>)
+  | (Pick<TextDisplayEntity, 'kind' | 'text'> &
+      Partial<Omit<TextDisplayEntity, 'kind' | 'text'>>)
+  | (Pick<DisplayEntityGroup, 'kind' | 'children'> &
+      Partial<Omit<DisplayEntityGroup, 'kind' | 'children'>>)
+
 export type DisplayEntityState = {
   entities: Map<string, DisplayEntity>
   selectedEntityIds: string[]
@@ -57,7 +87,10 @@ export type DisplayEntityState = {
    * @param typeOrText `kind`가 `block` 또는 `item`일 경우 블록/아이템 id, `text`일 경우 입력할 텍스트 (JSON Format)
    * @returns 생성된 디스플레이 엔티티 데이터 id
    */
-  createNew: (kind: DisplayEntity['kind'], typeOrText: string) => string
+  createNew: (
+    params: CreateNewEntityActionParam[],
+    skipHistoryAdd?: boolean,
+  ) => void
   setSelected: (ids: string[]) => void
   addToSelected: (id: string) => void
   setEntityTranslation: (id: string, translation: PartialNumber3Tuple) => void
@@ -70,14 +103,17 @@ export type DisplayEntityState = {
       rotation?: PartialNumber3Tuple
       scale?: PartialNumber3Tuple
     }[],
+    skipHistoryAdd?: boolean,
   ) => void
   setEntityDisplayType: (
     id: string,
     display: ModelDisplayPositionKey | null,
+    skipHistoryAdd?: boolean,
   ) => void
   setBDEntityBlockstates: (
     id: string,
     blockstates: Record<string, string>,
+    skipHistoryAdd?: boolean,
   ) => void
   setTextDisplayProperties: (
     id: string,
@@ -87,12 +123,14 @@ export type DisplayEntityState = {
         'id' | 'kind' | 'position' | 'rotation' | 'size' | 'parent'
       >
     >,
+    skipHistoryAdd?: boolean,
   ) => void
   setItemDisplayPlayerHeadProperties: (
     entityId: string,
     data: PlayerHeadProperties,
+    skipHistoryAdd?: boolean,
   ) => void
-  deleteEntities: (entityIds: string[]) => void
+  deleteEntities: (entityIds: string[], skipHistoryAdd?: boolean) => void
 
   bulkImport: (items: DisplayEntitySaveDataItem[]) => Promise<void>
   bulkImportFromBDE: (saveData: BDEngineSaveData) => Promise<void>
@@ -100,8 +138,12 @@ export type DisplayEntityState = {
 
   clearEntities: () => void
 
-  groupSelected: () => void
-  ungroupSelected: () => void
+  groupEntities: (
+    entityIds: string[],
+    groupIdToSet?: string,
+    skipHistoryAdd?: boolean,
+  ) => void
+  ungroupEntityGroup: (entityGroupId: string, skipHistoryAdd?: boolean) => void
 }
 
 export const useDisplayEntityStore = create(
@@ -109,71 +151,107 @@ export const useDisplayEntityStore = create(
     entities: new Map(),
     selectedEntityIds: [],
 
-    createNew: (kind, typeOrText) => {
-      const id = generateId(ENTITY_ID_LENGTH)
+    createNew: (params, skipHistoryAdd) => {
+      const entityIds: string[] = []
 
       set((state) => {
-        useEntityRefStore.getState().createEntityRefs([id])
+        for (const param of params) {
+          const id = param.id ?? generateId(ENTITY_ID_LENGTH)
 
-        if (kind === 'block') {
-          state.entities.set(id, {
-            kind: 'block',
-            id,
-            type: typeOrText,
-            size: [1, 1, 1],
-            position: [0, 0, 0],
-            rotation: [0, 0, 0],
-            display: null,
-            blockstates: {},
-          })
-        } else if (kind === 'item') {
-          state.entities.set(id, {
-            kind: 'item',
-            id,
-            type: typeOrText,
-            size: [1, 1, 1],
-            position: typeOrText === 'player_head' ? [0, 0.5, 0] : [0, 0, 0],
-            rotation: [0, 0, 0],
-            display: null,
-          })
+          if (param.kind === 'block') {
+            state.entities.set(id, {
+              kind: 'block',
+              id,
+              type: param.type,
+              parent: param.parent,
+              size: param.size ?? [1, 1, 1],
+              position: param.position ?? [0, 0, 0],
+              rotation: param.rotation ?? [0, 0, 0],
+              display: param.display ?? null,
+              blockstates: param.blockstates ?? {},
+            })
+          } else if (param.kind === 'item') {
+            state.entities.set(id, {
+              kind: 'item',
+              id,
+              type: param.type,
+              parent: param.parent,
+              size: param.size ?? [1, 1, 1],
+              position:
+                param.position ??
+                (param.type === 'player_head' ? [0, 0.5, 0] : [0, 0, 0]),
+              rotation: param.rotation ?? [0, 0, 0],
+              display: param.display ?? null,
+            })
 
-          const entity = state.entities.get(id)!
-          if (isItemDisplayPlayerHead(entity)) {
-            // is player_head
-            entity.playerHeadProperties = {
-              texture: {
-                baked: false,
-              },
+            const entity = state.entities.get(id)!
+            if (isItemDisplayPlayerHead(entity)) {
+              // is player_head
+              entity.playerHeadProperties =
+                isCreateNewEntityActionParamIsPlayerHead(param) &&
+                param.playerHeadProperties != null
+                  ? param.playerHeadProperties
+                  : {
+                      texture: {
+                        baked: false,
+                      },
+                    }
             }
+          } else if (param.kind === 'text') {
+            state.entities.set(id, {
+              kind: 'text',
+              id,
+              parent: param.parent,
+              text: param.text,
+              textColor: param.textColor ?? 0xffffffff, // #ffffffff, white
+              textEffects: param.textEffects ?? {
+                bold: false,
+                italic: false,
+                underlined: false,
+                strikethrough: false,
+                obfuscated: false,
+              },
+              size: param.size ?? [1, 1, 1],
+              position: param.position ?? [0, 0, 0],
+              rotation: param.rotation ?? [0, 0, 0],
+              alignment: param.alignment ?? 'center',
+              backgroundColor: param.backgroundColor ?? 0xff000000, // #ff000000, black
+              defaultBackground: param.defaultBackground ?? false,
+              lineWidth: param.lineWidth ?? 200,
+              seeThrough: param.seeThrough ?? false,
+              shadow: param.shadow ?? false,
+              textOpacity: param.textOpacity ?? 255,
+            })
+          } else if (param.kind === 'group') {
+            if (param.children.length < 1) {
+              continue
+            }
+
+            state.entities.set(id, {
+              kind: 'group',
+              id,
+              parent: param.parent,
+              children: param.children,
+              size: param.size ?? [1, 1, 1],
+              position: param.position ?? [0, 0, 0],
+              rotation: param.rotation ?? [1, 1, 1],
+            })
           }
-        } else if (kind === 'text') {
-          state.entities.set(id, {
-            kind: 'text',
-            id,
-            text: typeOrText,
-            textColor: 0xffffffff, // #ffffffff, white
-            textEffects: {
-              bold: false,
-              italic: false,
-              underlined: false,
-              strikethrough: false,
-              obfuscated: false,
-            },
-            size: [1, 1, 1],
-            position: [0, 0, 0],
-            rotation: [0, 0, 0],
-            alignment: 'center',
-            backgroundColor: 0xff000000, // #ff000000, black
-            defaultBackground: false,
-            lineWidth: 200,
-            seeThrough: false,
-            shadow: false,
-            textOpacity: 255,
+
+          entityIds.push(id)
+        }
+
+        useEntityRefStore.getState().createEntityRefs(entityIds)
+
+        if (!skipHistoryAdd) {
+          const createdEntities = entityIds.map((id) => state.entities.get(id)!)
+          useHistoryStore.getState().addHistory({
+            type: 'createEntities',
+            beforeState: {},
+            afterState: { entities: createdEntities },
           })
         }
       })
-
-      return id
     },
     setSelected: (ids) =>
       set((state) => {
@@ -247,9 +325,22 @@ export const useDisplayEntityStore = create(
         })
         entity.size = scaleDraft
       }),
-    batchSetEntityTransformation: (data) =>
+    batchSetEntityTransformation: (data, skipHistoryAdd) =>
       set((state) => {
         logger.debug('batchSetEntityTransformation', data)
+
+        const positionChanges = new Map<
+          string,
+          { beforeState: Number3Tuple; afterState: Number3Tuple }
+        >()
+        const rotationChanges = new Map<
+          string,
+          { beforeState: Number3Tuple; afterState: Number3Tuple }
+        >()
+        const scaleChanges = new Map<
+          string,
+          { beforeState: Number3Tuple; afterState: Number3Tuple }
+        >()
 
         data.forEach((item) => {
           const entity = state.entities.get(item.id)
@@ -262,6 +353,12 @@ export const useDisplayEntityStore = create(
                 positionDraft[idx] = d
               }
             })
+
+            positionChanges.set(item.id, {
+              beforeState: entity.position.slice() as Number3Tuple,
+              afterState: positionDraft,
+            })
+
             entity.position = positionDraft
           }
           if (item.rotation != null) {
@@ -271,6 +368,12 @@ export const useDisplayEntityStore = create(
                 rotationDraft[idx] = d
               }
             })
+
+            rotationChanges.set(item.id, {
+              beforeState: entity.rotation.slice() as Number3Tuple,
+              afterState: rotationDraft,
+            })
+
             entity.rotation = rotationDraft
           }
           if (item.scale != null) {
@@ -280,11 +383,56 @@ export const useDisplayEntityStore = create(
                 scaleDraft[idx] = d
               }
             })
+
+            scaleChanges.set(item.id, {
+              beforeState: entity.size.slice() as Number3Tuple,
+              afterState: scaleDraft,
+            })
+
             entity.size = scaleDraft
           }
         })
+
+        if (!skipHistoryAdd) {
+          const { entities } = get()
+          const records = data.map(({ id }) => {
+            const positionChange = positionChanges.get(id)
+            const rotationChange = rotationChanges.get(id)
+            const scaleChange = scaleChanges.get(id)
+
+            const { kind } = entities.get(id)!
+            const beforeState: Pick<DisplayEntity, 'kind'> &
+              Partial<Pick<DisplayEntity, 'position' | 'rotation' | 'size'>> = {
+              kind,
+            }
+            const afterState: Pick<DisplayEntity, 'kind'> &
+              Partial<Pick<DisplayEntity, 'position' | 'rotation' | 'size'>> = {
+              kind,
+            }
+
+            if (positionChange != null) {
+              beforeState.position = positionChange.beforeState
+              afterState.position = positionChange.afterState
+            }
+            if (rotationChange != null) {
+              beforeState.rotation = rotationChange.beforeState
+              afterState.rotation = rotationChange.afterState
+            }
+            if (scaleChange != null) {
+              beforeState.size = scaleChange.beforeState
+              afterState.size = scaleChange.afterState
+            }
+
+            return { id, beforeState, afterState }
+          })
+
+          useHistoryStore.getState().addHistory({
+            type: 'changeProperties',
+            entities: records,
+          })
+        }
       }),
-    setEntityDisplayType: (id, display) =>
+    setEntityDisplayType: (id, display, skipHistoryAdd) =>
       set((state) => {
         const entity = state.entities.get(id)
         if (entity == null) {
@@ -299,9 +447,22 @@ export const useDisplayEntityStore = create(
           return
         }
 
+        if (!skipHistoryAdd) {
+          useHistoryStore.getState().addHistory({
+            type: 'changeProperties',
+            entities: [
+              {
+                id,
+                beforeState: { kind: entity.kind, display: entity.display },
+                afterState: { kind: entity.kind, display },
+              },
+            ],
+          })
+        }
+
         entity.display = display
       }),
-    setBDEntityBlockstates: (id, blockstates) => {
+    setBDEntityBlockstates: (id, blockstates, skipHistoryAdd) => {
       // 변경할 게 없으면 그냥 종료
       if (Object.keys(blockstates).length < 1) {
         return
@@ -321,10 +482,24 @@ export const useDisplayEntityStore = create(
           return
         }
 
+        if (!skipHistoryAdd) {
+          const oldBlockstates = cloneDeep(entity.blockstates)
+          useHistoryStore.getState().addHistory({
+            type: 'changeProperties',
+            entities: [
+              {
+                id,
+                beforeState: { kind: entity.kind, blockstates: oldBlockstates },
+                afterState: { kind: entity.kind, blockstates },
+              },
+            ],
+          })
+        }
+
         entity.blockstates = { ...entity.blockstates, ...blockstates }
       })
     },
-    setTextDisplayProperties: (id, properties) =>
+    setTextDisplayProperties: (id, properties, skipHistoryAdd) =>
       set((state) => {
         const entity = state.entities.get(id)
         if (entity == null) {
@@ -350,9 +525,48 @@ export const useDisplayEntityStore = create(
           return
         }
 
+        // TODO: clean up this mess
+        if (!skipHistoryAdd) {
+          const nonProxiedEntity = cloneDeep(entity)
+          const beforeState: typeof properties = {}
+          for (const key of Object.keys(properties) as Array<
+            keyof typeof properties
+          >) {
+            if (key === 'textEffects') {
+              if (properties.textEffects != null) {
+                beforeState.textEffects = Object.assign(
+                  {},
+                  nonProxiedEntity.textEffects,
+                )
+                for (const key of Object.keys(beforeState.textEffects) as Array<
+                  keyof (typeof properties)['textEffects']
+                >) {
+                  if (!(key in properties.textEffects)) {
+                    delete beforeState.textEffects[key]
+                  }
+                }
+              }
+            } else {
+              // copy original state values to beforeState
+              // @ts-expect-error beforeState[key] keeps accepting undefined only, type mismatch
+              beforeState[key] = nonProxiedEntity[key]
+            }
+          }
+          useHistoryStore.getState().addHistory({
+            type: 'changeProperties',
+            entities: [
+              {
+                id,
+                beforeState: { kind: entity.kind, ...beforeState },
+                afterState: { kind: entity.kind, ...properties },
+              },
+            ],
+          })
+        }
+
         merge(entity, properties)
       }),
-    setItemDisplayPlayerHeadProperties: (entityId, data) =>
+    setItemDisplayPlayerHeadProperties: (entityId, data, skipHistoryAdd) =>
       set((state) => {
         const entity = state.entities.get(entityId)
         if (entity == null) {
@@ -367,13 +581,32 @@ export const useDisplayEntityStore = create(
           return
         }
 
+        if (!skipHistoryAdd) {
+          useHistoryStore.getState().addHistory({
+            type: 'changeProperties',
+            entities: [
+              {
+                id: entityId,
+                beforeState: {
+                  kind: entity.kind,
+                  playerHeadProperties: cloneDeep(entity.playerHeadProperties),
+                },
+                afterState: { kind: entity.kind, playerHeadProperties: data },
+              },
+            ],
+          })
+        }
+
         entity.playerHeadProperties = data
       }),
-    deleteEntities: (entityIds) =>
+    deleteEntities: (entityIds, skipHistoryAdd) =>
       set((state) => {
         const deletePendingEntityIds = new Set<string>()
 
-        const recursivelyDelete = (ids: string[]) => {
+        const recursivelyFlagForDeletion = (
+          ids: string[],
+          excludeChildren?: boolean,
+        ) => {
           for (const id of ids) {
             // 이미 삭제 대상인 entity일 경우 스킵
             // 이 entity의 parent entity가 삭제 대상이라 이미 처리한 경우임
@@ -395,25 +628,44 @@ export const useDisplayEntityStore = create(
                 if (idx >= 0) {
                   parentElement.children.splice(idx, 1)
                 }
+                // parent entity의 children이 더 이상 없을 경우 같이 삭제
+                if (parentElement.children.length < 1) {
+                  recursivelyFlagForDeletion([parentElement.id], true)
+                }
               }
             }
 
             // children으로 등록된 entity들이 있다면 같이 삭제
-            if (entity.kind === 'group') {
+            if (entity.kind === 'group' && !excludeChildren) {
               // children entity에서 parent entity의 children id 배열을 건드릴 경우 for ... of 배열 순환에 문제가 생김
               // index가 하나씩 앞으로 당겨지면서 일부 엔티티가 삭제 처리가 안됨
-              recursivelyDelete(entity.children.slice())
+              recursivelyFlagForDeletion(entity.children.slice())
             }
 
             deletePendingEntityIds.add(id)
           }
         }
 
-        recursivelyDelete(entityIds)
+        recursivelyFlagForDeletion(entityIds)
 
         useEntityRefStore
           .getState()
           .deleteEntityRefs([...deletePendingEntityIds.values()])
+
+        // add history
+        if (!skipHistoryAdd) {
+          // get the non-proxied entities
+          const { entities } = get()
+          const deletedEntities = [...deletePendingEntityIds].map(
+            (id) => entities.get(id)!,
+          )
+          useHistoryStore.getState().addHistory({
+            type: 'deleteEntities',
+            beforeState: { entities: deletedEntities },
+            afterState: {},
+          })
+        }
+
         for (const entityIdToDelete of deletePendingEntityIds) {
           state.entities.delete(entityIdToDelete)
         }
@@ -535,10 +787,14 @@ export const useDisplayEntityStore = create(
 
       f(items)
 
-      await preloadResources([...entities.values()])
+      const entitiesArr = [...entities.values()]
+
+      await preloadResources(entitiesArr)
 
       createEntityRefs([...entities.keys()])
       set({ entities })
+
+      useHistoryStore.getState().clearHistory()
     },
     bulkImportFromBDE: async (saveData) => {
       const entities = new Map<string, DisplayEntity>()
@@ -701,6 +957,8 @@ export const useDisplayEntityStore = create(
 
       createEntityRefs([...entities.keys()])
       set({ entities })
+
+      useHistoryStore.getState().clearHistory()
     },
     exportAll: () => {
       const { entities } = get()
@@ -779,72 +1037,59 @@ export const useDisplayEntityStore = create(
         useEntityRefStore.getState().clearEntityRefs()
       }),
 
-    groupSelected: () =>
+    groupEntities: (entityIds, groupIdToSet, skipHistoryAdd) =>
       set((state) => {
-        const groupId = nanoid(16)
+        const groupId = groupIdToSet ?? nanoid(16)
 
-        const selectedEntities = [...state.entities.values()].filter((e) =>
-          state.selectedEntityIds.includes(e.id),
-        )
-        if (selectedEntities.length < 1) {
-          logger.error('groupSelected(): no selected entities to group')
-          return
-        }
+        const entities = entityIds.map((id) => state.entities.get(id)!)
 
-        const firstSelectedEntityParentId = selectedEntities[0].parent
-        if (
-          !selectedEntities.every(
-            (e) => e.parent === firstSelectedEntityParentId,
-          )
-        ) {
+        const firstEntityParentId = entities[0].parent
+        if (!entities.every((e) => e.parent === firstEntityParentId)) {
           logger.error(
-            'groupSelected(): cannot group entities with different parent',
+            'groupEntities(): cannot group entities with different parent',
           )
           return
         }
 
         const previousParentGroup =
-          firstSelectedEntityParentId != null
-            ? (state.entities.get(
-                firstSelectedEntityParentId,
-              ) as DisplayEntityGroup) // WritableDraft<DisplayEntityGroup>
+          firstEntityParentId != null
+            ? (state.entities.get(firstEntityParentId) as DisplayEntityGroup) // WritableDraft<DisplayEntityGroup>
             : undefined
 
         // box3로 그룹 안에 포함될 모든 entity들을 포함하도록 늘려서 측정
         const box3 = new Box3()
         const entityRefs = useEntityRefStore.getState().entityRefs
-        for (const selectedEntity of selectedEntities) {
-          const entityRefData = entityRefs.get(selectedEntity.id)!
+        for (const entity of entities) {
+          const entityRefData = entityRefs.get(entity.id)!
           box3.expandByObject(entityRefData.objectRef.current)
 
-          selectedEntity.parent = groupId
+          entity.parent = groupId
           if (previousParentGroup != null) {
             // group하기 전 엔티티가 다른 그룹에 속해 있었다면 children 목록에서 제거
             const idx = previousParentGroup.children.findIndex(
-              (id) => id === selectedEntity.id,
+              (id) => id === entity.id,
             )
             if (idx >= 0) {
               previousParentGroup.children.splice(idx, 1)
             }
           }
         }
-        for (const selectedEntity of selectedEntities) {
-          selectedEntity.position[0] -= box3.min.x
-          selectedEntity.position[1] -= box3.min.y
-          selectedEntity.position[2] -= box3.min.z
+        for (const entity of entities) {
+          entity.position[0] -= box3.min.x
+          entity.position[1] -= box3.min.y
+          entity.position[2] -= box3.min.z
         }
 
         useEntityRefStore.getState().createEntityRefs([groupId])
 
-        // unshift 이제 더 이상 안됨 흑흑
         state.entities.set(groupId, {
           kind: 'group',
           id: groupId,
           position: box3.min.toArray(),
           rotation: [0, 0, 0],
           size: [1, 1, 1],
-          parent: firstSelectedEntityParentId,
-          children: [...state.selectedEntityIds],
+          parent: firstEntityParentId,
+          children: entityIds,
         } satisfies DisplayEntityGroup)
         if (previousParentGroup != null) {
           // 새로 만들어진 그룹을 기존에 엔티티들이 있었던 그룹의 children으로 추가
@@ -853,21 +1098,21 @@ export const useDisplayEntityStore = create(
 
         // 선택된 디스플레이 엔티티를 방금 생성한 그룹으로 설정
         state.selectedEntityIds = [groupId]
-      }),
-    ungroupSelected: () =>
-      set((state) => {
-        if (state.selectedEntityIds.length !== 1) {
-          logger.error(
-            `ungroupSelected(): Cannot ungroup ${state.selectedEntityIds.length} items; Only single group can be ungrouped.`,
-          )
-          return
-        }
 
-        const entityGroupId = state.selectedEntityIds[0]
+        if (!skipHistoryAdd) {
+          useHistoryStore.getState().addHistory({
+            type: 'group',
+            parentGroupId: groupId,
+            childrenEntityIds: entityIds,
+          })
+        }
+      }),
+    ungroupEntityGroup: (entityGroupId, skipHistoryAdd) =>
+      set((state) => {
         const selectedEntityGroup = state.entities.get(entityGroupId)
         if (selectedEntityGroup?.kind !== 'group') {
           logger.error(
-            `ungroupSelected(): selected entity ${entityGroupId} (kind: ${selectedEntityGroup?.kind}) is not a group`,
+            `ungroupEntityGroup(): selected entity ${entityGroupId} is not a group but ${selectedEntityGroup?.kind}`,
           )
           return
         }
@@ -919,6 +1164,14 @@ export const useDisplayEntityStore = create(
             e.rotation = [newRotation.x, newRotation.y, newRotation.z]
             e.size = newScale.toArray()
           })
+
+        if (!skipHistoryAdd) {
+          useHistoryStore.getState().addHistory({
+            type: 'ungroup',
+            parentGroupId: entityGroupId,
+            childrenEntityIds: selectedEntityGroup.children.slice(), // get the non-proxied array
+          })
+        }
 
         // 그룹의 children을 비우기
         // 그룹 삭제는 DisplayEntity.tsx의 useEffect()에서 수행 (그룹에 children이 비어있을 경우 삭제)

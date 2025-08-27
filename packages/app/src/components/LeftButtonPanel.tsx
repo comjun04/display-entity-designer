@@ -1,13 +1,20 @@
 import { Tooltip } from '@heroui/tooltip'
 import { FC } from 'react'
 import { IoMove } from 'react-icons/io5'
-import { LuMenu, LuMoveDiagonal, LuRotate3D } from 'react-icons/lu'
+import {
+  LuMenu,
+  LuMoveDiagonal,
+  LuRedo,
+  LuRotate3D,
+  LuUndo,
+} from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
 import { openFromFile, saveToFile } from '@/services/fileService'
 import { getLogger } from '@/services/loggerService'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useEditorStore } from '@/stores/editorStore'
+import { useHistoryStore } from '@/stores/historyStore'
 
 import FloatingButton from './FloatingButton'
 import MobileDragHoldButton from './MobileDragHoldButton'
@@ -34,9 +41,15 @@ const LeftButtonPanel: FC = () => {
   const { setOpenedDialog } = useDialogStore(
     useShallow((state) => ({ setOpenedDialog: state.setOpenedDialog })),
   )
+  const { undoHistory, redoHistory } = useHistoryStore(
+    useShallow((state) => ({
+      undoHistory: state.undoHistory,
+      redoHistory: state.redoHistory,
+    })),
+  )
 
   return (
-    <div className="absolute left-0 top-0 z-[5] ml-4 mt-4 flex flex-col gap-2">
+    <div className="absolute left-0 top-0 z-[5] ml-4 mt-4 flex flex-col items-start gap-2">
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <FloatingButton>
@@ -47,7 +60,7 @@ const LeftButtonPanel: FC = () => {
           side="right"
           sideOffset={10}
           align="start"
-          className="min-w-52 origin-top-left p-2 data-[state=open]:slide-in-from-left-0"
+          className="origin-top-left data-[state=open]:slide-in-from-left-0 sm:min-w-52"
         >
           <DropdownMenuItem className="w-full" onClick={openFromFile}>
             <div className="flex w-full flex-row items-center gap-2 text-sm">
@@ -96,6 +109,19 @@ const LeftButtonPanel: FC = () => {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <div className="flex flex-row gap-2">
+        <Tooltip content="Undo" placement="right" delay={300} closeDelay={0}>
+          <FloatingButton onClick={() => undoHistory()}>
+            <LuUndo size={24} />
+          </FloatingButton>
+        </Tooltip>
+        <Tooltip content="Redo" placement="right" delay={300} closeDelay={0}>
+          <FloatingButton onClick={() => redoHistory()}>
+            <LuRedo size={24} />
+          </FloatingButton>
+        </Tooltip>
+      </div>
 
       <Tooltip
         content="Translate mode"

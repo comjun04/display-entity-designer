@@ -66,7 +66,7 @@ const ItemDisplaySelectDialog: FC = () => {
             key={item}
             className="rounded-lg bg-neutral-700 p-1 text-center text-xs transition duration-150 hover:bg-neutral-700/50"
             onClick={() => {
-              createNewEntity('item', item)
+              createNewEntity([{ kind: 'item', type: item }])
               setOpenedDialog(null)
             }}
           >

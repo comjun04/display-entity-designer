@@ -67,7 +67,7 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
 
     useDisplayEntityStore
       .getState()
-      .setBDEntityBlockstates(id, newBlockstateObject)
+      .setBDEntityBlockstates(id, newBlockstateObject, true)
   }, [blockstatesData, id])
 
   useFrame(() => {

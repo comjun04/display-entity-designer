@@ -272,3 +272,64 @@ export interface MinimalTextureValue {
 }
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
+
+export type History =
+  | {
+      type: 'createEntities'
+      beforeState: Record<string, never>
+      afterState: {
+        entities: DisplayEntity[]
+      }
+    }
+  | {
+      type: 'deleteEntities'
+      beforeState: {
+        entities: DisplayEntity[]
+      }
+      afterState: Record<string, never>
+    }
+  | {
+      type: 'group' | 'ungroup'
+      parentGroupId: string
+      childrenEntityIds: string[]
+    }
+  | {
+      type: 'changeProperties'
+      entities: {
+        id: string
+        beforeState: HistoryChangePropertiesState
+        afterState: HistoryChangePropertiesState
+      }[]
+    }
+
+type HistoryChangePropertiesStateCommonOmitKeys = 'kind' | 'id' | 'parent'
+type HistoryChangePropertiesState =
+  | (Pick<BlockDisplayEntity, 'kind'> &
+      Partial<
+        Omit<BlockDisplayEntity, HistoryChangePropertiesStateCommonOmitKeys>
+      >)
+  | (Pick<ItemDisplayEntity, 'kind'> &
+      Partial<
+        Omit<ItemDisplayEntity, HistoryChangePropertiesStateCommonOmitKeys> & {
+          playerHeadProperties: PlayerHeadProperties
+        }
+      >)
+  | (Pick<TextDisplayEntity, 'kind'> &
+      // extract position, rotation, size as non-DeepPartial as DeepPartial breaks Number3Tuple constraints
+      Partial<Pick<TextDisplayEntity, 'position' | 'rotation' | 'size'>> &
+      DeepPartial<
+        Omit<
+          TextDisplayEntity,
+          | HistoryChangePropertiesStateCommonOmitKeys
+          | 'position'
+          | 'rotation'
+          | 'size'
+        >
+      >)
+  | (Pick<DisplayEntityGroup, 'kind'> &
+      Partial<
+        Omit<
+          DisplayEntityGroup,
+          HistoryChangePropertiesStateCommonOmitKeys | 'children'
+        >
+      >)

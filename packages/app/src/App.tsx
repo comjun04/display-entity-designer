@@ -15,8 +15,8 @@ function App() {
         <Scene />
 
         {/* floating buttons */}
-        <TopButtonPanel />
         <LeftButtonPanel />
+        <TopButtonPanel />
         <MobileBottomButtonPanel />
       </div>
 
