@@ -93,9 +93,6 @@ export type DisplayEntityState = {
   ) => void
   setSelected: (ids: string[]) => void
   addToSelected: (id: string) => void
-  setEntityTranslation: (id: string, translation: PartialNumber3Tuple) => void
-  setEntityRotation: (id: string, rotation: PartialNumber3Tuple) => void
-  setEntityScale: (id: string, scale: PartialNumber3Tuple) => void
   batchSetEntityTransformation: (
     data: {
       id: string
@@ -272,58 +269,6 @@ export const useDisplayEntityStore = create(
         if (!state.selectedEntityIds.includes(id)) {
           state.selectedEntityIds.push(id)
         }
-      }),
-    setEntityTranslation: (id, translation) =>
-      set((state) => {
-        logger.debug('setEntityTranslation', id, translation)
-
-        const entity = state.entities.get(id)
-        if (entity == null) {
-          logger.error(`setEntityTranslation(): unknown entity ${id}`)
-          return
-        }
-
-        const positionDraft = entity.position.slice() as Number3Tuple
-        translation.forEach((d, idx) => {
-          if (d != null) {
-            positionDraft[idx] = d
-          }
-        })
-        entity.position = positionDraft
-      }),
-    setEntityRotation: (id, rotation) =>
-      set((state) => {
-        const entity = state.entities.get(id)
-        if (entity == null) {
-          logger.error(`setEntityRotation(): unknown entity ${id}`)
-          return
-        }
-
-        const rotationDraft = entity.rotation.slice() as Number3Tuple
-        rotation.forEach((d, idx) => {
-          if (d != null) {
-            rotationDraft[idx] = d
-          }
-        })
-        entity.rotation = rotationDraft
-      }),
-    setEntityScale: (id, scale) =>
-      set((state) => {
-        logger.debug('setEntityScale', id, scale)
-
-        const entity = state.entities.get(id)
-        if (entity == null) {
-          logger.error(`setEntityScale(): unknown entity ${id}`)
-          return
-        }
-
-        const scaleDraft = entity.size.slice() as Number3Tuple
-        scale.forEach((d, idx) => {
-          if (d != null) {
-            scaleDraft[idx] = d
-          }
-        })
-        entity.size = scaleDraft
       }),
     batchSetEntityTransformation: (data, skipHistoryAdd) =>
       set((state) => {
