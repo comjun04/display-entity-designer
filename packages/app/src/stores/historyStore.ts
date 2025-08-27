@@ -171,6 +171,7 @@ function applyHistoryPropertyChange(
     batchSetEntityTransformation,
     setEntityDisplayType,
     setBDEntityBlockstates,
+    setTextDisplayProperties,
   } = displayEntityStore.getState()
 
   const transformationChanges = new Map<
@@ -217,6 +218,12 @@ function applyHistoryPropertyChange(
     // apply block_display blockstates
     if (stateToUse.kind === 'block' && stateToUse.blockstates != null) {
       setBDEntityBlockstates(record.id, stateToUse.blockstates, true)
+    }
+
+    // apply text_display properties
+    if (stateToUse.kind === 'text') {
+      const { kind: _, ...rest } = stateToUse
+      setTextDisplayProperties(record.id, rest, true)
     }
   }
 
