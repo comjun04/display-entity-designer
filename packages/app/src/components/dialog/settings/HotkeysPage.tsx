@@ -30,6 +30,18 @@ const HotkeysPage: FC = () => {
               Ctrl + ,
             </div>
           </div>
+          <div className="mt-1 flex flex-row items-center gap-2">
+            <span className="grow px-3">Undo</span>
+            <div className="w-full max-w-[12rem] rounded bg-neutral-700/70 px-2 py-1">
+              Ctrl + Z
+            </div>
+          </div>
+          <div className="mt-1 flex flex-row items-center gap-2">
+            <span className="grow px-3">Redo</span>
+            <div className="w-full max-w-[12rem] rounded bg-neutral-700/70 px-2 py-1">
+              Ctrl + Y
+            </div>
+          </div>
         </div>
       </div>
       <div className="mt-1">
