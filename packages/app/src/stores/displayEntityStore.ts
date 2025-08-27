@@ -1,3 +1,4 @@
+import cloneDeep from 'lodash.clonedeep'
 import merge from 'lodash.merge'
 import { nanoid } from 'nanoid'
 import { Box3, Euler, Matrix4, Quaternion, Vector3 } from 'three'
@@ -481,7 +482,7 @@ export const useDisplayEntityStore = create(
         }
 
         if (!skipHistoryAdd) {
-          const oldBlockstates = Object.assign({}, entity.blockstates)
+          const oldBlockstates = cloneDeep(entity.blockstates)
           useHistoryStore.getState().addHistory({
             type: 'changeProperties',
             entities: [
@@ -525,7 +526,7 @@ export const useDisplayEntityStore = create(
 
         // TODO: clean up this mess
         if (!skipHistoryAdd) {
-          const nonProxiedEntity = get().entities.get(id)! as TextDisplayEntity
+          const nonProxiedEntity = cloneDeep(entity)
           const beforeState: typeof properties = {}
           for (const key of Object.keys(properties) as Array<
             keyof typeof properties
