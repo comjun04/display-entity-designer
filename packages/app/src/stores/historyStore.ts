@@ -172,6 +172,7 @@ function applyHistoryPropertyChange(
     setEntityDisplayType,
     setBDEntityBlockstates,
     setTextDisplayProperties,
+    setItemDisplayPlayerHeadProperties,
   } = displayEntityStore.getState()
 
   const transformationChanges = new Map<
@@ -210,9 +211,20 @@ function applyHistoryPropertyChange(
       })
     }
 
-    // apply item_display display property
-    if (stateToUse.kind === 'item' && stateToUse.display !== undefined) {
-      setEntityDisplayType(record.id, stateToUse.display, true)
+    if (stateToUse.kind === 'item') {
+      // apply item_display display property
+      if (stateToUse.display !== undefined) {
+        setEntityDisplayType(record.id, stateToUse.display, true)
+      }
+
+      // apply item_display player_head properties
+      if (stateToUse.playerHeadProperties != null) {
+        setItemDisplayPlayerHeadProperties(
+          record.id,
+          stateToUse.playerHeadProperties,
+          true,
+        )
+      }
     }
 
     // apply block_display blockstates

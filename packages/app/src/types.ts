@@ -310,7 +310,9 @@ type HistoryChangePropertiesState =
       >)
   | (Pick<ItemDisplayEntity, 'kind'> &
       Partial<
-        Omit<ItemDisplayEntity, HistoryChangePropertiesStateCommonOmitKeys>
+        Omit<ItemDisplayEntity, HistoryChangePropertiesStateCommonOmitKeys> & {
+          playerHeadProperties: PlayerHeadProperties
+        }
       >)
   | (Pick<TextDisplayEntity, 'kind'> &
       // extract position, rotation, size as non-DeepPartial as DeepPartial breaks Number3Tuple constraints

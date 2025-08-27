@@ -128,6 +128,7 @@ export type DisplayEntityState = {
   setItemDisplayPlayerHeadProperties: (
     entityId: string,
     data: PlayerHeadProperties,
+    skipHistoryAdd?: boolean,
   ) => void
   deleteEntities: (entityIds: string[], skipHistoryAdd?: boolean) => void
 
@@ -565,7 +566,7 @@ export const useDisplayEntityStore = create(
 
         merge(entity, properties)
       }),
-    setItemDisplayPlayerHeadProperties: (entityId, data) =>
+    setItemDisplayPlayerHeadProperties: (entityId, data, skipHistoryAdd) =>
       set((state) => {
         const entity = state.entities.get(entityId)
         if (entity == null) {
@@ -578,6 +579,22 @@ export const useDisplayEntityStore = create(
             `Attempted to set player_head properties on non player_head display`,
           )
           return
+        }
+
+        if (!skipHistoryAdd) {
+          useHistoryStore.getState().addHistory({
+            type: 'changeProperties',
+            entities: [
+              {
+                id: entityId,
+                beforeState: {
+                  kind: entity.kind,
+                  playerHeadProperties: cloneDeep(entity.playerHeadProperties),
+                },
+                afterState: { kind: entity.kind, playerHeadProperties: data },
+              },
+            ],
+          })
         }
 
         entity.playerHeadProperties = data
