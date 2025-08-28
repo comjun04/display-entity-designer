@@ -75,6 +75,9 @@ const SettingsDialog: FC = () => {
             >
               Hotkeys
             </button>
+
+            <hr className="border-t-2 border-neutral-700" />
+
             <button
               className={cn(
                 'w-full rounded px-2 py-1 text-start text-sm transition duration-150',
@@ -111,6 +114,7 @@ const SettingsDialog: FC = () => {
             <option value="general">General</option>
             <option value="performance">Performance</option>
             <option value="hotkeys">Hotkeys</option>
+            <option disabled>----------</option>
             <option value="about">About</option>
             <option value="debug">Debug Options</option>
           </select>
