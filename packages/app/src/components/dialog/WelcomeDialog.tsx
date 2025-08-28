@@ -1,0 +1,61 @@
+import { FC } from 'react'
+import { LuFilePlus, LuFolderOpen } from 'react-icons/lu'
+import { useShallow } from 'zustand/shallow'
+
+import { openFromFile } from '@/services/fileService'
+import { useDialogStore } from '@/stores/dialogStore'
+
+import Dialog from './Dialog'
+
+const WelcomeDialog: FC = () => {
+  const { isOpen, setOpenedDialog } = useDialogStore(
+    useShallow((state) => ({
+      isOpen: state.openedDialog === 'welcome',
+      setOpenedDialog: state.setOpenedDialog,
+    })),
+  )
+
+  const closeDialog = () => setOpenedDialog(null)
+
+  return (
+    <Dialog
+      title=""
+      open={isOpen}
+      onClose={closeDialog}
+      className="relative z-50"
+    >
+      <div className="flex flex-col">
+        <div>
+          <h2 className="text-3xl">
+            <span className="text-sky-200">D</span>isplay{' '}
+            <span className="text-sky-200">E</span>ntity{' '}
+            <span className="text-sky-200">Pl</span>atform
+          </h2>
+          <span>Graphical editor for Minecraft Display entities</span>
+        </div>
+
+        <div className="mt-8 flex flex-col gap-2 sm:w-1/2">
+          <button
+            className="flex flex-row items-center gap-2 rounded bg-neutral-900 px-4 py-2"
+            onClick={closeDialog}
+          >
+            <LuFilePlus size={24} />
+            <span>Start with something new</span>
+          </button>
+          <button
+            className="flex flex-row items-center gap-2 rounded bg-neutral-900 px-4 py-2"
+            onClick={() => {
+              openFromFile()
+              closeDialog()
+            }}
+          >
+            <LuFolderOpen size={24} />
+            <span>Open from device</span>
+          </button>
+        </div>
+      </div>
+    </Dialog>
+  )
+}
+
+export default WelcomeDialog

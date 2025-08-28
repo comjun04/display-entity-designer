@@ -3,6 +3,7 @@ import { immer } from 'zustand/middleware/immer'
 
 // ==========
 type DialogType =
+  | 'welcome'
   | 'settings'
   | 'blockDisplaySelect'
   | 'itemDisplaySelect'
