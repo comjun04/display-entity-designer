@@ -25,6 +25,7 @@ type TransformationData = {
 const settingsSchema = z.object({
   general: z
     .object({
+      showWelcomeOnStartup: z.boolean().default(true),
       forceUnifont: z.boolean().default(false),
     })
     .default({}),

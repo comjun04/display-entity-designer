@@ -11,10 +11,14 @@ import ItemDisplaySelectDialog from './components/dialog/ItemDisplaySelectDialog
 import SettingsDialog from './components/dialog/SettingsDialog'
 import WelcomeDialog from './components/dialog/WelcomeDialog'
 import { useDialogStore } from './stores/dialogStore'
+import { useEditorStore } from './stores/editorStore'
 
 function App() {
   useEffect(() => {
-    useDialogStore.getState().setOpenedDialog('welcome')
+    const { showWelcomeOnStartup } = useEditorStore.getState().settings.general
+    if (showWelcomeOnStartup) {
+      useDialogStore.getState().setOpenedDialog('welcome')
+    }
   }, [])
 
   return (

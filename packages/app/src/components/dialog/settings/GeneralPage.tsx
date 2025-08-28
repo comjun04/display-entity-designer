@@ -17,6 +17,22 @@ const GeneralPage: FC = () => {
       <div className="mt-4 flex flex-row items-center gap-2">
         <input
           type="checkbox"
+          id="settings_general_showWelcomeOnStartup"
+          checked={settings.general.showWelcomeOnStartup}
+          onChange={(evt) => {
+            setSettings({
+              general: { showWelcomeOnStartup: evt.target.checked },
+            })
+          }}
+        />
+        <label htmlFor="settings_general_showWelcomeOnStartup">
+          Show Welcome on Startup
+        </label>
+      </div>
+
+      <div className="mt-4 flex flex-row items-center gap-2">
+        <input
+          type="checkbox"
           id="settings_general_forceUnifont"
           checked={settings.general.forceUnifont}
           onChange={(evt) => {

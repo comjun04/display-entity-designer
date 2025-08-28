@@ -4,6 +4,7 @@ import { useShallow } from 'zustand/shallow'
 
 import { openFromFile } from '@/services/fileService'
 import { useDialogStore } from '@/stores/dialogStore'
+import { useEditorStore } from '@/stores/editorStore'
 
 import Dialog from './Dialog'
 
@@ -12,6 +13,12 @@ const WelcomeDialog: FC = () => {
     useShallow((state) => ({
       isOpen: state.openedDialog === 'welcome',
       setOpenedDialog: state.setOpenedDialog,
+    })),
+  )
+  const { showWelcomeOnStartup, setSettings } = useEditorStore(
+    useShallow((state) => ({
+      showWelcomeOnStartup: state.settings.general.showWelcomeOnStartup,
+      setSettings: state.setSettings,
     })),
   )
 
@@ -52,6 +59,22 @@ const WelcomeDialog: FC = () => {
             <LuFolderOpen size={24} />
             <span>Open from device</span>
           </button>
+        </div>
+
+        <div className="mt-4 flex flex-row items-center gap-2">
+          <input
+            type="checkbox"
+            id="settings_showWelcomeOnStartup"
+            checked={showWelcomeOnStartup}
+            onChange={(evt) => {
+              setSettings({
+                general: { showWelcomeOnStartup: evt.target.checked },
+              })
+            }}
+          />
+          <label htmlFor="settings_showWelcomeOnStartup">
+            Show Welcome on Startup
+          </label>
         </div>
       </div>
     </Dialog>
