@@ -2,7 +2,7 @@ import { FC } from 'react'
 
 import { Disclaimer, SpecialThanks, Title } from '@/components/brandings'
 
-const ProgramInfoPage: FC = () => {
+const AboutPage: FC = () => {
   return (
     <>
       <Title />
@@ -18,4 +18,4 @@ const ProgramInfoPage: FC = () => {
   )
 }
 
-export default ProgramInfoPage
+export default AboutPage

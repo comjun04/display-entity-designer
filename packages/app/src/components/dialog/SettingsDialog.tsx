@@ -5,17 +5,17 @@ import { useDialogStore } from '@/stores/dialogStore'
 import { cn } from '@/utils'
 
 import Dialog from './Dialog'
+import AboutPage from './settings/AboutPage'
 import DebugOptionsPage from './settings/DebugOptionsPage'
 import GeneralPage from './settings/GeneralPage'
 import HotkeysPage from './settings/HotkeysPage'
 import PerformancePage from './settings/PerformancePage'
-import ProgramInfoPage from './settings/ProgramInfoPage'
 
 type SettingsPageType =
   | 'general'
   | 'performance'
   | 'hotkeys'
-  | 'programInfo'
+  | 'about'
   | 'debug'
 
 const SettingsDialog: FC = () => {
@@ -78,13 +78,13 @@ const SettingsDialog: FC = () => {
             <button
               className={cn(
                 'w-full rounded px-2 py-1 text-start text-sm transition duration-150',
-                selectedPage === 'programInfo'
+                selectedPage === 'about'
                   ? 'bg-neutral-700'
                   : 'hover:bg-neutral-700/50',
               )}
-              onClick={() => setSelectedPage('programInfo')}
+              onClick={() => setSelectedPage('about')}
             >
-              Program Info
+              About
             </button>
             <button
               className={cn(
@@ -111,7 +111,7 @@ const SettingsDialog: FC = () => {
             <option value="general">General</option>
             <option value="performance">Performance</option>
             <option value="hotkeys">Hotkeys</option>
-            <option value="programInfo">Program Info</option>
+            <option value="about">About</option>
             <option value="debug">Debug Options</option>
           </select>
         </div>
@@ -126,8 +126,8 @@ const SettingsDialog: FC = () => {
           {/* Hotkeys */}
           {selectedPage === 'hotkeys' && <HotkeysPage />}
 
-          {/* Program Info */}
-          {selectedPage === 'programInfo' && <ProgramInfoPage />}
+          {/* About */}
+          {selectedPage === 'about' && <AboutPage />}
 
           {/* Debug */}
           {selectedPage === 'debug' && <DebugOptionsPage />}
