@@ -30,3 +30,31 @@ export const Disclaimer: FC<DisclaimerProps> = ({ className }) => {
     </div>
   )
 }
+
+interface SpecialThanksProps {
+  className?: string
+}
+export const SpecialThanks: FC<SpecialThanksProps> = ({ className }) => {
+  return (
+    <div className={cn('mt-4 text-sm text-neutral-500', className)}>
+      Special Thanks to{' '}
+      <a
+        href="https://github.com/eszesbalint"
+        target="_blank"
+        className="underline"
+      >
+        Eszes Bálint
+      </a>{' '}
+      for creating{' '}
+      <a
+        href="https://github.com/eszesbalint/bdstudio"
+        target="_blank"
+        className="underline"
+      >
+        BDStudio
+      </a>
+      , the initial editor of Minecraft display entities, and inspiration of
+      this project
+    </div>
+  )
+}

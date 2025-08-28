@@ -1,6 +1,6 @@
 import { FC } from 'react'
 
-import { Disclaimer, Title } from '@/components/brandings'
+import { Disclaimer, SpecialThanks, Title } from '@/components/brandings'
 
 const ProgramInfoPage: FC = () => {
   return (
@@ -13,6 +13,7 @@ const ProgramInfoPage: FC = () => {
       </div>
 
       <Disclaimer />
+      <SpecialThanks />
     </>
   )
 }

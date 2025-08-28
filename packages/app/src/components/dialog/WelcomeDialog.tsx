@@ -2,7 +2,7 @@ import { FC } from 'react'
 import { LuFilePlus, LuFolderOpen } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
-import { Disclaimer, Title } from '@/components/brandings'
+import { Disclaimer, SpecialThanks, Title } from '@/components/brandings'
 import { openFromFile } from '@/services/fileService'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useEditorStore } from '@/stores/editorStore'
@@ -71,6 +71,7 @@ const WelcomeDialog: FC = () => {
         </div>
 
         <Disclaimer />
+        <SpecialThanks />
       </div>
     </Dialog>
   )
