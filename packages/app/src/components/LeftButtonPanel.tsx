@@ -98,6 +98,17 @@ const LeftButtonPanel: FC = () => {
               </DropdownMenuItem>
             </DropdownMenuSubContent>
           </DropdownMenuSub>
+
+          <DropdownMenuSeparator />
+
+          <DropdownMenuItem
+            className="w-full"
+            onClick={() => setOpenedDialog('welcome')}
+          >
+            <div className="flex w-full flex-row items-center gap-2 text-sm">
+              <div className="grow">Welcome</div>
+            </div>
+          </DropdownMenuItem>
           <DropdownMenuItem
             className="w-full"
             onClick={() => setOpenedDialog('settings')}
