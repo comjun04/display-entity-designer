@@ -70,6 +70,26 @@ const DisplayEntity: FC<DisplayEntityProps> = ({ id }) => {
     }
   }, [id, thisEntity])
 
+  useEffect(() => {
+    if (
+      thisEntity?.position == null ||
+      thisEntity?.rotation == null ||
+      thisEntity?.size == null
+    ) {
+      return
+    }
+    if (thisEntityRefObj == null) return
+
+    thisEntityRefObj.position.set(...thisEntity.position)
+    thisEntityRefObj.rotation.set(...thisEntity.rotation)
+    thisEntityRefObj.scale.set(...thisEntity.size)
+  }, [
+    thisEntity?.position,
+    thisEntity?.rotation,
+    thisEntity?.size,
+    thisEntityRefObj,
+  ])
+
   const handleClick = useCallback(
     (event: ThreeEvent<MouseEvent>) => {
       if (thisEntity == null) return

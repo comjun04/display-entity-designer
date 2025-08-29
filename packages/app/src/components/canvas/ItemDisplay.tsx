@@ -1,4 +1,4 @@
-import { ThreeEvent, useFrame } from '@react-three/fiber'
+import { ThreeEvent } from '@react-three/fiber'
 import { FC, MutableRefObject, memo } from 'react'
 import { Group } from 'three'
 import { useShallow } from 'zustand/shallow'
@@ -24,9 +24,9 @@ const MemoizedModel = memo(Model)
 const ItemDisplay: FC<ItemDisplayProps> = ({
   id,
   type,
-  size,
-  position,
-  rotation,
+  // size,
+  // position,
+  // rotation,
   onClick,
   objectRef: ref,
 }) => {
@@ -49,14 +49,6 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
       }
     }),
   )
-
-  useFrame(() => {
-    if (!thisEntitySelected) {
-      ref?.current?.position.set(...position)
-      ref?.current?.rotation.set(...rotation)
-      ref?.current?.scale.set(...size)
-    }
-  })
 
   return (
     <object3D ref={ref}>

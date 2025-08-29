@@ -1,4 +1,4 @@
-import { ThreeEvent, invalidate, useFrame } from '@react-three/fiber'
+import { ThreeEvent, invalidate } from '@react-three/fiber'
 import { FC, MutableRefObject, useEffect, useRef } from 'react'
 import { Group } from 'three'
 import { useShallow } from 'zustand/shallow'
@@ -23,9 +23,9 @@ type TextDisplayProps = {
 const TextDisplay: FC<TextDisplayProps> = ({
   id,
   text,
-  position,
-  rotation,
-  size,
+  // position,
+  // rotation,
+  // size,
   objectRef: ref,
   onClick,
 }) => {
@@ -91,14 +91,6 @@ const TextDisplay: FC<TextDisplayProps> = ({
     thisEntityTextColor,
     forceUnifont,
   ])
-
-  useFrame(() => {
-    if (!thisEntitySelected) {
-      ref?.current?.position.set(...position)
-      ref?.current?.rotation.set(...rotation)
-      ref?.current?.scale.set(...size)
-    }
-  })
 
   return (
     <object3D ref={ref}>

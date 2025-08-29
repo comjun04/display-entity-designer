@@ -4,6 +4,8 @@ import { immer } from 'zustand/middleware/immer'
 import { getLogger } from '@/services/loggerService'
 import { History, Number3Tuple } from '@/types'
 
+import { useEditorStore } from './editorStore'
+
 const logger = getLogger('historyStore')
 
 interface HistoryStoreState {
@@ -242,5 +244,17 @@ function applyHistoryPropertyChange(
   // apply transformation change
   if (transformationChanges.size > 0) {
     batchSetEntityTransformation([...transformationChanges.values()], true)
+
+    const { entities, selectedEntityIds } = displayEntityStore.getState()
+    if (selectedEntityIds.length > 0) {
+      const firstSelectedEntity = entities.get(selectedEntityIds[0])
+      if (firstSelectedEntity != null) {
+        useEditorStore.getState().setSelectionBaseTransformation({
+          position: firstSelectedEntity.position,
+          rotation: firstSelectedEntity.rotation,
+          size: firstSelectedEntity.size,
+        })
+      }
+    }
   }
 }
