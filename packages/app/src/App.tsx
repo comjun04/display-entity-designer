@@ -8,6 +8,7 @@ import TopButtonPanel from './components/TopButtonPanel'
 import BlockDisplaySelectDialog from './components/dialog/BlockDisplaySelectDialog'
 import ExportToMinecraftDialog from './components/dialog/ExportToMinecraftDialog'
 import ItemDisplaySelectDialog from './components/dialog/ItemDisplaySelectDialog'
+import PromptDialog from './components/dialog/PromptDialog.tsx'
 import SettingsDialog from './components/dialog/SettingsDialog'
 import WelcomeDialog from './components/dialog/WelcomeDialog'
 import { useDialogStore } from './stores/dialogStore'
@@ -35,6 +36,7 @@ function App() {
       <Sidebar />
 
       <WelcomeDialog />
+      <PromptDialog />
       <SettingsDialog />
       <BlockDisplaySelectDialog />
       <ItemDisplaySelectDialog />
