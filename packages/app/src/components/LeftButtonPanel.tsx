@@ -10,6 +10,7 @@ import {
 } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
+import { newProject } from '@/services/actions'
 import { openFromFile, saveToFile } from '@/services/fileService'
 import { getLogger } from '@/services/loggerService'
 import { useDialogStore } from '@/stores/dialogStore'
@@ -62,6 +63,11 @@ const LeftButtonPanel: FC = () => {
           align="start"
           className="origin-top-left data-[state=open]:slide-in-from-left-0 sm:min-w-52"
         >
+          <DropdownMenuItem className="w-full" onClick={newProject}>
+            <div className="flex w-full flex-row items-center gap-2 text-sm">
+              <span className="grow">New Project</span>
+            </div>
+          </DropdownMenuItem>
           <DropdownMenuItem className="w-full" onClick={openFromFile}>
             <div className="flex w-full flex-row items-center gap-2 text-sm">
               <span className="grow">Open</span>
