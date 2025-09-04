@@ -37,7 +37,7 @@ const Dialog: FC<DialogProps> = ({
       <DialogBackdrop
         transition
         className={cn(
-          'fixed inset-0 duration-200 ease-out data-[closed]:opacity-0',
+          'fixed inset-0 bg-black/30 duration-200 ease-out data-[closed]:opacity-0',
           useLargeStaticSize ? 'xs:backdrop-blur-sm' : 'backdrop-blur-sm',
         )}
       />
