@@ -25,6 +25,7 @@ const PromptDialog: FC = () => {
       open={isOpen}
       onClose={closeDialog}
       className="relative z-50"
+      useLargeStaticSize={false}
     >
       <div className="flex flex-col">
         <div>{promptDialogData.content}</div>
