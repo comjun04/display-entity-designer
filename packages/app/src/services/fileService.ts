@@ -90,6 +90,18 @@ async function openProjectFile(file: File): Promise<boolean> {
 }
 
 export async function saveToFile() {
+  const saveDataBlob = await createSaveData()
+
+  const objectUrl = URL.createObjectURL(saveDataBlob)
+  const tempElement = document.createElement('a')
+  tempElement.href = objectUrl
+  tempElement.download = 'project.depl'
+  tempElement.click() // trigger download
+
+  URL.revokeObjectURL(objectUrl)
+}
+
+export async function createSaveData() {
   const rootEntities = useDisplayEntityStore.getState().exportAll()
   const finalSaveObject = {
     __version: FILE_VERSION,
@@ -108,13 +120,7 @@ export async function saveToFile() {
     type: 'application/octet-stream', // prevent chrome mobile from downloading as `project.depl.txt`
   })
 
-  const objectUrl = URL.createObjectURL(newBlob)
-  const tempElement = document.createElement('a')
-  tempElement.href = objectUrl
-  tempElement.download = 'project.depl'
-  tempElement.click() // trigger download
-
-  URL.revokeObjectURL(objectUrl)
+  return newBlob
 }
 
 // ===============
