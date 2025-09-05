@@ -1,3 +1,5 @@
+import { encodeBinaryToBase64 } from '@/utils'
+
 import { createSaveData } from './fileService'
 import { getLogger } from './loggerService'
 
@@ -59,12 +61,7 @@ export default class AutosaveService {
 
     // base64 encode
     const a = new Uint8Array(await saveDataBlob.arrayBuffer())
-    let str = ''
-    for (let n = 0; n < a.length; n += 8192) {
-      const chunk = a.subarray(n, n + 8192)
-      str += String.fromCharCode(...chunk) // split input into chunks because too many arguments will throw error
-    }
-    const encoded = window.btoa(str)
+    const encoded = encodeBinaryToBase64(a)
 
     // save to localStorage
     window.localStorage.setItem(AUTOSAVE_KEY, encoded)

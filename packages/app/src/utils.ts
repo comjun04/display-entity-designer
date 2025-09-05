@@ -8,6 +8,46 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
+export function encodeBinaryToBase64(binaryData: Uint8Array) {
+  let str = ''
+  for (let i = 0; i < binaryData.length; i += 8192) {
+    const chunk = binaryData.subarray(i, i + 8192)
+    str += String.fromCharCode(...chunk) // split input into chunks because too many arguments will throw error
+  }
+  const encoded = window.btoa(str)
+
+  return encoded
+}
+export function decodeBase64ToBinary(encodedString: string) {
+  const atobDecodedStr = window.atob(encodedString)
+  const byteArr = new Uint8Array(new ArrayBuffer(atobDecodedStr.length))
+  for (let i = 0; i < atobDecodedStr.length; i++) {
+    byteArr[i] = atobDecodedStr.charCodeAt(i)
+  }
+
+  return byteArr
+}
+
+export async function gzip(data: string, blobType?: string) {
+  const gzipCompressionStream = new Blob([data])
+    .stream()
+    .pipeThrough(new CompressionStream('gzip'))
+  const blob = await new Response(gzipCompressionStream).blob()
+  const typedBlob = new Blob([blob], {
+    type: blobType ?? 'application/octet-stream', // prevent chrome mobile from downloading as `project.depl.txt`
+  })
+
+  return typedBlob
+}
+export async function gunzip(blob: Blob) {
+  const gzipDecompressionStream = blob
+    .stream()
+    .pipeThrough(new DecompressionStream('gzip'))
+  const decompressedData = await new Response(gzipDecompressionStream).text()
+
+  return decompressedData
+}
+
 export function stripMinecraftPrefix(input: string) {
   return input.startsWith('minecraft:') ? input.slice(10) : input
 }

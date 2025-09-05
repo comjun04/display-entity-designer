@@ -1,6 +1,7 @@
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { BDEngineSaveData, DisplayEntitySaveDataItem } from '@/types'
+import { decodeBase64ToBinary, gunzip, gzip } from '@/utils'
 
 import { getLogger } from './loggerService'
 
@@ -69,11 +70,7 @@ async function openProjectFile(file: File): Promise<boolean> {
     return false
   }
 
-  const gzipDecompressionStream = file
-    .slice(8)
-    .stream()
-    .pipeThrough(new DecompressionStream('gzip'))
-  const saveDataString = await new Response(gzipDecompressionStream).text()
+  const saveDataString = await gunzip(file.slice(8))
   const saveData = JSON.parse(saveDataString) as DisplayEntitySaveData
 
   // TODO: saveData type validation
@@ -111,11 +108,7 @@ export async function createSaveData() {
 
   const finalSaveObjectString = JSON.stringify(finalSaveObject)
 
-  // gzip
-  const gzipCompressionStream = new Blob([finalSaveObjectString])
-    .stream()
-    .pipeThrough(new CompressionStream('gzip'))
-  const blob = await new Response(gzipCompressionStream).blob()
+  const blob = await gzip(finalSaveObjectString)
   const newBlob = new Blob([FILE_MAGIC, fileVersionArrayBuffer, blob], {
     type: 'application/octet-stream', // prevent chrome mobile from downloading as `project.depl.txt`
   })
@@ -135,17 +128,9 @@ export async function importFromBDE(file: File): Promise<boolean> {
     }
   })
 
-  const base64Decoded = window.atob(rawFileContentUtf8)
-  const byteArr = new Uint8Array(new ArrayBuffer(base64Decoded.length))
-  for (let i = 0; i < base64Decoded.length; i++) {
-    byteArr[i] = base64Decoded.charCodeAt(i)
-  }
+  const byteArr = decodeBase64ToBinary(rawFileContentUtf8)
   const blob = new Blob([byteArr])
-  const gzipDecompressionStream = blob
-    .stream()
-    .pipeThrough(new DecompressionStream('gzip'))
-
-  const saveDataString = await new Response(gzipDecompressionStream).text()
+  const saveDataString = await gunzip(blob)
   const saveData = JSON.parse(saveDataString) as BDEngineSaveData
 
   const { bulkImportFromBDE, clearEntities } = useDisplayEntityStore.getState()
