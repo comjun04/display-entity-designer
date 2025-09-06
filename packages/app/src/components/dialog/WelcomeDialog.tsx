@@ -75,9 +75,9 @@ const WelcomeDialog: FC = () => {
 
               <button
                 className="flex flex-row items-center gap-2 rounded bg-neutral-900 px-4 py-2"
-                onClick={async () => {
+                onClick={() => {
                   closeDialog()
-                  await autosaveService.loadSave()
+                  autosaveService.loadSave().catch(console.error)
                 }}
               >
                 <LuArchiveRestore size={24} />
