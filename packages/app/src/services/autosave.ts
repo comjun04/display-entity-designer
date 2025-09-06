@@ -1,6 +1,6 @@
-import { encodeBinaryToBase64 } from '@/utils'
+import { decodeBase64ToBinary, encodeBinaryToBase64 } from '@/utils'
 
-import { createSaveData } from './fileService'
+import { createSaveData, openProjectFile } from './fileService'
 import { getLogger } from './loggerService'
 
 const AUTOSAVE_KEY = 'autoSavedProject'
@@ -66,5 +66,26 @@ export default class AutosaveService {
     // save to localStorage
     window.localStorage.setItem(AUTOSAVE_KEY, encoded)
     logger.info('doActualSave(): save complete')
+  }
+
+  get saveExist() {
+    return window.localStorage.getItem(AUTOSAVE_KEY) != null
+  }
+
+  async loadSave() {
+    const saveDataEncoded = window.localStorage.getItem(AUTOSAVE_KEY)
+    if (saveDataEncoded == null) {
+      throw new Error('Autosave data does not exist')
+    }
+
+    logger.log('loading autosaved data')
+
+    // base64 decode
+    const saveData = decodeBase64ToBinary(saveDataEncoded)
+    await openProjectFile(new Blob([saveData]))
+  }
+
+  deleteSave() {
+    window.localStorage.removeItem(AUTOSAVE_KEY)
   }
 }

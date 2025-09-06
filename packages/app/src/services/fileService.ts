@@ -46,7 +46,7 @@ export function openFromFile() {
   inputElement.click()
 }
 
-async function openProjectFile(file: File): Promise<boolean> {
+export async function openProjectFile(file: Blob): Promise<boolean> {
   if (file.size < 10) {
     logger.error(
       'Cannot open project file: cannot extract file header, file too small',
@@ -119,7 +119,7 @@ export async function createSaveData() {
 // ===============
 // BDEngine
 
-export async function importFromBDE(file: File): Promise<boolean> {
+export async function importFromBDE(file: Blob): Promise<boolean> {
   const fileReader = new FileReader()
   fileReader.readAsText(file, 'utf-8')
   const rawFileContentUtf8 = await new Promise<string>((resolve) => {
