@@ -31,7 +31,10 @@ const WelcomeDialog: FC = () => {
     autosaveService.saveExist,
   )
 
-  const closeDialog = () => setOpenedDialog(null)
+  const closeDialog = () => {
+    setShowRecoverSessionSection(false)
+    setOpenedDialog(null)
+  }
 
   return (
     <Dialog
@@ -48,7 +51,6 @@ const WelcomeDialog: FC = () => {
             onClick={() => {
               closeDialog()
               newProject()
-              setShowRecoverSessionSection(false)
             }}
           >
             <LuFilePlus size={24} />
@@ -58,7 +60,6 @@ const WelcomeDialog: FC = () => {
             className="flex flex-row items-center gap-2 rounded bg-neutral-900 px-4 py-2"
             onClick={() => {
               openFromFile()
-              setShowRecoverSessionSection(false)
               closeDialog()
             }}
           >
@@ -77,7 +78,6 @@ const WelcomeDialog: FC = () => {
                 onClick={async () => {
                   closeDialog()
                   await autosaveService.loadSave()
-                  setShowRecoverSessionSection(false)
                 }}
               >
                 <LuArchiveRestore size={24} />
