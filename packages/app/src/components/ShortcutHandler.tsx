@@ -6,12 +6,15 @@ import { getLogger } from '@/services/loggerService'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
+import { useHistoryStore } from '@/stores/historyStore'
 
 const logger = getLogger('ShortcutHandler')
 
 const ShortcutHandler: FC = () => {
   useEffect(() => {
     const focusableElements = ['input', 'textarea']
+    const { undoHistory, redoHistory } = useHistoryStore.getState()
+
     const handler = (evt: KeyboardEvent) => {
       const { openedDialog, setOpenedDialog } = useDialogStore.getState()
 
@@ -72,6 +75,16 @@ const ShortcutHandler: FC = () => {
         case ',':
           if (evt.ctrlKey) {
             setOpenedDialog('settings')
+          }
+          break
+        case 'z':
+          if (evt.ctrlKey) {
+            undoHistory()
+          }
+          break
+        case 'y':
+          if (evt.ctrlKey) {
+            redoHistory()
           }
       }
     }

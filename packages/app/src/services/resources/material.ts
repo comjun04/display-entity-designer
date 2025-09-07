@@ -69,7 +69,10 @@ export async function loadMaterial({
     // check for cached
     const { materials } = useClassObjectCacheStore.getState()
     if (materials.has(materialKey)) {
-      return materials.get(materialKey)!
+      return {
+        material: materials.get(materialKey)!,
+        materialKey,
+      }
     }
 
     logger.log(`Loading material for ${textureKey}`)
@@ -120,6 +123,6 @@ export async function loadMaterial({
     })
 
     setMaterial(materialKey, material)
-    return material
+    return { material, materialKey }
   })
 }

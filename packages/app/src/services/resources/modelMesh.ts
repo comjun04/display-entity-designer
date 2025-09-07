@@ -134,7 +134,10 @@ export async function loadModelMesh({
 }: LoadModelMeshArgs) {
   const mergedGeometries: BufferGeometry[] = []
   const fullGeometryGroups: GeometryGroup[] = []
-  const fullMaterials: Material[] = []
+  const fullMaterials: {
+    material: Material
+    materialKey: string
+  }[] = []
 
   // player_head check
   const isPlayerHead = modelResourceLocation === 'item/player_head'
@@ -152,7 +155,6 @@ export async function loadModelMesh({
 
     const geometries: PlaneGeometry[] = []
     const geometryGroups: GeometryGroup[] = []
-    const materials: Material[] = []
 
     let faceIdx = 0
     for (const faceKey in element.faces) {
@@ -176,7 +178,7 @@ export async function loadModelMesh({
 
       // BlockFace.tsx
 
-      const material = await loadMaterial({
+      const { material, materialKey } = await loadMaterial({
         textureData: isPlayerHead
           ? playerHeadTextureData?.baked &&
             isValidTextureUrl(playerHeadTextureData.url)
@@ -200,7 +202,14 @@ export async function loadModelMesh({
         textureSize,
         tintindex: faceData.tintindex,
       })
-      materials.push(material)
+
+      let materialIndex = fullMaterials.findIndex(
+        (d) => d.materialKey === materialKey,
+      )
+      if (materialIndex < 0) {
+        fullMaterials.push({ material, materialKey })
+        materialIndex = fullMaterials.length - 1
+      }
 
       let width = 1
       let height = 1
@@ -328,7 +337,7 @@ export async function loadModelMesh({
       geometryGroups.push({
         start: fullGeometryGroups.length * 6 + faceIdx * 6,
         count: 6, // PlaneGeometry = 2 triangles * 3 indices = 6
-        materialIndex: fullGeometryGroups.length + faceIdx,
+        materialIndex,
       })
 
       faceIdx++
@@ -399,7 +408,6 @@ export async function loadModelMesh({
 
     mergedGeometries.push(mergeVertices(mergedGeometry))
     fullGeometryGroups.push(...geometryGroups)
-    fullMaterials.push(...materials)
 
     elementIdx++
   }
@@ -411,11 +419,21 @@ export async function loadModelMesh({
     )
     return
   }
-  for (const group of fullGeometryGroups) {
-    const { start, count, materialIndex } = group
-    finalMergedGeometry.addGroup(start, count, materialIndex)
+
+  if (fullMaterials.length > 1) {
+    for (const group of fullGeometryGroups) {
+      const { start, count, materialIndex } = group
+      finalMergedGeometry.addGroup(start, count, materialIndex)
+    }
+  } else {
+    // material이 1개일 때는 굳이 그룹을 여러 개로 나눌 필요가 없음 (그룹 1개당 1 draw call)
+    // material이 2개 이상 사용될 때 geometry 합치는 순서를 조정해서 최소한의 그룹만 사용하도록 변경
+    finalMergedGeometry.addGroup(0, fullGeometryGroups.length * 6, 0)
   }
 
-  const mesh = new Mesh(finalMergedGeometry, fullMaterials)
+  const mesh = new Mesh(
+    finalMergedGeometry,
+    fullMaterials.map((d) => d.material),
+  )
   return mesh
 }

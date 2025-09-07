@@ -1,8 +1,12 @@
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { BDEngineSaveData, DisplayEntitySaveDataItem } from '@/types'
+import { decodeBase64ToBinary, gunzip, gzip } from '@/utils'
 
+import AutosaveService from './autosave'
 import { getLogger } from './loggerService'
+
+// circular import, but not a problem because AutosaveService is a Singleton class
 
 const logger = getLogger('FileService')
 
@@ -45,7 +49,7 @@ export function openFromFile() {
   inputElement.click()
 }
 
-async function openProjectFile(file: File): Promise<boolean> {
+export async function openProjectFile(file: Blob): Promise<boolean> {
   if (file.size < 10) {
     logger.error(
       'Cannot open project file: cannot extract file header, file too small',
@@ -69,11 +73,7 @@ async function openProjectFile(file: File): Promise<boolean> {
     return false
   }
 
-  const gzipDecompressionStream = file
-    .slice(8)
-    .stream()
-    .pipeThrough(new DecompressionStream('gzip'))
-  const saveDataString = await new Response(gzipDecompressionStream).text()
+  const saveDataString = await gunzip(file.slice(8))
   const saveData = JSON.parse(saveDataString) as DisplayEntitySaveData
 
   // TODO: saveData type validation
@@ -90,6 +90,22 @@ async function openProjectFile(file: File): Promise<boolean> {
 }
 
 export async function saveToFile() {
+  const saveDataBlob = await createSaveData()
+
+  const objectUrl = URL.createObjectURL(saveDataBlob)
+  const tempElement = document.createElement('a')
+  tempElement.href = objectUrl
+  tempElement.download = 'project.depl'
+  tempElement.click() // trigger download
+
+  URL.revokeObjectURL(objectUrl)
+
+  useEditorStore.getState().setProjectDirty(false)
+  // delete autosave because user already saved to local disk
+  AutosaveService.instance.deleteSave()
+}
+
+export async function createSaveData() {
   const rootEntities = useDisplayEntityStore.getState().exportAll()
   const finalSaveObject = {
     __version: FILE_VERSION,
@@ -99,28 +115,18 @@ export async function saveToFile() {
 
   const finalSaveObjectString = JSON.stringify(finalSaveObject)
 
-  // gzip
-  const gzipCompressionStream = new Blob([finalSaveObjectString])
-    .stream()
-    .pipeThrough(new CompressionStream('gzip'))
-  const blob = await new Response(gzipCompressionStream).blob()
+  const blob = await gzip(finalSaveObjectString)
   const newBlob = new Blob([FILE_MAGIC, fileVersionArrayBuffer, blob], {
     type: 'application/octet-stream', // prevent chrome mobile from downloading as `project.depl.txt`
   })
 
-  const objectUrl = URL.createObjectURL(newBlob)
-  const tempElement = document.createElement('a')
-  tempElement.href = objectUrl
-  tempElement.download = 'project.depl'
-  tempElement.click() // trigger download
-
-  URL.revokeObjectURL(objectUrl)
+  return newBlob
 }
 
 // ===============
 // BDEngine
 
-export async function importFromBDE(file: File): Promise<boolean> {
+export async function importFromBDE(file: Blob): Promise<boolean> {
   const fileReader = new FileReader()
   fileReader.readAsText(file, 'utf-8')
   const rawFileContentUtf8 = await new Promise<string>((resolve) => {
@@ -129,17 +135,9 @@ export async function importFromBDE(file: File): Promise<boolean> {
     }
   })
 
-  const base64Decoded = window.atob(rawFileContentUtf8)
-  const byteArr = new Uint8Array(new ArrayBuffer(base64Decoded.length))
-  for (let i = 0; i < base64Decoded.length; i++) {
-    byteArr[i] = base64Decoded.charCodeAt(i)
-  }
+  const byteArr = decodeBase64ToBinary(rawFileContentUtf8)
   const blob = new Blob([byteArr])
-  const gzipDecompressionStream = blob
-    .stream()
-    .pipeThrough(new DecompressionStream('gzip'))
-
-  const saveDataString = await new Response(gzipDecompressionStream).text()
+  const saveDataString = await gunzip(blob)
   const saveData = JSON.parse(saveDataString) as BDEngineSaveData
 
   const { bulkImportFromBDE, clearEntities } = useDisplayEntityStore.getState()

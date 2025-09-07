@@ -25,6 +25,7 @@ type TransformationData = {
 const settingsSchema = z.object({
   general: z
     .object({
+      showWelcomeOnStartup: z.boolean().default(true),
       forceUnifont: z.boolean().default(false),
     })
     .default({}),
@@ -71,6 +72,9 @@ type EditorState = {
     rotation?: PartialNumber3Tuple
     size?: PartialNumber3Tuple
   }) => void
+
+  projectDirty: boolean
+  setProjectDirty: (isDirty: boolean) => void
 
   settings: Settings
   setSettings: (newSettings: DeepPartial<Settings>) => void
@@ -166,6 +170,12 @@ export const useEditorStore = create(
           }
         }),
 
+      projectDirty: false,
+      setProjectDirty: (isDirty) =>
+        set((state) => {
+          state.projectDirty = isDirty
+        }),
+
       settings: initialSettings,
       setSettings: (newSettings) =>
         set((state) => {
@@ -194,6 +204,7 @@ export const useEditorStore = create(
             size: [1, 1, 1],
           }
           state.usingTransformControl = false
+          state.projectDirty = false
         }),
     }
   }),
