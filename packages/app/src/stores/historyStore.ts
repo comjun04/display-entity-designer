@@ -34,6 +34,7 @@ export const useHistoryStore = create(
       })
 
       AutosaveService.instance.markOperationPerformed()
+      useEditorStore.getState().setProjectDirty(true)
     },
     undoHistory: () => {
       import('./displayEntityStore')
@@ -93,6 +94,7 @@ export const useHistoryStore = create(
           })
 
           AutosaveService.instance.markOperationPerformed()
+          useEditorStore.getState().setProjectDirty(true)
         })
         .catch(console.error)
     },
@@ -154,6 +156,7 @@ export const useHistoryStore = create(
           })
 
           AutosaveService.instance.markOperationPerformed()
+          useEditorStore.getState().setProjectDirty(true)
         })
         .catch(console.error)
     },

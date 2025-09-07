@@ -96,6 +96,8 @@ export async function saveToFile() {
   tempElement.click() // trigger download
 
   URL.revokeObjectURL(objectUrl)
+
+  useEditorStore.getState().setProjectDirty(false)
 }
 
 export async function createSaveData() {
