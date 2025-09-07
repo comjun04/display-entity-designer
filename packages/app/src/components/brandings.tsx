@@ -24,9 +24,9 @@ interface DisclaimerProps {
 export const Disclaimer: FC<DisclaimerProps> = ({ className }) => {
   return (
     <div className={cn('mt-4 text-sm text-neutral-500', className)}>
-      This website or tool is not an official Minecraft product. Minecraft is a
-      trademark of Mojang AB. All rights related to Minecraft and its
-      intellectual property are owned by Mojang AB.
+      This app is not an official Minecraft product. Minecraft is a trademark of
+      Mojang AB. All rights related to Minecraft and its intellectual property
+      are owned by Mojang AB.
     </div>
   )
 }
