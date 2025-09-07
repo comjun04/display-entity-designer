@@ -45,55 +45,61 @@ const WelcomeDialog: FC = () => {
     >
       <div className="flex flex-col">
         <Title />
-        <div className="mt-8 flex flex-col gap-2 sm:w-1/2">
-          <button
-            className="flex flex-row items-center gap-2 rounded bg-neutral-900 px-4 py-2"
-            onClick={() => {
-              closeDialog()
-              newProject()
-            }}
-          >
-            <LuFilePlus size={24} />
-            <span>Start with something new</span>
-          </button>
-          <button
-            className="flex flex-row items-center gap-2 rounded bg-neutral-900 px-4 py-2"
-            onClick={() => {
-              openFromFile()
-              closeDialog()
-            }}
-          >
-            <LuFolderOpen size={24} />
-            <span>Open from device</span>
-          </button>
-          {showRecoverSessionSection && (
-            <div className="flex flex-col gap-2 rounded bg-neutral-700 p-4">
-              <div>
-                DEPL was closed without saving. Do you want to recover from
-                autosaved data?
-              </div>
+        <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+          <div className="flex-1">
+            <div className="text-2xl text-sky-200">v{__VERSION__}</div>
+            <div className="text-sm">Brief description of the update</div>
+          </div>
+          <div className="flex flex-1 flex-col gap-2">
+            <button
+              className="flex flex-row items-center gap-2 rounded bg-neutral-900 px-4 py-2"
+              onClick={() => {
+                closeDialog()
+                newProject()
+              }}
+            >
+              <LuFilePlus size={24} />
+              <span>Start with something new</span>
+            </button>
+            <button
+              className="flex flex-row items-center gap-2 rounded bg-neutral-900 px-4 py-2"
+              onClick={() => {
+                openFromFile()
+                closeDialog()
+              }}
+            >
+              <LuFolderOpen size={24} />
+              <span>Open from device</span>
+            </button>
+            {showRecoverSessionSection && (
+              <div className="flex flex-col gap-2 rounded bg-neutral-700 p-4">
+                <div>
+                  DEPL was closed without saving. Do you want to recover from
+                  autosaved data?
+                </div>
 
-              <button
-                className="flex flex-row items-center gap-2 rounded bg-neutral-900 px-4 py-2"
-                onClick={() => {
-                  closeDialog()
-                  autosaveService.loadSave().catch(console.error)
-                }}
-              >
-                <LuArchiveRestore size={24} />
-                <span>Recover Project</span>
-              </button>
-              <button
-                className="self-start text-start text-sm underline"
-                onClick={() => {
-                  autosaveService.deleteSave()
-                  setShowRecoverSessionSection(false)
-                }}
-              >
-                Discard
-              </button>
-            </div>
-          )}
+                <button
+                  className="flex flex-row items-center gap-2 rounded bg-neutral-900 px-4 py-2"
+                  onClick={() => {
+                    closeDialog()
+                    autosaveService.loadSave().catch(console.error)
+                  }}
+                >
+                  <LuArchiveRestore size={24} />
+                  <span>Recover Project</span>
+                </button>
+                <button
+                  className="self-start text-start text-sm underline"
+                  onClick={() => {
+                    autosaveService.deleteSave()
+                    setShowRecoverSessionSection(false)
+                  }}
+                >
+                  Discard
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         <div className="mt-4 flex flex-row items-center gap-2">
@@ -111,7 +117,6 @@ const WelcomeDialog: FC = () => {
             Show Welcome on Startup
           </label>
         </div>
-
         <Disclaimer />
         <SpecialThanks />
       </div>
