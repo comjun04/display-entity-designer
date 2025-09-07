@@ -3,7 +3,10 @@ import { useEditorStore } from '@/stores/editorStore'
 import { BDEngineSaveData, DisplayEntitySaveDataItem } from '@/types'
 import { decodeBase64ToBinary, gunzip, gzip } from '@/utils'
 
+import AutosaveService from './autosave'
 import { getLogger } from './loggerService'
+
+// circular import, but not a problem because AutosaveService is a Singleton class
 
 const logger = getLogger('FileService')
 
@@ -98,6 +101,8 @@ export async function saveToFile() {
   URL.revokeObjectURL(objectUrl)
 
   useEditorStore.getState().setProjectDirty(false)
+  // delete autosave because user already saved to local disk
+  AutosaveService.instance.deleteSave()
 }
 
 export async function createSaveData() {
