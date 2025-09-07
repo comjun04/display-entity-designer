@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
+import AutosaveService from '@/services/autosave'
 import { getLogger } from '@/services/loggerService'
 import { History, Number3Tuple } from '@/types'
 
@@ -25,12 +26,16 @@ export const useHistoryStore = create(
     // redo stack, pushed when undo, popped when redo
     redoStack: [],
 
-    addHistory: (history) =>
+    addHistory: (history) => {
       set((state) => {
         logger.debug('addHistory():', history)
         state.undoStack.push(history)
         state.redoStack.length = 0
-      }),
+      })
+
+      AutosaveService.instance.markOperationPerformed()
+      useEditorStore.getState().setProjectDirty(true)
+    },
     undoHistory: () => {
       import('./displayEntityStore')
         .then(({ useDisplayEntityStore }) => {
@@ -87,6 +92,9 @@ export const useHistoryStore = create(
             // from proxy revocation
             state.redoStack.push(history)
           })
+
+          AutosaveService.instance.markOperationPerformed()
+          useEditorStore.getState().setProjectDirty(true)
         })
         .catch(console.error)
     },
@@ -146,6 +154,9 @@ export const useHistoryStore = create(
             // from proxy revocation
             state.undoStack.push(history)
           })
+
+          AutosaveService.instance.markOperationPerformed()
+          useEditorStore.getState().setProjectDirty(true)
         })
         .catch(console.error)
     },

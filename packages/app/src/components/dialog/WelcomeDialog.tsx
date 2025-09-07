@@ -1,9 +1,10 @@
-import { FC } from 'react'
-import { LuFilePlus, LuFolderOpen } from 'react-icons/lu'
+import { FC, useState } from 'react'
+import { LuArchiveRestore, LuFilePlus, LuFolderOpen } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
 import { Disclaimer, SpecialThanks, Title } from '@/components/brandings'
 import { newProject } from '@/services/actions'
+import AutosaveService from '@/services/autosave'
 import { openFromFile } from '@/services/fileService'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useEditorStore } from '@/stores/editorStore'
@@ -24,7 +25,16 @@ const WelcomeDialog: FC = () => {
     })),
   )
 
-  const closeDialog = () => setOpenedDialog(null)
+  const autosaveService = AutosaveService.instance
+
+  const [showRecoverSessionSection, setShowRecoverSessionSection] = useState(
+    autosaveService.saveExist,
+  )
+
+  const closeDialog = () => {
+    setShowRecoverSessionSection(false)
+    setOpenedDialog(null)
+  }
 
   return (
     <Dialog
@@ -56,6 +66,34 @@ const WelcomeDialog: FC = () => {
             <LuFolderOpen size={24} />
             <span>Open from device</span>
           </button>
+          {showRecoverSessionSection && (
+            <div className="flex flex-col gap-2 rounded bg-neutral-700 p-4">
+              <div>
+                DEPL was closed without saving. Do you want to recover from
+                autosaved data?
+              </div>
+
+              <button
+                className="flex flex-row items-center gap-2 rounded bg-neutral-900 px-4 py-2"
+                onClick={() => {
+                  closeDialog()
+                  autosaveService.loadSave().catch(console.error)
+                }}
+              >
+                <LuArchiveRestore size={24} />
+                <span>Recover Project</span>
+              </button>
+              <button
+                className="self-start text-start text-sm underline"
+                onClick={() => {
+                  autosaveService.deleteSave()
+                  setShowRecoverSessionSection(false)
+                }}
+              >
+                Discard
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="mt-4 flex flex-row items-center gap-2">
