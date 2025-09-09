@@ -1,0 +1,15 @@
+{
+  "dialog": {
+    "welcome": {
+      "action": {
+        "new": "새로운 프로젝트",
+        "open": "열기"
+      },
+      "recoverProject": {
+        "desc": "DEPL이 저장되지 않고 종료되었습니다. 자동 저장된 데이터를 복구할까요?",
+        "action": { "recover": "프로젝트 복구", "discard": "삭제" }
+      },
+      "showWelcomeOnStartup": "시작 시 환영 메세지 표시"
+    }
+  }
+}
