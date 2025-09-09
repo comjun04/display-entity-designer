@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "generate": "tsx src/generate.ts",
+    "generate:incremental": "tsx src/generateIncremental.ts",
     "serve": "serve output",
     "husky:pre-commit": "pretty-quick --staged --pattern \"packages/asset-utils/**/*.{js,ts,jsx,tsx,json}\""
   },
