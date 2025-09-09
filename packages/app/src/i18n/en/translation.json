@@ -1,3 +1,15 @@
 {
-  
+  "dialog": {
+    "welcome": {
+      "action": {
+        "new": "Start with something new",
+        "open": "Open from device"
+      },
+      "recoverProject": {
+        "desc": "DEPL was closed without saving. Do you want to recover from autosaved data?",
+        "action": { "recover": "Recover Project", "discard": "Discard" }
+      },
+      "showWelcomeOnStartup": "Show Welcome on Startup"
+    }
+  }
 }
