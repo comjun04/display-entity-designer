@@ -27,7 +27,7 @@ function App() {
     const listener = (evt: BeforeUnloadEvent) => {
       const { projectDirty } = useEditorStore.getState()
       if (projectDirty) {
-        AutosaveService.instance.forceSave()
+        AutosaveService.instance.forceSave().catch(console.error)
         evt.preventDefault()
         evt.returnValue = 'string' // legacy method to trigger confirmation dialog
       }
