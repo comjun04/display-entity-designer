@@ -2,6 +2,7 @@ import merge from 'lodash.merge'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
+import i18n from '@/i18n/config'
 import { getLogger } from '@/services/loggerService'
 import { Settings, getStoredSettings } from '@/services/settings'
 import { DeepPartial, Number3Tuple, PartialNumber3Tuple } from '@/types'
@@ -136,6 +137,12 @@ export const useEditorStore = create(
           if (newSettings?.debug?.alertUncaughtError != null) {
             globalThis.__depl_alertUncaughtError =
               newSettings.debug.alertUncaughtError
+          }
+
+          if (newSettings.general?.language != null) {
+            i18n
+              .changeLanguage(newSettings.general.language)
+              .catch(console.error)
           }
 
           try {

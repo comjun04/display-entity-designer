@@ -1,7 +1,7 @@
 import i18n, { Resource } from 'i18next'
 import { initReactI18next } from 'react-i18next'
 
-import { useEditorStore } from '@/stores/editorStore'
+import { getStoredSettings } from '@/services/settings'
 
 import enTranslation from './en/translation.json'
 import koTranslation from './ko/translation.json'
@@ -16,8 +16,10 @@ export const resources = {
   },
 } as const satisfies Resource
 
+const storedSettings = getStoredSettings()
+
 void i18n.use(initReactI18next).init({
-  lng: useEditorStore.getState().settings.general.language,
+  lng: storedSettings.general.language,
   fallbackLng: 'en',
   debug: true,
   resources,
