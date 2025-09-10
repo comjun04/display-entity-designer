@@ -1,15 +1,10 @@
 import merge from 'lodash.merge'
-import { z } from 'zod'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
 import { getLogger } from '@/services/loggerService'
-import {
-  DeepPartial,
-  LogLevel,
-  Number3Tuple,
-  PartialNumber3Tuple,
-} from '@/types'
+import { Settings, getStoredSettings } from '@/services/settings'
+import { DeepPartial, Number3Tuple, PartialNumber3Tuple } from '@/types'
 
 const logger = getLogger('editorStore')
 
@@ -21,35 +16,6 @@ type TransformationData = {
   rotation: Number3Tuple
   size: Number3Tuple
 }
-
-const settingsSchema = z.object({
-  general: z
-    .object({
-      language: z.enum(['en', 'ko']).default('en'),
-      showWelcomeOnStartup: z.boolean().default(true),
-      forceUnifont: z.boolean().default(false),
-    })
-    .default({}),
-  performance: z
-    .object({
-      reducePixelRatio: z.boolean().default(false),
-    })
-    .default({}),
-  debug: z
-    .object({
-      testOption: z.boolean().default(false),
-      minLogLevel: z
-        .enum<
-          LogLevel,
-          [LogLevel, ...LogLevel[]]
-        >(['error', 'warn', 'info', 'debug'])
-        .default('info'),
-      perfMonitorEnabled: z.boolean().default(false),
-      alertUncaughtError: z.boolean().default(false),
-    })
-    .default({}),
-})
-type Settings = z.infer<typeof settingsSchema>
 
 type EditorState = {
   mode: EditorMode
@@ -81,21 +47,6 @@ type EditorState = {
   setSettings: (newSettings: DeepPartial<Settings>) => void
 
   resetProject: () => void
-}
-
-function getStoredSettings() {
-  try {
-    const settingsString = window.localStorage.getItem('settings')
-    if (settingsString == null) return settingsSchema.parse({})
-
-    const jsonParsedData = JSON.parse(settingsString) as unknown
-    return settingsSchema.parse(jsonParsedData)
-  } catch (err) {
-    // logger.error()를 사용할 경우 settings 로드 과정에서 오류가 발생하면 순환참조 문제로 인해 로드 자체가 안되므로
-    // 여기서는 그냥 console.error 사용
-    console.error(err)
-    return settingsSchema.parse({})
-  }
 }
 
 export const useEditorStore = create(
