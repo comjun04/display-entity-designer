@@ -1,4 +1,5 @@
 import { FC } from 'react'
+import { Trans, useTranslation } from 'react-i18next'
 
 import { cn } from '@/utils'
 
@@ -6,6 +7,8 @@ interface TitleProps {
   className?: string
 }
 export const Title: FC<TitleProps> = ({ className }) => {
+  const { t } = useTranslation()
+
   return (
     <div className={className}>
       <h2 className="text-3xl">
@@ -13,7 +16,7 @@ export const Title: FC<TitleProps> = ({ className }) => {
         <span className="text-sky-200">E</span>ntity{' '}
         <span className="text-sky-200">Pl</span>atform
       </h2>
-      <span>Graphical editor for Minecraft Display entities</span>
+      <span>{t(($) => $.branding.desc)}</span>
     </div>
   )
 }
@@ -22,11 +25,11 @@ interface DisclaimerProps {
   className?: string
 }
 export const Disclaimer: FC<DisclaimerProps> = ({ className }) => {
+  const { t } = useTranslation()
+
   return (
     <div className={cn('mt-4 text-sm text-neutral-500', className)}>
-      This app is not an official Minecraft product. Minecraft is a trademark of
-      Mojang AB. All rights related to Minecraft and its intellectual property
-      are owned by Mojang AB.
+      {t(($) => $.branding.disclaimer)}
     </div>
   )
 }
@@ -37,24 +40,26 @@ interface SpecialThanksProps {
 export const SpecialThanks: FC<SpecialThanksProps> = ({ className }) => {
   return (
     <div className={cn('mt-4 text-sm text-neutral-500', className)}>
-      Special Thanks to{' '}
-      <a
-        href="https://github.com/eszesbalint"
-        target="_blank"
-        className="underline"
-      >
-        Eszes Bálint
-      </a>{' '}
-      for creating{' '}
-      <a
-        href="https://github.com/eszesbalint/bdstudio"
-        target="_blank"
-        className="underline"
-      >
-        BDStudio
-      </a>
-      , the initial editor of Minecraft display entities, and inspiration of
-      this project
+      <Trans i18nKey={($) => $.branding.specialThanks} ns="translation">
+        Special Thanks to{' '}
+        <a
+          href="https://github.com/eszesbalint"
+          target="_blank"
+          className="underline"
+        >
+          Eszes Bálint
+        </a>{' '}
+        for creating{' '}
+        <a
+          href="https://github.com/eszesbalint/bdstudio"
+          target="_blank"
+          className="underline"
+        >
+          BDStudio
+        </a>
+        , the initial editor of Minecraft display entities, and inspiration of
+        this project
+      </Trans>
     </div>
   )
 }
