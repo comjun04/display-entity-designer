@@ -37,6 +37,16 @@ import {
 
 const args = process.argv
 const mcVersion = args[2]
+const semveredMcVersion = semverCoerce(mcVersion)?.version
+if (semveredMcVersion == null) {
+  console.error(`Invalid version ${mcVersion}`)
+  process.exit(1)
+} else if (!semverSatisfies(semveredMcVersion, '>=1.19.4')) {
+  console.error(
+    `Minimum target version must be 1.19.4 or above, but got ${mcVersion}`,
+  )
+  process.exit(1)
+}
 
 const workdirFolderRootPath = pathJoin(pathResolve(), 'workdir')
 const workdirFolderSharedAssetsPath = pathJoin(workdirFolderRootPath, 'shared')
@@ -66,10 +76,21 @@ if (
 
 // fetch root manifest
 const rootVersionManifest = await fetchVersionManifest()
-const versions = rootVersionManifest.versions
-  .filter(
-    (v) =>
-      v.type === 'release' && semverSatisfies(semverCoerce(v.id)!, '>=1.19.4'),
+// filter release versions only
+const releaseVersions = rootVersionManifest.versions.filter(
+  (v) => v.type === 'release',
+)
+if (releaseVersions.find((v) => v.id === mcVersion) == null) {
+  console.error(
+    `The target version ${mcVersion} is not a valid minecraft version`,
+  )
+  process.exit(1)
+}
+
+// 1.19.4 <= versions to process <= targetVersion
+const versions = releaseVersions
+  .filter((v) =>
+    semverSatisfies(semverCoerce(v.id)!, `>=1.19.4 <=${semveredMcVersion}`),
   )
   .sort((a, b) => semverCompare(semverCoerce(a.id)!, semverCoerce(b.id)!))
 
