@@ -12,6 +12,7 @@
   "devDependencies": {
     "@depl/shared": "workspace:^",
     "@types/node": "^22.7.5",
+    "@types/semver": "^7.7.1",
     "@types/unzipper": "^0.10.10",
     "prettier": "^3.3.3",
     "pretty-quick": "^4.2.2",
@@ -21,6 +22,7 @@
   },
   "dependencies": {
     "rimraf": "^6.0.1",
+    "semver": "^7.7.2",
     "unzipper": "^0.12.3"
   }
 }

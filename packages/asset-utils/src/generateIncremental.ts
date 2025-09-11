@@ -10,13 +10,28 @@ import { createHash } from 'crypto'
 import { Open } from 'unzipper'
 import { rimraf } from 'rimraf'
 import { spawnSync } from 'child_process'
-import { BlockStatesFile, ModelFile } from './types'
+import {
+  BlockStatesFile,
+  ModelFile,
+  ServerJarGeneratedRegistryData,
+} from './types'
 import { VersionMetadata } from '@depl/shared'
 import {
   blockstatesDefaultValues,
   renderableBlockEntityModelTextures,
 } from './constants'
-import { downloadAssets, downloadSharedAssets } from './cdn'
+import {
+  downloadAssets,
+  downloadSharedAssets,
+  fetchVersionManifest,
+  fetchVersionData,
+} from './cdn'
+
+import {
+  coerce as semverCoerce,
+  satisfies as semverSatisfies,
+  compare as semverCompare,
+} from 'semver'
 
 // =====
 
@@ -24,49 +39,22 @@ const args = process.argv
 const mcVersion = args[2]
 
 const workdirFolderRootPath = pathJoin(pathResolve(), 'workdir')
-const workdirFolderPath = pathJoin(workdirFolderRootPath, mcVersion)
 const workdirFolderSharedAssetsPath = pathJoin(workdirFolderRootPath, 'shared')
 const outputFolderRootPath = pathJoin(pathResolve(), 'output')
 const outputFolderPath = pathJoin(outputFolderRootPath, mcVersion)
 const outputFolderSharedAssetsPath = pathJoin(outputFolderRootPath, 'shared')
-const assetsMinecraftFolderPath = pathJoin(
-  outputFolderPath,
-  'assets',
-  'minecraft',
-)
 
 // workdir 폴더 미리 생성
 if (!existsSync(workdirFolderRootPath)) {
   await mkdir(workdirFolderRootPath)
 }
 
-// 버전 이름 폴더가 이미 있는지 확인
-if (
-  !existsSync(workdirFolderPath) ||
-  !(await lstat(workdirFolderPath)).isDirectory()
-) {
-  console.log(`workdir/${mcVersion} folder does not exist. Creating a new one.`)
-  await mkdir(workdirFolderPath, { recursive: true })
-}
 if (
   !existsSync(workdirFolderSharedAssetsPath) ||
   !(await lstat(workdirFolderSharedAssetsPath)).isDirectory()
 ) {
   console.log('workdir/shared folder does not exist. Creating a new one.')
   await mkdir(workdirFolderSharedAssetsPath, { recursive: true })
-}
-
-if (
-  !existsSync(outputFolderPath) ||
-  !(await lstat(outputFolderPath)).isDirectory()
-) {
-  console.log(`output/${mcVersion} folder does not exist. Creating a new one.`)
-  await mkdir(outputFolderPath, { recursive: true })
-} else if ((await readdir(outputFolderPath)).length > 0) {
-  console.error(
-    `The folder output/${mcVersion} folder is not empty. Specify a different version name or empty the folder and rerun the command.`,
-  )
-  process.exit(1)
 }
 if (
   !existsSync(outputFolderSharedAssetsPath) ||
@@ -76,150 +64,233 @@ if (
   await mkdir(outputFolderSharedAssetsPath, { recursive: true })
 }
 
-console.log('Cleaning up previous server jar reports files')
-await cleanupWorkdir(mcVersion)
+// fetch root manifest
+const rootVersionManifest = await fetchVersionManifest()
+const versions = rootVersionManifest.versions
+  .filter(
+    (v) =>
+      v.type === 'release' && semverSatisfies(semverCoerce(v.id)!, '>=1.19.4'),
+  )
+  .sort((a, b) => semverCompare(semverCoerce(a.id)!, semverCoerce(b.id)!))
 
-const versionData = await downloadAssets(mcVersion, workdirFolderPath)
-
-const jarfileAbsolutePath = pathJoin(workdirFolderPath, 'client.jar')
-const zip = await Open.file(jarfileAbsolutePath)
-
-console.log('Extracting version asset files...')
-
-const fileHashes: Record<string, string> = {}
-const filesToExtract = zip.files.filter(
-  (f) =>
-    /^assets\/minecraft\/(blockstates|models|font|textures\/(block|colormap|entity\/player|font|item))\//.test(
-      f.path,
-    ) || renderableBlockEntityModelTextures.includes(f.path),
-)
-for (const file of filesToExtract) {
-  const dirPath = file.path.split('/').slice(0, -1).join('/')
-  await mkdir(pathJoin(outputFolderPath, dirPath), { recursive: true })
-
-  const buf = await file.buffer()
-  const hash = createHash('sha1').update(buf).digest('hex')
-  fileHashes[file.path] = hash
-  await writeFile(pathJoin(outputFolderPath, file.path), buf)
-}
-
-await writeFile(
-  pathJoin(workdirFolderPath, 'fileHashes.json'),
-  JSON.stringify(fileHashes, null, 2),
-)
-
-// chest, shulker_box 등 엔티티 모델로 렌더링되는 블록들은 원래는 model .json파일에 element가 없어 렌더링 가능한 블록으로 인식되지 않는데,
-// 이를 렌더링 가능한 블록으로 인식시키기 위해 따로 만든 파일들을 복사해서 지정된 폴더에 붙여넣기
-console.log('Copying data in hardcoded folder to destination folder...')
-await cp(pathJoin(pathResolve(), 'hardcoded'), assetsMinecraftFolderPath, {
-  recursive: true,
-})
-
-// generate server resource reports file to get blocks.json and items.json
-console.log('Generating server.jar resource reports...')
-const serverJarfilePath = pathJoin(workdirFolderPath, 'server.jar')
-spawnSync(
-  'java',
-  [
-    '-DbundlerMainClass=net.minecraft.data.Main',
-    '-jar',
-    serverJarfilePath,
-    '--reports',
-  ],
+const fileInfos: Record<
+  string,
   {
-    cwd: workdirFolderPath,
-  },
-)
+    fromVersion: string // first version that file existed
+    hash: string // file hash
+  }
+> = {}
+const blockRenderables: Record<string, boolean> = {}
 
-const reportsPath = pathJoin(workdirFolderPath, 'generated', 'reports')
+for (const versionToDownload of versions) {
+  const versionId = versionToDownload.id
+  const workdirFolderPath = pathJoin(workdirFolderRootPath, versionId)
+  const outputFolderPath = pathJoin(outputFolderRootPath, versionId)
+  const assetsMinecraftFolderPath = pathJoin(
+    outputFolderPath,
+    'assets',
+    'minecraft',
+  )
 
-// blocks.json
-console.log('Generating blocks list')
+  console.log(`[incremental] processing ${versionId}`)
 
-const generatedBlocksJson = JSON.parse(
-  await readFile(pathJoin(reportsPath, 'blocks.json'), 'utf8'),
-)
-
-// TODO: chest, shulker_box 등 엔티티 모델로 렌더링되는 블록들은 모델 .json에 `elements`가 있는지 여부로 알 수 없음.
-// 이 모델들은 하드코딩되어있기 때문에 별도로 처리해줘야 함
-// https://minecraft.fandom.com/wiki/Model#Objects_which_cannot_be_remodelled
-const renderableBlocks: string[] = []
-for await (const blockNameWithPrefix of [...Object.keys(generatedBlocksJson)]) {
-  const blockName = stripMinecraftPrefix(blockNameWithPrefix)
-  const blockstateFile = JSON.parse(
-    await readFile(
-      pathJoin(assetsMinecraftFolderPath, 'blockstates', `${blockName}.json`),
-      'utf8',
-    ),
-  ) as BlockStatesFile
-
-  let canRender: boolean = false
-  if ('variants' in blockstateFile) {
-    for (const key in blockstateFile.variants) {
-      const variantData = blockstateFile.variants[key]
-      if (Array.isArray(variantData)) {
-        for (const variantDataItem of variantData) {
-          canRender = await canRenderToBlockDisplay(variantDataItem.model)
-          if (canRender) break
-        }
-      } else {
-        canRender = await canRenderToBlockDisplay(variantData.model)
-      }
-
-      if (canRender) break
-    }
-  } else if ('multipart' in blockstateFile) {
-    for (const multipartItem of blockstateFile.multipart) {
-      if (Array.isArray(multipartItem.apply)) {
-        for (const multipartApplyItem of multipartItem.apply) {
-          canRender = await canRenderToBlockDisplay(multipartApplyItem.model)
-          if (canRender) break
-        }
-      } else {
-        canRender = await canRenderToBlockDisplay(multipartItem.apply.model)
-      }
-
-      if (canRender) break
-    }
+  if ((await readdir(outputFolderPath)).length > 0) {
+    console.log(`cleaning up output/${versionId} folder`)
+    await rimraf(outputFolderPath)
   }
 
-  if (canRender) {
-    const defaultBlockstateValues = [
-      ...Object.entries(blockstatesDefaultValues[blockName] ?? {}),
-    ]
-    const stringifiedDefaultBlockstateValues =
-      defaultBlockstateValues.length > 0
-        ? '[' +
-          defaultBlockstateValues
-            .map(([key, value]) => `${key}=${value}`)
-            .join(',') +
-          ']'
-        : ''
+  // 해당 버전 작업 폴더가 없으면 새로 만들기
+  await mkdir(workdirFolderPath, { recursive: true })
+  await mkdir(assetsMinecraftFolderPath, { recursive: true })
 
-    renderableBlocks.push(blockName + stringifiedDefaultBlockstateValues)
-  } else {
-    console.log(`[BlockListGen] excluding block ${blockName}`)
+  await downloadAssets(versionId, workdirFolderPath)
+
+  const jarfileAbsolutePath = pathJoin(workdirFolderPath, 'client.jar')
+  const zip = await Open.file(jarfileAbsolutePath)
+
+  console.log('Extracting version asset files...')
+
+  const filesToExtract = zip.files.filter(
+    (f) =>
+      /^assets\/minecraft\/(blockstates|models|font|textures\/(block|colormap|entity\/player|font|item))\//.test(
+        f.path,
+      ) || renderableBlockEntityModelTextures.includes(f.path),
+  )
+  let fileExtractSkipCount = 0
+  for (const file of filesToExtract) {
+    const buf = await file.buffer()
+    const hash = createHash('sha1').update(buf).digest('hex')
+    if (fileInfos[file.path]?.hash === hash) {
+      // file is unchanged between previous version and this version
+      // so skip it
+      fileExtractSkipCount++
+      continue
+    }
+    fileInfos[file.path] = {
+      fromVersion: versionId,
+      hash,
+    }
+
+    const dirPath = file.path.split('/').slice(0, -1).join('/')
+    await mkdir(pathJoin(outputFolderPath, dirPath), { recursive: true })
+    await writeFile(pathJoin(outputFolderPath, file.path), buf)
   }
+  console.log(
+    `Extracted files. Skipped: ${fileExtractSkipCount} / ${filesToExtract.length}`,
+  )
+
+  await writeFile(
+    pathJoin(workdirFolderPath, 'fileInfos.json'),
+    JSON.stringify(fileInfos, null, 2),
+  )
+
+  // chest, shulker_box 등 엔티티 모델로 렌더링되는 블록들은 원래는 model .json파일에 element가 없어 렌더링 가능한 블록으로 인식되지 않는데,
+  // 이를 렌더링 가능한 블록으로 인식시키기 위해 따로 만든 파일들을 복사해서 지정된 폴더에 붙여넣기
+  /*
+  console.log('Copying data in hardcoded folder to destination folder...')
+  await cp(pathJoin(pathResolve(), 'hardcoded'), assetsMinecraftFolderPath, {
+    recursive: true,
+  })
+  */
+
+  console.log('Cleaning up previous server jar reports files')
+  await cleanupWorkdir(versionId)
+
+  // generate server resource reports file to get blocks.json and items.json
+  console.log('Generating server.jar resource reports...')
+  const serverJarfilePath = pathJoin(workdirFolderPath, 'server.jar')
+  spawnSync(
+    'java',
+    [
+      '-DbundlerMainClass=net.minecraft.data.Main',
+      '-jar',
+      serverJarfilePath,
+      '--reports',
+    ],
+    {
+      cwd: workdirFolderPath,
+    },
+  )
+
+  const reportsPath = pathJoin(workdirFolderPath, 'generated', 'reports')
+
+  // blocks.json
+  console.log('Generating blocks list')
+
+  const generatedBlocksJson = JSON.parse(
+    await readFile(pathJoin(reportsPath, 'blocks.json'), 'utf8'),
+  )
+
+  // TODO: chest, shulker_box 등 엔티티 모델로 렌더링되는 블록들은 모델 .json에 `elements`가 있는지 여부로 알 수 없음.
+  // 이 모델들은 하드코딩되어있기 때문에 별도로 처리해줘야 함
+  // https://minecraft.fandom.com/wiki/Model#Objects_which_cannot_be_remodelled
+  const renderableBlocks: string[] = []
+  for (const blockNameWithPrefix of Object.keys(generatedBlocksJson)) {
+    const blockName = stripMinecraftPrefix(blockNameWithPrefix)
+    let canRender: boolean = false
+
+    if (blockName in blockRenderables) {
+      canRender = blockRenderables[blockName]
+    } else {
+      const blockstateFile = JSON.parse(
+        await readFile(
+          pathJoin(
+            assetsMinecraftFolderPath,
+            'blockstates',
+            `${blockName}.json`,
+          ),
+          'utf8',
+        ),
+      ) as BlockStatesFile
+
+      if ('variants' in blockstateFile) {
+        for (const key in blockstateFile.variants) {
+          const variantData = blockstateFile.variants[key]
+          if (Array.isArray(variantData)) {
+            for (const variantDataItem of variantData) {
+              canRender = await canRenderToBlockDisplay(
+                versionId,
+                variantDataItem.model,
+              )
+              if (canRender) break
+            }
+          } else {
+            canRender = await canRenderToBlockDisplay(
+              versionId,
+              variantData.model,
+            )
+          }
+
+          if (canRender) break
+        }
+      } else if ('multipart' in blockstateFile) {
+        for (const multipartItem of blockstateFile.multipart) {
+          if (Array.isArray(multipartItem.apply)) {
+            for (const multipartApplyItem of multipartItem.apply) {
+              canRender = await canRenderToBlockDisplay(
+                versionId,
+                multipartApplyItem.model,
+              )
+              if (canRender) break
+            }
+          } else {
+            canRender = await canRenderToBlockDisplay(
+              versionId,
+              multipartItem.apply.model,
+            )
+          }
+
+          if (canRender) break
+        }
+      }
+    }
+
+    if (canRender) {
+      const defaultBlockstateValues = [
+        ...Object.entries(blockstatesDefaultValues[blockName] ?? {}),
+      ]
+      const stringifiedDefaultBlockstateValues =
+        defaultBlockstateValues.length > 0
+          ? '[' +
+            defaultBlockstateValues
+              .map(([key, value]) => `${key}=${value}`)
+              .join(',') +
+            ']'
+          : ''
+
+      renderableBlocks.push(blockName + stringifiedDefaultBlockstateValues)
+    } else {
+      console.log(`[BlockListGen] excluding block ${blockName}`)
+    }
+
+    blockRenderables[blockName] = canRender
+  }
+
+  await writeFile(
+    pathJoin(workdirFolderPath, 'blockRenderables.json'),
+    JSON.stringify(blockRenderables),
+  )
+  await writeFile(
+    pathJoin(assetsMinecraftFolderPath, 'blocks.json'),
+    JSON.stringify({ blocks: renderableBlocks }),
+  )
+
+  // items.json
+  console.log('Generating items list')
+
+  const generatedRegistryJson = JSON.parse(
+    await readFile(pathJoin(reportsPath, 'registries.json'), 'utf8'), // items.json does not exist on 1.19.4 ao use registries.json instead
+  ) as ServerJarGeneratedRegistryData
+  const items = Object.keys(generatedRegistryJson['minecraft:item'].entries)
+    .map((k) => k.match(/^minecraft:(.+)$/)![1])
+    .filter((i) => i !== 'air')
+  await writeFile(
+    pathJoin(assetsMinecraftFolderPath, 'items.json'),
+    JSON.stringify({ items }),
+  )
 }
 
-await writeFile(
-  pathJoin(assetsMinecraftFolderPath, 'blocks.json'),
-  JSON.stringify({ blocks: renderableBlocks }),
-)
-
-// items.json
-console.log('Generating items list')
-
-const generatedItemsJson = JSON.parse(
-  await readFile(pathJoin(reportsPath, 'items.json'), 'utf8'),
-)
-const items = [...Object.keys(generatedItemsJson)]
-  .map((k) => k.match(/^minecraft:(.+)$/)![1])
-  .filter((i) => i !== 'air')
-await writeFile(
-  pathJoin(assetsMinecraftFolderPath, 'items.json'),
-  JSON.stringify({ items }),
-)
+const versionData = await fetchVersionData(mcVersion)
 
 // shared assets
 const workdirFolderSharedAssetsSubPath = pathJoin(
@@ -284,10 +355,22 @@ function stripMinecraftPrefix(input: string) {
   return input.startsWith('minecraft:') ? input.slice(10) : input
 }
 
-async function canRenderToBlockDisplay(modelResourceLocation: string) {
+async function canRenderToBlockDisplay(
+  version: string,
+  modelResourceLocation: string,
+) {
   if (modelResourceLocation.startsWith('minecraft:')) {
     modelResourceLocation = modelResourceLocation.slice(10)
   }
+
+  const modelFileInfo =
+    fileInfos[`assets/minecraft/models/${modelResourceLocation}.json`]
+  const assetsMinecraftFolderPath = pathJoin(
+    outputFolderRootPath,
+    modelFileInfo?.fromVersion ?? version,
+    'assets',
+    'minecraft',
+  )
 
   const modelData = JSON.parse(
     await readFile(
@@ -307,7 +390,7 @@ async function canRenderToBlockDisplay(modelResourceLocation: string) {
 
   // parent 값이 있을 경우 parent에서도 체크
   if (modelData.parent != null) {
-    return await canRenderToBlockDisplay(modelData.parent)
+    return await canRenderToBlockDisplay(version, modelData.parent)
   }
 
   // console.log(modelResourceLocation, modelData)
