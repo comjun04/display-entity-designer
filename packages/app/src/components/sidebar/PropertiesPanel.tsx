@@ -1,4 +1,5 @@
 import { FC, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   LuBold,
   LuItalic,
@@ -86,6 +87,8 @@ const BlockDisplayProperties: FC = () => {
 }
 
 const ItemDisplayProperties: FC = () => {
+  const { t } = useTranslation()
+
   const singleSelectedEntity = useDisplayEntityStore((state) => {
     const entity =
       state.selectedEntityIds.length === 1
@@ -108,7 +111,7 @@ const ItemDisplayProperties: FC = () => {
   return (
     <div className="flex flex-col gap-2">
       <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
-        Display
+        {t(($) => $.sidebar.propertiesPanel.sections.display)}
       </div>
 
       <div className="flex flex-row items-center gap-2">
@@ -137,10 +140,16 @@ const ItemDisplayProperties: FC = () => {
       {isItemDisplayPlayerHead(singleSelectedEntity) && (
         <>
           <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
-            Textures
+            {t(($) => $.sidebar.propertiesPanel.sections.textures.title)}
           </div>
           <div className="flex flex-row items-center gap-2">
-            <label className="flex-none text-end">texture url</label>
+            <label className="flex-none text-end">
+              {t(
+                ($) =>
+                  $.sidebar.propertiesPanel.sections.textures.properties
+                    .textureUrl.title,
+              )}
+            </label>
             <input
               className="min-w-0 shrink rounded bg-neutral-800 py-1 pl-1 text-xs outline-none"
               value={tempPlayerHeadTextureUrl}
@@ -172,11 +181,21 @@ const ItemDisplayProperties: FC = () => {
                   })
               }}
             >
-              Apply
+              {t(
+                ($) =>
+                  $.sidebar.propertiesPanel.sections.textures.properties
+                    .textureUrl.applyBtn,
+              )}
             </button>
           </div>
           <div className="flex flex-row items-center gap-2">
-            <label className="flex-none text-end">player username</label>
+            <label className="flex-none text-end">
+              {t(
+                ($) =>
+                  $.sidebar.propertiesPanel.sections.textures.properties
+                    .playerUsername.title,
+              )}
+            </label>
             <input
               className="min-w-0 shrink rounded bg-neutral-800 py-1 pl-1 text-xs outline-none"
               maxLength={16}
@@ -225,7 +244,11 @@ const ItemDisplayProperties: FC = () => {
                   })
               }}
             >
-              Load
+              {t(
+                ($) =>
+                  $.sidebar.propertiesPanel.sections.textures.properties
+                    .playerUsername.loadBtn,
+              )}
             </button>
           </div>
         </>
@@ -235,6 +258,8 @@ const ItemDisplayProperties: FC = () => {
 }
 
 const TextDisplayProperties: FC = () => {
+  const { t } = useTranslation()
+
   const singleSelectedEntity = useDisplayEntityStore((state) => {
     const entity =
       state.selectedEntityIds.length === 1
@@ -250,7 +275,7 @@ const TextDisplayProperties: FC = () => {
   return (
     <div className="flex flex-col gap-2">
       <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
-        Text
+        {t(($) => $.sidebar.propertiesPanel.sections.text)}
       </div>
 
       <div className="flex flex-row items-center gap-2">
@@ -402,7 +427,7 @@ const TextDisplayProperties: FC = () => {
       </div>
 
       <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
-        Text Effects
+        {t(($) => $.sidebar.propertiesPanel.sections.textEffects)}
       </div>
       <div className="flex w-full flex-row gap-1 rounded bg-neutral-800 p-1">
         <button
@@ -496,6 +521,8 @@ const TextDisplayProperties: FC = () => {
 }
 
 const PropertiesPanel: FC = () => {
+  const { t } = useTranslation()
+
   const { singleSelectedEntity } = useDisplayEntityStore(
     useShallow((state) => {
       return {
@@ -509,7 +536,9 @@ const PropertiesPanel: FC = () => {
 
   return (
     <SidePanel>
-      <SidePanelTitle>Properties</SidePanelTitle>
+      <SidePanelTitle>
+        {t(($) => $.sidebar.propertiesPanel.title)}
+      </SidePanelTitle>
       <SidePanelContent>
         {singleSelectedEntity?.kind === 'block' && <BlockDisplayProperties />}
         {singleSelectedEntity?.kind === 'item' && <ItemDisplayProperties />}

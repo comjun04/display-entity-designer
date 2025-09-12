@@ -1,9 +1,12 @@
 import { FC } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/shallow'
 
 import { Settings, useEditorStore } from '@/stores/editorStore'
 
 const GeneralPage: FC = () => {
+  const { t } = useTranslation()
+
   const { settings, setSettings } = useEditorStore(
     useShallow((state) => ({
       settings: state.settings,
@@ -13,10 +16,14 @@ const GeneralPage: FC = () => {
 
   return (
     <>
-      <h3 className="text-xl font-bold">General</h3>
+      <h3 className="text-xl font-bold">
+        {t(($) => $.dialog.settings.page.general.title)}
+      </h3>
 
       <div className="mt-4 flex flex-row items-center gap-2">
-        <label htmlFor="settings_general_language">Language</label>
+        <label htmlFor="settings_general_language">
+          {t(($) => $.dialog.settings.page.general.options.language)}
+        </label>
         <select
           id="settings_general_language"
           className="flex-none rounded bg-neutral-900 px-2 py-1"
@@ -46,7 +53,9 @@ const GeneralPage: FC = () => {
           }}
         />
         <label htmlFor="settings_general_showWelcomeOnStartup">
-          Show Welcome on Startup
+          {t(
+            ($) => $.dialog.settings.page.general.options.showWelcomeOnStartup,
+          )}
         </label>
       </div>
 
@@ -62,7 +71,7 @@ const GeneralPage: FC = () => {
           }}
         />
         <label htmlFor="settings_general_forceUnifont">
-          Force Unicode font (Unifont)
+          {t(($) => $.dialog.settings.page.general.options.forceUnifont)}
         </label>
       </div>
     </>

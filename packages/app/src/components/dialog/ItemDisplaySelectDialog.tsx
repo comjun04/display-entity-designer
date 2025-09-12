@@ -1,4 +1,5 @@
 import { FC, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import useSWRImmutable from 'swr/immutable'
 import { useShallow } from 'zustand/shallow'
 
@@ -10,6 +11,8 @@ import { CDNItemsListResponse } from '@/types'
 import Dialog from './Dialog'
 
 const ItemDisplaySelectDialog: FC = () => {
+  const { t } = useTranslation()
+
   const [firstOpened, setFirstOpened] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -45,13 +48,13 @@ const ItemDisplaySelectDialog: FC = () => {
 
   return (
     <Dialog
-      title="Add Item Display"
+      title={t(($) => $.dialog.itemDisplaySelect.title)}
       open={isOpen}
       onClose={closeDialog}
       className="relative z-50"
     >
       <div className="flex flex-row items-center gap-4">
-        <span>Search</span>
+        <span>{t(($) => $.dialog.itemDisplaySelect.search.label)}</span>
         <input
           type="text"
           className="grow rounded px-2 py-1 text-sm outline-none"

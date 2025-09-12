@@ -1,5 +1,6 @@
 import { useDebouncedEffect } from '@react-hookz/web'
 import { FC, JSX, useEffect, useState } from 'react'
+import { Trans, useTranslation } from 'react-i18next'
 import { LuCopy, LuCopyCheck } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
@@ -28,6 +29,8 @@ const CopyButton: FC<CopyButtonProps> = ({
   onClick,
   ...props
 }) => {
+  const { t } = useTranslation()
+
   const [clicked, setClicked] = useState(false)
   const [showCopiedState, setShowCopiedState] = useState(false)
 
@@ -62,12 +65,12 @@ const CopyButton: FC<CopyButtonProps> = ({
       {showCopiedState ? (
         <>
           <LuCopyCheck />
-          Copied!
+          {t(($) => $.dialog.exportToMinecraft.result.copyBtn.copied)}
         </>
       ) : (
         <>
           <LuCopy />
-          Copy
+          {t(($) => $.dialog.exportToMinecraft.result.copyBtn.normal)}
         </>
       )}
     </button>
@@ -79,12 +82,14 @@ type TagValidatorInputProps = {
 }
 
 const TagValidatorInput: FC<TagValidatorInputProps> = ({ onChange }) => {
+  const { t } = useTranslation()
+
   const [input, setInput] = useState('')
   const [hasValidationErrors, setHasValidationErrors] = useState(false)
 
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-      <span>Base Tag</span>
+      <span>{t(($) => $.dialog.exportToMinecraft.baseTag.title)}</span>
       <input
         className="rounded p-1 text-sm outline-none"
         value={input}
@@ -102,12 +107,17 @@ const TagValidatorInput: FC<TagValidatorInputProps> = ({ onChange }) => {
       />
       {hasValidationErrors && (
         <span className="text-sm text-red-500">
-          Tag must contain only alphabets, numbers,{' '}
-          <code className="rounded bg-neutral-800 p-1 font-mono">_</code>,{' '}
-          <code className="rounded bg-neutral-800 p-1 font-mono">-</code>,{' '}
-          <code className="rounded bg-neutral-800 p-1 font-mono">.</code>, and{' '}
-          <code className="rounded bg-neutral-800 p-1 font-mono">+</code>{' '}
-          characters.
+          <Trans
+            i18nKey={($) => $.dialog.exportToMinecraft.baseTag.invalidTagNotice}
+            ns="translation"
+          >
+            Tag must contain only alphabets, numbers,{' '}
+            <code className="rounded bg-neutral-800 p-1 font-mono">_</code>,{' '}
+            <code className="rounded bg-neutral-800 p-1 font-mono">-</code>,{' '}
+            <code className="rounded bg-neutral-800 p-1 font-mono">.</code>, and{' '}
+            <code className="rounded bg-neutral-800 p-1 font-mono">+</code>{' '}
+            characters.
+          </Trans>
         </span>
       )}
     </div>
@@ -115,6 +125,8 @@ const TagValidatorInput: FC<TagValidatorInputProps> = ({ onChange }) => {
 }
 
 const ExportToMinecraftDialog: FC = () => {
+  const { t } = useTranslation()
+
   const { isOpen, setOpenedDialog } = useDialogStore(
     useShallow((state) => ({
       isOpen: state.openedDialog === 'exportToMinecraft',
@@ -267,7 +279,7 @@ const ExportToMinecraftDialog: FC = () => {
 
   return (
     <Dialog
-      title="Export to Minecraft"
+      title={t(($) => $.dialog.exportToMinecraft.title)}
       open={isOpen}
       onClose={() => setOpenedDialog(null)}
       className="relative z-50"
@@ -284,7 +296,11 @@ const ExportToMinecraftDialog: FC = () => {
           return (
             <div key={idx}>
               <div className="flex flex-row items-center">
-                <span className="grow">Summon command {idx + 1}</span>
+                <span className="grow">
+                  {t(($) => $.dialog.exportToMinecraft.result.summonCommand, {
+                    n: idx + 1,
+                  })}
+                </span>
                 <CopyButton valueToCopy={summonCommand} />
               </div>
               <textarea
@@ -301,7 +317,9 @@ const ExportToMinecraftDialog: FC = () => {
 
         <div>
           <div className="flex flex-row items-center">
-            <span className="grow">Remove command</span>
+            <span className="grow">
+              {t(($) => $.dialog.exportToMinecraft.result.removeCommand)}
+            </span>
             <CopyButton valueToCopy={removeCommand} />
           </div>
           <textarea
