@@ -353,6 +353,8 @@ for (const versionToDownload of versions) {
   // write version metadata.json
   console.log('Writing metadata.json')
   const versionMetadata: VersionMetadata = {
+    version: 1,
+    incremental: true,
     gameVersion: versionId,
     sharedAssets: {
       assetIndex: parseInt(versionData.assetIndex.id),

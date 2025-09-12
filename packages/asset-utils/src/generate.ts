@@ -259,6 +259,8 @@ for (const assetFilePath of sharedAssets) {
 // write version metadata.json
 console.log('Writing metadata.json')
 const versionMetadata: VersionMetadata = {
+  version: 1,
+  incremental: false,
   gameVersion: mcVersion,
   sharedAssets: {
     assetIndex: parseInt(versionData.assetIndex.id),
