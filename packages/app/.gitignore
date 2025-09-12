@@ -131,3 +131,6 @@ dist
 
 # vim swap files
 *.sw?
+
+# rollup-plugin-visualizer generated file
+stats.html
