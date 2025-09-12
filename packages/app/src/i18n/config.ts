@@ -14,7 +14,6 @@ i18n
   .init<HttpBackendOptions>({
     lng: storedSettings.general.language,
     fallbackLng: 'en',
-    debug: true,
     defaultNS,
     interpolation: {
       escapeValue: false, // react already safes from xss
