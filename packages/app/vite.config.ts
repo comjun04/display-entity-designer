@@ -11,7 +11,7 @@ const isDevelopmentMode = process.env.NODE_ENV === 'development'
 const commitHash = execSync('git rev-parse --short HEAD').toString()
 
 const plugins: PluginOption[] = [react()]
-if (isDevelopmentMode) {
+if (process.env.GENERATE_BUILD_STATS) {
   plugins.push(visualizer())
 }
 

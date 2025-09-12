@@ -5,17 +5,18 @@ import {
   PerspectiveCamera,
 } from '@react-three/drei'
 import { Canvas, invalidate } from '@react-three/fiber'
-import { FC, useEffect, useRef } from 'react'
+import { FC, Suspense, lazy, useEffect, useRef } from 'react'
 import { Color, DoubleSide } from 'three'
 
 import CustomCameraControls from './CustomCameraControls'
 import DisplayentitiesRootGroup from './components/DisplayEntitiesRootGroup'
 import DragSelectControl from './components/DragSelectControl'
-import Perf from './components/Perf'
 import ShortcutHandler from './components/ShortcutHandler'
 import TransformControls from './components/TransformControls'
 import { useDisplayEntityStore } from './stores/displayEntityStore'
 import { useEditorStore } from './stores/editorStore'
+
+const Perf = lazy(() => import('./components/Perf'))
 
 const Scene: FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -132,7 +133,11 @@ const Scene: FC = () => {
         <GizmoViewport />
       </GizmoHelper>
 
-      {perfMonitorEnabled && <Perf />}
+      {perfMonitorEnabled && (
+        <Suspense>
+          <Perf />
+        </Suspense>
+      )}
     </Canvas>
   )
 }
