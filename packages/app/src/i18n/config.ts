@@ -1,33 +1,26 @@
-import i18n, { Resource } from 'i18next'
+import i18n from 'i18next'
+import HttpBackend, { HttpBackendOptions } from 'i18next-http-backend'
 import { initReactI18next } from 'react-i18next'
 
 import { getStoredSettings } from '@/services/settings'
 
-import enTranslation from './en/translation.json'
-import koTranslation from './ko/translation.json'
-
 export const defaultNS = 'translation'
-export const resources = {
-  en: {
-    translation: enTranslation,
-  },
-  ko: {
-    translation: koTranslation,
-  },
-} as const satisfies Resource
 
 const storedSettings = getStoredSettings()
 
 i18n
   .use(initReactI18next)
-  .init({
+  .use(HttpBackend)
+  .init<HttpBackendOptions>({
     lng: storedSettings.general.language,
     fallbackLng: 'en',
     debug: true,
-    resources,
     defaultNS,
     interpolation: {
       escapeValue: false, // react already safes from xss
+    },
+    backend: {
+      loadPath: '/locales/{{lng}}/{{ns}}.json',
     },
   })
   .catch(console.error)

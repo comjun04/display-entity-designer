@@ -1,9 +1,12 @@
-import { defaultNS, resources } from '@/i18n/config'
+import enTranslation from '@/../public/locales/en/translation.json'
+import { defaultNS } from '@/i18n/config'
 
 declare module 'i18next' {
   interface CustomTypeOptions {
     defaultNS: typeof defaultNS
-    resources: (typeof resources)['en']
+    resources: {
+      translation: typeof enTranslation
+    }
     enableSelector: true
   }
 }
