@@ -1,5 +1,5 @@
 import { existsSync } from 'fs'
-import { cp, lstat, mkdir, readdir, readFile, writeFile } from 'fs/promises'
+import { cp, mkdir, readdir, readFile, writeFile } from 'fs/promises'
 import {
   join as pathJoin,
   resolve as pathResolve,
@@ -51,27 +51,11 @@ if (semveredMcVersion == null) {
 const workdirFolderRootPath = pathJoin(pathResolve(), 'workdir')
 const workdirFolderSharedAssetsPath = pathJoin(workdirFolderRootPath, 'shared')
 const outputFolderRootPath = pathJoin(pathResolve(), 'output')
-const outputFolderPath = pathJoin(outputFolderRootPath, mcVersion)
 const outputFolderSharedAssetsPath = pathJoin(outputFolderRootPath, 'shared')
 
 // workdir 폴더 미리 생성
 if (!existsSync(workdirFolderRootPath)) {
   await mkdir(workdirFolderRootPath)
-}
-
-if (
-  !existsSync(workdirFolderSharedAssetsPath) ||
-  !(await lstat(workdirFolderSharedAssetsPath)).isDirectory()
-) {
-  console.log('workdir/shared folder does not exist. Creating a new one.')
-  await mkdir(workdirFolderSharedAssetsPath, { recursive: true })
-}
-if (
-  !existsSync(outputFolderSharedAssetsPath) ||
-  !(await lstat(outputFolderSharedAssetsPath)).isDirectory()
-) {
-  console.log('output/shared folder does not exist. Creating a new one.')
-  await mkdir(outputFolderSharedAssetsPath, { recursive: true })
 }
 
 // fetch root manifest
@@ -323,58 +307,63 @@ for (const versionToDownload of versions) {
     pathJoin(assetsMinecraftFolderPath, 'items.json'),
     JSON.stringify({ items }),
   )
-}
 
-const versionData = await fetchVersionData(mcVersion)
+  const versionData = await fetchVersionData(versionId)
 
-// shared assets
-const workdirFolderSharedAssetsSubPath = pathJoin(
-  workdirFolderSharedAssetsPath,
-  versionData.assetIndex.id,
-)
-const outputFolderSharedAssetsSubPath = pathJoin(
-  outputFolderSharedAssetsPath,
-  versionData.assetIndex.id,
-)
-
-let unifontHexFilePath = ''
-
-const sharedAssets = await downloadSharedAssets(
-  versionData.assetIndex,
-  workdirFolderRootPath,
-)
-for (const assetFilePath of sharedAssets) {
-  console.log('Copying shared asset file', assetFilePath)
-  const assetFileWorkdirAbsolutePath = pathJoin(
-    workdirFolderSharedAssetsSubPath,
-    assetFilePath,
+  // shared assets
+  const workdirFolderSharedAssetsSubPath = pathJoin(
+    workdirFolderSharedAssetsPath,
+    versionData.assetIndex.id,
   )
-  const assetFileOutputAbsolutePath = pathJoin(
-    outputFolderSharedAssetsSubPath,
-    assetFilePath,
+  const outputFolderSharedAssetsSubPath = pathJoin(
+    outputFolderSharedAssetsPath,
+    versionData.assetIndex.id,
   )
-  await mkdir(dirname(assetFileOutputAbsolutePath), { recursive: true })
-  await cp(assetFileWorkdirAbsolutePath, assetFileOutputAbsolutePath)
+  await mkdir(workdirFolderSharedAssetsSubPath, { recursive: true })
+  await mkdir(outputFolderSharedAssetsSubPath, { recursive: true })
 
-  // unifont_all_no_pua_<version>.hex
-  if (basename(assetFilePath).startsWith('unifont_all_')) {
-    unifontHexFilePath = assetFilePath
+  let unifontHexFilePath = ''
+
+  const sharedAssets = await downloadSharedAssets(
+    versionData.assetIndex,
+    workdirFolderRootPath,
+  )
+  for (const assetFilePath of sharedAssets) {
+    console.log('Copying shared asset file', assetFilePath)
+    const assetFileWorkdirAbsolutePath = pathJoin(
+      workdirFolderSharedAssetsSubPath,
+      assetFilePath,
+    )
+    const assetFileOutputAbsolutePath = pathJoin(
+      outputFolderSharedAssetsSubPath,
+      assetFilePath,
+    )
+    await mkdir(dirname(assetFileOutputAbsolutePath), { recursive: true })
+    await cp(assetFileWorkdirAbsolutePath, assetFileOutputAbsolutePath)
+
+    // unifont_all_no_pua_<version>.hex
+    // TODO: 1.19.4 (assetIndex id 3) does not use unifont hexfile
+    // but uses legacy_unicode provider (includes glyph_sizes.bin)
+    // need to handle this later
+    if (basename(assetFilePath).startsWith('unifont_all_')) {
+      unifontHexFilePath = assetFilePath
+    }
   }
-}
 
-// write version metadata.json
-console.log('Writing metadata.json')
-const versionMetadata: VersionMetadata = {
-  gameVersion: mcVersion,
-  sharedAssets: {
-    assetIndex: parseInt(versionData.assetIndex.id),
-    unifontHexFilePath,
-  },
+  // write version metadata.json
+  console.log('Writing metadata.json')
+  const versionMetadata: VersionMetadata = {
+    gameVersion: versionId,
+    sharedAssets: {
+      assetIndex: parseInt(versionData.assetIndex.id),
+      unifontHexFilePath,
+    },
+  }
+  await writeFile(
+    pathJoin(outputFolderPath, 'metadata.json'),
+    JSON.stringify(versionMetadata),
+  )
 }
-await writeFile(
-  pathJoin(outputFolderPath, 'metadata.json'),
-  JSON.stringify(versionMetadata),
-)
 
 console.log('Done')
 
