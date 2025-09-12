@@ -2,7 +2,8 @@ import { FC } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/shallow'
 
-import { Settings, useEditorStore } from '@/stores/editorStore'
+import { Settings } from '@/services/settings'
+import { useEditorStore } from '@/stores/editorStore'
 
 const GeneralPage: FC = () => {
   const { t } = useTranslation()
