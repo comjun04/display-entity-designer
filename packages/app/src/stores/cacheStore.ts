@@ -2,9 +2,16 @@ import { MeshStandardMaterial, PlaneGeometry, Texture } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
+import { CDNBaseUrl } from '@/constants'
 import { getLogger } from '@/services/loggerService'
 import { loadModel } from '@/services/resources/model'
-import { BlockstatesData, FontProvider, ModelData, ModelFile } from '@/types'
+import {
+  BlockstatesData,
+  FontProvider,
+  ModelData,
+  ModelFile,
+  VersionMetadata,
+} from '@/types'
 
 const logger = getLogger('cacheStore')
 
@@ -157,3 +164,34 @@ export const useClassObjectCacheStore = create<ClassObjectCacheStoreState>(
       }),
   }),
 )
+
+export class VersionMetadataCache {
+  private static _instance: VersionMetadataCache
+
+  private _cache = new Map<string, VersionMetadata>()
+
+  private constructor() {}
+  static get instance() {
+    if (this._instance == null) {
+      this._instance = new VersionMetadataCache()
+    }
+
+    return this._instance
+  }
+
+  get(version: string) {
+    return this._cache.get(version)
+  }
+
+  async fetch(version: string) {
+    const data = (await fetch(`${CDNBaseUrl}/${version}/metadata.json`).then(
+      (r) => r.json(),
+    )) as VersionMetadata
+    this._cache.set(version, data)
+    return data
+  }
+
+  clear() {
+    this._cache.clear()
+  }
+}

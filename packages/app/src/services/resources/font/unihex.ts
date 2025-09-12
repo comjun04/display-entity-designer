@@ -1,17 +1,8 @@
 import { Mutex } from 'async-mutex'
 import { CanvasTexture } from 'three'
-import { FileLoader } from 'three'
 
-import {
-  CDNBaseUrl,
-  CDNVersionAssetsUrl,
-  UnifontSizeOverrides,
-} from '@/constants'
-import { useCacheStore } from '@/stores/cacheStore'
-import { VersionMetadata } from '@/types'
-
-const fileLoader = new FileLoader()
-fileLoader.setResponseType('json')
+import { CDNBaseUrl, MCVersion, UnifontSizeOverrides } from '@/constants'
+import { VersionMetadataCache, useCacheStore } from '@/stores/cacheStore'
 
 const unifontHexDataLoadMutex = new Mutex()
 
@@ -40,11 +31,10 @@ async function getCharPixels(char: string) {
   if (!useCacheStore.getState().unifontHexData.has(charCode)) {
     await unifontHexDataLoadMutex.runExclusive(async () => {
       if (useCacheStore.getState().unifontHexData.size < 1) {
-        // TODO: Extract version manifest loading
-        const versionManifest = (await fileLoader.loadAsync(
-          `${CDNVersionAssetsUrl}/metadata.json`,
-        )) as unknown as VersionMetadata
-        const { assetIndex, unifontHexFilePath } = versionManifest.sharedAssets
+        // TODO: Extract version metadata loading
+        const versionMetadata =
+          await VersionMetadataCache.instance.fetch(MCVersion)
+        const { assetIndex, unifontHexFilePath } = versionMetadata.sharedAssets
         const fullFilePath = `shared/${assetIndex}/${unifontHexFilePath}`
 
         await loadUnifontHexFile(fullFilePath)
