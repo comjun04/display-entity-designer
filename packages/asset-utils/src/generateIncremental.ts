@@ -94,13 +94,13 @@ const versions = releaseVersions
   )
   .sort((a, b) => semverCompare(semverCoerce(a.id)!, semverCoerce(b.id)!))
 
-const fileInfos: Record<
+const fileInfos = new Map<
   string,
   {
     fromVersion: string // first version that file existed
     hash: string // file hash
   }
-> = {}
+>()
 const blockRenderables: Record<string, boolean> = {}
 
 for (const versionToDownload of versions) {
@@ -141,16 +141,16 @@ for (const versionToDownload of versions) {
   for (const file of filesToExtract) {
     const buf = await file.buffer()
     const hash = createHash('sha1').update(buf).digest('hex')
-    if (fileInfos[file.path]?.hash === hash) {
+    if (fileInfos.get(file.path)?.hash === hash) {
       // file is unchanged between previous version and this version
       // so skip it
       fileExtractSkipCount++
       continue
     }
-    fileInfos[file.path] = {
+    fileInfos.set(file.path, {
       fromVersion: versionId,
       hash,
-    }
+    })
 
     const dirPath = file.path.split('/').slice(0, -1).join('/')
     await mkdir(pathJoin(outputFolderPath, dirPath), { recursive: true })
@@ -160,9 +160,23 @@ for (const versionToDownload of versions) {
     `Extracted files. Skipped: ${fileExtractSkipCount} / ${filesToExtract.length}`,
   )
 
+  const sortedFileInfos = [...fileInfos.entries()].sort((a, b) => {
+    if (a < b) return -1
+    else if (a > b) return 1
+    else return 0
+  })
   await writeFile(
     pathJoin(workdirFolderPath, 'fileInfos.json'),
-    JSON.stringify(fileInfos, null, 2),
+    JSON.stringify(Object.fromEntries(sortedFileInfos), null, 2),
+  )
+
+  const minifiedSortedFileInfos = sortedFileInfos.map(([k, v]) => [
+    k,
+    { fromVersion: v.fromVersion },
+  ])
+  await writeFile(
+    pathJoin(outputFolderPath, 'fileInfos.json'),
+    JSON.stringify(Object.fromEntries(minifiedSortedFileInfos)),
   )
 
   // chest, shulker_box 등 엔티티 모델로 렌더링되는 블록들은 원래는 model .json파일에 element가 없어 렌더링 가능한 블록으로 인식되지 않는데,
@@ -384,8 +398,9 @@ async function canRenderToBlockDisplay(
     modelResourceLocation = modelResourceLocation.slice(10)
   }
 
-  const modelFileInfo =
-    fileInfos[`assets/minecraft/models/${modelResourceLocation}.json`]
+  const modelFileInfo = fileInfos.get(
+    `assets/minecraft/models/${modelResourceLocation}.json`,
+  )
   const assetsMinecraftFolderPath = pathJoin(
     outputFolderRootPath,
     modelFileInfo?.fromVersion ?? version,
