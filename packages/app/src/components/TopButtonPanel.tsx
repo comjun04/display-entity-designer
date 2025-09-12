@@ -1,5 +1,6 @@
 import { Tooltip } from '@heroui/tooltip'
 import { FC } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FaObjectGroup } from 'react-icons/fa6'
 import { IoMdTrash } from 'react-icons/io'
 import { IoCubeOutline } from 'react-icons/io5'
@@ -14,6 +15,8 @@ import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import FloatingButton from './FloatingButton'
 
 const TopButtonPanel: FC = () => {
+  const { t } = useTranslation()
+
   const { setOpenedDialog } = useDialogStore(
     useShallow((state) => ({
       setOpenedDialog: state.setOpenedDialog,
@@ -30,7 +33,7 @@ const TopButtonPanel: FC = () => {
     <div className="absolute left-1/2 top-4 z-[5] -translate-x-1/2">
       <div className="flex flex-row rounded-lg bg-black">
         <Tooltip
-          content="Block Display"
+          content={t(($) => $.editor.topBar.blockDisplay)}
           placement="bottom"
           size="sm"
           offset={0}
@@ -47,7 +50,7 @@ const TopButtonPanel: FC = () => {
         </Tooltip>
 
         <Tooltip
-          content="Item Display"
+          content={t(($) => $.editor.topBar.itemDisplay)}
           placement="bottom"
           size="sm"
           offset={0}
@@ -64,7 +67,7 @@ const TopButtonPanel: FC = () => {
         </Tooltip>
 
         <Tooltip
-          content="Text Display"
+          content={t(($) => $.editor.topBar.textDisplay)}
           placement="bottom"
           size="sm"
           offset={0}
@@ -85,7 +88,7 @@ const TopButtonPanel: FC = () => {
         <div className="my-2 border-l border-gray-700" />
 
         <Tooltip
-          content="Add Player Head"
+          content={t(($) => $.editor.topBar.addPlayerHead)}
           placement="bottom"
           size="sm"
           offset={0}
@@ -106,7 +109,7 @@ const TopButtonPanel: FC = () => {
         <div className="my-2 border-l border-gray-700" />
 
         <Tooltip
-          content="Group/Ungroup"
+          content={t(($) => $.editor.topBar.groupOrUngroup)}
           placement="bottom"
           size="sm"
           offset={0}
@@ -119,7 +122,7 @@ const TopButtonPanel: FC = () => {
         </Tooltip>
 
         <Tooltip
-          content="Delete"
+          content={t(($) => $.editor.topBar.delete)}
           placement="bottom"
           size="sm"
           offset={0}

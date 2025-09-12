@@ -1,4 +1,5 @@
 import { FC, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { MathUtils } from 'three'
 import { useShallow } from 'zustand/shallow'
 
@@ -14,6 +15,8 @@ import XYZInput from './XYZInput'
 const logger = getLogger('TransformsPanel')
 
 const TransformsPanel: FC = () => {
+  const { t } = useTranslation()
+
   const {
     selectedEntityIds,
     batchSetEntityTransformation,
@@ -214,7 +217,9 @@ const TransformsPanel: FC = () => {
 
   return (
     <SidePanel>
-      <SidePanelTitle>Transforms</SidePanelTitle>
+      <SidePanelTitle>
+        {t(($) => $.sidebar.transformsPanel.title)}
+      </SidePanelTitle>
       <SidePanelContent>
         {/* Translation */}
         <div>

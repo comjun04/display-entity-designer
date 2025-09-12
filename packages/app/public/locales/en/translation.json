@@ -1,0 +1,183 @@
+{
+  "branding": {
+    "desc": "Graphical editor for Minecraft Display entities",
+    "disclaimer": "This app is not an official Minecraft product. Minecraft is a trademark of Mojang AB. All rights related to Minecraft and its intellectual property are owned by Mojang AB.",
+    "specialThanks": "Special Thanks to <2>Eszes Bálint</2> for creating <6>BDStudio</6>, the initial editor of Minecraft display entities, and inspiration of this project"
+  },
+  "dialog": {
+    "welcome": {
+      "action": {
+        "new": "Start with something new",
+        "open": "Open from device"
+      },
+      "recoverProject": {
+        "desc": "DEPL was closed without saving. Do you want to recover from autosaved data?",
+        "action": { "recover": "Recover Project", "discard": "Discard" }
+      },
+      "showWelcomeOnStartup": "Show Welcome on Startup"
+    },
+    "blockDisplaySelect": {
+      "title": "Add Block Display",
+      "search": {
+        "label": "Search"
+      }
+    },
+    "itemDisplaySelect": {
+      "title": "Add Item Display",
+      "search": {
+        "label": "Search"
+      }
+    },
+    "exportToMinecraft": {
+      "title": "Export to Minecraft",
+      "baseTag": {
+        "title": "Base Tag",
+        "invalidTagNotice": "Tag must contain only alphabets, numbers, <2>_</2>, <5>-</5>, <8>.</8>, and <11>+</11> characters."
+      },
+      "result": {
+        "summonCommand": "Summon command {{n}}",
+        "removeCommand": "Remove command",
+        "copyBtn": {
+          "normal": "Copy",
+          "copied": "Copied!"
+        }
+      }
+    },
+    "settings": {
+      "title": "Settings",
+      "page": {
+        "general": {
+          "title": "General",
+          "options": {
+            "language": "Language",
+            "showWelcomeOnStartup": "Show Welcome on Startup",
+            "forceUnifont": "Force Unicode font (Unifont)"
+          }
+        },
+        "performance": {
+          "title": "Performance",
+          "options": {
+            "reducePixelRatio": "Reduce Pixel Ratio to 1"
+          }
+        },
+        "hotkeys": {
+          "title": "Hotkeys",
+          "changingHotkeyNotSupported": "*Changing hotkeys are not yet supported.",
+          "categories": {
+            "general": {
+              "title": "General",
+              "items": {
+                "openFromFile": "Open from file",
+                "saveToFile": "Save to file",
+                "openSettings": "Open Settings",
+                "undo": "Undo",
+                "redo": "Redo"
+              }
+            },
+            "editor": {
+              "title": "Editor",
+              "items": {
+                "translateMode": "Translate mode",
+                "rotateMode": "Rotate mode",
+                "scaleMode": "Scale mode",
+                "groupOrUngroup": "Group/Ungroup",
+                "deleteEntity": "Delete Entity"
+              }
+            }
+          }
+        },
+        "about": {
+          "title": "About"
+        },
+        "debugOptions": {
+          "title": "Debug Options",
+          "options": {
+            "testOption": {
+              "title": "Test Option"
+            },
+            "minLogLevel": {
+              "title": "Minimum Log Level"
+            },
+            "perfMonitorEnabled": {
+              "title": "Enable Performance Monitor"
+            },
+            "alertUncaughtError": {
+              "title": "Notify uncaught errors with window.alert()"
+            }
+          }
+        }
+      }
+    },
+    "prompt": {
+      "createNewProject": {
+        "title": "Creating New Project",
+        "content": "Are you sure to want to create new project? Any unsaved changes will be lost.",
+        "button": {
+          "yes": "Yes",
+          "no": "No"
+        }
+      }
+    }
+  },
+  "editor": {
+    "undo": "Undo",
+    "redo": "Redo",
+    "modes": {
+      "translate": "Translate mode",
+      "rotate": "Rotate mode",
+      "scale": "Scale mode"
+    },
+    "topBar": {
+      "blockDisplay": "Block Display",
+      "itemDisplay": "Item Display",
+      "textDisplay": "Text Display",
+      "addPlayerHead": "Add Player Head",
+      "groupOrUngroup": "Group/Ungroup",
+      "delete": "Delete"
+    }
+  },
+  "menu": {
+    "newProject": "New Project",
+    "open": "Open",
+    "save": "Save",
+    "exportTo": {
+      "title": "Export to...",
+      "submenu": {
+        "minecraft": {
+          "desc": "Export this project to Minecraft"
+        }
+      }
+    },
+    "welcome": "Welcome",
+    "settings": "Settings"
+  },
+  "sidebar": {
+    "objectsPanel": {
+      "title": "Objects"
+    },
+    "transformsPanel": {
+      "title": "Transforms"
+    },
+    "propertiesPanel": {
+      "title": "Properties",
+      "sections": {
+        "display": "Display",
+        "text": "Text",
+        "textEffects": "Text Effects",
+        "textures": {
+          "title": "Textures",
+          "properties": {
+            "textureUrl": {
+              "title": "texture url",
+              "applyBtn": "Apply"
+            },
+            "playerUsername": {
+              "title": "player username",
+              "loadBtn": "Load"
+            }
+          }
+        }
+      }
+    }
+  }
+}
