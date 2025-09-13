@@ -1,8 +1,9 @@
 import { Mutex } from 'async-mutex'
 import { CanvasTexture } from 'three'
 
-import { CDNBaseUrl, MCVersion, UnifontSizeOverrides } from '@/constants'
+import { CDNBaseUrl, UnifontSizeOverrides } from '@/constants'
 import { VersionMetadataCache, useCacheStore } from '@/stores/cacheStore'
+import { useProjectStore } from '@/stores/projectStore'
 
 const unifontHexDataLoadMutex = new Mutex()
 
@@ -32,8 +33,9 @@ async function getCharPixels(char: string) {
     await unifontHexDataLoadMutex.runExclusive(async () => {
       if (useCacheStore.getState().unifontHexData.size < 1) {
         // TODO: Extract version metadata loading
-        const versionMetadata =
-          await VersionMetadataCache.instance.fetch(MCVersion)
+        const versionMetadata = await VersionMetadataCache.instance.fetch(
+          useProjectStore.getState().targetGameVersion,
+        )
         const { assetIndex, unifontHexFilePath } = versionMetadata.sharedAssets
         const fullFilePath = `shared/${assetIndex}/${unifontHexFilePath}`
 

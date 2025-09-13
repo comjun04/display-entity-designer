@@ -1,6 +1,5 @@
 import { CanvasTexture, ImageLoader } from 'three'
 
-import { CDNVersionAssetsUrl } from '@/constants'
 import fetcher from '@/fetcher'
 import { AssetFileInfosCache, useCacheStore } from '@/stores/cacheStore'
 import { CDNFontProviderResponse } from '@/types'

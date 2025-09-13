@@ -6,7 +6,6 @@ import {
   TextureLoader,
 } from 'three'
 
-import { CDNVersionAssetsUrl } from '@/constants'
 import {
   AssetFileInfosCache,
   useCacheStore,
