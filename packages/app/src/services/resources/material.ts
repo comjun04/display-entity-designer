@@ -7,7 +7,11 @@ import {
 } from 'three'
 
 import { CDNVersionAssetsUrl } from '@/constants'
-import { useCacheStore, useClassObjectCacheStore } from '@/stores/cacheStore'
+import {
+  AssetFileInfosCache,
+  useCacheStore,
+  useClassObjectCacheStore,
+} from '@/stores/cacheStore'
 import { getTextureColor } from '@/utils'
 
 import { getLogger } from '../loggerService'
@@ -84,7 +88,9 @@ export async function loadMaterial({
       const img = await new ImageLoader().loadAsync(
         textureData.type === 'player_head'
           ? textureData.playerHeadTextureUrl
-          : `${CDNVersionAssetsUrl}/assets/minecraft/textures/${textureData.resourceLocation}.png`,
+          : await AssetFileInfosCache.instance.makeFullFileUrl(
+              `/assets/minecraft/textures/${textureData.resourceLocation}.png`,
+            ),
       )
 
       const canvas = document.createElement('canvas')

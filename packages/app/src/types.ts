@@ -18,6 +18,7 @@ export type {
 }
 
 export type {
+  AssetFileInfos,
   BackendAPIV1GetPlayerSkinResponse,
   ModelFaceKey,
   ModelFile,

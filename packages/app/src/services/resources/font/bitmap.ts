@@ -2,7 +2,7 @@ import { CanvasTexture, ImageLoader } from 'three'
 
 import { CDNVersionAssetsUrl } from '@/constants'
 import fetcher from '@/fetcher'
-import { useCacheStore } from '@/stores/cacheStore'
+import { AssetFileInfosCache, useCacheStore } from '@/stores/cacheStore'
 import { CDNFontProviderResponse } from '@/types'
 import { stripMinecraftPrefix } from '@/utils'
 
@@ -15,7 +15,9 @@ export async function createCharTexture(char: string) {
   }
 
   const img = await imageLoader.loadAsync(
-    `${CDNVersionAssetsUrl}/assets/minecraft/textures/${stripMinecraftPrefix(glyphData.file)}`,
+    await AssetFileInfosCache.instance.makeFullFileUrl(
+      `/assets/minecraft/textures/${stripMinecraftPrefix(glyphData.file)}`,
+    ),
   )
 
   const canvas = document.createElement('canvas')
@@ -53,6 +55,7 @@ async function getGlyphData(char: string) {
   if (fontProviders['provider.default'] == null) {
     const { providers } = (await fetcher(
       '/assets/minecraft/font/include/default.json',
+      true,
     )) as CDNFontProviderResponse
     setFontProviders('provider.default', providers)
     defaultFontProviders = providers
@@ -66,7 +69,9 @@ async function getGlyphData(char: string) {
       const idx = provider.chars[i].indexOf(char[0])
       if (idx >= 0) {
         const img = await imageLoader.loadAsync(
-          `${CDNVersionAssetsUrl}/assets/minecraft/textures/${stripMinecraftPrefix(provider.file)}`,
+          await AssetFileInfosCache.instance.makeFullFileUrl(
+            `/assets/minecraft/textures/${stripMinecraftPrefix(provider.file)}`,
+          ),
         )
 
         const width = img.width / provider.chars[0].length

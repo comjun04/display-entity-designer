@@ -38,6 +38,7 @@ export async function loadModel(resourceLocation: string) {
     if (resourceLocationData == null) {
       resourceLocationData = (await fetcher(
         `/assets/minecraft/models/${currentResourceLocation}.json`,
+        true,
       )) as ModelFile
       setModelJson(currentResourceLocation, resourceLocationData)
     }
