@@ -9,25 +9,22 @@ const settingsSchema = z.object({
       showWelcomeOnStartup: z.boolean().default(true),
       forceUnifont: z.boolean().default(false),
     })
-    .default({}),
+    .prefault({}),
   performance: z
     .object({
       reducePixelRatio: z.boolean().default(false),
     })
-    .default({}),
+    .prefault({}),
   debug: z
     .object({
       testOption: z.boolean().default(false),
       minLogLevel: z
-        .enum<
-          LogLevel,
-          [LogLevel, ...LogLevel[]]
-        >(['error', 'warn', 'info', 'debug'])
+        .enum(['error', 'warn', 'info', 'debug'] satisfies LogLevel[])
         .default('info'),
       perfMonitorEnabled: z.boolean().default(false),
       alertUncaughtError: z.boolean().default(false),
     })
-    .default({}),
+    .prefault({}),
 })
 export type Settings = z.infer<typeof settingsSchema>
 

@@ -52,10 +52,7 @@ type EditorState = {
 
 export const useEditorStore = create(
   immer<EditorState>((set) => {
-    const initialSettings = getStoredSettings() ?? {
-      testOption: false,
-      minLogLevel: 'info',
-    }
+    const initialSettings = getStoredSettings()
     globalThis.__depl_alertUncaughtError =
       initialSettings?.debug?.alertUncaughtError
 
