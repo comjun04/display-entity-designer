@@ -12,7 +12,12 @@ const commitHash = execSync('git rev-parse --short HEAD').toString()
 
 const plugins: PluginOption[] = [react()]
 if (process.env.GENERATE_BUILD_STATS) {
-  plugins.push(visualizer())
+  plugins.push(
+    visualizer({
+      gzipSize: true,
+      brotliSize: true,
+    }),
+  )
 }
 
 // https://vitejs.dev/config/
