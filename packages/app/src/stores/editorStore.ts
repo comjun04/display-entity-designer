@@ -1,4 +1,4 @@
-import merge from 'lodash.merge'
+import { merge } from 'lodash-es'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 

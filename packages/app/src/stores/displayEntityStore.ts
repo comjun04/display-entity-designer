@@ -1,5 +1,4 @@
-import cloneDeep from 'lodash.clonedeep'
-import merge from 'lodash.merge'
+import { cloneDeep, merge } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import { Box3, Euler, Matrix4, Quaternion, Vector3 } from 'three'
 import { create } from 'zustand'
