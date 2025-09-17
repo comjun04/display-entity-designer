@@ -1,9 +1,9 @@
-import { FC } from 'react'
+import type { FC } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/shallow'
 
 import { useEditorStore } from '@/stores/editorStore'
-import { LogLevel } from '@/types'
+import type { LogLevel } from '@/types'
 
 const DebugOptionsPage: FC = () => {
   const { t } = useTranslation()

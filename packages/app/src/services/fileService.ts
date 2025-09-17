@@ -1,6 +1,6 @@
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
-import { BDEngineSaveData, DisplayEntitySaveDataItem } from '@/types'
+import type { BDEngineSaveData, DisplayEntitySaveDataItem } from '@/types'
 import { decodeBase64ToBinary, gunzip, gzip } from '@/utils'
 
 import AutosaveService from './autosave'

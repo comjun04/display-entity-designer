@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import { LogLevel } from '@/types'
+import type { LogLevel } from '@/types'
 
 const settingsSchema = z.object({
   general: z

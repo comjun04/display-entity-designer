@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react'
+import { type FC, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import useSWRImmutable from 'swr/immutable'
 import { useShallow } from 'zustand/shallow'
@@ -6,7 +6,7 @@ import { useShallow } from 'zustand/shallow'
 import fetcher from '@/fetcher'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
-import { CDNItemsListResponse } from '@/types'
+import type { CDNItemsListResponse } from '@/types'
 
 import Dialog from './Dialog'
 

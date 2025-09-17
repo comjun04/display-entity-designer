@@ -2,7 +2,7 @@ import { type ClassValue, clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
 import { CDNVersionAssetsUrl } from './constants'
-import { ModelElement, ModelFaceKey } from './types'
+import type { ModelElement, ModelFaceKey } from './types'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

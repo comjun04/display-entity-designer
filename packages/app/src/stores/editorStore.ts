@@ -4,8 +4,8 @@ import { immer } from 'zustand/middleware/immer'
 
 import i18n from '@/i18n/config'
 import { getLogger } from '@/services/loggerService'
-import { Settings, getStoredSettings } from '@/services/settings'
-import { DeepPartial, Number3Tuple, PartialNumber3Tuple } from '@/types'
+import { type Settings, getStoredSettings } from '@/services/settings'
+import type { DeepPartial, Number3Tuple, PartialNumber3Tuple } from '@/types'
 
 const logger = getLogger('editorStore')
 

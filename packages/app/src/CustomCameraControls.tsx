@@ -1,6 +1,6 @@
 import { CameraControls } from '@react-three/drei'
 import OriginalCameraControls from 'camera-controls'
-import { FC, useEffect, useRef, useState } from 'react'
+import { type FC, useEffect, useRef, useState } from 'react'
 
 const CustomCameraControls: FC = () => {
   const [shiftPressed, setShiftPressed] = useState(false)

@@ -1,5 +1,5 @@
 import i18n from 'i18next'
-import HttpBackend, { HttpBackendOptions } from 'i18next-http-backend'
+import HttpBackend, { type HttpBackendOptions } from 'i18next-http-backend'
 import { initReactI18next } from 'react-i18next'
 
 import { getStoredSettings } from '@/services/settings'

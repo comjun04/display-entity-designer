@@ -1,5 +1,5 @@
 import { useDebouncedEffect } from '@react-hookz/web'
-import { FC, JSX, useEffect, useState } from 'react'
+import { type FC, type JSX, useEffect, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { LuCopy, LuCopyCheck } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
@@ -9,8 +9,8 @@ import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEntityRefStore } from '@/stores/entityRefStore'
 import {
-  MinimalTextureValue,
-  TextEffects,
+  type MinimalTextureValue,
+  type TextEffects,
   isItemDisplayPlayerHead,
 } from '@/types'
 import { cn } from '@/utils'

@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import type { FC } from 'react'
 import { LuPanelRightOpen } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 

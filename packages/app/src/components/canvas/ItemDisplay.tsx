@@ -1,10 +1,10 @@
-import { ThreeEvent } from '@react-three/fiber'
-import { FC, MutableRefObject, memo } from 'react'
+import type { ThreeEvent } from '@react-three/fiber'
+import { type FC, type MutableRefObject, memo } from 'react'
 import { Group } from 'three'
 import { useShallow } from 'zustand/shallow'
 
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
-import { Number3Tuple, isItemDisplayPlayerHead } from '@/types'
+import { type Number3Tuple, isItemDisplayPlayerHead } from '@/types'
 
 import BoundingBox from './BoundingBox'
 import Model from './Model'

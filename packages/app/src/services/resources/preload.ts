@@ -1,7 +1,7 @@
 import {
-  BlockStateApplyModelInfo,
-  DisplayEntity,
-  PlayerHeadProperties,
+  type BlockStateApplyModelInfo,
+  type DisplayEntity,
+  type PlayerHeadProperties,
   isItemDisplayPlayerHead,
 } from '@/types'
 

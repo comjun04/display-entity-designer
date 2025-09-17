@@ -5,7 +5,7 @@ import {
   PerspectiveCamera,
 } from '@react-three/drei'
 import { Canvas, invalidate } from '@react-three/fiber'
-import { FC, Suspense, lazy, useEffect, useRef } from 'react'
+import { type FC, Suspense, lazy, useEffect, useRef } from 'react'
 import { Color, DoubleSide } from 'three'
 
 import CustomCameraControls from './CustomCameraControls'

@@ -1,7 +1,7 @@
 // Base code is from @react-three/drei `Select` component
 // https://github.com/pmndrs/drei/blob/adae93761fa0925c2ee80b30dcb2f903e6d11f3c/src/web/Select.tsx
 import { invalidate, useThree } from '@react-three/fiber'
-import { FC, useEffect, useRef } from 'react'
+import { type FC, useEffect, useRef } from 'react'
 import { Group, Vector2, Vector3 } from 'three'
 import { shallow } from 'zustand/shallow'
 

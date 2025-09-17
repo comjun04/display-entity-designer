@@ -1,6 +1,6 @@
 import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react'
 import Sketch from '@uiw/react-color-sketch'
-import { JSX, forwardRef } from 'react'
+import { type JSX, forwardRef } from 'react'
 
 import '@/styles/colorpicker-darkmode.css'
 import { cn } from '@/utils'

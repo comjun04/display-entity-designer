@@ -1,4 +1,4 @@
-import { JSX, forwardRef } from 'react'
+import { type JSX, forwardRef } from 'react'
 
 import { cn } from '@/utils'
 

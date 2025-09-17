@@ -8,7 +8,7 @@ import {
   UnifontSizeOverrides,
 } from '@/constants'
 import { useCacheStore } from '@/stores/cacheStore'
-import { VersionMetadata } from '@/types'
+import type { VersionMetadata } from '@/types'
 
 const fileLoader = new FileLoader()
 fileLoader.setResponseType('json')

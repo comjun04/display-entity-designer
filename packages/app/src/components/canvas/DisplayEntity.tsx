@@ -1,5 +1,5 @@
-import { ThreeEvent } from '@react-three/fiber'
-import { FC, useCallback, useEffect } from 'react'
+import type { ThreeEvent } from '@react-three/fiber'
+import { type FC, useCallback, useEffect } from 'react'
 import { useShallow } from 'zustand/shallow'
 
 import useEntityRefObject from '@/hooks/useEntityRefObject'

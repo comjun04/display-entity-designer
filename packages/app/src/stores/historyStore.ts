@@ -3,7 +3,7 @@ import { immer } from 'zustand/middleware/immer'
 
 import AutosaveService from '@/services/autosave'
 import { getLogger } from '@/services/loggerService'
-import { History, Number3Tuple } from '@/types'
+import type { History, Number3Tuple } from '@/types'
 
 import { useEditorStore } from './editorStore'
 

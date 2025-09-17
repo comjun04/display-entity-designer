@@ -1,8 +1,8 @@
-import { FC } from 'react'
+import type { FC } from 'react'
 import { MathUtils } from 'three'
 
 import useCachedMaterial from '@/hooks/useCachedMaterial'
-import { Number3Tuple } from '@/types'
+import type { Number3Tuple } from '@/types'
 
 type BlockFaceNewProps = {
   faceName: 'up' | 'down' | 'north' | 'south' | 'west' | 'east'

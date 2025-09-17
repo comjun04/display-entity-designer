@@ -1,12 +1,12 @@
 import { invalidate } from '@react-three/fiber'
-import { FC, useEffect, useRef, useState } from 'react'
+import { type FC, useEffect, useRef, useState } from 'react'
 import { Euler, MathUtils, Matrix4, Mesh, Quaternion, Vector3 } from 'three'
 import { useShallow } from 'zustand/shallow'
 
 import { getLogger } from '@/services/loggerService'
 import { loadModelMesh } from '@/services/resources/modelMesh'
 import { useCacheStore } from '@/stores/cacheStore'
-import {
+import type {
   ModelDisplayPositionKey,
   Number3Tuple,
   PlayerHeadProperties,

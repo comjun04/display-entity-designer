@@ -1,6 +1,6 @@
 import { useFrame } from '@react-three/fiber'
-import { FC, useRef } from 'react'
-import { BoxHelper, ColorRepresentation, Matrix4, Object3D } from 'three'
+import { type FC, useRef } from 'react'
+import { BoxHelper, type ColorRepresentation, Matrix4, Object3D } from 'three'
 
 const dummyObject = new Object3D()
 

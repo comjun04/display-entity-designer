@@ -6,7 +6,7 @@ import { immer } from 'zustand/middleware/immer'
 
 import { getLogger } from '@/services/loggerService'
 import { preloadResources } from '@/services/resources/preload'
-import {
+import type {
   BDEngineSaveData,
   BDEngineSaveDataItem,
   BlockDisplayEntity,
@@ -21,8 +21,8 @@ import {
   PlayerHeadProperties,
   TextDisplayEntity,
   TextureValue,
-  isItemDisplayPlayerHead,
 } from '@/types'
+import { isItemDisplayPlayerHead } from '@/types'
 
 import { useEditorStore } from './editorStore'
 import { useEntityRefStore } from './entityRefStore'

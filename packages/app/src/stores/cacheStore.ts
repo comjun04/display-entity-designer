@@ -4,7 +4,12 @@ import { immer } from 'zustand/middleware/immer'
 
 import { getLogger } from '@/services/loggerService'
 import { loadModel } from '@/services/resources/model'
-import { BlockstatesData, FontProvider, ModelData, ModelFile } from '@/types'
+import type {
+  BlockstatesData,
+  FontProvider,
+  ModelData,
+  ModelFile,
+} from '@/types'
 
 const logger = getLogger('cacheStore')
 

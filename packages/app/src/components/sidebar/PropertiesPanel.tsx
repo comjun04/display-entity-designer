@@ -1,4 +1,4 @@
-import { FC, useState } from 'react'
+import { type FC, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   LuBold,
@@ -13,9 +13,9 @@ import { BackendHost } from '@/constants'
 import useBlockStates from '@/hooks/useBlockStates'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import {
-  BackendAPIV1GetPlayerSkinResponse,
-  ModelDisplayPositionKey,
-  TextDisplayAlignment,
+  type BackendAPIV1GetPlayerSkinResponse,
+  type ModelDisplayPositionKey,
+  type TextDisplayAlignment,
   isItemDisplayPlayerHead,
 } from '@/types'
 import { cn, isValidTextureUrl } from '@/utils'
