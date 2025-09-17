@@ -32,6 +32,7 @@ import {
   satisfies as semverSatisfies,
   compare as semverCompare,
 } from 'semver'
+import { glob } from 'glob'
 
 // =====
 
@@ -78,11 +79,16 @@ const versions = releaseVersions
   )
   .sort((a, b) => semverCompare(semverCoerce(a.id)!, semverCoerce(b.id)!))
 
+const sortedHardcodedDataFolders = (
+  await readdir(pathJoin(pathResolve(), 'hardcoded'))
+).sort((a, b) => semverCompare(semverCoerce(a)!, semverCoerce(b)!))
+
 const fileInfos = new Map<
   string,
   {
     fromVersion: string // first version that file existed
     hash: string // file hash
+    isHardcodedData: boolean
   }
 >()
 const blockRenderables: Record<string, boolean> = {}
@@ -124,8 +130,13 @@ for (const versionToDownload of versions) {
   let fileExtractSkipCount = 0
   for (const file of filesToExtract) {
     const buf = await file.buffer()
-    const hash = createHash('sha1').update(buf).digest('hex')
-    if (fileInfos.get(file.path)?.hash === hash) {
+    const hash = makeHash(buf)
+
+    const fileInfo = fileInfos.get(file.path)
+    if (
+      fileInfo != null &&
+      (fileInfo.hash === hash || fileInfo.isHardcodedData)
+    ) {
       // file is unchanged between previous version and this version
       // so skip it
       fileExtractSkipCount++
@@ -134,6 +145,7 @@ for (const versionToDownload of versions) {
     fileInfos.set(file.path, {
       fromVersion: versionId,
       hash,
+      isHardcodedData: false,
     })
 
     const dirPath = file.path.split('/').slice(0, -1).join('/')
@@ -143,6 +155,38 @@ for (const versionToDownload of versions) {
   console.log(
     `Extracted files. Skipped: ${fileExtractSkipCount} / ${filesToExtract.length}`,
   )
+
+  // chest, shulker_box 등 엔티티 모델로 렌더링되는 블록들은 원래는 model .json파일에 element가 없어 렌더링 가능한 블록으로 인식되지 않는데,
+  // 이를 렌더링 가능한 블록으로 인식시키기 위해 따로 만든 파일들을 복사해서 지정된 폴더에 붙여넣기
+  console.log('Copying data in hardcoded folder to destination folder...')
+  if (sortedHardcodedDataFolders.includes(versionId)) {
+    const hardcodedDataVersionPath = pathJoin(
+      pathResolve(),
+      'hardcoded',
+      versionId,
+    )
+    await cp(hardcodedDataVersionPath, assetsMinecraftFolderPath, {
+      recursive: true,
+    })
+
+    const hardcodedDataFilePaths = await glob('**/*.*', {
+      cwd: hardcodedDataVersionPath,
+    })
+    for (const path of hardcodedDataFilePaths) {
+      const buf = await readFile(pathJoin(hardcodedDataVersionPath, path))
+      const hash = makeHash(buf)
+
+      fileInfos.set(`assets/minecraft/${path}`, {
+        fromVersion: versionId,
+        hash,
+        isHardcodedData: true,
+      })
+    }
+  } else {
+    console.log(
+      `  Skipped because hardcoded data for version ${versionId} does not exist`,
+    )
+  }
 
   const sortedFileInfos = [...fileInfos.entries()].sort((a, b) => {
     if (a < b) return -1
@@ -162,15 +206,6 @@ for (const versionToDownload of versions) {
     pathJoin(outputFolderPath, 'fileInfos.json'),
     JSON.stringify(Object.fromEntries(minifiedSortedFileInfos)),
   )
-
-  // chest, shulker_box 등 엔티티 모델로 렌더링되는 블록들은 원래는 model .json파일에 element가 없어 렌더링 가능한 블록으로 인식되지 않는데,
-  // 이를 렌더링 가능한 블록으로 인식시키기 위해 따로 만든 파일들을 복사해서 지정된 폴더에 붙여넣기
-  /*
-  console.log('Copying data in hardcoded folder to destination folder...')
-  await cp(pathJoin(pathResolve(), 'hardcoded'), assetsMinecraftFolderPath, {
-    recursive: true,
-  })
-  */
 
   console.log('Cleaning up previous server jar reports files')
   await cleanupWorkdir(versionId)
@@ -424,4 +459,8 @@ async function canRenderToBlockDisplay(
 
   // elements object가 발견되지 않음. 블록 디스플레이로 렌더링할 수 없음
   return false
+}
+
+function makeHash(buf: Buffer) {
+  return createHash('sha1').update(buf).digest('hex')
 }
