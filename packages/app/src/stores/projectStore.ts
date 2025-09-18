@@ -1,6 +1,8 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
+import { LatestGameVersion } from '@/constants'
+
 interface ProjectStoreState {
   targetGameVersion: string
   setTargetGameVersion: (version: string) => void
@@ -8,7 +10,7 @@ interface ProjectStoreState {
 
 export const useProjectStore = create(
   immer<ProjectStoreState>((set) => ({
-    targetGameVersion: '1.21',
+    targetGameVersion: LatestGameVersion,
     setTargetGameVersion: (version) =>
       set((state) => {
         state.targetGameVersion = version
