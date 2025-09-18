@@ -497,6 +497,8 @@ const TextDisplayProperties: FC = () => {
 }
 
 const ProjectProperties: FC = () => {
+  const targetGameVersion = useProjectStore((state) => state.targetGameVersion)
+
   return (
     <div className="flex flex-col gap-2">
       <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
@@ -506,12 +508,15 @@ const ProjectProperties: FC = () => {
         <label className="flex-1 text-end">Target Minecraft Version</label>
         <select
           className="flex-[2] rounded bg-neutral-800 px-2 py-1"
+          value={targetGameVersion}
           onChange={(evt) => {
             useProjectStore.getState().setTargetGameVersion(evt.target.value)
           }}
         >
           {GameVersions.map((version) => (
-            <option value={version.id}>{version.label}</option>
+            <option key={version.id} value={version.id}>
+              {version.label}
+            </option>
           ))}
         </select>
       </div>

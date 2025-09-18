@@ -5,6 +5,7 @@ import { useShallow } from 'zustand/shallow'
 import fetcher from '@/fetcher'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
+import { useProjectStore } from '@/stores/projectStore'
 import { CDNBlocksListResponse } from '@/types'
 
 import Dialog from './Dialog'
@@ -24,12 +25,13 @@ const BlockDisplaySelectDialog: FC = () => {
       setOpenedDialog: state.setOpenedDialog,
     })),
   )
+  const targetGameVersion = useProjectStore((state) => state.targetGameVersion)
 
   const closeDialog = () => setOpenedDialog(null)
 
   const { data } = useSWRImmutable<CDNBlocksListResponse>(
-    firstOpened ? '/assets/minecraft/blocks.json' : null,
-    fetcher,
+    firstOpened ? ['/assets/minecraft/blocks.json', targetGameVersion] : null,
+    ([url]) => fetcher(url as string),
   )
   const blocks = (data?.blocks ?? []).map((d) => d.split('[')[0]) // 블록 이름 뒤에 붙는 `[up=true]` 등 blockstate 기본값 텍스트 제거
 
