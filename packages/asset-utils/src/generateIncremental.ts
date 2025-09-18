@@ -121,14 +121,14 @@ for (const versionToDownload of versions) {
     'minecraft',
   )
 
+  // 해당 버전 작업 폴더가 없으면 새로 만들기
+  await mkdir(workdirFolderPath, { recursive: true })
+  await mkdir(assetsMinecraftFolderPath, { recursive: true })
+
   if ((await readdir(outputFolderPath)).length > 0) {
     console.log(`cleaning up output/${versionId} folder`)
     await rimraf(outputFolderPath)
   }
-
-  // 해당 버전 작업 폴더가 없으면 새로 만들기
-  await mkdir(workdirFolderPath, { recursive: true })
-  await mkdir(assetsMinecraftFolderPath, { recursive: true })
 
   await downloadAssets(versionId, workdirFolderPath)
 
