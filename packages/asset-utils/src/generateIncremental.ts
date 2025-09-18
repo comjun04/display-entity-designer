@@ -103,7 +103,7 @@ for (const versionToDownload of versions) {
     'minecraft',
   )
 
-  console.log(`[incremental] processing ${versionId}`)
+  console.log(`\n[incremental] processing ${versionId}`)
 
   if ((await readdir(outputFolderPath)).length > 0) {
     console.log(`cleaning up output/${versionId} folder`)
@@ -297,6 +297,10 @@ for (const versionToDownload of versions) {
           if (canRender) break
         }
       }
+
+      if (!canRender) {
+        console.log(`[BlockListGen] excluding block ${blockName}`)
+      }
     }
 
     if (canRender) {
@@ -313,8 +317,6 @@ for (const versionToDownload of versions) {
           : ''
 
       renderableBlocks.push(blockName + stringifiedDefaultBlockstateValues)
-    } else {
-      console.log(`[BlockListGen] excluding block ${blockName}`)
     }
 
     blockRenderables[blockName] = canRender
