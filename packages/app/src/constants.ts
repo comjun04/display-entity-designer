@@ -128,3 +128,5 @@ export const GameVersions = [
     label: '1.19.4',
   },
 ]
+export const LegacyHardcodedGameVersion = '1.21'
+export const LatestGameVersion = GameVersions[0].id
