@@ -34,6 +34,16 @@ import {
 } from 'semver'
 import { glob } from 'glob'
 
+// these minecraft versions does not include resource/feature addition or changes, just bugfixes
+const versionsToSkip = [
+  '1.20.1',
+  '1.20.4',
+  '1.20.6',
+  '1.21.1',
+  '1.21.3',
+  '1.21.8',
+]
+
 // =====
 
 const args = process.argv
@@ -95,6 +105,14 @@ const blockRenderables: Record<string, boolean> = {}
 
 for (const versionToDownload of versions) {
   const versionId = versionToDownload.id
+  console.log(`\n[incremental] processing ${versionId}`)
+  if (versionsToSkip.includes(versionId)) {
+    console.log(
+      `  Skipping version ${versionId} as it does not include new files to be extracted`,
+    )
+    continue
+  }
+
   const workdirFolderPath = pathJoin(workdirFolderRootPath, versionId)
   const outputFolderPath = pathJoin(outputFolderRootPath, versionId)
   const assetsMinecraftFolderPath = pathJoin(
@@ -102,8 +120,6 @@ for (const versionToDownload of versions) {
     'assets',
     'minecraft',
   )
-
-  console.log(`\n[incremental] processing ${versionId}`)
 
   if ((await readdir(outputFolderPath)).length > 0) {
     console.log(`cleaning up output/${versionId} folder`)
