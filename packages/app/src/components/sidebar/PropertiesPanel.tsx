@@ -8,9 +8,10 @@ import {
 } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
-import { BackendHost } from '@/constants'
+import { BackendHost, GameVersions } from '@/constants'
 import useBlockStates from '@/hooks/useBlockStates'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
+import { useProjectStore } from '@/stores/projectStore'
 import {
   BackendAPIV1GetPlayerSkinResponse,
   ModelDisplayPositionKey,
@@ -495,6 +496,29 @@ const TextDisplayProperties: FC = () => {
   )
 }
 
+const ProjectProperties: FC = () => {
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
+        Project
+      </div>
+      <div className="flex flex-row items-center gap-2">
+        <label className="flex-1 text-end">Target Minecraft Version</label>
+        <select
+          className="flex-[2] rounded bg-neutral-800 px-2 py-1"
+          onChange={(evt) => {
+            useProjectStore.getState().setTargetGameVersion(evt.target.value)
+          }}
+        >
+          {GameVersions.map((version) => (
+            <option value={version.id}>{version.label}</option>
+          ))}
+        </select>
+      </div>
+    </div>
+  )
+}
+
 const PropertiesPanel: FC = () => {
   const { singleSelectedEntity } = useDisplayEntityStore(
     useShallow((state) => {
@@ -515,6 +539,8 @@ const PropertiesPanel: FC = () => {
         {singleSelectedEntity?.kind === 'item' && <ItemDisplayProperties />}
 
         {singleSelectedEntity?.kind === 'text' && <TextDisplayProperties />}
+
+        {singleSelectedEntity == null && <ProjectProperties />}
       </SidePanelContent>
     </SidePanel>
   )
