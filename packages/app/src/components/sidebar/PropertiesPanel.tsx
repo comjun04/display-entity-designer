@@ -10,6 +10,7 @@ import { useShallow } from 'zustand/shallow'
 
 import { BackendHost, GameVersions } from '@/constants'
 import useBlockStates from '@/hooks/useBlockStates'
+import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useProjectStore } from '@/stores/projectStore'
 import {
@@ -510,7 +511,25 @@ const ProjectProperties: FC = () => {
           className="flex-[2] rounded bg-neutral-800 px-2 py-1"
           value={targetGameVersion}
           onChange={(evt) => {
-            useProjectStore.getState().setTargetGameVersion(evt.target.value)
+            const gameVersionData = GameVersions.find(
+              (v) => v.id === evt.target.value,
+            )!
+
+            useDialogStore.getState().openPromptDialog({
+              title: 'Change Target Minecraft Version',
+              content: `Are you sure to change target Minecraft version to ${gameVersionData.label}?`,
+              buttonText: {
+                positive: 'Change',
+                negative: 'Cancel',
+              },
+              onChoice: (choice) => {
+                if (choice) {
+                  useProjectStore
+                    .getState()
+                    .setTargetGameVersion(gameVersionData.id)
+                }
+              },
+            })
           }}
         >
           {GameVersions.map((version) => (
