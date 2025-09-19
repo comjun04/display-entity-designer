@@ -264,10 +264,12 @@ export function getTextureColor(
   if (
     modelResourceLocation.startsWith('item/') &&
     modelResourceLocation.endsWith('_spawn_egg') &&
-    semverSatisfies(semveredGameVersion, '<1.21.5') // minecraft uses unique textures for spawn eggs from 1.21.5
+    semverSatisfies(semveredGameVersion, '<1.21.5') // minecraft uses unique textures for spawn eggs since 1.21.5
   ) {
     const spawnEggType = modelResourceLocation.slice(5, -10)
     const isOverlay = textureLayer === '1'
+
+    // https://minecraft.wiki/w/Spawn_Egg_colors#Java_Edition
     switch (spawnEggType) {
       case 'allay':
         return isOverlay ? 0x00adff : 0x00daff
@@ -297,6 +299,8 @@ export function getTextureColor(
         return isOverlay ? 0xe5c48b : 0xc1a76a
       case 'cow':
         return isOverlay ? 0xa1a1a1 : 0x443626
+      case 'creaking':
+        return isOverlay ? 0xfc7812 : 0x5f5f5f
       case 'creeper':
         return isOverlay ? 0x000000 : 0x0da70b
       case 'dolphin':
