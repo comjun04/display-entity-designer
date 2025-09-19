@@ -11,6 +11,7 @@ import {
   useCacheStore,
   useClassObjectCacheStore,
 } from '@/stores/cacheStore'
+import { useProjectStore } from '@/stores/projectStore'
 import { getTextureColor } from '@/utils'
 
 import { getLogger } from '../loggerService'
@@ -48,8 +49,10 @@ export async function loadMaterial({
 
   const [width, height] = textureSize
 
+  const { targetGameVersion } = useProjectStore.getState()
   const textureColor = getTextureColor(
     modelResourceLocation,
+    targetGameVersion,
     textureLayer,
     tintindex,
   )
