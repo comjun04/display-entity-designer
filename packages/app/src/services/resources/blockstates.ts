@@ -54,10 +54,10 @@ export async function loadBlockstates(
 
   logger.log(`Loading blockstates for block ${blockType}`)
 
-  const rawBlockstatesData = (await fetcher(
+  const { data: rawBlockstatesData } = await fetcher<BlockStatesFile>(
     `/assets/minecraft/blockstates/${blockType}.json`,
     true,
-  )) as BlockStatesFile
+  )
 
   const blockDefaultValues: Record<string, string> =
     blockString != null

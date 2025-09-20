@@ -36,10 +36,11 @@ export async function loadModel(resourceLocation: string) {
     let resourceLocationData =
       useCacheStore.getState().modelJson[currentResourceLocation]
     if (resourceLocationData == null) {
-      resourceLocationData = (await fetcher(
+      const { data } = await fetcher<ModelFile>(
         `/assets/minecraft/models/${currentResourceLocation}.json`,
         true,
-      )) as ModelFile
+      )
+      resourceLocationData = data
       setModelJson(currentResourceLocation, resourceLocationData)
     }
 

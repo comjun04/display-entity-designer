@@ -29,12 +29,12 @@ const ItemDisplaySelectDialog: FC = () => {
 
   const closeDialog = () => setOpenedDialog(null)
 
-  const { data } = useSWRImmutable<CDNItemsListResponse>(
+  const { data: itemListResponse } = useSWRImmutable(
     firstOpened ? ['/assets/minecraft/items.json', targetGameVersion] : null,
-    ([url]) => fetcher(url as string),
+    ([url]) => fetcher<CDNItemsListResponse>(url as string),
   )
 
-  const items = data?.items ?? []
+  const items = itemListResponse?.data.items ?? []
 
   useEffect(() => {
     if (isOpen) {

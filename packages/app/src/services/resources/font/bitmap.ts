@@ -52,10 +52,12 @@ async function getGlyphData(char: string) {
   // load character providers
   let defaultFontProviders = fontProviders['provider.default']
   if (fontProviders['provider.default'] == null) {
-    const { providers } = (await fetcher(
+    const {
+      data: { providers },
+    } = await fetcher<CDNFontProviderResponse>(
       '/assets/minecraft/font/include/default.json',
       true,
-    )) as CDNFontProviderResponse
+    )
     setFontProviders('provider.default', providers)
     defaultFontProviders = providers
   }

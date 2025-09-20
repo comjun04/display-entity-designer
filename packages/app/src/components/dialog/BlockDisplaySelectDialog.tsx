@@ -29,11 +29,13 @@ const BlockDisplaySelectDialog: FC = () => {
 
   const closeDialog = () => setOpenedDialog(null)
 
-  const { data } = useSWRImmutable<CDNBlocksListResponse>(
+  const { data: blocksListResponse } = useSWRImmutable(
     firstOpened ? ['/assets/minecraft/blocks.json', targetGameVersion] : null,
-    ([url]) => fetcher(url as string),
+    ([url]) => fetcher<CDNBlocksListResponse>(url as string),
   )
-  const blocks = (data?.blocks ?? []).map((d) => d.split('[')[0]) // 블록 이름 뒤에 붙는 `[up=true]` 등 blockstate 기본값 텍스트 제거
+  const blocks = (blocksListResponse?.data.blocks ?? []).map(
+    (d) => d.split('[')[0],
+  ) // 블록 이름 뒤에 붙는 `[up=true]` 등 blockstate 기본값 텍스트 제거
 
   useEffect(() => {
     if (isOpen) {
