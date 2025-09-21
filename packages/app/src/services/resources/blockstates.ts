@@ -1,5 +1,5 @@
 import fetcher from '@/fetcher'
-import { useCacheStore } from '@/stores/cacheStore'
+import { AssetFileInfosCache, useCacheStore } from '@/stores/cacheStore'
 import {
   BlockStateApplyModelInfo,
   BlockStatesFile,
@@ -46,8 +46,17 @@ export async function loadBlockstates(
 ): Promise<BlockstatesData> {
   const blockType = blockString.split('[')[0]
 
+  const fileInfo = await AssetFileInfosCache.instance.fetchFileInfo(
+    `/assets/minecraft/blockstates/${blockType}.json`,
+  )
+  if (fileInfo == null) {
+    throw new Error(`Cannot get info of blockstates file ${blockType}`)
+  }
+
+  const key = `${fileInfo.fromVersion};${blockType}`
+
   const directFetchedBlockstatesData =
-    useCacheStore.getState().blockstatesData[blockType]
+    useCacheStore.getState().blockstatesData[key]
   if (directFetchedBlockstatesData != null) {
     return directFetchedBlockstatesData
   }
@@ -251,6 +260,6 @@ export async function loadBlockstates(
   blockstateMap.delete('')
 
   const newBlockstatesData = { blockstates: blockstateMap, models }
-  useCacheStore.getState().setBlockstateData(blockType, newBlockstatesData)
+  useCacheStore.getState().setBlockstateData(key, newBlockstatesData)
   return { blockstates: blockstateMap, models }
 }
