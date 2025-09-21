@@ -1,3 +1,5 @@
+import { Mutex } from 'async-mutex'
+
 import fetcher from '@/fetcher'
 import { AssetFileInfosCache, useCacheStore } from '@/stores/cacheStore'
 import { ModelData, ModelElement, ModelFile } from '@/types'
@@ -7,12 +9,41 @@ import { getLogger } from '../loggerService'
 
 const logger = getLogger('ResourceLoader/model')
 
+const modelJsonCache = new Map<string, ModelFile>()
+const modelJsonLoadMutexMap = new Map<string, Mutex>()
+
+async function fetchModelJson(resourceLocation: string) {
+  const modelFileFromVersion = await AssetFileInfosCache.instance.fetchFileInfo(
+    `/assets/minecraft/models/${resourceLocation}.json`,
+  )
+  if (modelFileFromVersion == null) {
+    throw new Error(`Cannot get info of model file ${resourceLocation}`)
+  }
+
+  const key = `${modelFileFromVersion.fromVersion};${resourceLocation}`
+
+  if (!modelJsonLoadMutexMap.has(key)) {
+    modelJsonLoadMutexMap.set(key, new Mutex())
+  }
+  const mutex = modelJsonLoadMutexMap.get(key)!
+  return await mutex.runExclusive(async () => {
+    let modelJson = modelJsonCache.get(key)
+    if (modelJson == null) {
+      const { data } = await fetcher<ModelFile>(
+        `/assets/minecraft/models/${resourceLocation}.json`,
+        true,
+      )
+      modelJson = data
+      modelJsonCache.set(key, modelJson)
+    }
+
+    return modelJson
+  })
+}
+
 export async function loadModel(resourceLocation: string) {
-  const {
-    modelData,
-    setModelData: setCachedModelData,
-    setModelJson,
-  } = useCacheStore.getState()
+  const { modelData, setModelData: setCachedModelData } =
+    useCacheStore.getState()
 
   const cachedModelData = modelData[resourceLocation]
   if (cachedModelData != null) {
@@ -33,28 +64,7 @@ export async function loadModel(resourceLocation: string) {
   let textureSize: [number, number] | undefined = undefined
 
   const f = async (currentResourceLocation: string) => {
-    const modelFileFromVersion =
-      await AssetFileInfosCache.instance.fetchFileInfo(
-        `/assets/minecraft/models/${currentResourceLocation}.json`,
-      )
-    if (modelFileFromVersion == null) {
-      throw new Error(
-        `Cannot get info of model file ${currentResourceLocation}`,
-      )
-    }
-
-    const key = `${modelFileFromVersion.fromVersion};${currentResourceLocation}`
-
-    let resourceLocationData = useCacheStore.getState().modelJson[key]
-    if (resourceLocationData == null) {
-      console.log(currentResourceLocation)
-      const { data } = await fetcher<ModelFile>(
-        `/assets/minecraft/models/${currentResourceLocation}.json`,
-        true,
-      )
-      resourceLocationData = data
-      setModelJson(key, resourceLocationData)
-    }
+    const resourceLocationData = await fetchModelJson(currentResourceLocation)
 
     // 불러온 model 데이터들을 합쳐서 저장 (기존 데이터 우선)
     textures = { ...resourceLocationData.textures, ...textures }
@@ -128,6 +138,6 @@ export async function loadModel(resourceLocation: string) {
     textureSize,
   }
 
-  // setCachedModelData(resourceLocation, newModelData, isBlockShapedItemModel)
+  setCachedModelData(resourceLocation, newModelData, isBlockShapedItemModel)
   return { data: newModelData, isBlockShapedItemModel }
 }

@@ -11,7 +11,6 @@ import {
   BlockstatesData,
   FontProvider,
   ModelData,
-  ModelFile,
   VersionMetadata,
 } from '@/types'
 
@@ -24,9 +23,6 @@ const logger = getLogger('cacheStore')
 type CacheStoreState = {
   blockstatesData: Record<string, BlockstatesData>
   setBlockstateData: (blockType: string, data: BlockstatesData) => void
-
-  modelJson: Record<string, ModelFile>
-  setModelJson: (resourceLocation: string, jsonContent: ModelFile) => void
 
   modelData: Record<
     string,
@@ -68,12 +64,6 @@ export const useCacheStore = create(
     setBlockstateData: (blockType, blockstatesData) =>
       set((state) => {
         state.blockstatesData[blockType] = blockstatesData
-      }),
-
-    modelJson: {},
-    setModelJson: (resourceLocation, jsonContent) =>
-      set((state) => {
-        state.modelJson[resourceLocation] = jsonContent
       }),
 
     modelData: {},
