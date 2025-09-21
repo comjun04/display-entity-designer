@@ -6,6 +6,7 @@ import { useShallow } from 'zustand/shallow'
 import { getLogger } from '@/services/loggerService'
 import { loadModelMesh } from '@/services/resources/modelMesh'
 import { AssetFileInfosCache, useCacheStore } from '@/stores/cacheStore'
+import { useProjectStore } from '@/stores/projectStore'
 import {
   ModelDisplayPositionKey,
   Number3Tuple,
@@ -47,6 +48,8 @@ const ModelNew: FC<ModelNewProps> = ({
   const mergedMeshRef = useRef<Mesh>()
   const [meshLoaded, setMeshLoaded] = useState(false)
 
+  const targetGameVersion = useProjectStore((state) => state.targetGameVersion)
+
   const { modelData: modelDataTemp, modelDataLoading } = useCacheStore(
     useShallow((state) => ({
       modelData:
@@ -87,6 +90,11 @@ const ModelNew: FC<ModelNewProps> = ({
     }
     f().catch(console.error)
   }, [initialResourceLocation, modelDataTemp, modelDataLoading])
+
+  useEffect(() => {
+    setModelFileFromVersion(undefined)
+    setMeshLoaded(false)
+  }, [targetGameVersion])
 
   useEffect(() => {
     setMeshLoaded(false)
