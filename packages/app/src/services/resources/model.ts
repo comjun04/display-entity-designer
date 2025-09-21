@@ -1,5 +1,5 @@
 import fetcher from '@/fetcher'
-import { useCacheStore } from '@/stores/cacheStore'
+import { AssetFileInfosCache, useCacheStore } from '@/stores/cacheStore'
 import { ModelData, ModelElement, ModelFile } from '@/types'
 import { generateBuiltinItemModel, stripMinecraftPrefix } from '@/utils'
 
@@ -33,15 +33,27 @@ export async function loadModel(resourceLocation: string) {
   let textureSize: [number, number] | undefined = undefined
 
   const f = async (currentResourceLocation: string) => {
-    let resourceLocationData =
-      useCacheStore.getState().modelJson[currentResourceLocation]
+    const modelFileFromVersion =
+      await AssetFileInfosCache.instance.fetchFileInfo(
+        `/assets/minecraft/models/${currentResourceLocation}.json`,
+      )
+    if (modelFileFromVersion == null) {
+      throw new Error(
+        `Cannot get info of model file ${currentResourceLocation}`,
+      )
+    }
+
+    const key = `${modelFileFromVersion.fromVersion};${currentResourceLocation}`
+
+    let resourceLocationData = useCacheStore.getState().modelJson[key]
     if (resourceLocationData == null) {
+      console.log(currentResourceLocation)
       const { data } = await fetcher<ModelFile>(
         `/assets/minecraft/models/${currentResourceLocation}.json`,
         true,
       )
       resourceLocationData = data
-      setModelJson(currentResourceLocation, resourceLocationData)
+      setModelJson(key, resourceLocationData)
     }
 
     // 불러온 model 데이터들을 합쳐서 저장 (기존 데이터 우선)
@@ -116,6 +128,6 @@ export async function loadModel(resourceLocation: string) {
     textureSize,
   }
 
-  setCachedModelData(resourceLocation, newModelData, isBlockShapedItemModel)
+  // setCachedModelData(resourceLocation, newModelData, isBlockShapedItemModel)
   return { data: newModelData, isBlockShapedItemModel }
 }

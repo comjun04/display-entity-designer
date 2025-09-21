@@ -5,7 +5,7 @@ import { useShallow } from 'zustand/shallow'
 
 import { getLogger } from '@/services/loggerService'
 import { loadModelMesh } from '@/services/resources/modelMesh'
-import { useCacheStore } from '@/stores/cacheStore'
+import { AssetFileInfosCache, useCacheStore } from '@/stores/cacheStore'
 import {
   ModelDisplayPositionKey,
   Number3Tuple,
@@ -42,12 +42,15 @@ const ModelNew: FC<ModelNewProps> = ({
   yRotation = 0,
   playerHeadTextureData,
 }) => {
+  const [modelFileFromVersion, setModelFileFromVersion] = useState<string>()
+
   const mergedMeshRef = useRef<Mesh>()
   const [meshLoaded, setMeshLoaded] = useState(false)
 
   const { modelData: modelDataTemp, modelDataLoading } = useCacheStore(
     useShallow((state) => ({
-      modelData: state.modelData[initialResourceLocation],
+      modelData:
+        state.modelData[`${modelFileFromVersion};${initialResourceLocation}`],
       modelDataLoading: state.modelDataLoading.has(initialResourceLocation),
     })),
   )
@@ -64,7 +67,25 @@ const ModelNew: FC<ModelNewProps> = ({
 
     if (latestModelDataLoading.has(initialResourceLocation)) return
 
-    loadModelData(initialResourceLocation)
+    const f = async () => {
+      const fileInfo = await AssetFileInfosCache.instance.fetchFileInfo(
+        `/assets/minecraft/models/${initialResourceLocation}.json`,
+      )
+      if (fileInfo == null) {
+        throw new Error(
+          `Cannot get info of model file ${initialResourceLocation}`,
+        )
+      }
+
+      logger.log(
+        `Loading model data for ${initialResourceLocation} (${fileInfo.fromVersion})`,
+      )
+
+      await loadModelData(initialResourceLocation)
+
+      setModelFileFromVersion(fileInfo.fromVersion)
+    }
+    f().catch(console.error)
   }, [initialResourceLocation, modelDataTemp, modelDataLoading])
 
   useEffect(() => {

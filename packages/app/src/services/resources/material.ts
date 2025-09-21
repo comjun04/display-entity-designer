@@ -57,14 +57,28 @@ export async function loadMaterial({
     tintindex,
   )
 
+  let textureFileFromVersion = ''
+  if (textureData.type === 'vanilla') {
+    const assetFileInfo = await AssetFileInfosCache.instance.fetchFileInfo(
+      `/assets/minecraft/textures/${textureData.resourceLocation}.png`,
+    )
+    if (assetFileInfo == null) {
+      throw new Error(
+        `Cannot get info of texture asset file ${textureData.resourceLocation}`,
+      )
+    }
+
+    textureFileFromVersion = assetFileInfo.fromVersion
+  }
+
   const textureKey =
     textureData.type === 'player_head'
       ? `#player_head;${textureData.playerHeadTextureUrl.split('/').slice(-1)[0]}`
-      : textureData.resourceLocation
+      : `${textureFileFromVersion};${textureData.resourceLocation}`
   const materialKey =
     textureData.type === 'player_head'
       ? textureKey
-      : `${textureData.resourceLocation};${textureColor}`
+      : `${textureFileFromVersion};${textureData.resourceLocation};${textureColor}`
 
   // 동시에 여러 번 로딩하지 않도록 key값을 기준으로 lock을 구현
   if (!materialLoadMutexMap.has(materialKey)) {

@@ -36,7 +36,7 @@ type CacheStoreState = {
     }
   >
   modelDataLoading: Set<string>
-  loadModelData: (resourceLocation: string) => void
+  loadModelData: (resourceLocation: string) => Promise<void>
   setModelData: (
     resourceLocation: string,
     data: ModelData,
@@ -78,23 +78,31 @@ export const useCacheStore = create(
 
     modelData: {},
     modelDataLoading: new Set(),
-    loadModelData: (resourceLocation) => {
+    loadModelData: async (resourceLocation) => {
+      const fileInfo = await AssetFileInfosCache.instance.fetchFileInfo(
+        `/assets/minecraft/models/${resourceLocation}.json`,
+      )
+      if (fileInfo == null) {
+        set((state) => state.modelDataLoading.delete(resourceLocation))
+        throw new Error(`Cannot get info of model file ${resourceLocation}`)
+      }
+
+      const key = `${fileInfo.fromVersion};${resourceLocation}`
+      logger.debug('loadModelData:', key)
+
       set((state) => {
         if (state.modelDataLoading.has(resourceLocation)) return
         state.modelDataLoading = new Set(state.modelDataLoading)
         state.modelDataLoading.add(resourceLocation)
       })
 
-      loadModel(resourceLocation)
-        .then((modelData) => {
-          set((state) => {
-            state.modelData[resourceLocation] = modelData
+      const modelData = await loadModel(resourceLocation)
+      set((state) => {
+        state.modelData[key] = modelData
 
-            state.modelDataLoading = new Set(state.modelDataLoading)
-            state.modelDataLoading.delete(resourceLocation)
-          })
-        })
-        .catch(logger.error)
+        state.modelDataLoading = new Set(state.modelDataLoading)
+        state.modelDataLoading.delete(resourceLocation)
+      })
     },
     setModelData: (resourceLocation, data, isBlockShapedItemModel) =>
       set((state) => {
@@ -249,11 +257,13 @@ export class AssetFileInfosCache {
       const data = (await fetch(`${CDNBaseUrl}/${version}/fileInfos.json`).then(
         (r) => r.json(),
       )) as AssetFileInfos
+      logger.debug('[AssetFileInfosCache] set cache', version)
       this._cache.set(version, data)
       return data
     })
   }
   async fetchFileInfo(filePath: string, version?: string) {
+    logger.debug('[AssetFileInfosCache] fetchFileInfo: ', filePath)
     const fileInfos = await this.fetchAll(version)
 
     const slashUnprefixedPath =
