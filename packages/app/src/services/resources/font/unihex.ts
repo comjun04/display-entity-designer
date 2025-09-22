@@ -1,12 +1,16 @@
 import { Mutex } from 'async-mutex'
 import { CanvasTexture } from 'three'
 
-import { CDNBaseUrl, UnifontSizeOverrides } from '@/constants'
+import { CDNBaseUrl } from '@/constants'
 import { VersionMetadataCache } from '@/stores/cacheStore'
 import { useProjectStore } from '@/stores/projectStore'
+import { CDNFontProviderResponse, type UnifontSizeOverrideEntry } from '@/types'
 
-// unifont hex data cache, keys are shared asset id and charcode
+// unifont hex data cache, keys are sharedAsset id and charcode
 const unifontHexDataCache = new Map<number, Map<number, string>>()
+// unifont size overrides cache, used to override glyph width before calculation
+// keys are sharedAsset id
+const unifontSizeOverridesCache = new Map<number, UnifontSizeOverrideEntry[]>()
 const unifontHexDataLoadMutexMap = new Map<number, Mutex>()
 
 async function loadUnifontHexFile(
@@ -19,11 +23,39 @@ async function loadUnifontHexFile(
   const mutex = unifontHexDataLoadMutexMap.get(assetIndex)!
 
   return await mutex.runExclusive(async () => {
-    const existingData = unifontHexDataCache.get(assetIndex)
-    if (existingData != null) {
-      return existingData
+    const existingHexData = unifontHexDataCache.get(assetIndex)
+    const existingSizeOverridesData = unifontSizeOverridesCache.get(assetIndex)
+    if (existingHexData != null && existingSizeOverridesData != null) {
+      return {
+        hexData: existingHexData,
+        sizeOverrides: existingSizeOverridesData,
+      }
     }
 
+    // first load include/unifont.json file
+    const unifontProviderFile = (await fetch(
+      `${CDNBaseUrl}/shared/${assetIndex}/assets/minecraft/font/include/unifont.json`,
+    ).then((res) => res.json())) as CDNFontProviderResponse
+    // find for `unihex` provider without filter conditions
+    const defaultUnihexProvider = unifontProviderFile.providers.find(
+      (d) => d.type === 'unihex' && d.filter == null,
+    )
+    if (
+      defaultUnihexProvider?.type !==
+      'unihex' /* need to check type param in if clause to teach tsserver that this var is unihex provider */
+    ) {
+      throw new Error(
+        'Cannot find default unihex provider in unifont.json file. This should not happen',
+      )
+    }
+
+    // cache size overrides data
+    unifontSizeOverridesCache.set(
+      assetIndex,
+      defaultUnihexProvider.size_overrides,
+    )
+
+    // now load the actual font hex file
     const fullFilePath = `shared/${assetIndex}/${sharedAssetRelativeFilePath}`
     const unifontHexFile = await fetch(`${CDNBaseUrl}/${fullFilePath}`).then(
       (res) => res.text(),
@@ -41,7 +73,11 @@ async function loadUnifontHexFile(
     }
 
     unifontHexDataCache.set(assetIndex, unifontHexDataNewMap)
-    return unifontHexDataNewMap
+
+    return {
+      hexData: unifontHexDataNewMap,
+      sizeOverrides: defaultUnihexProvider.size_overrides,
+    }
   })
 }
 
@@ -54,7 +90,7 @@ async function getCharPixels(char: string) {
   )
   const { assetIndex, unifontHexFilePath } = versionMetadata.sharedAssets
 
-  const unifontHexData = await loadUnifontHexFile(
+  const { hexData: unifontHexData, sizeOverrides } = await loadUnifontHexFile(
     assetIndex,
     unifontHexFilePath,
   )
@@ -79,13 +115,11 @@ async function getCharPixels(char: string) {
   let totalRight = 0
 
   // size_overrides에 정의된 문자면 left랑 right 값을 바로 적용
-  const matchingSizeOverrideEntry = UnifontSizeOverrides.find(
-    (overrideEntry) => {
-      const from = overrideEntry.from.charCodeAt(0)
-      const to = overrideEntry.to.charCodeAt(0)
-      return from <= charCode && charCode <= to
-    },
-  )
+  const matchingSizeOverrideEntry = sizeOverrides.find((overrideEntry) => {
+    const from = overrideEntry.from.charCodeAt(0)
+    const to = overrideEntry.to.charCodeAt(0)
+    return from <= charCode && charCode <= to
+  })
   if (matchingSizeOverrideEntry != null) {
     totalLeft = matchingSizeOverrideEntry.left
     totalRight = matchingSizeOverrideEntry.right

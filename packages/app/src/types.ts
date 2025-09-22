@@ -101,9 +101,23 @@ export type FontProvider =
       type: 'space'
       advances: Record<string, number>
     }
+  | {
+      type: 'unihex'
+      hex_file: string // resource location to zip file which includes .hex files
+      size_overrides: UnifontSizeOverrideEntry[]
+      filter?: Record<string, boolean> // todo: find the filter condition key
+    }
 
 export type CDNFontProviderResponse = {
   providers: FontProvider[]
+}
+
+export interface UnifontSizeOverrideEntry {
+  __ranges: string[]
+  from: string
+  to: string
+  left: number
+  right: number
 }
 
 export type BaseDisplayEntity = {
