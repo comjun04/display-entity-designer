@@ -6,6 +6,7 @@ import { useShallow } from 'zustand/shallow'
 import { createTextMesh } from '@/services/resources/textMesh'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
+import { useProjectStore } from '@/stores/projectStore'
 import { Number3Tuple } from '@/types'
 
 import BoundingBox from './BoundingBox'
@@ -52,6 +53,8 @@ const TextDisplay: FC<TextDisplayProps> = ({
     (state) => state.settings.general.forceUnifont,
   )
 
+  const targetGameVersion = useProjectStore((state) => state.targetGameVersion)
+
   const innerGroupRef = useRef<Group>(null)
   const textModelGroupRef = useRef<Group>()
 
@@ -90,6 +93,7 @@ const TextDisplay: FC<TextDisplayProps> = ({
     thisEntityBackgroundColor,
     thisEntityTextColor,
     forceUnifont,
+    targetGameVersion,
   ])
 
   return (

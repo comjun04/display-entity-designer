@@ -8,7 +8,11 @@ import {
   Texture,
 } from 'three'
 
-import { useClassObjectCacheStore } from '@/stores/cacheStore'
+import {
+  VersionMetadataCache,
+  useClassObjectCacheStore,
+} from '@/stores/cacheStore'
+import { useProjectStore } from '@/stores/projectStore'
 
 import { createCharTexture as createBitmapFontCharTexture } from './font/bitmap'
 import { createCharTexture as createUnihexFontCharTexture } from './font/unihex'
@@ -187,7 +191,16 @@ async function createCharMesh(char: string, preferFont: Font, color: number) {
   // check for cached glyph data
   const { fontGlyphs: cache, setFontGlyph } =
     useClassObjectCacheStore.getState()
-  const key = `${preferFont};${char.charCodeAt(0).toString(16)}`
+
+  let fontKey: string = preferFont
+  if (preferFont === 'uniform') {
+    // unifont glyphs need to be treated separately by assetIndex id
+    const versionMetadata = await VersionMetadataCache.instance.fetch(
+      useProjectStore.getState().targetGameVersion,
+    )
+    fontKey += `;${versionMetadata.sharedAssets.assetIndex}`
+  }
+  const key = `${fontKey};${char.charCodeAt(0).toString(16)}`
 
   const d = cache.get(key)
   if (d != null) {

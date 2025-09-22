@@ -51,9 +51,6 @@ type CacheStoreState = {
 
   fontProviders: Record<string, FontProvider[]>
   setFontProviders: (key: string, data: FontProvider[]) => void
-
-  unifontHexData: Map<number, string>
-  setUnifontHexData: (data: Map<number, string>) => void
 }
 
 // 캐시 저장소
@@ -119,12 +116,6 @@ export const useCacheStore = create(
     setFontProviders: (key, data) =>
       set((state) => {
         state.fontProviders[key] = data
-      }),
-
-    unifontHexData: new Map(),
-    setUnifontHexData: (data) =>
-      set((state) => {
-        state.unifontHexData = data
       }),
   })),
 )

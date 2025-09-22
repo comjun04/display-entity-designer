@@ -2,49 +2,64 @@ import { Mutex } from 'async-mutex'
 import { CanvasTexture } from 'three'
 
 import { CDNBaseUrl, UnifontSizeOverrides } from '@/constants'
-import { VersionMetadataCache, useCacheStore } from '@/stores/cacheStore'
+import { VersionMetadataCache } from '@/stores/cacheStore'
 import { useProjectStore } from '@/stores/projectStore'
 
-const unifontHexDataLoadMutex = new Mutex()
+// unifont hex data cache, keys are shared asset id and charcode
+const unifontHexDataCache = new Map<number, Map<number, string>>()
+const unifontHexDataLoadMutexMap = new Map<number, Mutex>()
 
-async function loadUnifontHexFile(filePath: string) {
-  const unifontHexFile = await fetch(`${CDNBaseUrl}/${filePath}`).then((res) =>
-    res.text(),
-  )
-
-  const unifontHexDataNewMap = new Map<number, string>()
-
-  const lines = unifontHexFile.trim().split('\n')
-  for (const line of lines) {
-    const [charCodeStr, rawHex] = line.split(':')
-    const hex = rawHex.trim()
-
-    const charCode = parseInt(charCodeStr, 16)
-    unifontHexDataNewMap.set(charCode, hex)
+async function loadUnifontHexFile(
+  assetIndex: number,
+  sharedAssetRelativeFilePath: string,
+) {
+  if (!unifontHexDataLoadMutexMap.has(assetIndex)) {
+    unifontHexDataLoadMutexMap.set(assetIndex, new Mutex())
   }
+  const mutex = unifontHexDataLoadMutexMap.get(assetIndex)!
 
-  useCacheStore.getState().setUnifontHexData(unifontHexDataNewMap)
+  return await mutex.runExclusive(async () => {
+    const existingData = unifontHexDataCache.get(assetIndex)
+    if (existingData != null) {
+      return existingData
+    }
+
+    const fullFilePath = `shared/${assetIndex}/${sharedAssetRelativeFilePath}`
+    const unifontHexFile = await fetch(`${CDNBaseUrl}/${fullFilePath}`).then(
+      (res) => res.text(),
+    )
+
+    const unifontHexDataNewMap = new Map<number, string>()
+
+    const lines = unifontHexFile.trim().split('\n')
+    for (const line of lines) {
+      const [charCodeStr, rawHex] = line.split(':')
+      const hex = rawHex.trim()
+
+      const charCode = parseInt(charCodeStr, 16)
+      unifontHexDataNewMap.set(charCode, hex)
+    }
+
+    unifontHexDataCache.set(assetIndex, unifontHexDataNewMap)
+    return unifontHexDataNewMap
+  })
 }
 
 async function getCharPixels(char: string) {
   const charCode = char.charCodeAt(0)
 
-  if (!useCacheStore.getState().unifontHexData.has(charCode)) {
-    await unifontHexDataLoadMutex.runExclusive(async () => {
-      if (useCacheStore.getState().unifontHexData.size < 1) {
-        // TODO: Extract version metadata loading
-        const versionMetadata = await VersionMetadataCache.instance.fetch(
-          useProjectStore.getState().targetGameVersion,
-        )
-        const { assetIndex, unifontHexFilePath } = versionMetadata.sharedAssets
-        const fullFilePath = `shared/${assetIndex}/${unifontHexFilePath}`
+  // TODO: Extract version metadata loading
+  const versionMetadata = await VersionMetadataCache.instance.fetch(
+    useProjectStore.getState().targetGameVersion,
+  )
+  const { assetIndex, unifontHexFilePath } = versionMetadata.sharedAssets
 
-        await loadUnifontHexFile(fullFilePath)
-      }
-    })
-  }
+  const unifontHexData = await loadUnifontHexFile(
+    assetIndex,
+    unifontHexFilePath,
+  )
 
-  const hex = useCacheStore.getState().unifontHexData.get(charCode)
+  const hex = unifontHexData.get(charCode)
   if (hex == null) {
     throw new Error(`Unsupported character ${char[0]} (${charCode})!`)
   }
