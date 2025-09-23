@@ -155,10 +155,14 @@ const ExportToMinecraftDialog: FC = () => {
         console.error('semveredGameVersion is null, this should not happen')
         return
       }
-      const itemComponentEnabled = semverSatisfies(
+
+      // whether item uses data component instead of nbt
+      const isItemDataComponentEnabled = semverSatisfies(
         semveredGameVersion,
         '>=1.20.5',
       )
+      // whether text is represented as SNBT rather than JSON
+      const isTextFormatSNBT = semverSatisfies(semveredGameVersion, '>=1.21.5')
 
       const tagString = baseTag.length > 0 ? `Tags:["${baseTag}"],` : ''
       const passengersStrings = [...entities.values()]
@@ -208,7 +212,7 @@ const ExportToMinecraftDialog: FC = () => {
                   },
                 } satisfies MinimalTextureValue
                 const textureValueString = btoa(JSON.stringify(o))
-                itemExtraData = itemComponentEnabled
+                itemExtraData = isItemDataComponentEnabled
                   ? `,components:{"minecraft:profile":{properties:[{name:"textures",value:"${textureValueString}"}]}}`
                   : `,SkullOwner:{Properties:{textures:[{Value:"${textureValueString}"}]}}`
               }
@@ -217,16 +221,23 @@ const ExportToMinecraftDialog: FC = () => {
           } else if (entity.kind === 'text') {
             // text
             const text = entity.text
-              .replaceAll('\n', '\\\\n')
+              .replaceAll('\n', isTextFormatSNBT ? '\\n' : '\\\\n')
               .replaceAll('"', '\\"')
             const enabledTextEffects = (
               Object.keys(entity.textEffects) as Array<keyof TextEffects>
             ).filter((k) => entity.textEffects[k])
             const enabledTextEffectsString =
               enabledTextEffects.length > 0
-                ? ',' + enabledTextEffects.map((k) => `"${k}":true`).join(',')
+                ? ',' +
+                  enabledTextEffects
+                    .map((k) =>
+                      isTextFormatSNBT ? `${k}:true` : `"${k}":true`,
+                    )
+                    .join(',')
                 : ''
-            specificData = `text:'{"text":"${text}"${enabledTextEffectsString},"color":"#${entity.textColor.toString(16)}"}'`
+            specificData = isTextFormatSNBT
+              ? `text:{text:"${text}"${enabledTextEffectsString},color:"#${entity.textColor.toString(16)}"}`
+              : `text:'{"text":"${text}"${enabledTextEffectsString},"color":"#${entity.textColor.toString(16)}"}'`
 
             // TODO: omit optional nbt data if data value is default value
 
