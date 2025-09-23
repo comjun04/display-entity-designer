@@ -221,6 +221,7 @@ const ExportToMinecraftDialog: FC = () => {
           } else if (entity.kind === 'text') {
             // text
             const text = entity.text
+              .replaceAll('\\', '\\\\')
               .replaceAll('\n', isTextFormatSNBT ? '\\n' : '\\\\n')
               .replaceAll('"', '\\"')
             const enabledTextEffects = (
