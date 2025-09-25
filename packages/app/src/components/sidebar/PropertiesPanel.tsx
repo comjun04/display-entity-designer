@@ -517,7 +517,7 @@ const ProjectProperties: FC = () => {
 
             useDialogStore.getState().openPromptDialog({
               title: 'Change Target Minecraft Version',
-              content: `Are you sure to change target Minecraft version to ${gameVersionData.label}?`,
+              content: `Are you sure to change target Minecraft version to ${gameVersionData.label}? Display entities using newer blocks or items will be removed and cannot be undone.`,
               buttonText: {
                 positive: 'Change',
                 negative: 'Cancel',

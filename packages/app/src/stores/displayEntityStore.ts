@@ -5,12 +5,15 @@ import { Box3, Euler, Matrix4, Quaternion, Vector3 } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
+import fetcher from '@/fetcher'
 import { getLogger } from '@/services/loggerService'
 import { preloadResources } from '@/services/resources/preload'
 import {
   BDEngineSaveData,
   BDEngineSaveDataItem,
   BlockDisplayEntity,
+  CDNBlocksListResponse,
+  CDNItemsListResponse,
   DeepPartial,
   DisplayEntity,
   DisplayEntityGroup,
@@ -134,6 +137,7 @@ export type DisplayEntityState = {
   exportAll: () => DisplayEntitySaveDataItem[]
 
   clearEntities: () => void
+  purgeInvalidEntities: () => Promise<void>
 
   groupEntities: (
     entityIds: string[],
@@ -981,6 +985,38 @@ export const useDisplayEntityStore = create(
 
         useEntityRefStore.getState().clearEntityRefs()
       }),
+    purgeInvalidEntities: async () => {
+      // fetch blocks and items list and remove entities
+      // which type is not available on current target game version
+
+      // i know fetching without caching is shit, will fix later
+
+      const blocksListResponse = await fetcher<CDNBlocksListResponse>(
+        '/assets/minecraft/blocks.json',
+        false,
+      )
+      const blocks = (blocksListResponse.data.blocks ?? []).map(
+        (d) => d.split('[')[0],
+      ) // 블록 이름 뒤에 붙는 `[up=true]` 등 blockstate 기본값 텍스트 제거
+
+      const itemsListResponse = await fetcher<CDNItemsListResponse>(
+        '/assets/minecraft/items.json',
+      )
+      const items = itemsListResponse.data.items
+
+      const { entities, deleteEntities } = get()
+
+      const invalidEntityIds: string[] = []
+      for (const [entityId, entity] of entities.entries()) {
+        if (entity.kind === 'block' && !blocks.includes(entity.type)) {
+          invalidEntityIds.push(entityId)
+        } else if (entity.kind === 'item' && !items.includes(entity.type)) {
+          invalidEntityIds.push(entityId)
+        }
+      }
+
+      deleteEntities(invalidEntityIds, true)
+    },
 
     groupEntities: (entityIds, groupIdToSet, skipHistoryAdd) =>
       set((state) => {

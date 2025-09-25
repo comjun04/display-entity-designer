@@ -3,6 +3,8 @@ import { immer } from 'zustand/middleware/immer'
 
 import { LatestGameVersion } from '@/constants'
 
+import { useDisplayEntityStore } from './displayEntityStore'
+
 interface ProjectStoreState {
   targetGameVersion: string
   setTargetGameVersion: (version: string) => void
@@ -11,9 +13,15 @@ interface ProjectStoreState {
 export const useProjectStore = create(
   immer<ProjectStoreState>((set) => ({
     targetGameVersion: LatestGameVersion,
-    setTargetGameVersion: (version) =>
+    setTargetGameVersion: (version) => {
       set((state) => {
         state.targetGameVersion = version
-      }),
+      })
+
+      useDisplayEntityStore
+        .getState()
+        .purgeInvalidEntities()
+        .catch(console.error)
+    },
   })),
 )
