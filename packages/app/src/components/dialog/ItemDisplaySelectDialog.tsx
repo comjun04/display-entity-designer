@@ -6,6 +6,7 @@ import { useShallow } from 'zustand/shallow'
 import fetcher from '@/fetcher'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
+import { useProjectStore } from '@/stores/projectStore'
 import { CDNItemsListResponse } from '@/types'
 
 import Dialog from './Dialog'
@@ -27,15 +28,16 @@ const ItemDisplaySelectDialog: FC = () => {
       setOpenedDialog: state.setOpenedDialog,
     })),
   )
+  const targetGameVersion = useProjectStore((state) => state.targetGameVersion)
 
   const closeDialog = () => setOpenedDialog(null)
 
-  const { data } = useSWRImmutable<CDNItemsListResponse>(
-    firstOpened ? '/assets/minecraft/items.json' : null,
-    fetcher,
+  const { data: itemListResponse } = useSWRImmutable(
+    firstOpened ? ['/assets/minecraft/items.json', targetGameVersion] : null,
+    ([url]) => fetcher<CDNItemsListResponse>(url as string),
   )
 
-  const items = data?.items ?? []
+  const items = itemListResponse?.data.items ?? []
 
   useEffect(() => {
     if (isOpen) {

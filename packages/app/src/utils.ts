@@ -1,7 +1,8 @@
 import { type ClassValue, clsx } from 'clsx'
+import { coerce as semverCoerce, satisfies as semverSatisfies } from 'semver'
 import { twMerge } from 'tailwind-merge'
 
-import { CDNVersionAssetsUrl } from './constants'
+import { AssetFileInfosCache } from './stores/cacheStore'
 import { ModelElement, ModelFaceKey } from './types'
 
 export function cn(...inputs: ClassValue[]) {
@@ -79,7 +80,9 @@ export async function generateBuiltinItemModel(
 
   const textureImage = new Image()
   textureImage.crossOrigin = 'anonymous'
-  textureImage.src = `${CDNVersionAssetsUrl}/assets/minecraft/textures/${textureResourceLocation}.png`
+  textureImage.src = await AssetFileInfosCache.instance.makeFullFileUrl(
+    `/assets/minecraft/textures/${textureResourceLocation}.png`,
+  )
   await new Promise((resolve) => {
     textureImage.onload = resolve
   })
@@ -165,11 +168,17 @@ const blocksUsingDefaultFoliageColors = [
 ]
 export function getTextureColor(
   modelResourceLocation: string,
+  gameVersion: string,
   textureLayer?: string,
   tintindex?: number,
 ) {
   const isBlockModel = modelResourceLocation.startsWith('block/')
   const modelName = modelResourceLocation.split('/').slice(1).join('/')
+
+  const semveredGameVersion = semverCoerce(gameVersion)?.version
+  if (semveredGameVersion == null) {
+    throw new Error(`Invalid game version ${gameVersion}`)
+  }
 
   if (textureLayer == null && tintindex == null) {
     return 0xffffff
@@ -254,10 +263,13 @@ export function getTextureColor(
   // 스폰알 아이템
   if (
     modelResourceLocation.startsWith('item/') &&
-    modelResourceLocation.endsWith('_spawn_egg')
+    modelResourceLocation.endsWith('_spawn_egg') &&
+    semverSatisfies(semveredGameVersion, '<1.21.5') // minecraft uses unique textures for spawn eggs since 1.21.5
   ) {
     const spawnEggType = modelResourceLocation.slice(5, -10)
     const isOverlay = textureLayer === '1'
+
+    // https://minecraft.wiki/w/Spawn_Egg_colors#Java_Edition
     switch (spawnEggType) {
       case 'allay':
         return isOverlay ? 0x00adff : 0x00daff
@@ -287,6 +299,8 @@ export function getTextureColor(
         return isOverlay ? 0xe5c48b : 0xc1a76a
       case 'cow':
         return isOverlay ? 0xa1a1a1 : 0x443626
+      case 'creaking':
+        return isOverlay ? 0xfc7812 : 0x5f5f5f
       case 'creeper':
         return isOverlay ? 0x000000 : 0x0da70b
       case 'dolphin':

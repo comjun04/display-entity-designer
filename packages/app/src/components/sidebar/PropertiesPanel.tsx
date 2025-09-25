@@ -9,9 +9,12 @@ import {
 } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
-import { BackendHost } from '@/constants'
+import { BackendHost, GameVersions } from '@/constants'
 import useBlockStates from '@/hooks/useBlockStates'
+import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
+import { useHistoryStore } from '@/stores/historyStore'
+import { useProjectStore } from '@/stores/projectStore'
 import {
   BackendAPIV1GetPlayerSkinResponse,
   ModelDisplayPositionKey,
@@ -520,6 +523,53 @@ const TextDisplayProperties: FC = () => {
   )
 }
 
+const ProjectProperties: FC = () => {
+  const targetGameVersion = useProjectStore((state) => state.targetGameVersion)
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
+        Project
+      </div>
+      <div className="flex flex-row items-center gap-2">
+        <label className="flex-1 text-end">Target Minecraft Version</label>
+        <select
+          className="flex-[2] rounded bg-neutral-800 px-2 py-1"
+          value={targetGameVersion}
+          onChange={(evt) => {
+            const gameVersionData = GameVersions.find(
+              (v) => v.id === evt.target.value,
+            )!
+
+            useDialogStore.getState().openPromptDialog({
+              title: 'Change Target Minecraft Version',
+              content: `Are you sure to change target Minecraft version to ${gameVersionData.label}? Display entities using newer blocks or items will be removed and cannot be undone. Project history will be cleared.`,
+              buttonText: {
+                positive: 'Change',
+                negative: 'Cancel',
+              },
+              onChoice: (choice) => {
+                if (choice) {
+                  useProjectStore
+                    .getState()
+                    .setTargetGameVersion(gameVersionData.id)
+                  useHistoryStore.getState().clearHistory()
+                }
+              },
+            })
+          }}
+        >
+          {GameVersions.map((version) => (
+            <option key={version.id} value={version.id}>
+              {version.label}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  )
+}
+
 const PropertiesPanel: FC = () => {
   const { t } = useTranslation()
 
@@ -544,6 +594,8 @@ const PropertiesPanel: FC = () => {
         {singleSelectedEntity?.kind === 'item' && <ItemDisplayProperties />}
 
         {singleSelectedEntity?.kind === 'text' && <TextDisplayProperties />}
+
+        {singleSelectedEntity == null && <ProjectProperties />}
       </SidePanelContent>
     </SidePanel>
   )

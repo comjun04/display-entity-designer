@@ -81,10 +81,18 @@ export interface ModelFile {
 // other asset cdn data
 
 export type VersionMetadata = {
+  version: 1 // metadata version
+  incremental: boolean // whether asset data is generated incrementally
   gameVersion: string // minecraft version
   sharedAssets: {
     assetIndex: number
     unifontHexFilePath: string
+  }
+}
+
+export interface AssetFileInfos {
+  [filePath: string]: {
+    fromVersion: string
   }
 }
 

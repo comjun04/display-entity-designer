@@ -16,11 +16,33 @@ import {
 const VERSION_MANIFEST_URL =
   'https://piston-meta.mojang.com/mc/game/version_manifest.json'
 
-async function fetchVersionData(versionId: string) {
-  console.log('Fetching version manifest')
-  const manifestFileRoot = (await fetch(VERSION_MANIFEST_URL).then((res) =>
+// cache
+let rootVersionManifestCache: CDNVersionManifest | null = null
+const clientJsonCache = new Map<string, CDNClientJson>()
+
+export async function fetchVersionManifest() {
+  if (rootVersionManifestCache != null) {
+    console.log('Using cached root version manifest')
+    return rootVersionManifestCache
+  }
+
+  console.log('Fetching root version manifest')
+  const manifest = (await fetch(VERSION_MANIFEST_URL).then((res) =>
     res.json(),
   )) as CDNVersionManifest
+  rootVersionManifestCache = manifest
+  return manifest
+}
+
+export async function fetchVersionData(versionId: string) {
+  const cachedClientJson = clientJsonCache.get(versionId)
+  if (cachedClientJson != null) {
+    console.log(`Using cached version manifest for ${versionId}`)
+    return cachedClientJson
+  }
+
+  console.log(`Fetching version manifest for ${versionId}`)
+  const manifestFileRoot = await fetchVersionManifest()
   const manifest = manifestFileRoot.versions.find((d) => d.id === versionId)
   if (manifest == null) {
     throw new Error(
@@ -32,6 +54,7 @@ async function fetchVersionData(versionId: string) {
   const clientJson = (await fetch(manifest.url).then((res) =>
     res.json(),
   )) as CDNClientJson
+  clientJsonCache.set(versionId, clientJson)
   return clientJson
 }
 
