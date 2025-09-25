@@ -12,6 +12,7 @@ import { BackendHost, GameVersions } from '@/constants'
 import useBlockStates from '@/hooks/useBlockStates'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
+import { useHistoryStore } from '@/stores/historyStore'
 import { useProjectStore } from '@/stores/projectStore'
 import {
   BackendAPIV1GetPlayerSkinResponse,
@@ -517,7 +518,7 @@ const ProjectProperties: FC = () => {
 
             useDialogStore.getState().openPromptDialog({
               title: 'Change Target Minecraft Version',
-              content: `Are you sure to change target Minecraft version to ${gameVersionData.label}? Display entities using newer blocks or items will be removed and cannot be undone.`,
+              content: `Are you sure to change target Minecraft version to ${gameVersionData.label}? Display entities using newer blocks or items will be removed and cannot be undone. Project history will be cleared.`,
               buttonText: {
                 positive: 'Change',
                 negative: 'Cancel',
@@ -527,6 +528,7 @@ const ProjectProperties: FC = () => {
                   useProjectStore
                     .getState()
                     .setTargetGameVersion(gameVersionData.id)
+                  useHistoryStore.getState().clearHistory()
                 }
               },
             })
