@@ -1,6 +1,7 @@
 import { CDNBaseUrl } from './constants'
 import { AssetFileInfosCache } from './stores/cacheStore'
 import { useProjectStore } from './stores/projectStore'
+import { CDNBlocksListResponse, CDNItemsListResponse } from './types'
 
 export default async function fetcher<T>(
   url: string,
@@ -33,4 +34,17 @@ export default async function fetcher<T>(
     fromVersion,
     data: fetchedData,
   }
+}
+
+export async function getBlockList() {
+  return await fetcher<CDNBlocksListResponse>(
+    '/assets/minecraft/blocks.json',
+    false,
+  )
+}
+export async function getItemList() {
+  return await fetcher<CDNItemsListResponse>(
+    '/assets/minecraft/items.json',
+    false,
+  )
 }
