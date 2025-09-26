@@ -8,10 +8,9 @@ import {
   Texture,
 } from 'three'
 
-import {
-  VersionMetadataCache,
-  useClassObjectCacheStore,
-} from '@/stores/cacheStore'
+import { getVersionMetadata } from '@/fetcher'
+import { queryClient } from '@/query'
+import { useClassObjectCacheStore } from '@/stores/cacheStore'
 import { useProjectStore } from '@/stores/projectStore'
 
 import { createCharTexture as createBitmapFontCharTexture } from './font/bitmap'
@@ -195,9 +194,12 @@ async function createCharMesh(char: string, preferFont: Font, color: number) {
   let fontKey: string = preferFont
   if (preferFont === 'uniform') {
     // unifont glyphs need to be treated separately by assetIndex id
-    const versionMetadata = await VersionMetadataCache.instance.fetch(
-      useProjectStore.getState().targetGameVersion,
-    )
+    const { targetGameVersion } = useProjectStore.getState()
+    const versionMetadata = await queryClient.fetchQuery({
+      queryKey: ['versionMetadata', targetGameVersion],
+      queryFn: () => getVersionMetadata(targetGameVersion),
+      staleTime: Infinity,
+    })
     fontKey += `;${versionMetadata.sharedAssets.assetIndex}`
   }
   const key = `${fontKey};${char.charCodeAt(0).toString(16)}`
