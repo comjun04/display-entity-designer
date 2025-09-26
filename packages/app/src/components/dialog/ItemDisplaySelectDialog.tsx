@@ -33,11 +33,11 @@ const ItemDisplaySelectDialog: FC = () => {
 
   const { data: itemListResponse } = useQuery({
     queryKey: ['items.json', targetGameVersion],
-    queryFn: firstOpened ? getItemList : skipToken,
+    queryFn: firstOpened ? () => getItemList(targetGameVersion) : skipToken,
     staleTime: Infinity,
   })
 
-  const items = itemListResponse?.data.items ?? []
+  const items = itemListResponse?.items ?? []
 
   useEffect(() => {
     if (isOpen) {

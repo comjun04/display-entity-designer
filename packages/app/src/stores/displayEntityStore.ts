@@ -5,15 +5,14 @@ import { Box3, Euler, Matrix4, Quaternion, Vector3 } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
-import fetcher from '@/fetcher'
+import { getBlockList, getItemList } from '@/fetcher'
+import { queryClient } from '@/query'
 import { getLogger } from '@/services/loggerService'
 import { preloadResources } from '@/services/resources/preload'
 import {
   BDEngineSaveData,
   BDEngineSaveDataItem,
   BlockDisplayEntity,
-  CDNBlocksListResponse,
-  CDNItemsListResponse,
   DeepPartial,
   DisplayEntity,
   DisplayEntityGroup,
@@ -31,6 +30,7 @@ import {
 import { useEditorStore } from './editorStore'
 import { useEntityRefStore } from './entityRefStore'
 import { useHistoryStore } from './historyStore'
+import { useProjectStore } from './projectStore'
 
 const logger = getLogger('displayEntityStore')
 
@@ -991,18 +991,20 @@ export const useDisplayEntityStore = create(
 
       // i know fetching without caching is shit, will fix later
 
-      const blocksListResponse = await fetcher<CDNBlocksListResponse>(
-        '/assets/minecraft/blocks.json',
-        false,
-      )
-      const blocks = (blocksListResponse.data.blocks ?? []).map(
+      const { targetGameVersion } = useProjectStore.getState()
+      const blocksListResponse = await queryClient.fetchQuery({
+        queryKey: ['blocks.json', targetGameVersion],
+        queryFn: () => getBlockList(targetGameVersion),
+      })
+      const blocks = (blocksListResponse.blocks ?? []).map(
         (d) => d.split('[')[0],
       ) // 블록 이름 뒤에 붙는 `[up=true]` 등 blockstate 기본값 텍스트 제거
 
-      const itemsListResponse = await fetcher<CDNItemsListResponse>(
-        '/assets/minecraft/items.json',
-      )
-      const items = itemsListResponse.data.items
+      const itemsListResponse = await queryClient.fetchQuery({
+        queryKey: ['items.json', targetGameVersion],
+        queryFn: () => getItemList(targetGameVersion),
+      })
+      const items = itemsListResponse.items
 
       const { entities, deleteEntities } = get()
 
