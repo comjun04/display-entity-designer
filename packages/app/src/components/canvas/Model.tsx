@@ -35,7 +35,7 @@ const ReverseHalfBlockTranslatedMatrix = new Matrix4().makeTranslation(
 
 const logger = getLogger('Model')
 
-const ModelNew: FC<ModelNewProps> = ({
+const Model: FC<ModelNewProps> = ({
   initialResourceLocation,
   displayType,
   xRotation = 0,
@@ -193,4 +193,4 @@ const ModelNew: FC<ModelNewProps> = ({
   return <primitive object={mergedMeshRef.current!} />
 }
 
-export default ModelNew
+export default Model
