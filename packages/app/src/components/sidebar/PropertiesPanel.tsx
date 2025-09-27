@@ -553,6 +553,10 @@ const ProjectProperties: FC = () => {
                   useProjectStore
                     .getState()
                     .setTargetGameVersion(gameVersionData.id)
+                  useDisplayEntityStore
+                    .getState()
+                    .purgeInvalidEntities()
+                    .catch(console.error)
                   useHistoryStore.getState().clearHistory()
                 }
               },

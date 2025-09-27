@@ -1,13 +1,12 @@
+import { skipToken, useQuery } from '@tanstack/react-query'
 import { FC, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import useSWRImmutable from 'swr/immutable'
 import { useShallow } from 'zustand/shallow'
 
-import fetcher from '@/fetcher'
+import { getBlockListQueryFn } from '@/queries/getBlockList'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useProjectStore } from '@/stores/projectStore'
-import { CDNBlocksListResponse } from '@/types'
 
 import Dialog from './Dialog'
 
@@ -32,13 +31,12 @@ const BlockDisplaySelectDialog: FC = () => {
 
   const closeDialog = () => setOpenedDialog(null)
 
-  const { data: blocksListResponse } = useSWRImmutable(
-    firstOpened ? ['/assets/minecraft/blocks.json', targetGameVersion] : null,
-    ([url]) => fetcher<CDNBlocksListResponse>(url as string),
-  )
-  const blocks = (blocksListResponse?.data.blocks ?? []).map(
-    (d) => d.split('[')[0],
-  ) // 블록 이름 뒤에 붙는 `[up=true]` 등 blockstate 기본값 텍스트 제거
+  const { data: blocksListResponse } = useQuery({
+    queryKey: ['blocks.json', targetGameVersion],
+    queryFn: firstOpened ? getBlockListQueryFn : skipToken,
+    staleTime: Infinity,
+  })
+  const blocks = (blocksListResponse?.blocks ?? []).map((d) => d.split('[')[0]) // 블록 이름 뒤에 붙는 `[up=true]` 등 blockstate 기본값 텍스트 제거
 
   useEffect(() => {
     if (isOpen) {

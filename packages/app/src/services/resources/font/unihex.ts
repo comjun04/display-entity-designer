@@ -2,7 +2,7 @@ import { Mutex } from 'async-mutex'
 import { CanvasTexture } from 'three'
 
 import { CDNBaseUrl } from '@/constants'
-import { VersionMetadataCache } from '@/stores/cacheStore'
+import { getVersionMetadata } from '@/queries/getVersionMetadata'
 import { useProjectStore } from '@/stores/projectStore'
 import { CDNFontProviderResponse, type UnifontSizeOverrideEntry } from '@/types'
 
@@ -85,9 +85,8 @@ async function getCharPixels(char: string) {
   const charCode = char.charCodeAt(0)
 
   // TODO: Extract version metadata loading
-  const versionMetadata = await VersionMetadataCache.instance.fetch(
-    useProjectStore.getState().targetGameVersion,
-  )
+  const { targetGameVersion } = useProjectStore.getState()
+  const versionMetadata = await getVersionMetadata(targetGameVersion)
   const { assetIndex, unifontHexFilePath } = versionMetadata.sharedAssets
 
   const { hexData: unifontHexData, sizeOverrides } = await loadUnifontHexFile(

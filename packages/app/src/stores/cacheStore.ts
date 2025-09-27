@@ -11,7 +11,6 @@ import {
   BlockstatesData,
   FontProvider,
   ModelData,
-  VersionMetadata,
 } from '@/types'
 
 import { useProjectStore } from './projectStore'
@@ -157,50 +156,6 @@ export const useClassObjectCacheStore = create<ClassObjectCacheStoreState>(
       }),
   }),
 )
-
-export class VersionMetadataCache {
-  private static _instance: VersionMetadataCache
-
-  private _cache = new Map<string, VersionMetadata>()
-  private _fetchMutexMap = new Map<string, Mutex>()
-
-  private constructor() {}
-  static get instance() {
-    if (this._instance == null) {
-      this._instance = new VersionMetadataCache()
-    }
-
-    return this._instance
-  }
-
-  get(version: string) {
-    return this._cache.get(version)
-  }
-
-  async fetch(version: string) {
-    if (!this._fetchMutexMap.has(version)) {
-      this._fetchMutexMap.set(version, new Mutex())
-    }
-    const mutex = this._fetchMutexMap.get(version)!
-
-    return await mutex.runExclusive(async () => {
-      const existingData = this.get(version)
-      if (existingData != null) {
-        return existingData
-      }
-
-      const data = (await fetch(`${CDNBaseUrl}/${version}/metadata.json`).then(
-        (r) => r.json(),
-      )) as VersionMetadata
-      this._cache.set(version, data)
-      return data
-    })
-  }
-
-  clear() {
-    this._cache.clear()
-  }
-}
 
 export class AssetFileInfosCache {
   private static _instance: AssetFileInfosCache
