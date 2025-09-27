@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import type { FC } from 'react'
 import { useShallow } from 'zustand/shallow'
 
 import { useDialogStore } from '@/stores/dialogStore'

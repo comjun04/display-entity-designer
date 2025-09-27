@@ -6,7 +6,7 @@ import { immer } from 'zustand/middleware/immer'
 import { CDNBaseUrl } from '@/constants'
 import { getLogger } from '@/services/loggerService'
 import { loadModel } from '@/services/resources/model'
-import {
+import type {
   AssetFileInfos,
   BlockstatesData,
   FontProvider,

@@ -1,8 +1,8 @@
-import { QueryFunctionContext } from '@tanstack/react-query'
+import type { QueryFunctionContext } from '@tanstack/react-query'
 
 import { CDNBaseUrl } from '@/constants'
 import { queryClient } from '@/query'
-import { VersionMetadata } from '@/types'
+import type { VersionMetadata } from '@/types'
 
 export async function getVersionMetadataQueryFn({
   queryKey,

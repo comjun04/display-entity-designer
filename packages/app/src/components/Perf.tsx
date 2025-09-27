@@ -1,6 +1,6 @@
 import { invalidate, useFrame } from '@react-three/fiber'
 import { Perf as R3FPerf } from 'r3f-perf'
-import { FC, useRef } from 'react'
+import { type FC, useRef } from 'react'
 
 const Perf: FC = () => {
   const count = useRef(0)

@@ -1,5 +1,5 @@
-import { ThreeEvent, invalidate } from '@react-three/fiber'
-import { FC, MutableRefObject, useEffect, useRef } from 'react'
+import { type ThreeEvent, invalidate } from '@react-three/fiber'
+import { type FC, type MutableRefObject, useEffect, useRef } from 'react'
 import { Group } from 'three'
 import { useShallow } from 'zustand/shallow'
 
@@ -7,7 +7,7 @@ import { createTextMesh } from '@/services/resources/textMesh'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { useProjectStore } from '@/stores/projectStore'
-import { Number3Tuple } from '@/types'
+import type { Number3Tuple } from '@/types'
 
 import BoundingBox from './BoundingBox'
 

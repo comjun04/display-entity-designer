@@ -1,5 +1,5 @@
 import { Switch as HeadlessUISwitch } from '@headlessui/react'
-import { FC } from 'react'
+import type { FC } from 'react'
 
 import { cn } from '@/utils'
 

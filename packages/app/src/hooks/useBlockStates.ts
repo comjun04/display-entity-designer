@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react'
 import { getLogger } from '@/services/loggerService'
 import { loadBlockstates } from '@/services/resources/blockstates'
 import { useProjectStore } from '@/stores/projectStore'
-import { BlockstatesData } from '@/types'
+import type { BlockstatesData } from '@/types'
 
 const logger = getLogger('useBlockStates()')
 

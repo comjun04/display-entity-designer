@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import type { FC } from 'react'
 import { useTranslation } from 'react-i18next'
 import { IoCubeOutline } from 'react-icons/io5'
 import { LuChevronDown, LuType } from 'react-icons/lu'

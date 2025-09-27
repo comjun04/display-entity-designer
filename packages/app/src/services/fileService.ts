@@ -2,7 +2,7 @@ import { LatestGameVersion, LegacyHardcodedGameVersion } from '@/constants'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { useProjectStore } from '@/stores/projectStore'
-import { BDEngineSaveData, DisplayEntitySaveDataItem } from '@/types'
+import type { BDEngineSaveData, DisplayEntitySaveDataItem } from '@/types'
 import { decodeBase64ToBinary, gunzip, gzip } from '@/utils'
 
 import AutosaveService from './autosave'

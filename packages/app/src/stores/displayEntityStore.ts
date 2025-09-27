@@ -1,5 +1,4 @@
-import cloneDeep from 'lodash.clonedeep'
-import merge from 'lodash.merge'
+import { cloneDeep, merge } from 'lodash-es'
 import { nanoid } from 'nanoid'
 import { Box3, Euler, Matrix4, Quaternion, Vector3 } from 'three'
 import { create } from 'zustand'
@@ -9,7 +8,7 @@ import { getBlockList } from '@/queries/getBlockList'
 import { getItemList } from '@/queries/getItemList'
 import { getLogger } from '@/services/loggerService'
 import { preloadResources } from '@/services/resources/preload'
-import {
+import type {
   BDEngineSaveData,
   BDEngineSaveDataItem,
   BlockDisplayEntity,
@@ -24,8 +23,8 @@ import {
   PlayerHeadProperties,
   TextDisplayEntity,
   TextureValue,
-  isItemDisplayPlayerHead,
 } from '@/types'
+import { isItemDisplayPlayerHead } from '@/types'
 
 import { useEditorStore } from './editorStore'
 import { useEntityRefStore } from './entityRefStore'

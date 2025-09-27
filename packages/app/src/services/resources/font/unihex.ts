@@ -4,7 +4,10 @@ import { CanvasTexture } from 'three'
 import { CDNBaseUrl } from '@/constants'
 import { getVersionMetadata } from '@/queries/getVersionMetadata'
 import { useProjectStore } from '@/stores/projectStore'
-import { CDNFontProviderResponse, type UnifontSizeOverrideEntry } from '@/types'
+import {
+  type CDNFontProviderResponse,
+  type UnifontSizeOverrideEntry,
+} from '@/types'
 
 // unifont hex data cache, keys are sharedAsset id and charcode
 const unifontHexDataCache = new Map<number, Map<number, string>>()

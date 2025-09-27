@@ -1,6 +1,6 @@
 import fetcher from '@/fetcher'
 import { AssetFileInfosCache, useCacheStore } from '@/stores/cacheStore'
-import {
+import type {
   BlockStateApplyModelInfo,
   BlockStatesFile,
   BlockstatesData,

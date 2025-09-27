@@ -4,7 +4,7 @@ import {
   DialogTitle,
   Dialog as OriginalDialog,
 } from '@headlessui/react'
-import { FC, ReactNode } from 'react'
+import type { FC, ReactNode } from 'react'
 import { LuX } from 'react-icons/lu'
 
 import { cn } from '@/utils'

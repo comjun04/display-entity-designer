@@ -1,11 +1,11 @@
-import merge from 'lodash.merge'
+import { merge } from 'lodash-es'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
 import i18n from '@/i18n/config'
 import { getLogger } from '@/services/loggerService'
-import { Settings, getStoredSettings } from '@/services/settings'
-import { DeepPartial, Number3Tuple, PartialNumber3Tuple } from '@/types'
+import { type Settings, getStoredSettings } from '@/services/settings'
+import type { DeepPartial, Number3Tuple, PartialNumber3Tuple } from '@/types'
 
 const logger = getLogger('editorStore')
 
@@ -52,10 +52,7 @@ type EditorState = {
 
 export const useEditorStore = create(
   immer<EditorState>((set) => {
-    const initialSettings = getStoredSettings() ?? {
-      testOption: false,
-      minLogLevel: 'info',
-    }
+    const initialSettings = getStoredSettings()
     globalThis.__depl_alertUncaughtError =
       initialSettings?.debug?.alertUncaughtError
 

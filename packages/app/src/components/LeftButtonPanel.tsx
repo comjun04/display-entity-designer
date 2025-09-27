@@ -1,5 +1,5 @@
 import { Tooltip } from '@heroui/tooltip'
-import { FC } from 'react'
+import type { FC } from 'react'
 import { useTranslation } from 'react-i18next'
 import { IoMove } from 'react-icons/io5'
 import {

@@ -2,7 +2,7 @@ import { CanvasTexture, ImageLoader } from 'three'
 
 import fetcher from '@/fetcher'
 import { AssetFileInfosCache, useCacheStore } from '@/stores/cacheStore'
-import { CDNFontProviderResponse } from '@/types'
+import type { CDNFontProviderResponse } from '@/types'
 import { stripMinecraftPrefix } from '@/utils'
 
 const imageLoader = new ImageLoader()

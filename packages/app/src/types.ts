@@ -1,12 +1,12 @@
-import {
+import type {
   BlockStateApplyModelInfo,
   BlockStatesFile,
   ModelDisplayPositionKey,
   ModelElement,
   Number3Tuple,
 } from '@depl/shared'
-import { MutableRefObject, RefCallback } from 'react'
-import { Matrix4Tuple } from 'three'
+import type { MutableRefObject, RefCallback } from 'react'
+import type { Matrix4Tuple } from 'three'
 
 // re-export imported types from shared package
 export type {

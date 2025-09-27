@@ -1,8 +1,8 @@
-import { QueryFunctionContext } from '@tanstack/react-query'
+import type { QueryFunctionContext } from '@tanstack/react-query'
 
 import { CDNBaseUrl } from '@/constants'
 import { queryClient } from '@/query'
-import { CDNItemsListResponse } from '@/types'
+import type { CDNItemsListResponse } from '@/types'
 
 export async function getItemListQueryFn({ queryKey }: QueryFunctionContext) {
   const [, gameVersion] = queryKey
