@@ -3,7 +3,7 @@ import { FC, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/shallow'
 
-import { getItemList } from '@/fetcher'
+import { getItemListQueryFn } from '@/queries/getItemList'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useProjectStore } from '@/stores/projectStore'
@@ -33,7 +33,7 @@ const ItemDisplaySelectDialog: FC = () => {
 
   const { data: itemListResponse } = useQuery({
     queryKey: ['items.json', targetGameVersion],
-    queryFn: firstOpened ? () => getItemList(targetGameVersion) : skipToken,
+    queryFn: firstOpened ? getItemListQueryFn : skipToken,
     staleTime: Infinity,
   })
 

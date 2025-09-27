@@ -3,7 +3,7 @@ import { FC, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/shallow'
 
-import { getBlockList } from '@/fetcher'
+import { getBlockListQueryFn } from '@/queries/getBlockList'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useProjectStore } from '@/stores/projectStore'
@@ -33,7 +33,7 @@ const BlockDisplaySelectDialog: FC = () => {
 
   const { data: blocksListResponse } = useQuery({
     queryKey: ['blocks.json', targetGameVersion],
-    queryFn: firstOpened ? () => getBlockList(targetGameVersion) : skipToken,
+    queryFn: firstOpened ? getBlockListQueryFn : skipToken,
     staleTime: Infinity,
   })
   const blocks = (blocksListResponse?.blocks ?? []).map((d) => d.split('[')[0]) // 블록 이름 뒤에 붙는 `[up=true]` 등 blockstate 기본값 텍스트 제거

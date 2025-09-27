@@ -1,11 +1,6 @@
 import { CDNBaseUrl } from './constants'
 import { AssetFileInfosCache } from './stores/cacheStore'
 import { useProjectStore } from './stores/projectStore'
-import {
-  CDNBlocksListResponse,
-  CDNItemsListResponse,
-  VersionMetadata,
-} from './types'
 
 export default async function fetcher<T>(
   url: string,
@@ -38,21 +33,4 @@ export default async function fetcher<T>(
     fromVersion,
     data: fetchedData,
   }
-}
-
-export async function getBlockList(gameVersion: string) {
-  return (await fetch(
-    `${CDNBaseUrl}/${gameVersion}/assets/minecraft/blocks.json`,
-  ).then((res) => res.json())) as CDNBlocksListResponse
-}
-export async function getItemList(gameVersion: string) {
-  return (await fetch(
-    `${CDNBaseUrl}/${gameVersion}/assets/minecraft/items.json`,
-  ).then((res) => res.json())) as CDNItemsListResponse
-}
-
-export async function getVersionMetadata(gameVersion: string) {
-  return (await fetch(`${CDNBaseUrl}/${gameVersion}/metadata.json`).then(
-    (res) => res.json(),
-  )) as VersionMetadata
 }

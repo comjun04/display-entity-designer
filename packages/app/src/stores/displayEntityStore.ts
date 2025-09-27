@@ -5,8 +5,8 @@ import { Box3, Euler, Matrix4, Quaternion, Vector3 } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
-import { getBlockList, getItemList } from '@/fetcher'
-import { queryClient } from '@/query'
+import { getBlockList } from '@/queries/getBlockList'
+import { getItemList } from '@/queries/getItemList'
 import { getLogger } from '@/services/loggerService'
 import { preloadResources } from '@/services/resources/preload'
 import {
@@ -992,18 +992,12 @@ export const useDisplayEntityStore = create(
       // i know fetching without caching is shit, will fix later
 
       const { targetGameVersion } = useProjectStore.getState()
-      const blocksListResponse = await queryClient.fetchQuery({
-        queryKey: ['blocks.json', targetGameVersion],
-        queryFn: () => getBlockList(targetGameVersion),
-      })
+      const blocksListResponse = await getBlockList(targetGameVersion)
       const blocks = (blocksListResponse.blocks ?? []).map(
         (d) => d.split('[')[0],
       ) // 블록 이름 뒤에 붙는 `[up=true]` 등 blockstate 기본값 텍스트 제거
 
-      const itemsListResponse = await queryClient.fetchQuery({
-        queryKey: ['items.json', targetGameVersion],
-        queryFn: () => getItemList(targetGameVersion),
-      })
+      const itemsListResponse = await getItemList(targetGameVersion)
       const items = itemsListResponse.items
 
       const { entities, deleteEntities } = get()
