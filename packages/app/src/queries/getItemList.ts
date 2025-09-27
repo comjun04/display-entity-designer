@@ -4,7 +4,9 @@ import { CDNBaseUrl } from '@/constants'
 import { queryClient } from '@/query'
 import type { CDNItemsListResponse } from '@/types'
 
-export async function getItemListQueryFn({ queryKey }: QueryFunctionContext) {
+export async function getItemListQueryFn({
+  queryKey,
+}: QueryFunctionContext<string[]>) {
   const [, gameVersion] = queryKey
   return (await fetch(
     `${CDNBaseUrl}/${gameVersion}/assets/minecraft/items.json`,

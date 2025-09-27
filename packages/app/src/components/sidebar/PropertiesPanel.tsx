@@ -212,39 +212,46 @@ const ItemDisplayProperties: FC = () => {
 
             <button
               className="rounded bg-neutral-800 p-1 text-xs"
-              onClick={async () => {
+              onClick={() => {
                 if (tempPlayerName.length < 3 || tempPlayerName.length > 16) {
                   return
                 }
 
-                const skinQueryResponse = (await fetch(
-                  `${BackendHost}/v1/skin/${tempPlayerName}`,
-                )
-                  .then((res) => res.json())
-                  .catch(console.error)) as BackendAPIV1GetPlayerSkinResponse
+                const asyncFn = async () => {
+                  const skinQueryResponse = (await fetch(
+                    `${BackendHost}/v1/skin/${tempPlayerName}`,
+                  )
+                    .then((res) => res.json())
+                    .catch(console.error)) as BackendAPIV1GetPlayerSkinResponse
 
-                const textureUrl = skinQueryResponse.skinUrl
-                if (textureUrl == null) {
-                  console.error(
-                    `Minecraft user ${skinQueryResponse.name} does not have a skin`,
-                  )
-                  return
-                } else if (!isValidTextureUrl(textureUrl)) {
-                  console.error(
-                    `Unsupported texture url ${textureUrl}. This should not happen`,
-                  )
-                  return
+                  const textureUrl = skinQueryResponse.skinUrl
+                  if (textureUrl == null) {
+                    console.error(
+                      `Minecraft user ${skinQueryResponse.name} does not have a skin`,
+                    )
+                    return
+                  } else if (!isValidTextureUrl(textureUrl)) {
+                    console.error(
+                      `Unsupported texture url ${textureUrl}. This should not happen`,
+                    )
+                    return
+                  }
+
+                  setTempPlayerHeadTextureUrl(textureUrl)
+                  useDisplayEntityStore
+                    .getState()
+                    .setItemDisplayPlayerHeadProperties(
+                      singleSelectedEntity.id,
+                      {
+                        texture: {
+                          baked: true,
+                          url: textureUrl,
+                        },
+                      },
+                    )
                 }
 
-                setTempPlayerHeadTextureUrl(textureUrl)
-                useDisplayEntityStore
-                  .getState()
-                  .setItemDisplayPlayerHeadProperties(singleSelectedEntity.id, {
-                    texture: {
-                      baked: true,
-                      url: textureUrl,
-                    },
-                  })
+                asyncFn().catch(console.error)
               }}
             >
               {t(

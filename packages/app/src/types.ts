@@ -34,7 +34,7 @@ declare global {
 
 export type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends object
-    ? T[P] extends Function
+    ? T[P] extends Function // eslint-disable-line @typescript-eslint/no-unsafe-function-type
       ? T[P]
       : DeepPartial<T[P]>
     : T[P]

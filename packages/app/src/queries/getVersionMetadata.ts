@@ -6,7 +6,7 @@ import type { VersionMetadata } from '@/types'
 
 export async function getVersionMetadataQueryFn({
   queryKey,
-}: QueryFunctionContext) {
+}: QueryFunctionContext<string[]>) {
   const [, gameVersion] = queryKey
   return (await fetch(`${CDNBaseUrl}/${gameVersion}/metadata.json`).then(
     (res) => res.json(),

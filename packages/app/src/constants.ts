@@ -1,6 +1,9 @@
+// eslint does not recognize vite-env.d.ts definition, so just ignore it
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 export const CDNBaseUrl = import.meta.env.VITE_CDN_BASE_URL
 
 export const BackendHost = import.meta.env.VITE_BACKEND_HOST
+/* eslint-enable @typescript-eslint/no-unsafe-assignment */
 
 export const GameVersions = [
   {

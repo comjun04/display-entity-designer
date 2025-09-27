@@ -46,6 +46,7 @@ export const SpecialThanks: FC<SpecialThanksProps> = ({ className }) => {
           href="https://github.com/eszesbalint"
           target="_blank"
           className="underline"
+          rel="noreferrer"
         >
           Eszes Bálint
         </a>{' '}
@@ -54,6 +55,7 @@ export const SpecialThanks: FC<SpecialThanksProps> = ({ className }) => {
           href="https://github.com/eszesbalint/bdstudio"
           target="_blank"
           className="underline"
+          rel="noreferrer"
         >
           BDStudio
         </a>

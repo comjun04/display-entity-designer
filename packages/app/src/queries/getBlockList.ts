@@ -4,7 +4,9 @@ import { CDNBaseUrl } from '@/constants'
 import { queryClient } from '@/query'
 import type { CDNBlocksListResponse } from '@/types'
 
-export async function getBlockListQueryFn({ queryKey }: QueryFunctionContext) {
+export async function getBlockListQueryFn({
+  queryKey,
+}: QueryFunctionContext<string[]>) {
   const [, gameVersion] = queryKey
   return (await fetch(
     `${CDNBaseUrl}/${gameVersion}/assets/minecraft/blocks.json`,
