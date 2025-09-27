@@ -51,3 +51,16 @@ export type CDNAssetIndexJson = {
     }
   }
 }
+
+// partial types of registries.json generated from server.jar data gen
+export interface ServerJarGeneratedRegistryData {
+  'minecraft:item': {
+    default: string
+    entries: Record<
+      string,
+      {
+        protocol_id: number
+      }
+    >
+  }
+}

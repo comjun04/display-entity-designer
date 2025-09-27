@@ -1,11 +1,11 @@
 import { invalidate } from '@react-three/fiber'
 import { type FC, useEffect, useRef, useState } from 'react'
 import { Euler, MathUtils, Matrix4, Mesh, Quaternion, Vector3 } from 'three'
-import { useShallow } from 'zustand/shallow'
 
+import useModelData from '@/hooks/useModelData'
 import { getLogger } from '@/services/loggerService'
 import { loadModelMesh } from '@/services/resources/modelMesh'
-import { useCacheStore } from '@/stores/cacheStore'
+import { useProjectStore } from '@/stores/projectStore'
 import type {
   ModelDisplayPositionKey,
   Number3Tuple,
@@ -45,11 +45,10 @@ const ModelNew: FC<ModelNewProps> = ({
   const mergedMeshRef = useRef<Mesh>()
   const [meshLoaded, setMeshLoaded] = useState(false)
 
-  const { modelData: modelDataTemp, modelDataLoading } = useCacheStore(
-    useShallow((state) => ({
-      modelData: state.modelData[initialResourceLocation],
-      modelDataLoading: state.modelDataLoading.has(initialResourceLocation),
-    })),
+  const targetGameVersion = useProjectStore((state) => state.targetGameVersion)
+
+  const { data: modelDataTemp, loading: modelDataLoading } = useModelData(
+    initialResourceLocation,
   )
 
   const isItemModel = stripMinecraftPrefix(initialResourceLocation).startsWith(
@@ -57,22 +56,15 @@ const ModelNew: FC<ModelNewProps> = ({
   )
 
   useEffect(() => {
-    if (modelDataTemp != null) return
-
-    const { modelDataLoading: latestModelDataLoading, loadModelData } =
-      useCacheStore.getState()
-
-    if (latestModelDataLoading.has(initialResourceLocation)) return
-
-    loadModelData(initialResourceLocation)
-  }, [initialResourceLocation, modelDataTemp, modelDataLoading])
+    setMeshLoaded(false)
+  }, [targetGameVersion])
 
   useEffect(() => {
     setMeshLoaded(false)
   }, [playerHeadTextureData])
 
   useEffect(() => {
-    if (modelDataTemp == null) return
+    if (modelDataTemp == null || modelDataLoading) return
     if (meshLoaded) return
 
     const { data: modelData, isBlockShapedItemModel } = modelDataTemp
@@ -162,6 +154,7 @@ const ModelNew: FC<ModelNewProps> = ({
   }, [
     initialResourceLocation,
     modelDataTemp,
+    modelDataLoading,
     meshLoaded,
     isItemModel,
     playerHeadTextureData,

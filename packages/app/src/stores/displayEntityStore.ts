@@ -4,6 +4,8 @@ import { Box3, Euler, Matrix4, Quaternion, Vector3 } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
+import { getBlockList } from '@/queries/getBlockList'
+import { getItemList } from '@/queries/getItemList'
 import { getLogger } from '@/services/loggerService'
 import { preloadResources } from '@/services/resources/preload'
 import type {
@@ -27,6 +29,7 @@ import { isItemDisplayPlayerHead } from '@/types'
 import { useEditorStore } from './editorStore'
 import { useEntityRefStore } from './entityRefStore'
 import { useHistoryStore } from './historyStore'
+import { useProjectStore } from './projectStore'
 
 const logger = getLogger('displayEntityStore')
 
@@ -133,6 +136,7 @@ export type DisplayEntityState = {
   exportAll: () => DisplayEntitySaveDataItem[]
 
   clearEntities: () => void
+  purgeInvalidEntities: () => Promise<void>
 
   groupEntities: (
     entityIds: string[],
@@ -980,6 +984,34 @@ export const useDisplayEntityStore = create(
 
         useEntityRefStore.getState().clearEntityRefs()
       }),
+    purgeInvalidEntities: async () => {
+      // fetch blocks and items list and remove entities
+      // which type is not available on current target game version
+
+      // i know fetching without caching is shit, will fix later
+
+      const { targetGameVersion } = useProjectStore.getState()
+      const blocksListResponse = await getBlockList(targetGameVersion)
+      const blocks = (blocksListResponse.blocks ?? []).map(
+        (d) => d.split('[')[0],
+      ) // 블록 이름 뒤에 붙는 `[up=true]` 등 blockstate 기본값 텍스트 제거
+
+      const itemsListResponse = await getItemList(targetGameVersion)
+      const items = itemsListResponse.items
+
+      const { entities, deleteEntities } = get()
+
+      const invalidEntityIds: string[] = []
+      for (const [entityId, entity] of entities.entries()) {
+        if (entity.kind === 'block' && !blocks.includes(entity.type)) {
+          invalidEntityIds.push(entityId)
+        } else if (entity.kind === 'item' && !items.includes(entity.type)) {
+          invalidEntityIds.push(entityId)
+        }
+      }
+
+      deleteEntities(invalidEntityIds, true)
+    },
 
     groupEntities: (entityIds, groupIdToSet, skipHistoryAdd) =>
       set((state) => {

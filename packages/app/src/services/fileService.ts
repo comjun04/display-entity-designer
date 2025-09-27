@@ -1,5 +1,7 @@
+import { LatestGameVersion, LegacyHardcodedGameVersion } from '@/constants'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
+import { useProjectStore } from '@/stores/projectStore'
 import type { BDEngineSaveData, DisplayEntitySaveDataItem } from '@/types'
 import { decodeBase64ToBinary, gunzip, gzip } from '@/utils'
 
@@ -10,14 +12,17 @@ import { getLogger } from './loggerService'
 
 const logger = getLogger('FileService')
 
-type DisplayEntitySaveData = {
+interface DisplayEntitySaveDataBase {
   __version: number
   __program: string
   entities: DisplayEntitySaveDataItem[]
 }
+interface DisplayEntitySaveData_V3 extends DisplayEntitySaveDataBase {
+  targetGameVersion: string
+}
 
 const FILE_MAGIC = 'DEPL'
-const FILE_VERSION = 2
+const FILE_VERSION = 3
 
 const fileVersionArrayBuffer = new ArrayBuffer(4)
 const fileVersionDataView = new DataView(fileVersionArrayBuffer)
@@ -74,7 +79,7 @@ export async function openProjectFile(file: Blob): Promise<boolean> {
   }
 
   const saveDataString = await gunzip(file.slice(8))
-  const saveData = JSON.parse(saveDataString) as DisplayEntitySaveData
+  const saveData = JSON.parse(saveDataString) as DisplayEntitySaveDataBase
 
   // TODO: saveData type validation
 
@@ -83,6 +88,12 @@ export async function openProjectFile(file: Blob): Promise<boolean> {
   // reset project and load data
   clearEntities()
   useEditorStore.getState().resetProject()
+
+  const targetGameVersion =
+    saveData.__version >= 3
+      ? (saveData as DisplayEntitySaveData_V3).targetGameVersion
+      : LegacyHardcodedGameVersion
+  useProjectStore.getState().setTargetGameVersion(targetGameVersion)
 
   bulkImport(saveData.entities).catch(logger.error)
 
@@ -111,7 +122,8 @@ export async function createSaveData() {
     __version: FILE_VERSION,
     __program: 'Display Entity Platform',
     entities: rootEntities,
-  } satisfies DisplayEntitySaveData
+    targetGameVersion: useProjectStore.getState().targetGameVersion,
+  } satisfies DisplayEntitySaveData_V3
 
   const finalSaveObjectString = JSON.stringify(finalSaveObject)
 
@@ -145,6 +157,10 @@ export async function importFromBDE(file: Blob): Promise<boolean> {
   // reset project and load data
   clearEntities()
   useEditorStore.getState().resetProject()
+
+  // BDEngine project does not have project version or target minecraft version
+  // Since BDEngine always targets latest minecraft version so we use that
+  useProjectStore.getState().setTargetGameVersion(LatestGameVersion)
 
   bulkImportFromBDE(saveData).catch(logger.error)
 

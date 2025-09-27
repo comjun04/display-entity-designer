@@ -2,12 +2,14 @@ import { useDebouncedEffect } from '@react-hookz/web'
 import { type FC, type JSX, useEffect, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { LuCopy, LuCopyCheck } from 'react-icons/lu'
+import { coerce as semverCoerce, satisfies as semverSatisfies } from 'semver'
 import { useShallow } from 'zustand/shallow'
 
 import { getLogger } from '@/services/loggerService'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEntityRefStore } from '@/stores/entityRefStore'
+import { useProjectStore } from '@/stores/projectStore'
 import {
   type MinimalTextureValue,
   type TextEffects,
@@ -139,6 +141,8 @@ const ExportToMinecraftDialog: FC = () => {
     })),
   )
 
+  const targetGameVersion = useProjectStore((state) => state.targetGameVersion)
+
   const [baseTag, setBaseTag] = useState('')
   const [nbtDataGenerated, setNbtDataGenerated] = useState(false)
   const [nbtStrings, setNbtStrings] = useState<string[]>([])
@@ -152,11 +156,25 @@ const ExportToMinecraftDialog: FC = () => {
   // 엔티티 데이터나 태그가 바뀌었다면 커맨드를 다시 생성해야 함
   useEffect(() => {
     setNbtDataGenerated(false)
-  }, [entities, baseTag])
+  }, [entities, baseTag, targetGameVersion])
 
   useEffect(() => {
     if (!nbtDataGenerated && isOpen) {
       const { entityRefs } = useEntityRefStore.getState()
+
+      const semveredGameVersion = semverCoerce(targetGameVersion)?.version
+      if (semveredGameVersion == null) {
+        console.error('semveredGameVersion is null, this should not happen')
+        return
+      }
+
+      // whether item uses data component instead of nbt
+      const isItemDataComponentEnabled = semverSatisfies(
+        semveredGameVersion,
+        '>=1.20.5',
+      )
+      // whether text is represented as SNBT rather than JSON
+      const isTextFormatSNBT = semverSatisfies(semveredGameVersion, '>=1.21.5')
 
       const tagString = baseTag.length > 0 ? `Tags:["${baseTag}"],` : ''
       const passengersStrings = [...entities.values()]
@@ -206,23 +224,33 @@ const ExportToMinecraftDialog: FC = () => {
                   },
                 } satisfies MinimalTextureValue
                 const textureValueString = btoa(JSON.stringify(o))
-                itemExtraData = `,components:{"minecraft:profile":{properties:[{name:"textures",value:"${textureValueString}"}]}}`
+                itemExtraData = isItemDataComponentEnabled
+                  ? `,components:{"minecraft:profile":{properties:[{name:"textures",value:"${textureValueString}"}]}}`
+                  : `,SkullOwner:{Properties:{textures:[{Value:"${textureValueString}"}]}}`
               }
             }
             specificData = `item:{id:"${entity.type}"${itemExtraData}}${displayText}`
           } else if (entity.kind === 'text') {
             // text
             const text = entity.text
-              .replaceAll('\n', '\\\\n')
+              .replaceAll('\\', '\\\\')
+              .replaceAll('\n', isTextFormatSNBT ? '\\n' : '\\\\n')
               .replaceAll('"', '\\"')
             const enabledTextEffects = (
               Object.keys(entity.textEffects) as Array<keyof TextEffects>
             ).filter((k) => entity.textEffects[k])
             const enabledTextEffectsString =
               enabledTextEffects.length > 0
-                ? ',' + enabledTextEffects.map((k) => `"${k}":true`).join(',')
+                ? ',' +
+                  enabledTextEffects
+                    .map((k) =>
+                      isTextFormatSNBT ? `${k}:true` : `"${k}":true`,
+                    )
+                    .join(',')
                 : ''
-            specificData = `text:'{"text":"${text}"${enabledTextEffectsString},"color":"#${entity.textColor.toString(16)}"}'`
+            specificData = isTextFormatSNBT
+              ? `text:{text:"${text}"${enabledTextEffectsString},color:"#${entity.textColor.toString(16)}"}`
+              : `text:'{"text":"${text}"${enabledTextEffectsString},"color":"#${entity.textColor.toString(16)}"}'`
 
             // TODO: omit optional nbt data if data value is default value
 
@@ -273,7 +301,7 @@ const ExportToMinecraftDialog: FC = () => {
 
       setNbtDataGenerated(true)
     }
-  }, [nbtDataGenerated, isOpen, baseTag, entities])
+  }, [nbtDataGenerated, isOpen, baseTag, entities, targetGameVersion])
 
   const removeCommand = `/kill @e[${baseTag.length > 0 ? `tag=${baseTag}` : 'type=block_display'},distance=..2]`
 

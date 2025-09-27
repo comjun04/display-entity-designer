@@ -1,12 +1,12 @@
+import { skipToken, useQuery } from '@tanstack/react-query'
 import { type FC, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import useSWRImmutable from 'swr/immutable'
 import { useShallow } from 'zustand/shallow'
 
-import fetcher from '@/fetcher'
+import { getItemListQueryFn } from '@/queries/getItemList'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
-import type { CDNItemsListResponse } from '@/types'
+import { useProjectStore } from '@/stores/projectStore'
 
 import Dialog from './Dialog'
 
@@ -27,15 +27,17 @@ const ItemDisplaySelectDialog: FC = () => {
       setOpenedDialog: state.setOpenedDialog,
     })),
   )
+  const targetGameVersion = useProjectStore((state) => state.targetGameVersion)
 
   const closeDialog = () => setOpenedDialog(null)
 
-  const { data } = useSWRImmutable<CDNItemsListResponse>(
-    firstOpened ? '/assets/minecraft/items.json' : null,
-    fetcher,
-  )
+  const { data: itemListResponse } = useQuery({
+    queryKey: ['items.json', targetGameVersion],
+    queryFn: firstOpened ? getItemListQueryFn : skipToken,
+    staleTime: Infinity,
+  })
 
-  const items = data?.items ?? []
+  const items = itemListResponse?.items ?? []
 
   useEffect(() => {
     if (isOpen) {
