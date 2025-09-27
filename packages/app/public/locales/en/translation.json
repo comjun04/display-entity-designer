@@ -116,6 +116,14 @@
           "yes": "Yes",
           "no": "No"
         }
+      },
+      "changeTargetMinecraftVersion": {
+        "title": "Change Target Minecraft Version",
+        "content": "Are you sure to change target Minecraft version to {{newVersionLabel}}? Display entities using newer blocks or items will be removed and project history will be cleared. This cannot be undone.",
+        "button": {
+          "yes": "Change",
+          "no": "Cancel"
+        }
       }
     }
   },
@@ -161,6 +169,14 @@
     "propertiesPanel": {
       "title": "Properties",
       "sections": {
+        "project": {
+          "title": "Project",
+          "properties": {
+            "targetMinecraftVersion": {
+              "title": "Target Minecraft Version"
+            }
+          }
+        },
         "display": "Display",
         "text": "Text",
         "textEffects": "Text Effects",

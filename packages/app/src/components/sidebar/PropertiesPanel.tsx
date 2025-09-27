@@ -524,15 +524,23 @@ const TextDisplayProperties: FC = () => {
 }
 
 const ProjectProperties: FC = () => {
+  const { t } = useTranslation()
+
   const targetGameVersion = useProjectStore((state) => state.targetGameVersion)
 
   return (
     <div className="flex flex-col gap-2">
       <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
-        Project
+        {t(($) => $.sidebar.propertiesPanel.sections.project.title)}
       </div>
       <div className="flex flex-row items-center gap-2">
-        <label className="flex-1 text-end">Target Minecraft Version</label>
+        <label className="flex-1 text-end">
+          {t(
+            ($) =>
+              $.sidebar.propertiesPanel.sections.project.properties
+                .targetMinecraftVersion.title,
+          )}
+        </label>
         <select
           className="flex-[2] rounded bg-neutral-800 px-2 py-1"
           value={targetGameVersion}
@@ -542,11 +550,23 @@ const ProjectProperties: FC = () => {
             )!
 
             useDialogStore.getState().openPromptDialog({
-              title: 'Change Target Minecraft Version',
-              content: `Are you sure to change target Minecraft version to ${gameVersionData.label}? Display entities using newer blocks or items will be removed and cannot be undone. Project history will be cleared.`,
+              title: t(
+                ($) => $.dialog.prompt.changeTargetMinecraftVersion.title,
+              ),
+              content: t(
+                ($) => $.dialog.prompt.changeTargetMinecraftVersion.content,
+                {
+                  newVersionLabel: gameVersionData.label,
+                },
+              ),
               buttonText: {
-                positive: 'Change',
-                negative: 'Cancel',
+                positive: t(
+                  ($) =>
+                    $.dialog.prompt.changeTargetMinecraftVersion.button.yes,
+                ),
+                negative: t(
+                  ($) => $.dialog.prompt.changeTargetMinecraftVersion.button.no,
+                ),
               },
               onChoice: (choice) => {
                 if (choice) {
