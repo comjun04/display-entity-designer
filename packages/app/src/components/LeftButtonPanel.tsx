@@ -135,7 +135,8 @@ const LeftButtonPanel: FC = () => {
       <div className="flex flex-row gap-2">
         <Tooltip
           content={t(($) => $.editor.undo)}
-          placement="right"
+          placement="bottom"
+          size="sm"
           delay={300}
           closeDelay={0}
         >
@@ -145,7 +146,8 @@ const LeftButtonPanel: FC = () => {
         </Tooltip>
         <Tooltip
           content={t(($) => $.editor.redo)}
-          placement="right"
+          placement="bottom"
+          size="sm"
           delay={300}
           closeDelay={0}
         >
@@ -158,6 +160,7 @@ const LeftButtonPanel: FC = () => {
       <Tooltip
         content={t(($) => $.editor.modes.translate)}
         placement="right"
+        size="sm"
         delay={300}
         closeDelay={0}
       >
@@ -172,6 +175,7 @@ const LeftButtonPanel: FC = () => {
       <Tooltip
         content={t(($) => $.editor.modes.rotate)}
         placement="right"
+        size="sm"
         delay={300}
         closeDelay={0}
       >
@@ -186,6 +190,7 @@ const LeftButtonPanel: FC = () => {
       <Tooltip
         content={t(($) => $.editor.modes.scale)}
         placement="right"
+        size="sm"
         delay={300}
         closeDelay={0}
       >
