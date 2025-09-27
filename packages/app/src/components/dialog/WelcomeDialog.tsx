@@ -55,24 +55,11 @@ const WelcomeDialog: FC = () => {
               <div className="text-2xl text-sky-200">v{__VERSION__}</div>
               <div className="ml-4 text-sm text-neutral-400">
                 <ul className="list-disc">
-                  <li>Added Welcome screen - This screen!</li>
-                  <li>
-                    Improved loading and rendering performance, reducing loading
-                    time to half on large projects, and increase FPS when
-                    entities are moved offscreen.
-                  </li>
-                  <li>
-                    Now you can undo/redo each edit, allows you to quickly fix
-                    wrong move.
-                  </li>
-                  <li>
-                    Added autosave feature, which saves current project to the
-                    browser on every 5 edits or 10 seconds after last edit. If
-                    you closed the editor without saving, don&apos;t worry -
-                    there&apos;s a backup for you.
-                  </li>
-                  <li>Added menu to create new project.</li>
-                  <li>...and several fixes to improve the app!</li>
+                  {t(($) => $.dialog.welcome.changeLogs, {
+                    returnObjects: true,
+                  }).map((line) => (
+                    <li>{line}</li>
+                  ))}
                 </ul>
               </div>
             </div>
