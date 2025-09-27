@@ -140,7 +140,8 @@
       "itemDisplay": "Item Display",
       "textDisplay": "Text Display",
       "addPlayerHead": "Add Player Head",
-      "groupOrUngroup": "Group/Ungroup",
+      "group": "Group",
+      "ungroup": "Ungroup",
       "delete": "Delete"
     }
   },
