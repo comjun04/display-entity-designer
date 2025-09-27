@@ -204,9 +204,7 @@ const LeftButtonPanel: FC = () => {
 
       <div />
 
-      <Tooltip>
-        <MobileDragHoldButton />
-      </Tooltip>
+      <MobileDragHoldButton />
     </div>
   )
 }
