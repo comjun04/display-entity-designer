@@ -1,4 +1,5 @@
-import { FC } from 'react'
+import type { FC } from 'react'
+import { useTranslation } from 'react-i18next'
 import { IoCubeOutline } from 'react-icons/io5'
 import { LuChevronDown, LuType } from 'react-icons/lu'
 import { TbDiamondFilled } from 'react-icons/tb'
@@ -117,6 +118,8 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
 }
 
 const ObjectsPanel: FC = () => {
+  const { t } = useTranslation()
+
   const rootEntityIds = useDisplayEntityStore(
     useShallow((state) =>
       [...state.entities.values()]
@@ -127,7 +130,7 @@ const ObjectsPanel: FC = () => {
 
   return (
     <SidePanel className="max-h-[50vh]">
-      <SidePanelTitle>Objects</SidePanelTitle>
+      <SidePanelTitle>{t(($) => $.sidebar.objectsPanel.title)}</SidePanelTitle>
       <SidePanelContent>
         {rootEntityIds.map((id) => (
           <ObjectItem key={id} id={id} />

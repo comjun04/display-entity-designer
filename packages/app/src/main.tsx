@@ -4,6 +4,8 @@ import { createRoot } from 'react-dom/client'
 import { Cache } from 'three'
 
 import App from './App.tsx'
+// setup i18n
+import './i18n/config.ts'
 import './styles/global.css'
 
 // enable immer map/set support

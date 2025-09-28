@@ -1,15 +1,18 @@
 import { useDebouncedEffect } from '@react-hookz/web'
-import { FC, JSX, useEffect, useState } from 'react'
+import { type FC, type JSX, useEffect, useState } from 'react'
+import { Trans, useTranslation } from 'react-i18next'
 import { LuCopy, LuCopyCheck } from 'react-icons/lu'
+import { coerce as semverCoerce, satisfies as semverSatisfies } from 'semver'
 import { useShallow } from 'zustand/shallow'
 
 import { getLogger } from '@/services/loggerService'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEntityRefStore } from '@/stores/entityRefStore'
+import { useProjectStore } from '@/stores/projectStore'
 import {
-  MinimalTextureValue,
-  TextEffects,
+  type MinimalTextureValue,
+  type TextEffects,
   isItemDisplayPlayerHead,
 } from '@/types'
 import { cn } from '@/utils'
@@ -28,6 +31,8 @@ const CopyButton: FC<CopyButtonProps> = ({
   onClick,
   ...props
 }) => {
+  const { t } = useTranslation()
+
   const [clicked, setClicked] = useState(false)
   const [showCopiedState, setShowCopiedState] = useState(false)
 
@@ -62,12 +67,12 @@ const CopyButton: FC<CopyButtonProps> = ({
       {showCopiedState ? (
         <>
           <LuCopyCheck />
-          Copied!
+          {t(($) => $.dialog.exportToMinecraft.result.copyBtn.copied)}
         </>
       ) : (
         <>
           <LuCopy />
-          Copy
+          {t(($) => $.dialog.exportToMinecraft.result.copyBtn.normal)}
         </>
       )}
     </button>
@@ -79,12 +84,14 @@ type TagValidatorInputProps = {
 }
 
 const TagValidatorInput: FC<TagValidatorInputProps> = ({ onChange }) => {
+  const { t } = useTranslation()
+
   const [input, setInput] = useState('')
   const [hasValidationErrors, setHasValidationErrors] = useState(false)
 
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-      <span>Base Tag</span>
+      <span>{t(($) => $.dialog.exportToMinecraft.baseTag.title)}</span>
       <input
         className="rounded p-1 text-sm outline-none"
         value={input}
@@ -102,12 +109,17 @@ const TagValidatorInput: FC<TagValidatorInputProps> = ({ onChange }) => {
       />
       {hasValidationErrors && (
         <span className="text-sm text-red-500">
-          Tag must contain only alphabets, numbers,{' '}
-          <code className="rounded bg-neutral-800 p-1 font-mono">_</code>,{' '}
-          <code className="rounded bg-neutral-800 p-1 font-mono">-</code>,{' '}
-          <code className="rounded bg-neutral-800 p-1 font-mono">.</code>, and{' '}
-          <code className="rounded bg-neutral-800 p-1 font-mono">+</code>{' '}
-          characters.
+          <Trans
+            i18nKey={($) => $.dialog.exportToMinecraft.baseTag.invalidTagNotice}
+            ns="translation"
+          >
+            Tag must contain only alphabets, numbers,{' '}
+            <code className="rounded bg-neutral-800 p-1 font-mono">_</code>,{' '}
+            <code className="rounded bg-neutral-800 p-1 font-mono">-</code>,{' '}
+            <code className="rounded bg-neutral-800 p-1 font-mono">.</code>, and{' '}
+            <code className="rounded bg-neutral-800 p-1 font-mono">+</code>{' '}
+            characters.
+          </Trans>
         </span>
       )}
     </div>
@@ -115,6 +127,8 @@ const TagValidatorInput: FC<TagValidatorInputProps> = ({ onChange }) => {
 }
 
 const ExportToMinecraftDialog: FC = () => {
+  const { t } = useTranslation()
+
   const { isOpen, setOpenedDialog } = useDialogStore(
     useShallow((state) => ({
       isOpen: state.openedDialog === 'exportToMinecraft',
@@ -126,6 +140,8 @@ const ExportToMinecraftDialog: FC = () => {
       entities: state.entities,
     })),
   )
+
+  const targetGameVersion = useProjectStore((state) => state.targetGameVersion)
 
   const [baseTag, setBaseTag] = useState('')
   const [nbtDataGenerated, setNbtDataGenerated] = useState(false)
@@ -140,11 +156,25 @@ const ExportToMinecraftDialog: FC = () => {
   // 엔티티 데이터나 태그가 바뀌었다면 커맨드를 다시 생성해야 함
   useEffect(() => {
     setNbtDataGenerated(false)
-  }, [entities, baseTag])
+  }, [entities, baseTag, targetGameVersion])
 
   useEffect(() => {
     if (!nbtDataGenerated && isOpen) {
       const { entityRefs } = useEntityRefStore.getState()
+
+      const semveredGameVersion = semverCoerce(targetGameVersion)?.version
+      if (semveredGameVersion == null) {
+        console.error('semveredGameVersion is null, this should not happen')
+        return
+      }
+
+      // whether item uses data component instead of nbt
+      const isItemDataComponentEnabled = semverSatisfies(
+        semveredGameVersion,
+        '>=1.20.5',
+      )
+      // whether text is represented as SNBT rather than JSON
+      const isTextFormatSNBT = semverSatisfies(semveredGameVersion, '>=1.21.5')
 
       const tagString = baseTag.length > 0 ? `Tags:["${baseTag}"],` : ''
       const passengersStrings = [...entities.values()]
@@ -194,23 +224,33 @@ const ExportToMinecraftDialog: FC = () => {
                   },
                 } satisfies MinimalTextureValue
                 const textureValueString = btoa(JSON.stringify(o))
-                itemExtraData = `,components:{"minecraft:profile":{properties:[{name:"textures",value:"${textureValueString}"}]}}`
+                itemExtraData = isItemDataComponentEnabled
+                  ? `,components:{"minecraft:profile":{properties:[{name:"textures",value:"${textureValueString}"}]}}`
+                  : `,SkullOwner:{Properties:{textures:[{Value:"${textureValueString}"}]}}`
               }
             }
             specificData = `item:{id:"${entity.type}"${itemExtraData}}${displayText}`
           } else if (entity.kind === 'text') {
             // text
             const text = entity.text
-              .replaceAll('\n', '\\\\n')
+              .replaceAll('\\', '\\\\')
+              .replaceAll('\n', isTextFormatSNBT ? '\\n' : '\\\\n')
               .replaceAll('"', '\\"')
             const enabledTextEffects = (
               Object.keys(entity.textEffects) as Array<keyof TextEffects>
             ).filter((k) => entity.textEffects[k])
             const enabledTextEffectsString =
               enabledTextEffects.length > 0
-                ? ',' + enabledTextEffects.map((k) => `"${k}":true`).join(',')
+                ? ',' +
+                  enabledTextEffects
+                    .map((k) =>
+                      isTextFormatSNBT ? `${k}:true` : `"${k}":true`,
+                    )
+                    .join(',')
                 : ''
-            specificData = `text:'{"text":"${text}"${enabledTextEffectsString},"color":"#${entity.textColor.toString(16)}"}'`
+            specificData = isTextFormatSNBT
+              ? `text:{text:"${text}"${enabledTextEffectsString},color:"#${entity.textColor.toString(16)}"}`
+              : `text:'{"text":"${text}"${enabledTextEffectsString},"color":"#${entity.textColor.toString(16)}"}'`
 
             // TODO: omit optional nbt data if data value is default value
 
@@ -261,13 +301,13 @@ const ExportToMinecraftDialog: FC = () => {
 
       setNbtDataGenerated(true)
     }
-  }, [nbtDataGenerated, isOpen, baseTag, entities])
+  }, [nbtDataGenerated, isOpen, baseTag, entities, targetGameVersion])
 
   const removeCommand = `/kill @e[${baseTag.length > 0 ? `tag=${baseTag}` : 'type=block_display'},distance=..2]`
 
   return (
     <Dialog
-      title="Export to Minecraft"
+      title={t(($) => $.dialog.exportToMinecraft.title)}
       open={isOpen}
       onClose={() => setOpenedDialog(null)}
       className="relative z-50"
@@ -284,7 +324,11 @@ const ExportToMinecraftDialog: FC = () => {
           return (
             <div key={idx}>
               <div className="flex flex-row items-center">
-                <span className="grow">Summon command {idx + 1}</span>
+                <span className="grow">
+                  {t(($) => $.dialog.exportToMinecraft.result.summonCommand, {
+                    n: idx + 1,
+                  })}
+                </span>
                 <CopyButton valueToCopy={summonCommand} />
               </div>
               <textarea
@@ -301,7 +345,9 @@ const ExportToMinecraftDialog: FC = () => {
 
         <div>
           <div className="flex flex-row items-center">
-            <span className="grow">Remove command</span>
+            <span className="grow">
+              {t(($) => $.dialog.exportToMinecraft.result.removeCommand)}
+            </span>
             <CopyButton valueToCopy={removeCommand} />
           </div>
           <textarea

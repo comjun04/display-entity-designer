@@ -1,10 +1,13 @@
-import { FC } from 'react'
+import type { FC } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/shallow'
 
 import { useEditorStore } from '@/stores/editorStore'
-import { LogLevel } from '@/types'
+import type { LogLevel } from '@/types'
 
 const DebugOptionsPage: FC = () => {
+  const { t } = useTranslation()
+
   const { settings, setSettings } = useEditorStore(
     useShallow((state) => ({
       settings: state.settings,
@@ -14,7 +17,9 @@ const DebugOptionsPage: FC = () => {
 
   return (
     <>
-      <h3 className="text-xl font-bold">Debug Options</h3>
+      <h3 className="text-xl font-bold">
+        {t(($) => $.dialog.settings.page.debugOptions.title)}
+      </h3>
       <div className="mt-4 flex flex-row items-center gap-2">
         <input
           type="checkbox"
@@ -26,10 +31,19 @@ const DebugOptionsPage: FC = () => {
             })
           }}
         />
-        <label htmlFor="settings_debug_testoption">Test Option</label>
+        <label htmlFor="settings_debug_testoption">
+          {t(
+            ($) => $.dialog.settings.page.debugOptions.options.testOption.title,
+          )}
+        </label>
       </div>
       <div className="mt-4 flex flex-row items-center gap-2">
-        <label htmlFor="settings_debug_minloglevel">Minimum Log Level</label>
+        <label htmlFor="settings_debug_minloglevel">
+          {t(
+            ($) =>
+              $.dialog.settings.page.debugOptions.options.minLogLevel.title,
+          )}
+        </label>
         <select
           id="settings_debug_minloglevel"
           className="flex-none rounded bg-neutral-900 px-2 py-1"
@@ -58,7 +72,11 @@ const DebugOptionsPage: FC = () => {
           }}
         />
         <label htmlFor="settings_debug_perfMonitorEnabled">
-          Enable Performance Monitor
+          {t(
+            ($) =>
+              $.dialog.settings.page.debugOptions.options.perfMonitorEnabled
+                .title,
+          )}
         </label>
       </div>
       <div className="mt-4 flex flex-row items-center gap-2">
@@ -73,7 +91,11 @@ const DebugOptionsPage: FC = () => {
           }}
         />
         <label htmlFor="settings_debug_alertUncaughtError">
-          Notify uncaught errors with window.alert()
+          {t(
+            ($) =>
+              $.dialog.settings.page.debugOptions.options.alertUncaughtError
+                .title,
+          )}
         </label>
       </div>
     </>

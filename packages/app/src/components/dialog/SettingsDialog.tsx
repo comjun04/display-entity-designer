@@ -1,4 +1,5 @@
-import { FC, useState } from 'react'
+import { type FC, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/shallow'
 
 import { useDialogStore } from '@/stores/dialogStore'
@@ -19,6 +20,8 @@ type SettingsPageType =
   | 'debug'
 
 const SettingsDialog: FC = () => {
+  const { t } = useTranslation()
+
   const { isOpen, setOpenedDialog } = useDialogStore(
     useShallow((state) => ({
       isOpen: state.openedDialog === 'settings',
@@ -32,7 +35,7 @@ const SettingsDialog: FC = () => {
 
   return (
     <Dialog
-      title="Settings"
+      title={t(($) => $.dialog.settings.title)}
       open={isOpen}
       onClose={closeDialog}
       className="relative z-50"
@@ -50,7 +53,7 @@ const SettingsDialog: FC = () => {
               )}
               onClick={() => setSelectedPage('general')}
             >
-              General
+              {t(($) => $.dialog.settings.page.general.title)}
             </button>
 
             <button
@@ -62,7 +65,7 @@ const SettingsDialog: FC = () => {
               )}
               onClick={() => setSelectedPage('performance')}
             >
-              Performance
+              {t(($) => $.dialog.settings.page.performance.title)}
             </button>
             <button
               className={cn(
@@ -73,7 +76,7 @@ const SettingsDialog: FC = () => {
               )}
               onClick={() => setSelectedPage('hotkeys')}
             >
-              Hotkeys
+              {t(($) => $.dialog.settings.page.hotkeys.title)}
             </button>
 
             <hr className="border-t-2 border-neutral-700" />
@@ -87,7 +90,7 @@ const SettingsDialog: FC = () => {
               )}
               onClick={() => setSelectedPage('about')}
             >
-              About
+              {t(($) => $.dialog.settings.page.about.title)}
             </button>
             <button
               className={cn(
@@ -98,7 +101,7 @@ const SettingsDialog: FC = () => {
               )}
               onClick={() => setSelectedPage('debug')}
             >
-              Debug Options
+              {t(($) => $.dialog.settings.page.debugOptions.title)}
             </button>
           </div>
         </div>
@@ -111,12 +114,22 @@ const SettingsDialog: FC = () => {
               setSelectedPage(evt.target.value as SettingsPageType)
             }
           >
-            <option value="general">General</option>
-            <option value="performance">Performance</option>
-            <option value="hotkeys">Hotkeys</option>
+            <option value="general">
+              {t(($) => $.dialog.settings.page.general.title)}
+            </option>
+            <option value="performance">
+              {t(($) => $.dialog.settings.page.performance.title)}
+            </option>
+            <option value="hotkeys">
+              {t(($) => $.dialog.settings.page.hotkeys.title)}
+            </option>
             <option disabled>----------</option>
-            <option value="about">About</option>
-            <option value="debug">Debug Options</option>
+            <option value="about">
+              {t(($) => $.dialog.settings.page.about.title)}
+            </option>
+            <option value="debug">
+              {t(($) => $.dialog.settings.page.debugOptions.title)}
+            </option>
           </select>
         </div>
 

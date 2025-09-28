@@ -1,4 +1,5 @@
-import { FC, useState } from 'react'
+import { type FC, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   LuBold,
   LuItalic,
@@ -8,13 +9,16 @@ import {
 } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
-import { BackendHost } from '@/constants'
+import { BackendHost, GameVersions } from '@/constants'
 import useBlockStates from '@/hooks/useBlockStates'
+import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
+import { useHistoryStore } from '@/stores/historyStore'
+import { useProjectStore } from '@/stores/projectStore'
 import {
-  BackendAPIV1GetPlayerSkinResponse,
-  ModelDisplayPositionKey,
-  TextDisplayAlignment,
+  type BackendAPIV1GetPlayerSkinResponse,
+  type ModelDisplayPositionKey,
+  type TextDisplayAlignment,
   isItemDisplayPlayerHead,
 } from '@/types'
 import { cn, isValidTextureUrl } from '@/utils'
@@ -86,6 +90,8 @@ const BlockDisplayProperties: FC = () => {
 }
 
 const ItemDisplayProperties: FC = () => {
+  const { t } = useTranslation()
+
   const singleSelectedEntity = useDisplayEntityStore((state) => {
     const entity =
       state.selectedEntityIds.length === 1
@@ -108,7 +114,7 @@ const ItemDisplayProperties: FC = () => {
   return (
     <div className="flex flex-col gap-2">
       <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
-        Display
+        {t(($) => $.sidebar.propertiesPanel.sections.display)}
       </div>
 
       <div className="flex flex-row items-center gap-2">
@@ -137,10 +143,16 @@ const ItemDisplayProperties: FC = () => {
       {isItemDisplayPlayerHead(singleSelectedEntity) && (
         <>
           <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
-            Textures
+            {t(($) => $.sidebar.propertiesPanel.sections.textures.title)}
           </div>
           <div className="flex flex-row items-center gap-2">
-            <label className="flex-none text-end">texture url</label>
+            <label className="flex-none text-end">
+              {t(
+                ($) =>
+                  $.sidebar.propertiesPanel.sections.textures.properties
+                    .textureUrl.title,
+              )}
+            </label>
             <input
               className="min-w-0 shrink rounded bg-neutral-800 py-1 pl-1 text-xs outline-none"
               value={tempPlayerHeadTextureUrl}
@@ -172,11 +184,21 @@ const ItemDisplayProperties: FC = () => {
                   })
               }}
             >
-              Apply
+              {t(
+                ($) =>
+                  $.sidebar.propertiesPanel.sections.textures.properties
+                    .textureUrl.applyBtn,
+              )}
             </button>
           </div>
           <div className="flex flex-row items-center gap-2">
-            <label className="flex-none text-end">player username</label>
+            <label className="flex-none text-end">
+              {t(
+                ($) =>
+                  $.sidebar.propertiesPanel.sections.textures.properties
+                    .playerUsername.title,
+              )}
+            </label>
             <input
               className="min-w-0 shrink rounded bg-neutral-800 py-1 pl-1 text-xs outline-none"
               maxLength={16}
@@ -190,42 +212,53 @@ const ItemDisplayProperties: FC = () => {
 
             <button
               className="rounded bg-neutral-800 p-1 text-xs"
-              onClick={async () => {
+              onClick={() => {
                 if (tempPlayerName.length < 3 || tempPlayerName.length > 16) {
                   return
                 }
 
-                const skinQueryResponse = (await fetch(
-                  `${BackendHost}/v1/skin/${tempPlayerName}`,
-                )
-                  .then((res) => res.json())
-                  .catch(console.error)) as BackendAPIV1GetPlayerSkinResponse
+                const asyncFn = async () => {
+                  const skinQueryResponse = (await fetch(
+                    `${BackendHost}/v1/skin/${tempPlayerName}`,
+                  )
+                    .then((res) => res.json())
+                    .catch(console.error)) as BackendAPIV1GetPlayerSkinResponse
 
-                const textureUrl = skinQueryResponse.skinUrl
-                if (textureUrl == null) {
-                  console.error(
-                    `Minecraft user ${skinQueryResponse.name} does not have a skin`,
-                  )
-                  return
-                } else if (!isValidTextureUrl(textureUrl)) {
-                  console.error(
-                    `Unsupported texture url ${textureUrl}. This should not happen`,
-                  )
-                  return
+                  const textureUrl = skinQueryResponse.skinUrl
+                  if (textureUrl == null) {
+                    console.error(
+                      `Minecraft user ${skinQueryResponse.name} does not have a skin`,
+                    )
+                    return
+                  } else if (!isValidTextureUrl(textureUrl)) {
+                    console.error(
+                      `Unsupported texture url ${textureUrl}. This should not happen`,
+                    )
+                    return
+                  }
+
+                  setTempPlayerHeadTextureUrl(textureUrl)
+                  useDisplayEntityStore
+                    .getState()
+                    .setItemDisplayPlayerHeadProperties(
+                      singleSelectedEntity.id,
+                      {
+                        texture: {
+                          baked: true,
+                          url: textureUrl,
+                        },
+                      },
+                    )
                 }
 
-                setTempPlayerHeadTextureUrl(textureUrl)
-                useDisplayEntityStore
-                  .getState()
-                  .setItemDisplayPlayerHeadProperties(singleSelectedEntity.id, {
-                    texture: {
-                      baked: true,
-                      url: textureUrl,
-                    },
-                  })
+                asyncFn().catch(console.error)
               }}
             >
-              Load
+              {t(
+                ($) =>
+                  $.sidebar.propertiesPanel.sections.textures.properties
+                    .playerUsername.loadBtn,
+              )}
             </button>
           </div>
         </>
@@ -235,6 +268,8 @@ const ItemDisplayProperties: FC = () => {
 }
 
 const TextDisplayProperties: FC = () => {
+  const { t } = useTranslation()
+
   const singleSelectedEntity = useDisplayEntityStore((state) => {
     const entity =
       state.selectedEntityIds.length === 1
@@ -250,7 +285,7 @@ const TextDisplayProperties: FC = () => {
   return (
     <div className="flex flex-col gap-2">
       <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
-        Text
+        {t(($) => $.sidebar.propertiesPanel.sections.text)}
       </div>
 
       <div className="flex flex-row items-center gap-2">
@@ -402,7 +437,7 @@ const TextDisplayProperties: FC = () => {
       </div>
 
       <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
-        Text Effects
+        {t(($) => $.sidebar.propertiesPanel.sections.textEffects)}
       </div>
       <div className="flex w-full flex-row gap-1 rounded bg-neutral-800 p-1">
         <button
@@ -495,7 +530,80 @@ const TextDisplayProperties: FC = () => {
   )
 }
 
+const ProjectProperties: FC = () => {
+  const { t } = useTranslation()
+
+  const targetGameVersion = useProjectStore((state) => state.targetGameVersion)
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
+        {t(($) => $.sidebar.propertiesPanel.sections.project.title)}
+      </div>
+      <div className="flex flex-row items-center gap-2">
+        <label className="flex-1 text-end">
+          {t(
+            ($) =>
+              $.sidebar.propertiesPanel.sections.project.properties
+                .targetMinecraftVersion.title,
+          )}
+        </label>
+        <select
+          className="flex-[2] rounded bg-neutral-800 px-2 py-1"
+          value={targetGameVersion}
+          onChange={(evt) => {
+            const gameVersionData = GameVersions.find(
+              (v) => v.id === evt.target.value,
+            )!
+
+            useDialogStore.getState().openPromptDialog({
+              title: t(
+                ($) => $.dialog.prompt.changeTargetMinecraftVersion.title,
+              ),
+              content: t(
+                ($) => $.dialog.prompt.changeTargetMinecraftVersion.content,
+                {
+                  newVersionLabel: gameVersionData.label,
+                },
+              ),
+              buttonText: {
+                positive: t(
+                  ($) =>
+                    $.dialog.prompt.changeTargetMinecraftVersion.button.yes,
+                ),
+                negative: t(
+                  ($) => $.dialog.prompt.changeTargetMinecraftVersion.button.no,
+                ),
+              },
+              onChoice: (choice) => {
+                if (choice) {
+                  useProjectStore
+                    .getState()
+                    .setTargetGameVersion(gameVersionData.id)
+                  useDisplayEntityStore
+                    .getState()
+                    .purgeInvalidEntities()
+                    .catch(console.error)
+                  useHistoryStore.getState().clearHistory()
+                }
+              },
+            })
+          }}
+        >
+          {GameVersions.map((version) => (
+            <option key={version.id} value={version.id}>
+              {version.label}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  )
+}
+
 const PropertiesPanel: FC = () => {
+  const { t } = useTranslation()
+
   const { singleSelectedEntity } = useDisplayEntityStore(
     useShallow((state) => {
       return {
@@ -509,12 +617,16 @@ const PropertiesPanel: FC = () => {
 
   return (
     <SidePanel>
-      <SidePanelTitle>Properties</SidePanelTitle>
+      <SidePanelTitle>
+        {t(($) => $.sidebar.propertiesPanel.title)}
+      </SidePanelTitle>
       <SidePanelContent>
         {singleSelectedEntity?.kind === 'block' && <BlockDisplayProperties />}
         {singleSelectedEntity?.kind === 'item' && <ItemDisplayProperties />}
 
         {singleSelectedEntity?.kind === 'text' && <TextDisplayProperties />}
+
+        {singleSelectedEntity == null && <ProjectProperties />}
       </SidePanelContent>
     </SidePanel>
   )

@@ -1,4 +1,5 @@
-import { FC, useState } from 'react'
+import { type FC, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { LuArchiveRestore, LuFilePlus, LuFolderOpen } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
@@ -12,6 +13,8 @@ import { useEditorStore } from '@/stores/editorStore'
 import Dialog from './Dialog'
 
 const WelcomeDialog: FC = () => {
+  const { t } = useTranslation()
+
   const { isOpen, setOpenedDialog } = useDialogStore(
     useShallow((state) => ({
       isOpen: state.openedDialog === 'welcome',
@@ -52,24 +55,11 @@ const WelcomeDialog: FC = () => {
               <div className="text-2xl text-sky-200">v{__VERSION__}</div>
               <div className="ml-4 text-sm text-neutral-400">
                 <ul className="list-disc">
-                  <li>Added Welcome screen - This screen!</li>
-                  <li>
-                    Improved loading and rendering performance, reducing loading
-                    time to half on large projects, and increase FPS when
-                    entities are moved offscreen.
-                  </li>
-                  <li>
-                    Now you can undo/redo each edit, allows you to quickly fix
-                    wrong move.
-                  </li>
-                  <li>
-                    Added autosave feature, which saves current project to the
-                    browser on every 5 edits or 10 seconds after last edit. If
-                    you closed the editor without saving, don&apos;t worry -
-                    there&apos;s a backup for you.
-                  </li>
-                  <li>Added menu to create new project.</li>
-                  <li>...and several fixes to improve the app!</li>
+                  {t(($) => $.dialog.welcome.changeLogs, {
+                    returnObjects: true,
+                  }).map((line) => (
+                    <li>{line}</li>
+                  ))}
                 </ul>
               </div>
             </div>
@@ -82,7 +72,7 @@ const WelcomeDialog: FC = () => {
                 }}
               >
                 <LuFilePlus size={24} />
-                <span>Start with something new</span>
+                <span>{t(($) => $.dialog.welcome.action.new)}</span>
               </button>
               <button
                 className="flex flex-row items-center gap-2 rounded bg-neutral-900 px-4 py-2"
@@ -92,14 +82,11 @@ const WelcomeDialog: FC = () => {
                 }}
               >
                 <LuFolderOpen size={24} />
-                <span>Open from device</span>
+                <span>{t(($) => $.dialog.welcome.action.open)}</span>
               </button>
               {showRecoverSessionSection && (
                 <div className="flex flex-col gap-2 rounded bg-neutral-700 p-4">
-                  <div>
-                    DEPL was closed without saving. Do you want to recover from
-                    autosaved data?
-                  </div>
+                  <div>{t(($) => $.dialog.welcome.recoverProject.desc)}</div>
 
                   <button
                     className="flex flex-row items-center gap-2 rounded bg-neutral-900 px-4 py-2"
@@ -109,7 +96,9 @@ const WelcomeDialog: FC = () => {
                     }}
                   >
                     <LuArchiveRestore size={24} />
-                    <span>Recover Project</span>
+                    <span>
+                      {t(($) => $.dialog.welcome.recoverProject.action.recover)}
+                    </span>
                   </button>
                   <button
                     className="self-start text-start text-sm underline"
@@ -118,7 +107,7 @@ const WelcomeDialog: FC = () => {
                       setShowRecoverSessionSection(false)
                     }}
                   >
-                    Discard
+                    {t(($) => $.dialog.welcome.recoverProject.action.discard)}
                   </button>
                 </div>
               )}
@@ -137,7 +126,7 @@ const WelcomeDialog: FC = () => {
               }}
             />
             <label htmlFor="settings_showWelcomeOnStartup">
-              Show Welcome on Startup
+              {t(($) => $.dialog.welcome.showWelcomeOnStartup)}
             </label>
           </div>
           <Disclaimer />

@@ -1,9 +1,9 @@
 import { Tooltip } from '@heroui/tooltip'
-import { FC } from 'react'
-import { FaObjectGroup } from 'react-icons/fa6'
+import type { FC } from 'react'
+import { useTranslation } from 'react-i18next'
 import { IoMdTrash } from 'react-icons/io'
 import { IoCubeOutline } from 'react-icons/io5'
-import { LuSmile, LuType } from 'react-icons/lu'
+import { LuGroup, LuSmile, LuType, LuUngroup } from 'react-icons/lu'
 import { TbDiamondFilled } from 'react-icons/tb'
 import { useShallow } from 'zustand/shallow'
 
@@ -14,23 +14,29 @@ import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import FloatingButton from './FloatingButton'
 
 const TopButtonPanel: FC = () => {
+  const { t } = useTranslation()
+
   const { setOpenedDialog } = useDialogStore(
     useShallow((state) => ({
       setOpenedDialog: state.setOpenedDialog,
     })),
   )
-  const { selectedEntityIds, deleteEntities } = useDisplayEntityStore(
-    useShallow((state) => ({
-      selectedEntityIds: state.selectedEntityIds,
-      deleteEntities: state.deleteEntities,
-    })),
-  )
+  const { selectedEntityIds, deleteEntities, singleSelectedEntityIsGrouped } =
+    useDisplayEntityStore(
+      useShallow((state) => ({
+        selectedEntityIds: state.selectedEntityIds,
+        deleteEntities: state.deleteEntities,
+        singleSelectedEntityIsGrouped:
+          state.selectedEntityIds.length === 1 &&
+          state.entities.get(state.selectedEntityIds[0])?.kind === 'group',
+      })),
+    )
 
   return (
     <div className="absolute left-1/2 top-4 z-[5] -translate-x-1/2">
       <div className="flex flex-row rounded-lg bg-black">
         <Tooltip
-          content="Block Display"
+          content={t(($) => $.editor.topBar.blockDisplay)}
           placement="bottom"
           size="sm"
           offset={0}
@@ -47,7 +53,7 @@ const TopButtonPanel: FC = () => {
         </Tooltip>
 
         <Tooltip
-          content="Item Display"
+          content={t(($) => $.editor.topBar.itemDisplay)}
           placement="bottom"
           size="sm"
           offset={0}
@@ -64,7 +70,7 @@ const TopButtonPanel: FC = () => {
         </Tooltip>
 
         <Tooltip
-          content="Text Display"
+          content={t(($) => $.editor.topBar.textDisplay)}
           placement="bottom"
           size="sm"
           offset={0}
@@ -85,7 +91,7 @@ const TopButtonPanel: FC = () => {
         <div className="my-2 border-l border-gray-700" />
 
         <Tooltip
-          content="Add Player Head"
+          content={t(($) => $.editor.topBar.addPlayerHead)}
           placement="bottom"
           size="sm"
           offset={0}
@@ -106,20 +112,30 @@ const TopButtonPanel: FC = () => {
         <div className="my-2 border-l border-gray-700" />
 
         <Tooltip
-          content="Group/Ungroup"
+          content={t(($) =>
+            singleSelectedEntityIsGrouped
+              ? $.editor.topBar.ungroup
+              : $.editor.topBar.group,
+          )}
           placement="bottom"
           size="sm"
           offset={0}
           delay={300}
           closeDelay={0}
         >
-          <FloatingButton onClick={toggleGroup}>
-            <FaObjectGroup size={24} />
-          </FloatingButton>
+          {singleSelectedEntityIsGrouped ? (
+            <FloatingButton onClick={toggleGroup}>
+              <LuUngroup size={24} />
+            </FloatingButton>
+          ) : (
+            <FloatingButton onClick={toggleGroup}>
+              <LuGroup size={24} />
+            </FloatingButton>
+          )}
         </Tooltip>
 
         <Tooltip
-          content="Delete"
+          content={t(($) => $.editor.topBar.delete)}
           placement="bottom"
           size="sm"
           offset={0}

@@ -1,15 +1,18 @@
-import { FC, useEffect, useState } from 'react'
-import useSWRImmutable from 'swr/immutable'
+import { skipToken, useQuery } from '@tanstack/react-query'
+import { type FC, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/shallow'
 
-import fetcher from '@/fetcher'
+import { getItemListQueryFn } from '@/queries/getItemList'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
-import { CDNItemsListResponse } from '@/types'
+import { useProjectStore } from '@/stores/projectStore'
 
 import Dialog from './Dialog'
 
 const ItemDisplaySelectDialog: FC = () => {
+  const { t } = useTranslation()
+
   const [firstOpened, setFirstOpened] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -24,15 +27,17 @@ const ItemDisplaySelectDialog: FC = () => {
       setOpenedDialog: state.setOpenedDialog,
     })),
   )
+  const targetGameVersion = useProjectStore((state) => state.targetGameVersion)
 
   const closeDialog = () => setOpenedDialog(null)
 
-  const { data } = useSWRImmutable<CDNItemsListResponse>(
-    firstOpened ? '/assets/minecraft/items.json' : null,
-    fetcher,
-  )
+  const { data: itemListResponse } = useQuery({
+    queryKey: ['items.json', targetGameVersion],
+    queryFn: firstOpened ? getItemListQueryFn : skipToken,
+    staleTime: Infinity,
+  })
 
-  const items = data?.items ?? []
+  const items = itemListResponse?.items ?? []
 
   useEffect(() => {
     if (isOpen) {
@@ -45,13 +50,13 @@ const ItemDisplaySelectDialog: FC = () => {
 
   return (
     <Dialog
-      title="Add Item Display"
+      title={t(($) => $.dialog.itemDisplaySelect.title)}
       open={isOpen}
       onClose={closeDialog}
       className="relative z-50"
     >
       <div className="flex flex-row items-center gap-4">
-        <span>Search</span>
+        <span>{t(($) => $.dialog.itemDisplaySelect.search.label)}</span>
         <input
           type="text"
           className="grow rounded px-2 py-1 text-sm outline-none"

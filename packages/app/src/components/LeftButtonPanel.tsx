@@ -1,5 +1,6 @@
 import { Tooltip } from '@heroui/tooltip'
-import { FC } from 'react'
+import type { FC } from 'react'
+import { useTranslation } from 'react-i18next'
 import { IoMove } from 'react-icons/io5'
 import {
   LuMenu,
@@ -33,6 +34,8 @@ import {
 const logger = getLogger('LeftButtonPanel')
 
 const LeftButtonPanel: FC = () => {
+  const { t } = useTranslation()
+
   const { mode, setMode } = useEditorStore(
     useShallow((state) => ({
       mode: state.mode,
@@ -65,12 +68,12 @@ const LeftButtonPanel: FC = () => {
         >
           <DropdownMenuItem className="w-full" onClick={newProject}>
             <div className="flex w-full flex-row items-center gap-2 text-sm">
-              <span className="grow">New Project</span>
+              <span className="grow">{t(($) => $.menu.newProject)}</span>
             </div>
           </DropdownMenuItem>
           <DropdownMenuItem className="w-full" onClick={openFromFile}>
             <div className="flex w-full flex-row items-center gap-2 text-sm">
-              <span className="grow">Open</span>
+              <span className="grow">{t(($) => $.menu.open)}</span>
               <span className="text-xs text-neutral-500">Ctrl + O</span>
             </div>
           </DropdownMenuItem>
@@ -83,7 +86,7 @@ const LeftButtonPanel: FC = () => {
             }}
           >
             <div className="flex w-full flex-row items-center gap-2 text-sm">
-              <span className="grow">Save</span>
+              <span className="grow">{t(($) => $.menu.save)}</span>
               <span className="text-xs text-neutral-500">Ctrl + S</span>
             </div>
           </DropdownMenuItem>
@@ -91,7 +94,9 @@ const LeftButtonPanel: FC = () => {
           <DropdownMenuSeparator />
 
           <DropdownMenuSub>
-            <DropdownMenuSubTrigger>Export to...</DropdownMenuSubTrigger>
+            <DropdownMenuSubTrigger>
+              {t(($) => $.menu.exportTo.title)}
+            </DropdownMenuSubTrigger>
             <DropdownMenuSubContent>
               <DropdownMenuItem
                 className="block"
@@ -99,7 +104,7 @@ const LeftButtonPanel: FC = () => {
               >
                 <div className="text-sm">Minecraft</div>
                 <div className="text-xs text-neutral-500">
-                  Export this project to Minecraft
+                  {t(($) => $.menu.exportTo.submenu.minecraft.desc)}
                 </div>
               </DropdownMenuItem>
             </DropdownMenuSubContent>
@@ -112,7 +117,7 @@ const LeftButtonPanel: FC = () => {
             onClick={() => setOpenedDialog('welcome')}
           >
             <div className="flex w-full flex-row items-center gap-2 text-sm">
-              <div className="grow">Welcome</div>
+              <div className="grow">{t(($) => $.menu.welcome)}</div>
             </div>
           </DropdownMenuItem>
           <DropdownMenuItem
@@ -120,7 +125,7 @@ const LeftButtonPanel: FC = () => {
             onClick={() => setOpenedDialog('settings')}
           >
             <div className="flex w-full flex-row items-center gap-2 text-sm">
-              <div className="grow">Settings</div>
+              <div className="grow">{t(($) => $.menu.settings)}</div>
               <span className="text-xs text-neutral-500">Ctrl + ,</span>
             </div>
           </DropdownMenuItem>
@@ -128,12 +133,24 @@ const LeftButtonPanel: FC = () => {
       </DropdownMenu>
 
       <div className="flex flex-row gap-2">
-        <Tooltip content="Undo" placement="right" delay={300} closeDelay={0}>
+        <Tooltip
+          content={t(($) => $.editor.undo)}
+          placement="bottom"
+          size="sm"
+          delay={300}
+          closeDelay={0}
+        >
           <FloatingButton onClick={() => undoHistory()}>
             <LuUndo size={24} />
           </FloatingButton>
         </Tooltip>
-        <Tooltip content="Redo" placement="right" delay={300} closeDelay={0}>
+        <Tooltip
+          content={t(($) => $.editor.redo)}
+          placement="bottom"
+          size="sm"
+          delay={300}
+          closeDelay={0}
+        >
           <FloatingButton onClick={() => redoHistory()}>
             <LuRedo size={24} />
           </FloatingButton>
@@ -141,8 +158,9 @@ const LeftButtonPanel: FC = () => {
       </div>
 
       <Tooltip
-        content="Translate mode"
+        content={t(($) => $.editor.modes.translate)}
         placement="right"
+        size="sm"
         delay={300}
         closeDelay={0}
       >
@@ -155,8 +173,9 @@ const LeftButtonPanel: FC = () => {
       </Tooltip>
 
       <Tooltip
-        content="Rotate mode"
+        content={t(($) => $.editor.modes.rotate)}
         placement="right"
+        size="sm"
         delay={300}
         closeDelay={0}
       >
@@ -169,8 +188,9 @@ const LeftButtonPanel: FC = () => {
       </Tooltip>
 
       <Tooltip
-        content="Scale mode"
+        content={t(($) => $.editor.modes.scale)}
         placement="right"
+        size="sm"
         delay={300}
         closeDelay={0}
       >
@@ -184,9 +204,7 @@ const LeftButtonPanel: FC = () => {
 
       <div />
 
-      <Tooltip>
-        <MobileDragHoldButton />
-      </Tooltip>
+      <MobileDragHoldButton />
     </div>
   )
 }

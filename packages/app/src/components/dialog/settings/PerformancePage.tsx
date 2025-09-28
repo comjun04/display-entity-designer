@@ -1,9 +1,12 @@
-import { FC } from 'react'
+import type { FC } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/shallow'
 
 import { useEditorStore } from '@/stores/editorStore'
 
 const PerformancePage: FC = () => {
+  const { t } = useTranslation()
+
   const { settings, setSettings } = useEditorStore(
     useShallow((state) => ({
       settings: state.settings,
@@ -13,7 +16,9 @@ const PerformancePage: FC = () => {
 
   return (
     <>
-      <h3 className="text-xl font-bold">Performance</h3>
+      <h3 className="text-xl font-bold">
+        {t(($) => $.dialog.settings.page.performance.title)}
+      </h3>
       <div className="mt-4 flex flex-row items-center gap-2">
         <input
           type="checkbox"
@@ -26,7 +31,9 @@ const PerformancePage: FC = () => {
           }}
         />
         <label htmlFor="settings_performance_reducePixelRatio">
-          Reduce Pixel Ratio to 1
+          {t(
+            ($) => $.dialog.settings.page.performance.options.reducePixelRatio,
+          )}
         </label>
       </div>
     </>

@@ -1,7 +1,7 @@
 import {
   BufferAttribute,
   BufferGeometry,
-  GeometryGroup,
+  type GeometryGroup,
   Material,
   MathUtils,
   Mesh,
@@ -10,7 +10,7 @@ import {
 } from 'three'
 import { mergeBufferGeometries, mergeVertices } from 'three-stdlib'
 
-import {
+import type {
   ModelElement,
   ModelFaceKey,
   Number3Tuple,

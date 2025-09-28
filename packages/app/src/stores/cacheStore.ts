@@ -1,10 +1,19 @@
+import { Mutex } from 'async-mutex'
 import { MeshStandardMaterial, PlaneGeometry, Texture } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
+import { CDNBaseUrl } from '@/constants'
 import { getLogger } from '@/services/loggerService'
 import { loadModel } from '@/services/resources/model'
-import { BlockstatesData, FontProvider, ModelData, ModelFile } from '@/types'
+import type {
+  AssetFileInfos,
+  BlockstatesData,
+  FontProvider,
+  ModelData,
+} from '@/types'
+
+import { useProjectStore } from './projectStore'
 
 const logger = getLogger('cacheStore')
 
@@ -14,9 +23,6 @@ type CacheStoreState = {
   blockstatesData: Record<string, BlockstatesData>
   setBlockstateData: (blockType: string, data: BlockstatesData) => void
 
-  modelJson: Record<string, ModelFile>
-  setModelJson: (resourceLocation: string, jsonContent: ModelFile) => void
-
   modelData: Record<
     string,
     {
@@ -25,7 +31,7 @@ type CacheStoreState = {
     }
   >
   modelDataLoading: Set<string>
-  loadModelData: (resourceLocation: string) => void
+  loadModelData: (resourceLocation: string) => Promise<void>
   setModelData: (
     resourceLocation: string,
     data: ModelData,
@@ -44,9 +50,6 @@ type CacheStoreState = {
 
   fontProviders: Record<string, FontProvider[]>
   setFontProviders: (key: string, data: FontProvider[]) => void
-
-  unifontHexData: Map<number, string>
-  setUnifontHexData: (data: Map<number, string>) => void
 }
 
 // 캐시 저장소
@@ -59,31 +62,33 @@ export const useCacheStore = create(
         state.blockstatesData[blockType] = blockstatesData
       }),
 
-    modelJson: {},
-    setModelJson: (resourceLocation, jsonContent) =>
-      set((state) => {
-        state.modelJson[resourceLocation] = jsonContent
-      }),
-
     modelData: {},
     modelDataLoading: new Set(),
-    loadModelData: (resourceLocation) => {
+    loadModelData: async (resourceLocation) => {
+      const fileInfo = await AssetFileInfosCache.instance.fetchFileInfo(
+        `/assets/minecraft/models/${resourceLocation}.json`,
+      )
+      if (fileInfo == null) {
+        set((state) => state.modelDataLoading.delete(resourceLocation))
+        throw new Error(`Cannot get info of model file ${resourceLocation}`)
+      }
+
+      const key = `${fileInfo.fromVersion};${resourceLocation}`
+      logger.debug('loadModelData:', key)
+
       set((state) => {
         if (state.modelDataLoading.has(resourceLocation)) return
         state.modelDataLoading = new Set(state.modelDataLoading)
         state.modelDataLoading.add(resourceLocation)
       })
 
-      loadModel(resourceLocation)
-        .then((modelData) => {
-          set((state) => {
-            state.modelData[resourceLocation] = modelData
+      const modelData = await loadModel(resourceLocation)
+      set((state) => {
+        state.modelData[key] = modelData
 
-            state.modelDataLoading = new Set(state.modelDataLoading)
-            state.modelDataLoading.delete(resourceLocation)
-          })
-        })
-        .catch(logger.error)
+        state.modelDataLoading = new Set(state.modelDataLoading)
+        state.modelDataLoading.delete(resourceLocation)
+      })
     },
     setModelData: (resourceLocation, data, isBlockShapedItemModel) =>
       set((state) => {
@@ -110,12 +115,6 @@ export const useCacheStore = create(
     setFontProviders: (key, data) =>
       set((state) => {
         state.fontProviders[key] = data
-      }),
-
-    unifontHexData: new Map(),
-    setUnifontHexData: (data) =>
-      set((state) => {
-        state.unifontHexData = data
       }),
   })),
 )
@@ -157,3 +156,73 @@ export const useClassObjectCacheStore = create<ClassObjectCacheStoreState>(
       }),
   }),
 )
+
+export class AssetFileInfosCache {
+  private static _instance: AssetFileInfosCache
+
+  private _cache = new Map<string, AssetFileInfos>()
+  private _fetchMutexMap = new Map<string, Mutex>()
+
+  private constructor() {}
+  static get instance() {
+    if (this._instance == null) {
+      this._instance = new AssetFileInfosCache()
+    }
+
+    return this._instance
+  }
+
+  getInfos(version: string) {
+    return this._cache.get(version)
+  }
+
+  async fetchAll(version?: string) {
+    version ??= useProjectStore.getState().targetGameVersion
+
+    if (!this._fetchMutexMap.has(version)) {
+      this._fetchMutexMap.set(version, new Mutex())
+    }
+    const mutex = this._fetchMutexMap.get(version)!
+
+    return await mutex.runExclusive(async () => {
+      const existingData = this.getInfos(version)
+      if (existingData != null) {
+        return existingData
+      }
+
+      const data = (await fetch(`${CDNBaseUrl}/${version}/fileInfos.json`).then(
+        (r) => r.json(),
+      )) as AssetFileInfos
+      logger.debug('[AssetFileInfosCache] set cache', version)
+      this._cache.set(version, data)
+      return data
+    })
+  }
+  async fetchFileInfo(filePath: string, version?: string) {
+    logger.debug('[AssetFileInfosCache] fetchFileInfo: ', filePath)
+    const fileInfos = await this.fetchAll(version)
+
+    const slashUnprefixedPath =
+      filePath[0] === '/' ? filePath.slice(1) : filePath
+    return fileInfos[slashUnprefixedPath] ?? null
+  }
+
+  async makeFullFileUrl(filePath: string, version?: string) {
+    version ??= useProjectStore.getState().targetGameVersion
+    const slashPrefixedFilePath =
+      filePath[0] !== '/' ? `/${filePath}` : filePath
+
+    const fileInfo = await this.fetchFileInfo(filePath, version)
+    if (fileInfo == null) {
+      throw new Error(
+        `The file ${filePath} in version ${version} is unavailable`,
+      )
+    }
+
+    return `${CDNBaseUrl}/${fileInfo.fromVersion}${slashPrefixedFilePath}`
+  }
+
+  clear() {
+    this._cache.clear()
+  }
+}

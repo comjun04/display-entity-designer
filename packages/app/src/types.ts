@@ -1,12 +1,12 @@
-import {
+import type {
   BlockStateApplyModelInfo,
   BlockStatesFile,
   ModelDisplayPositionKey,
   ModelElement,
   Number3Tuple,
 } from '@depl/shared'
-import { MutableRefObject, RefCallback } from 'react'
-import { Matrix4Tuple } from 'three'
+import type { MutableRefObject, RefCallback } from 'react'
+import type { Matrix4Tuple } from 'three'
 
 // re-export imported types from shared package
 export type {
@@ -18,6 +18,7 @@ export type {
 }
 
 export type {
+  AssetFileInfos,
   BackendAPIV1GetPlayerSkinResponse,
   ModelFaceKey,
   ModelFile,
@@ -33,7 +34,7 @@ declare global {
 
 export type DeepPartial<T> = {
   [P in keyof T]?: T[P] extends object
-    ? T[P] extends Function
+    ? T[P] extends Function // eslint-disable-line @typescript-eslint/no-unsafe-function-type
       ? T[P]
       : DeepPartial<T[P]>
     : T[P]
@@ -100,9 +101,23 @@ export type FontProvider =
       type: 'space'
       advances: Record<string, number>
     }
+  | {
+      type: 'unihex'
+      hex_file: string // resource location to zip file which includes .hex files
+      size_overrides: UnifontSizeOverrideEntry[]
+      filter?: Record<string, boolean> // todo: find the filter condition key
+    }
 
 export type CDNFontProviderResponse = {
   providers: FontProvider[]
+}
+
+export interface UnifontSizeOverrideEntry {
+  __ranges: string[]
+  from: string
+  to: string
+  left: number
+  right: number
 }
 
 export type BaseDisplayEntity = {

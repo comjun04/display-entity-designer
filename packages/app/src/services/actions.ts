@@ -1,6 +1,9 @@
+import i18n from '@/i18n/config'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useHistoryStore } from '@/stores/historyStore'
+
+const { t } = i18n
 
 /**
  * 상단바 그룹 버튼을 눌렀거나 단축키를 입력했을 때 실행하는 함수
@@ -33,12 +36,11 @@ export function newProject() {
     entities.size > 0 || undoStack.length > 0 || redoStack.length > 0
   if (dirty) {
     useDialogStore.getState().openPromptDialog({
-      title: 'Creating New Project',
-      content:
-        'Are you sure to want to create new project? Any unsaved changes will be lost.',
+      title: t(($) => $.dialog.prompt.createNewProject.title),
+      content: t(($) => $.dialog.prompt.createNewProject.content),
       buttonText: {
-        positive: 'Yes',
-        negative: 'No',
+        positive: t(($) => $.dialog.prompt.createNewProject.button.yes),
+        negative: t(($) => $.dialog.prompt.createNewProject.button.no),
       },
       onChoice: (choice) => {
         if (choice) {

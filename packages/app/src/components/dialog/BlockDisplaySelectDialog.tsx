@@ -1,15 +1,18 @@
-import { FC, useEffect, useState } from 'react'
-import useSWRImmutable from 'swr/immutable'
+import { skipToken, useQuery } from '@tanstack/react-query'
+import { type FC, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/shallow'
 
-import fetcher from '@/fetcher'
+import { getBlockListQueryFn } from '@/queries/getBlockList'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
-import { CDNBlocksListResponse } from '@/types'
+import { useProjectStore } from '@/stores/projectStore'
 
 import Dialog from './Dialog'
 
 const BlockDisplaySelectDialog: FC = () => {
+  const { t } = useTranslation()
+
   const [firstOpened, setFirstOpened] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
@@ -24,14 +27,16 @@ const BlockDisplaySelectDialog: FC = () => {
       setOpenedDialog: state.setOpenedDialog,
     })),
   )
+  const targetGameVersion = useProjectStore((state) => state.targetGameVersion)
 
   const closeDialog = () => setOpenedDialog(null)
 
-  const { data } = useSWRImmutable<CDNBlocksListResponse>(
-    firstOpened ? '/assets/minecraft/blocks.json' : null,
-    fetcher,
-  )
-  const blocks = (data?.blocks ?? []).map((d) => d.split('[')[0]) // 블록 이름 뒤에 붙는 `[up=true]` 등 blockstate 기본값 텍스트 제거
+  const { data: blocksListResponse } = useQuery({
+    queryKey: ['blocks.json', targetGameVersion],
+    queryFn: firstOpened ? getBlockListQueryFn : skipToken,
+    staleTime: Infinity,
+  })
+  const blocks = (blocksListResponse?.blocks ?? []).map((d) => d.split('[')[0]) // 블록 이름 뒤에 붙는 `[up=true]` 등 blockstate 기본값 텍스트 제거
 
   useEffect(() => {
     if (isOpen) {
@@ -44,13 +49,13 @@ const BlockDisplaySelectDialog: FC = () => {
 
   return (
     <Dialog
-      title="Add Block Display"
+      title={t(($) => $.dialog.blockDisplaySelect.title)}
       open={isOpen}
       onClose={closeDialog}
       className="relative z-50"
     >
       <div className="flex flex-row items-center gap-4">
-        <span>Search</span>
+        <span>{t(($) => $.dialog.blockDisplaySelect.search.label)}</span>
         <input
           type="text"
           className="grow rounded px-2 py-1 text-sm outline-none"

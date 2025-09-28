@@ -1,12 +1,12 @@
 import { invalidate } from '@react-three/fiber'
-import { FC, useEffect, useRef, useState } from 'react'
+import { type FC, useEffect, useRef, useState } from 'react'
 import { Euler, MathUtils, Matrix4, Mesh, Quaternion, Vector3 } from 'three'
-import { useShallow } from 'zustand/shallow'
 
+import useModelData from '@/hooks/useModelData'
 import { getLogger } from '@/services/loggerService'
 import { loadModelMesh } from '@/services/resources/modelMesh'
-import { useCacheStore } from '@/stores/cacheStore'
-import {
+import { useProjectStore } from '@/stores/projectStore'
+import type {
   ModelDisplayPositionKey,
   Number3Tuple,
   PlayerHeadProperties,
@@ -35,7 +35,7 @@ const ReverseHalfBlockTranslatedMatrix = new Matrix4().makeTranslation(
 
 const logger = getLogger('Model')
 
-const ModelNew: FC<ModelNewProps> = ({
+const Model: FC<ModelNewProps> = ({
   initialResourceLocation,
   displayType,
   xRotation = 0,
@@ -45,39 +45,32 @@ const ModelNew: FC<ModelNewProps> = ({
   const mergedMeshRef = useRef<Mesh>()
   const [meshLoaded, setMeshLoaded] = useState(false)
 
-  const { modelData: modelDataTemp, modelDataLoading } = useCacheStore(
-    useShallow((state) => ({
-      modelData: state.modelData[initialResourceLocation],
-      modelDataLoading: state.modelDataLoading.has(initialResourceLocation),
-    })),
-  )
+  const targetGameVersion = useProjectStore((state) => state.targetGameVersion)
 
-  const isItemModel = stripMinecraftPrefix(initialResourceLocation).startsWith(
-    'item/',
+  const { data: modelDataTemp, loading: modelDataLoading } = useModelData(
+    initialResourceLocation,
   )
 
   useEffect(() => {
-    if (modelDataTemp != null) return
-
-    const { modelDataLoading: latestModelDataLoading, loadModelData } =
-      useCacheStore.getState()
-
-    if (latestModelDataLoading.has(initialResourceLocation)) return
-
-    loadModelData(initialResourceLocation)
-  }, [initialResourceLocation, modelDataTemp, modelDataLoading])
+    setMeshLoaded(false)
+  }, [targetGameVersion])
 
   useEffect(() => {
     setMeshLoaded(false)
   }, [playerHeadTextureData])
 
   useEffect(() => {
-    if (modelDataTemp == null) return
+    if (modelDataTemp == null || modelDataLoading) return
     if (meshLoaded) return
 
     const { data: modelData, isBlockShapedItemModel } = modelDataTemp
+    const isItemModel = stripMinecraftPrefix(
+      initialResourceLocation,
+    ).startsWith('item/')
 
     const fn = async () => {
+      setMeshLoaded(false)
+
       const loadedMesh = await loadModelMesh({
         modelResourceLocation: initialResourceLocation,
         elements: modelData.elements,
@@ -96,61 +89,7 @@ const ModelNew: FC<ModelNewProps> = ({
       if (mergedMeshRef.current != null) {
         mergedMeshRef.current.geometry.dispose()
       }
-
       mergedMeshRef.current = loadedMesh
-
-      // display info
-      const { display } = modelData
-      const displayInfo =
-        displayType != null ? (display[displayType] ?? {}) : {}
-      const displayRotation = (displayInfo.rotation ?? [0, 0, 0]).map((d) =>
-        MathUtils.degToRad(d),
-      ) as Number3Tuple
-      const displayTranslation = new Vector3(
-        ...(displayInfo.translation ?? [0, 0, 0]),
-      )
-        .max(DisplayTranslationMinVec)
-        .min(DisplayTranslationMaxVec)
-        .divideScalar(16)
-      const displayScale = new Vector3(...(displayInfo.scale ?? [1, 1, 1])).min(
-        DisplayScaleMaxVec,
-      )
-
-      loadedMesh.matrixAutoUpdate = false
-      loadedMesh.matrix
-        .makeTranslation(displayTranslation) // set display translation first
-        .premultiply(
-          // set display rotation and scale
-          new Matrix4().compose(
-            OriginVec,
-            new Quaternion().setFromEuler(new Euler(...displayRotation)),
-            displayScale,
-          ),
-        )
-        .premultiply(ReverseHalfBlockTranslatedMatrix)
-        .premultiply(
-          // set x rotation
-          new Matrix4().makeRotationFromQuaternion(
-            new Quaternion().setFromEuler(
-              new Euler(MathUtils.degToRad(-xRotation), 0, 0),
-            ),
-          ),
-        )
-        .premultiply(
-          // set y rotation
-          new Matrix4().makeRotationFromQuaternion(
-            new Quaternion().setFromEuler(
-              new Euler(0, MathUtils.degToRad(-yRotation), 0),
-            ),
-          ),
-        )
-        .premultiply(HalfBlockTranslatedMatrix)
-      loadedMesh.matrix.decompose(
-        loadedMesh.position,
-        loadedMesh.quaternion,
-        loadedMesh.scale,
-      )
-
       setMeshLoaded(true)
     }
 
@@ -162,10 +101,71 @@ const ModelNew: FC<ModelNewProps> = ({
   }, [
     initialResourceLocation,
     modelDataTemp,
+    modelDataLoading,
     meshLoaded,
-    isItemModel,
     playerHeadTextureData,
   ])
+
+  useEffect(() => {
+    const loadedMesh = mergedMeshRef.current
+    if (loadedMesh == null) return
+
+    if (modelDataTemp == null) return
+    const { data: modelData } = modelDataTemp
+
+    // display info
+    const { display } = modelData
+    const displayInfo = displayType != null ? (display[displayType] ?? {}) : {}
+    const displayRotation = (displayInfo.rotation ?? [0, 0, 0]).map((d) =>
+      MathUtils.degToRad(d),
+    ) as Number3Tuple
+    const displayTranslation = new Vector3(
+      ...(displayInfo.translation ?? [0, 0, 0]),
+    )
+      .max(DisplayTranslationMinVec)
+      .min(DisplayTranslationMaxVec)
+      .divideScalar(16)
+    const displayScale = new Vector3(...(displayInfo.scale ?? [1, 1, 1])).min(
+      DisplayScaleMaxVec,
+    )
+
+    loadedMesh.matrixAutoUpdate = false
+    loadedMesh.matrix
+      .makeTranslation(displayTranslation) // set display translation first
+      .premultiply(
+        // set display rotation and scale
+        new Matrix4().compose(
+          OriginVec,
+          new Quaternion().setFromEuler(new Euler(...displayRotation)),
+          displayScale,
+        ),
+      )
+      .premultiply(ReverseHalfBlockTranslatedMatrix)
+      .premultiply(
+        // set x rotation
+        new Matrix4().makeRotationFromQuaternion(
+          new Quaternion().setFromEuler(
+            new Euler(MathUtils.degToRad(-xRotation), 0, 0),
+          ),
+        ),
+      )
+      .premultiply(
+        // set y rotation
+        new Matrix4().makeRotationFromQuaternion(
+          new Quaternion().setFromEuler(
+            new Euler(0, MathUtils.degToRad(-yRotation), 0),
+          ),
+        ),
+      )
+      .premultiply(HalfBlockTranslatedMatrix)
+    loadedMesh.matrix.decompose(
+      loadedMesh.position,
+      loadedMesh.quaternion,
+      loadedMesh.scale,
+    )
+
+    invalidate()
+  }, [meshLoaded, modelDataTemp, displayType, xRotation, yRotation])
 
   useEffect(() => {
     if (meshLoaded) {
@@ -193,4 +193,4 @@ const ModelNew: FC<ModelNewProps> = ({
   return <primitive object={mergedMeshRef.current!} />
 }
 
-export default ModelNew
+export default Model

@@ -1,4 +1,5 @@
-import { FC, useCallback } from 'react'
+import { type FC, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { MathUtils } from 'three'
 import { useShallow } from 'zustand/shallow'
 
@@ -6,7 +7,7 @@ import { getLogger } from '@/services/loggerService'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { useEntityRefStore } from '@/stores/entityRefStore'
-import { PartialNumber3Tuple } from '@/types'
+import type { PartialNumber3Tuple } from '@/types'
 
 import { SidePanel, SidePanelContent, SidePanelTitle } from '../SidePanel'
 import XYZInput from './XYZInput'
@@ -14,6 +15,8 @@ import XYZInput from './XYZInput'
 const logger = getLogger('TransformsPanel')
 
 const TransformsPanel: FC = () => {
+  const { t } = useTranslation()
+
   const {
     selectedEntityIds,
     batchSetEntityTransformation,
@@ -214,7 +217,9 @@ const TransformsPanel: FC = () => {
 
   return (
     <SidePanel>
-      <SidePanelTitle>Transforms</SidePanelTitle>
+      <SidePanelTitle>
+        {t(($) => $.sidebar.transformsPanel.title)}
+      </SidePanelTitle>
       <SidePanelContent>
         {/* Translation */}
         <div>

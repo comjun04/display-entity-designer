@@ -1,5 +1,5 @@
-import { ThreeEvent, useFrame } from '@react-three/fiber'
-import { FC, MutableRefObject, useEffect } from 'react'
+import { type ThreeEvent, useFrame } from '@react-three/fiber'
+import { type FC, type MutableRefObject, useEffect } from 'react'
 import { Group } from 'three'
 import { useShallow } from 'zustand/shallow'
 

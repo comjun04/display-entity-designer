@@ -1,3 +1,4 @@
+import { QueryClientProvider } from '@tanstack/react-query'
 import { useEffect } from 'react'
 
 import Scene from './Scene'
@@ -11,6 +12,7 @@ import ItemDisplaySelectDialog from './components/dialog/ItemDisplaySelectDialog
 import PromptDialog from './components/dialog/PromptDialog.tsx'
 import SettingsDialog from './components/dialog/SettingsDialog'
 import WelcomeDialog from './components/dialog/WelcomeDialog'
+import { queryClient } from './query.ts'
 import AutosaveService from './services/autosave'
 import { useDialogStore } from './stores/dialogStore'
 import { useEditorStore } from './stores/editorStore'
@@ -27,7 +29,7 @@ function App() {
     const listener = (evt: BeforeUnloadEvent) => {
       const { projectDirty } = useEditorStore.getState()
       if (projectDirty) {
-        AutosaveService.instance.forceSave()
+        AutosaveService.instance.forceSave().catch(console.error)
         evt.preventDefault()
         evt.returnValue = 'string' // legacy method to trigger confirmation dialog
       }
@@ -40,25 +42,29 @@ function App() {
   }, [])
 
   return (
-    <div className="relative h-full w-full overflow-hidden xs:flex xs:flex-row">
-      <div className="relative h-full w-full flex-1">
-        <Scene />
+    <QueryClientProvider client={queryClient}>
+      <div className="relative h-full w-full overflow-hidden xs:flex xs:flex-row">
+        <div className="relative h-full w-full overflow-hidden">
+          {/* overflow-hidden is required to prevent child canvas width height from affecting parent div
+              and correctly measure parent container size for canvas resizing */}
+          <Scene />
 
-        {/* floating buttons */}
-        <LeftButtonPanel />
-        <TopButtonPanel />
-        <MobileBottomButtonPanel />
+          {/* floating buttons */}
+          <LeftButtonPanel />
+          <TopButtonPanel />
+          <MobileBottomButtonPanel />
+        </div>
+
+        <Sidebar />
+
+        <WelcomeDialog />
+        <PromptDialog />
+        <SettingsDialog />
+        <BlockDisplaySelectDialog />
+        <ItemDisplaySelectDialog />
+        <ExportToMinecraftDialog />
       </div>
-
-      <Sidebar />
-
-      <WelcomeDialog />
-      <PromptDialog />
-      <SettingsDialog />
-      <BlockDisplaySelectDialog />
-      <ItemDisplaySelectDialog />
-      <ExportToMinecraftDialog />
-    </div>
+    </QueryClientProvider>
   )
 }
 
