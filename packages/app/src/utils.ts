@@ -57,6 +57,7 @@ export function isValidTextureUrl(url: string) {
   return /^http(s)?:\/\/textures.minecraft.net\/texture\/[0-9a-f]+$/g.test(url)
 }
 
+type ItemModelBorderFaceKey = Exclude<ModelFaceKey, 'north' | 'south'>
 export async function generateBuiltinItemModel(
   textureResourceLocation: string,
   layerNumber: number,
@@ -98,7 +99,7 @@ export async function generateBuiltinItemModel(
 
   ctx.drawImage(textureImage, 0, 0, 16, 16, 0, 0, 16, 16)
 
-  const checkNeighborPixelEmpty = (x: number, y: number) => {
+  const checkPixelEmpty = (x: number, y: number) => {
     if (x < 0 || x > width) return true
     if (y < 0 || y > height) return true
 
@@ -108,11 +109,16 @@ export async function generateBuiltinItemModel(
     return false
   }
 
+  const mergedPixelBorders: {
+    direction: ItemModelBorderFaceKey
+    rangeStart: [number, number]
+    rangeEnd: [number, number]
+  }[] = []
+
   for (let y = 0; y < 16; y++) {
     for (let x = 0; x < 16; x++) {
       // Skip if pixel is empty
-      const alpha = ctx.getImageData(x, y, 1, 1).data[3]
-      if (alpha === 0) continue
+      if (checkPixelEmpty(x, y)) continue
 
       const neighbours = {
         up: [x, y - 1],
@@ -121,27 +127,76 @@ export async function generateBuiltinItemModel(
         west: [x - 1, y],
       } as const
 
-      const elementTemplate: ModelElement = {
-        from: [x - 8, 16 - (y + 1) - 8, -0.5],
-        to: [x + 1 - 8, 16 - y - 8, 0.5],
-        faces: {},
-      }
+      // NOTE: element template for one pixel drawing
+      // const elementTemplate: ModelElement = {
+      //   from: [x - 8, 16 - (y + 1) - 8, -0.5],
+      //   to: [x + 1 - 8, 16 - y - 8, 0.5],
+      //   faces: {},
+      // }
 
-      let shouldAddElement = false
       for (const [faceName, direction] of Object.entries(neighbours)) {
-        if (checkNeighborPixelEmpty(...direction)) {
-          shouldAddElement = true
-          elementTemplate.faces[faceName as ModelFaceKey] = {
-            uv: [x, y, x + 1, y + 1],
-            texture: layerId,
+        if (checkPixelEmpty(...direction)) {
+          const existingPixelBorderGroup = mergedPixelBorders.find(
+            (d) =>
+              d.direction === (faceName as ItemModelBorderFaceKey) &&
+              (d.direction === 'up' || d.direction === 'down'
+                ? // horizontal line merging, x changes, y is locked
+                  d.rangeStart[1] === y &&
+                  d.rangeEnd[1] === y &&
+                  d.rangeEnd[0] === x - 1
+                : // vertical line merging, x is locked, y changes
+                  d.rangeStart[0] === x &&
+                  d.rangeEnd[0] === x &&
+                  d.rangeEnd[1] === y - 1),
+          )
+          if (existingPixelBorderGroup != null) {
+            // if existing merged pixel border group found, extend rangeEnd
+            if (
+              existingPixelBorderGroup.direction === 'up' ||
+              existingPixelBorderGroup.direction === 'down'
+            ) {
+              existingPixelBorderGroup.rangeEnd[0] = x
+            } else {
+              existingPixelBorderGroup.rangeEnd[1] = y
+            }
+          } else {
+            mergedPixelBorders.push({
+              direction: faceName as ItemModelBorderFaceKey,
+              rangeStart: [x, y],
+              rangeEnd: [x, y],
+            })
           }
         }
       }
-
-      if (shouldAddElement) {
-        modelJson.elements.push(elementTemplate)
-      }
     }
+  }
+
+  for (const borderGroup of mergedPixelBorders) {
+    const element: ModelElement = {
+      from: [
+        borderGroup.rangeStart[0] - 8,
+        16 - (borderGroup.rangeEnd[1] + 1) - 8,
+        -0.5,
+      ],
+      to: [
+        borderGroup.rangeEnd[0] + 1 - 8,
+        16 - borderGroup.rangeStart[1] - 8,
+        0.5,
+      ],
+      faces: {
+        [borderGroup.direction]: {
+          // ts does not check missing key errors inside here idk why
+          texture: layerId,
+          uv: [
+            borderGroup.rangeStart[0],
+            borderGroup.rangeStart[1],
+            borderGroup.rangeEnd[0] + 1,
+            borderGroup.rangeEnd[1] + 1,
+          ],
+        },
+      },
+    }
+    modelJson.elements.push(element)
   }
 
   return modelJson
