@@ -81,7 +81,10 @@ type CreateNewEntityActionParam =
 
 export type DisplayEntityState = {
   entities: Map<string, DisplayEntity>
-  selectedEntityIds: string[]
+  selectedEntityIds: string[] // currently selected entity ids
+  // currently selected entity ids, and its parents (recursive all the way up to the root)
+  // required for ObjectPanel > ObjectItem child (reverse) selection tracking
+  selectedEntityIdsIncludingParent: Set<string>
 
   /**
    * 새로운 디스플레이 엔티티를 생성합니다.
@@ -150,6 +153,7 @@ export const useDisplayEntityStore = create(
   immer<DisplayEntityState>((set, get) => ({
     entities: new Map(),
     selectedEntityIds: [],
+    selectedEntityIdsIncludingParent: new Set(),
 
     createNew: (params, skipHistoryAdd) => {
       const entityIds: string[] = []
@@ -266,12 +270,41 @@ export const useDisplayEntityStore = create(
         }
 
         state.selectedEntityIds = ids
+
+        const f = (id: string) => {
+          if (state.selectedEntityIdsIncludingParent.has(id)) {
+            return
+          }
+          state.selectedEntityIdsIncludingParent.add(id)
+
+          const entity = state.entities.get(id)!
+          if (entity.parent != null) {
+            f(entity.parent)
+          }
+        }
+        state.selectedEntityIdsIncludingParent.clear()
+        for (const id of ids) {
+          f(id)
+        }
       }),
     addToSelected: (id) =>
       set((state) => {
         if (!state.selectedEntityIds.includes(id)) {
           state.selectedEntityIds.push(id)
         }
+
+        const f = (id: string) => {
+          if (state.selectedEntityIdsIncludingParent.has(id)) {
+            return
+          }
+          state.selectedEntityIdsIncludingParent.add(id)
+
+          const entity = state.entities.get(id)!
+          if (entity.parent != null) {
+            f(entity.parent)
+          }
+        }
+        f(id)
       }),
     batchSetEntityTransformation: (data, skipHistoryAdd) =>
       set((state) => {

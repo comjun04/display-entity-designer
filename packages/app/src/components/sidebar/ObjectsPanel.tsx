@@ -39,6 +39,9 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
       }
     }),
   )
+  const thisOrChildSelected = useDisplayEntityStore((state) =>
+    state.selectedEntityIdsIncludingParent.has(id),
+  )
 
   const blockstateArr: string[] = []
   if (kind === 'block') {
@@ -106,7 +109,7 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
         )}
       </div>
 
-      {kind === 'group' && children != null && (
+      {kind === 'group' && children != null && thisOrChildSelected && (
         <div className="pl-4">
           {children.map((entityId) => (
             <ObjectItem key={entityId} id={entityId} />
