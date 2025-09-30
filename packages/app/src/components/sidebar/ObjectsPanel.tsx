@@ -55,7 +55,10 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
       <div
         className={cn(
           'flex cursor-pointer flex-row items-center gap-1',
-          selected && 'font-bold text-yellow-500',
+          selected && [
+            'font-bold',
+            kind === 'group' ? 'text-green-500' : 'text-yellow-500',
+          ],
         )}
         onClick={(evt) => {
           const { addToSelected: addToSelectedEntity, setSelected } =
