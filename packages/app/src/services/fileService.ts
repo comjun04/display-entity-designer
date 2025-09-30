@@ -170,14 +170,19 @@ export async function importFromBDE(file: Blob): Promise<boolean> {
   const saveData = JSON.parse(saveDataString) as BDEngineSaveData
 
   const { bulkImportFromBDE, clearEntities } = useDisplayEntityStore.getState()
+  const { setTargetGameVersion, setProjectName } = useProjectStore.getState()
 
   // reset project and load data
   clearEntities()
   useEditorStore.getState().resetProject()
 
+  // load targetGameVersion
   // BDEngine project does not have project version or target minecraft version
   // Since BDEngine always targets latest minecraft version so we use that
-  useProjectStore.getState().setTargetGameVersion(LatestGameVersion)
+  setTargetGameVersion(LatestGameVersion)
+
+  // load projectName
+  setProjectName(saveData[0].name)
 
   bulkImportFromBDE(saveData).catch(logger.error)
 
