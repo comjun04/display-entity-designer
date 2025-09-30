@@ -137,9 +137,9 @@ export async function createSaveData() {
   const finalSaveObject = {
     __version: FILE_VERSION,
     __program: 'Display Entity Platform',
-    entities: rootEntities,
-    targetGameVersion,
     projectName,
+    targetGameVersion,
+    entities: rootEntities,
   } satisfies DisplayEntitySaveData_Latest
 
   const finalSaveObjectString = JSON.stringify(finalSaveObject)
