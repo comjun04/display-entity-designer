@@ -20,9 +20,14 @@ interface DisplayEntitySaveDataBase {
 interface DisplayEntitySaveData_V3 extends DisplayEntitySaveDataBase {
   targetGameVersion: string
 }
+interface DisplayEntitySaveData_V4 extends DisplayEntitySaveData_V3 {
+  projectName: string
+}
+
+type DisplayEntitySaveData_Latest = DisplayEntitySaveData_V4
 
 const FILE_MAGIC = 'DEPL'
-const FILE_VERSION = 3
+const FILE_VERSION = 4
 
 const fileVersionArrayBuffer = new ArrayBuffer(4)
 const fileVersionDataView = new DataView(fileVersionArrayBuffer)
@@ -84,17 +89,27 @@ export async function openProjectFile(file: Blob): Promise<boolean> {
   // TODO: saveData type validation
 
   const { bulkImport, clearEntities } = useDisplayEntityStore.getState()
+  const { setTargetGameVersion, setProjectName } = useProjectStore.getState()
 
   // reset project and load data
   clearEntities()
   useEditorStore.getState().resetProject()
 
+  // load targetGameVersion
   const targetGameVersion =
     saveData.__version >= 3
-      ? (saveData as DisplayEntitySaveData_V3).targetGameVersion
+      ? (saveData as DisplayEntitySaveData_Latest).targetGameVersion
       : LegacyHardcodedGameVersion
-  useProjectStore.getState().setTargetGameVersion(targetGameVersion)
+  setTargetGameVersion(targetGameVersion)
 
+  // load projectName
+  const projectName =
+    saveData.__version >= 4
+      ? (saveData as DisplayEntitySaveData_Latest).projectName
+      : ''
+  setProjectName(projectName)
+
+  // load entities
   bulkImport(saveData.entities).catch(logger.error)
 
   return true
@@ -118,12 +133,14 @@ export async function saveToFile() {
 
 export async function createSaveData() {
   const rootEntities = useDisplayEntityStore.getState().exportAll()
+  const { targetGameVersion, projectName } = useProjectStore.getState()
   const finalSaveObject = {
     __version: FILE_VERSION,
     __program: 'Display Entity Platform',
     entities: rootEntities,
-    targetGameVersion: useProjectStore.getState().targetGameVersion,
-  } satisfies DisplayEntitySaveData_V3
+    targetGameVersion,
+    projectName,
+  } satisfies DisplayEntitySaveData_Latest
 
   const finalSaveObjectString = JSON.stringify(finalSaveObject)
 

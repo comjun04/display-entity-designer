@@ -533,13 +533,37 @@ const TextDisplayProperties: FC = () => {
 const ProjectProperties: FC = () => {
   const { t } = useTranslation()
 
-  const targetGameVersion = useProjectStore((state) => state.targetGameVersion)
+  const { targetGameVersion, projectName, setProjectName } = useProjectStore(
+    useShallow((state) => ({
+      targetGameVersion: state.targetGameVersion,
+      projectName: state.projectName,
+      setProjectName: state.setProjectName,
+    })),
+  )
 
   return (
     <div className="flex flex-col gap-2">
       <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
         {t(($) => $.sidebar.propertiesPanel.sections.project.title)}
       </div>
+
+      <div className="flex flex-row items-center gap-2">
+        <label className="flex-1 text-end">
+          {t(
+            ($) =>
+              $.sidebar.propertiesPanel.sections.project.properties.projectName
+                .title,
+          )}
+        </label>
+        <input
+          className="min-w-0 shrink rounded bg-neutral-800 py-1 pl-1 text-xs outline-none"
+          value={projectName}
+          onChange={(evt) => {
+            setProjectName(evt.target.value)
+          }}
+        />
+      </div>
+
       <div className="flex flex-row items-center gap-2">
         <label className="flex-1 text-end">
           {t(

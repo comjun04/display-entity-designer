@@ -183,6 +183,9 @@
           "properties": {
             "targetMinecraftVersion": {
               "title": "기준 마인크래프트 버전"
+            },
+            "projectName": {
+              "title": "프로젝트 이름"
             }
           }
         },

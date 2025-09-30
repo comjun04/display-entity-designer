@@ -183,6 +183,9 @@
           "properties": {
             "targetMinecraftVersion": {
               "title": "Target Minecraft Version"
+            },
+            "projectName": {
+              "title": "Project Name"
             }
           }
         },
