@@ -1128,6 +1128,20 @@ export const useDisplayEntityStore = create(
         // 선택된 디스플레이 엔티티를 방금 생성한 그룹으로 설정
         state.selectedEntityIds = [groupId]
 
+        const f = (id: string) => {
+          if (state.selectedEntityIdsIncludingParent.has(id)) {
+            return
+          }
+          state.selectedEntityIdsIncludingParent.add(id)
+
+          const entity = state.entities.get(id)!
+          if (entity.parent != null) {
+            f(entity.parent)
+          }
+        }
+        state.selectedEntityIdsIncludingParent.clear()
+        f(groupId)
+
         if (!skipHistoryAdd) {
           useHistoryStore.getState().addHistory({
             type: 'group',
