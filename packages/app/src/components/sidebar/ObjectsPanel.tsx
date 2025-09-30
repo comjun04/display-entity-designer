@@ -1,7 +1,7 @@
 import type { FC } from 'react'
 import { useTranslation } from 'react-i18next'
 import { IoCubeOutline } from 'react-icons/io5'
-import { LuChevronDown, LuType } from 'react-icons/lu'
+import { LuChevronRight, LuType } from 'react-icons/lu'
 import { TbDiamondFilled } from 'react-icons/tb'
 import { useShallow } from 'zustand/shallow'
 
@@ -89,11 +89,16 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
           setSelected([id])
         }}
       >
-        <span className="flex-none">
+        <span
+          className={cn(
+            'flex-none transition',
+            kind === 'group' && thisOrChildSelected && 'rotate-90',
+          )}
+        >
           {kind === 'block' && <IoCubeOutline size={16} />}
           {kind === 'item' && <TbDiamondFilled size={16} />}
           {kind === 'text' && <LuType size={16} />}
-          {kind === 'group' && <LuChevronDown size={16} />}
+          {kind === 'group' && <LuChevronRight size={16} />}
         </span>
         <span>
           {kind === 'group'
