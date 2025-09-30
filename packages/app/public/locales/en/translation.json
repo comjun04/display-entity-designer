@@ -204,6 +204,14 @@
               "loadBtn": "Load"
             }
           }
+        },
+        "group": {
+          "title": "Group",
+          "properties": {
+            "groupName": {
+              "title": "Group Name"
+            }
+          }
         }
       }
     }

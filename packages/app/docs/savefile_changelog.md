@@ -1,5 +1,9 @@
 # Save file format changelog
 
+### Version `5`
+
+- Add `name` in `DisplayEntityGroup` (group name)
+
 ### Version `4`
 
 - Add `projectName` root field

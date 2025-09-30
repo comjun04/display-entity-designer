@@ -22,6 +22,7 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
     blockstates,
     selected,
     children,
+    groupName,
   } = useDisplayEntityStore(
     useShallow((state) => {
       const entity = state.entities.get(id)!
@@ -36,6 +37,8 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
 
         parent: entity.parent,
         children: entity.kind === 'group' ? entity.children : null,
+
+        groupName: entity.kind === 'group' ? entity.name : undefined,
       }
     }),
   )
@@ -102,7 +105,7 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
         </span>
         <span>
           {kind === 'group'
-            ? 'Group'
+            ? groupName || 'Group'
             : kind === 'text'
               ? textDisplayText
               : type}

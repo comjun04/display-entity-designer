@@ -132,6 +132,7 @@ export type DisplayEntityState = {
     data: PlayerHeadProperties,
     skipHistoryAdd?: boolean,
   ) => void
+  setGroupName: (entityId: string, name: string) => void
   deleteEntities: (entityIds: string[], skipHistoryAdd?: boolean) => void
 
   bulkImport: (items: DisplayEntitySaveDataItem[]) => Promise<void>
@@ -236,6 +237,7 @@ export const useDisplayEntityStore = create(
               id,
               parent: param.parent,
               children: param.children,
+              name: 'Group',
               size: param.size ?? [1, 1, 1],
               position: param.position ?? [0, 0, 0],
               rotation: param.rotation ?? [1, 1, 1],
@@ -580,6 +582,16 @@ export const useDisplayEntityStore = create(
 
         entity.playerHeadProperties = data
       }),
+    setGroupName: (entityId, name) =>
+      set((state) => {
+        const entity = state.entities.get(entityId)
+        if (entity == null || entity.kind !== 'group') {
+          logger.error(`setGroupName(): Entity ${entityId} is not a group`)
+          return
+        }
+
+        entity.name = name
+      }),
     deleteEntities: (entityIds, skipHistoryAdd) =>
       set((state) => {
         const deletePendingEntityIds = new Set<string>()
@@ -688,6 +700,10 @@ export const useDisplayEntityStore = create(
             const children = item.children ?? []
             const childrenIds = f(children, id)
 
+            // savedata v4 -> v5
+            // set group name to `Group` if not exist
+            const groupName = item.name ?? 'Group'
+
             entities.set(id, {
               kind: 'group',
               id,
@@ -696,6 +712,7 @@ export const useDisplayEntityStore = create(
               size: scale,
               children: childrenIds,
               parent: parentEntityId,
+              name: groupName,
             })
           } else if (item.kind === 'block') {
             // blockstate가 없을 경우 empty string을 key로 사용하게 되어 들어가게 되므로 빼주기
@@ -832,6 +849,7 @@ export const useDisplayEntityStore = create(
               size: scale,
               children: childrenIds.filter((id) => id != null),
               parent: parentEntityId,
+              name: item.name,
             })
           } else if ('isBlockDisplay' in item && item.isBlockDisplay) {
             // block display
@@ -994,6 +1012,7 @@ export const useDisplayEntityStore = create(
             kind: entity.kind,
             transforms,
             children,
+            name: entity.name,
           }
         }
 
@@ -1099,6 +1118,7 @@ export const useDisplayEntityStore = create(
           size: [1, 1, 1],
           parent: firstEntityParentId,
           children: entityIds,
+          name: 'Group',
         } satisfies DisplayEntityGroup)
         if (previousParentGroup != null) {
           // 새로 만들어진 그룹을 기존에 엔티티들이 있었던 그룹의 children으로 추가

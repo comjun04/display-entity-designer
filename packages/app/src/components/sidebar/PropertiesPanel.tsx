@@ -530,6 +530,47 @@ const TextDisplayProperties: FC = () => {
   )
 }
 
+const GroupProperties: FC = () => {
+  const { t } = useTranslation()
+
+  const singleSelectedEntity = useDisplayEntityStore((state) => {
+    const entity =
+      state.selectedEntityIds.length === 1
+        ? state.entities.get(state.selectedEntityIds[0])!
+        : null
+    return entity?.kind === 'group' ? entity : null
+  })
+
+  if (singleSelectedEntity == null) return null
+
+  return (
+    <div className="flex flex-col gap-2">
+      <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
+        {t(($) => $.sidebar.propertiesPanel.sections.group.title)}
+      </div>
+
+      <div className="flex flex-row items-center gap-2">
+        <label className="flex-1 text-end">
+          {t(
+            ($) =>
+              $.sidebar.propertiesPanel.sections.group.properties.groupName
+                .title,
+          )}
+        </label>
+        <input
+          className="min-w-0 shrink rounded bg-neutral-800 py-1 pl-1 text-xs outline-none"
+          value={singleSelectedEntity.name}
+          onChange={(evt) => {
+            useDisplayEntityStore
+              .getState()
+              .setGroupName(singleSelectedEntity.id, evt.target.value)
+          }}
+        />
+      </div>
+    </div>
+  )
+}
+
 const ProjectProperties: FC = () => {
   const { t } = useTranslation()
 
@@ -647,8 +688,8 @@ const PropertiesPanel: FC = () => {
       <SidePanelContent>
         {singleSelectedEntity?.kind === 'block' && <BlockDisplayProperties />}
         {singleSelectedEntity?.kind === 'item' && <ItemDisplayProperties />}
-
         {singleSelectedEntity?.kind === 'text' && <TextDisplayProperties />}
+        {singleSelectedEntity?.kind === 'group' && <GroupProperties />}
 
         {singleSelectedEntity == null && <ProjectProperties />}
       </SidePanelContent>

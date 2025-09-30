@@ -204,6 +204,14 @@
               "loadBtn": "불러오기"
             }
           }
+        },
+        "group": {
+          "title": "그룹",
+          "properties": {
+            "groupName": {
+              "title": "그룹 이름"
+            }
+          }
         }
       }
     }
