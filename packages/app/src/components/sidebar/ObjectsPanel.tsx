@@ -94,7 +94,7 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
       >
         <span
           className={cn(
-            'flex-none transition',
+            'flex-none transition-transform duration-200',
             kind === 'group' && thisOrChildSelected && 'rotate-90',
           )}
         >
