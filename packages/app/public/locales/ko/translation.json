@@ -88,6 +88,7 @@
                 "translateMode": "이동 모드",
                 "rotateMode": "회전 모드",
                 "scaleMode": "크기 조절 모드",
+                "duplicate": "엔티티 복제",
                 "groupOrUngroup": "그룹/그룹 해제",
                 "deleteEntity": "엔티티 삭제"
               }
