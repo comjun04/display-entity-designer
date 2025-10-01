@@ -313,6 +313,10 @@ export const useDisplayEntityStore = create(
       }),
     duplicateSelected: () =>
       set((state) => {
+        if (state.selectedEntityIds.length < 1) {
+          return
+        }
+
         const f = (entityId: string, newParentEntityId?: string) => {
           const entity = state.entities.get(entityId)!
           const clonedEntity = cloneDeep(entity)
