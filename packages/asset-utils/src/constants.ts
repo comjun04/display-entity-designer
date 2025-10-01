@@ -142,6 +142,10 @@ export const renderableBlockEntityModelTextures = [
   'chest/normal', // chest
   'chest/trapped', // trapped_chest
   'chest/ender', // ender_chest
+  'chest/copper', // copper_chest
+  'chest/copper_exposed', // exposed_copper_chest
+  'chest/copper_oxidized', // oxidized_copper_chest
+  'chest/copper_weathered', // weathered_copper_chest
 
   'conduit/base', // conduit
 
