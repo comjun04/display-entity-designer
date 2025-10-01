@@ -88,6 +88,7 @@
                 "translateMode": "이동 모드",
                 "rotateMode": "회전 모드",
                 "scaleMode": "크기 조절 모드",
+                "duplicate": "엔티티 복제",
                 "groupOrUngroup": "그룹/그룹 해제",
                 "deleteEntity": "엔티티 삭제"
               }
@@ -148,6 +149,7 @@
       "itemDisplay": "아이템 디스플레이",
       "textDisplay": "텍스트 디스플레이",
       "addPlayerHead": "플레이어 머리 추가",
+      "duplicate": "복제",
       "group": "그룹",
       "ungroup": "그룹 해제",
       "delete": "삭제"

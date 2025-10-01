@@ -88,6 +88,7 @@
                 "translateMode": "Translate mode",
                 "rotateMode": "Rotate mode",
                 "scaleMode": "Scale mode",
+                "duplicate": "Duplicate Entity",
                 "groupOrUngroup": "Group/Ungroup",
                 "deleteEntity": "Delete Entity"
               }
@@ -148,6 +149,7 @@
       "itemDisplay": "Item Display",
       "textDisplay": "Text Display",
       "addPlayerHead": "Add Player Head",
+      "duplicate": "Duplicate",
       "group": "Group",
       "ungroup": "Ungroup",
       "delete": "Delete"

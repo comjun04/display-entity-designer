@@ -3,7 +3,7 @@ import type { FC } from 'react'
 import { useTranslation } from 'react-i18next'
 import { IoMdTrash } from 'react-icons/io'
 import { IoCubeOutline } from 'react-icons/io5'
-import { LuGroup, LuSmile, LuType, LuUngroup } from 'react-icons/lu'
+import { LuCopyPlus, LuGroup, LuSmile, LuType, LuUngroup } from 'react-icons/lu'
 import { TbDiamondFilled } from 'react-icons/tb'
 import { useShallow } from 'zustand/shallow'
 
@@ -110,6 +110,21 @@ const TopButtonPanel: FC = () => {
         </Tooltip>
 
         <div className="my-2 border-l border-gray-700" />
+
+        <Tooltip
+          content={t(($) => $.editor.topBar.duplicate)}
+          placement="bottom"
+          size="sm"
+          offset={0}
+          delay={300}
+          closeDelay={0}
+        >
+          <FloatingButton
+            onClick={() => useDisplayEntityStore.getState().duplicateSelected()}
+          >
+            <LuCopyPlus size={24} />
+          </FloatingButton>
+        </Tooltip>
 
         <Tooltip
           content={t(($) =>

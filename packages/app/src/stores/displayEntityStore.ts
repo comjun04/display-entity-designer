@@ -96,8 +96,11 @@ export type DisplayEntityState = {
     params: CreateNewEntityActionParam[],
     skipHistoryAdd?: boolean,
   ) => void
+
   setSelected: (ids: string[]) => void
   addToSelected: (id: string) => void
+  duplicateSelected: () => void
+
   batchSetEntityTransformation: (
     data: {
       id: string
@@ -307,6 +310,60 @@ export const useDisplayEntityStore = create(
           }
         }
         f(id)
+      }),
+    duplicateSelected: () =>
+      set((state) => {
+        if (state.selectedEntityIds.length < 1) {
+          return
+        }
+
+        const f = (entityId: string, newParentEntityId?: string) => {
+          const entity = state.entities.get(entityId)!
+          const clonedEntity = cloneDeep(entity)
+          // stores cloned entity + cloned children entities
+          const clonedEntitiesArr = [clonedEntity]
+
+          // put new id to cloned entity
+          clonedEntity.id = generateId(ENTITY_ID_LENGTH)
+
+          if (newParentEntityId != null) {
+            clonedEntity.parent = newParentEntityId
+          }
+
+          // create ref object and register
+
+          // if entity is a group, clone children too
+          if (clonedEntity.kind === 'group') {
+            const clonedChildren = clonedEntity.children.flatMap((d) =>
+              f(d, clonedEntity.id),
+            )
+            // set children entity id array to cloned one
+            clonedEntity.children = clonedChildren.map((entity) => entity.id)
+
+            // put cloned children entities to list
+            for (const child of clonedChildren) {
+              clonedEntitiesArr.push(child)
+            }
+          }
+
+          return clonedEntitiesArr
+        }
+
+        const clonedEntities = state.selectedEntityIds.flatMap((entityId) =>
+          f(entityId),
+        )
+        clonedEntities.forEach((newEntity) => {
+          state.entities.set(newEntity.id, newEntity)
+        })
+        useEntityRefStore
+          .getState()
+          .createEntityRefs(clonedEntities.map((e) => e.id))
+
+        useHistoryStore.getState().addHistory({
+          type: 'createEntities',
+          beforeState: {},
+          afterState: { entities: clonedEntities },
+        })
       }),
     batchSetEntityTransformation: (data, skipHistoryAdd) =>
       set((state) => {
