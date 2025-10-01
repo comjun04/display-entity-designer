@@ -185,6 +185,12 @@ export const renderableBlockEntityModelTextures = [
   'bed/red',
   'bed/white',
   'bed/yellow',
+
+  // copper_golem (statue)
+  'copper_golem/copper_golem',
+  'copper_golem/exposed_copper_golem',
+  'copper_golem/weathered_copper_golem',
+  'copper_golem/oxidized_copper_golem',
 ].map(
   (resourceLocation) =>
     `assets/minecraft/textures/entity/${resourceLocation}.png`,
