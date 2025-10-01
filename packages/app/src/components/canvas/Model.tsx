@@ -75,7 +75,6 @@ const Model: FC<ModelNewProps> = ({
         modelResourceLocation: initialResourceLocation,
         elements: modelData.elements,
         textures: modelData.textures,
-        textureSize: modelData.textureSize,
         isItemModel,
         isBlockShapedItemModel,
         playerHeadTextureData,
