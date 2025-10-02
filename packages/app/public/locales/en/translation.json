@@ -16,11 +16,11 @@
       },
       "showWelcomeOnStartup": "Show Welcome on Startup",
       "changeLogs": [
-        "Now you can change app language. Currently English and Korean are supported, and more languages will be added later.",
-        "Added support for multiple Minecraft versions. Each project now has 'Target Game Version', which allows project to use blocks/items available on that game version as displays.",
-        "Added Minecraft resources up to latest version (1.21.7 ~ 1.21.8)",
-        "Group/Ungroup button on top bar now shows 'Ungroup' when selected a group, and 'Group' otherwise, for better action indication.",
-        "Fixed a bug where shrinking browser width causes sidebar to be hidden first instead of resizing the canvas.",
+        "Now supports Minecraft 1.21.9!",
+        "You can now duplicate selected entities by pressing button on top button panel or using hotkey.",
+        "Groups in Objects panel now collapses when group itself or its children entities/groups are not selected. This fixes massive UI lag when working with large projects.",
+        "Now you can name your project and individual groups.",
+        "Reduced geometries when generating builtin item model (most non-block items). This may improve performance a little.",
         "...and several fixes to improve the app!"
       ]
     },
