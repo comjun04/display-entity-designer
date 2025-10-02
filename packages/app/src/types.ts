@@ -201,6 +201,7 @@ export type TextDisplayEntity = BaseDisplayEntity & {
 
 export type DisplayEntityGroup = BaseDisplayEntity & {
   kind: 'group'
+  name: string
   children: string[] // list of entity ids
 }
 
@@ -216,7 +217,7 @@ export type DisplayEntitySaveDataItem = {
   | Pick<BlockDisplayEntity, 'kind' | 'type' | 'blockstates' | 'display'>
   | Omit<ItemDisplayEntity, 'id' | 'parent' | 'position' | 'rotation' | 'size'>
   | Omit<TextDisplayEntity, 'id' | 'parent' | 'position' | 'rotation' | 'size'>
-  | (Pick<DisplayEntityGroup, 'kind'> & {
+  | (Pick<DisplayEntityGroup, 'kind' | 'name'> & {
       children: DisplayEntitySaveDataItem[]
     })
 )

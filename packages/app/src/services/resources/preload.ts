@@ -43,7 +43,6 @@ export async function preloadResources(entities: DisplayEntity[]) {
       modelResourceLocation: applyModelInfo.model,
       elements: data.elements,
       textures: data.textures,
-      textureSize: data.textureSize,
       isItemModel: false,
       playerHeadTextureData: applyModelInfo.playerHeadTextureData,
     })

@@ -6,6 +6,9 @@ import { LatestGameVersion } from '@/constants'
 interface ProjectStoreState {
   targetGameVersion: string
   setTargetGameVersion: (version: string) => void
+
+  projectName: string
+  setProjectName: (name: string) => void
 }
 
 export const useProjectStore = create(
@@ -16,5 +19,11 @@ export const useProjectStore = create(
         state.targetGameVersion = version
       })
     },
+
+    projectName: '',
+    setProjectName: (name) =>
+      set((state) => {
+        state.projectName = name
+      }),
   })),
 )

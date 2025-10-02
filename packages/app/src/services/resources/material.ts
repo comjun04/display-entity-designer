@@ -32,7 +32,6 @@ export type LoadMaterialArgs = {
       }
   modelResourceLocation: string
   textureLayer?: string
-  textureSize?: [number, number]
   tintindex?: number
 }
 
@@ -40,14 +39,11 @@ export async function loadMaterial({
   textureData,
   modelResourceLocation,
   textureLayer,
-  textureSize = [16, 16],
   tintindex,
 }: LoadMaterialArgs) {
   const { croppedTextureDataUrls, setCroppedTextureDataUrl } =
     useCacheStore.getState()
   const { setMaterial } = useClassObjectCacheStore.getState()
-
-  const [width, height] = textureSize
 
   const { targetGameVersion } = useProjectStore.getState()
   const textureColor = getTextureColor(
@@ -111,6 +107,8 @@ export async function loadMaterial({
 
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d')!
+
+      const { width, height } = img
 
       // 텍스쳐 사진을 처음 로드했을 경우 맨 위 width x height 만큼 잘라서 적용
       canvas.width = width

@@ -57,8 +57,8 @@ const WelcomeDialog: FC = () => {
                 <ul className="list-disc">
                   {t(($) => $.dialog.welcome.changeLogs, {
                     returnObjects: true,
-                  }).map((line) => (
-                    <li>{line}</li>
+                  }).map((line, idx) => (
+                    <li key={idx}>{line}</li>
                   ))}
                 </ul>
               </div>

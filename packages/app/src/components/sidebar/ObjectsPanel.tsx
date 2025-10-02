@@ -1,7 +1,7 @@
 import type { FC } from 'react'
 import { useTranslation } from 'react-i18next'
 import { IoCubeOutline } from 'react-icons/io5'
-import { LuChevronDown, LuType } from 'react-icons/lu'
+import { LuChevronRight, LuType } from 'react-icons/lu'
 import { TbDiamondFilled } from 'react-icons/tb'
 import { useShallow } from 'zustand/shallow'
 
@@ -22,6 +22,7 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
     blockstates,
     selected,
     children,
+    groupName,
   } = useDisplayEntityStore(
     useShallow((state) => {
       const entity = state.entities.get(id)!
@@ -36,8 +37,13 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
 
         parent: entity.parent,
         children: entity.kind === 'group' ? entity.children : null,
+
+        groupName: entity.kind === 'group' ? entity.name : undefined,
       }
     }),
+  )
+  const thisOrChildSelected = useDisplayEntityStore((state) =>
+    state.selectedEntityIdsIncludingParent.has(id),
   )
 
   const blockstateArr: string[] = []
@@ -52,7 +58,10 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
       <div
         className={cn(
           'flex cursor-pointer flex-row items-center gap-1',
-          selected && 'font-bold text-yellow-500',
+          selected && [
+            'font-bold',
+            kind === 'group' ? 'text-green-500' : 'text-yellow-500',
+          ],
         )}
         onClick={(evt) => {
           const { addToSelected: addToSelectedEntity, setSelected } =
@@ -83,15 +92,20 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
           setSelected([id])
         }}
       >
-        <span className="flex-none">
+        <span
+          className={cn(
+            'flex-none transition-transform duration-200',
+            kind === 'group' && thisOrChildSelected && 'rotate-90',
+          )}
+        >
           {kind === 'block' && <IoCubeOutline size={16} />}
           {kind === 'item' && <TbDiamondFilled size={16} />}
           {kind === 'text' && <LuType size={16} />}
-          {kind === 'group' && <LuChevronDown size={16} />}
+          {kind === 'group' && <LuChevronRight size={16} />}
         </span>
         <span>
           {kind === 'group'
-            ? 'Group'
+            ? groupName || 'Group'
             : kind === 'text'
               ? textDisplayText
               : type}
@@ -106,7 +120,7 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
         )}
       </div>
 
-      {kind === 'group' && children != null && (
+      {kind === 'group' && children != null && thisOrChildSelected && (
         <div className="pl-4">
           {children.map((entityId) => (
             <ObjectItem key={entityId} id={entityId} />

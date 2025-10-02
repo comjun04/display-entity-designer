@@ -32,7 +32,7 @@ const ShortcutHandler: FC = () => {
         return true
       }
 
-      const { selectedEntityIds, deleteEntities } =
+      const { selectedEntityIds, deleteEntities, duplicateSelected } =
         useDisplayEntityStore.getState()
       const { setMode } = useEditorStore.getState()
 
@@ -62,6 +62,11 @@ const ShortcutHandler: FC = () => {
           if (evt.ctrlKey) {
             evt.preventDefault()
             openFromFile()
+          }
+          break
+        case 'd':
+          if (!evt.ctrlKey && !evt.altKey && !evt.shiftKey) {
+            duplicateSelected()
           }
           break
         case 'g':
