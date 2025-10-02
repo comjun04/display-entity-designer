@@ -44,7 +44,6 @@ export type LoadModelMaterialsArgs = {
   modelResourceLocation: string
   elements: ModelElement[]
   textures: Record<string, string>
-  textureSize?: [number, number]
   isItemModel: boolean
   playerHeadTextureData?: NonNullable<PlayerHeadProperties['texture']>
 }
@@ -59,7 +58,6 @@ export async function loadModelMaterials({
   modelResourceLocation,
   elements,
   textures,
-  textureSize = [16, 16],
   isItemModel,
   playerHeadTextureData,
 }: LoadModelMaterialsArgs) {
@@ -107,7 +105,6 @@ export async function loadModelMaterials({
             },
         modelResourceLocation,
         textureLayer,
-        textureSize,
         tintindex: faceData.tintindex,
       })
     }
@@ -118,7 +115,6 @@ export type LoadModelMeshArgs = {
   modelResourceLocation: string
   elements: ModelElement[]
   textures: Record<string, string>
-  textureSize?: [number, number]
   isItemModel: boolean
   isBlockShapedItemModel: boolean
   playerHeadTextureData?: NonNullable<PlayerHeadProperties['texture']>
@@ -127,7 +123,6 @@ export async function loadModelMesh({
   modelResourceLocation,
   elements,
   textures,
-  textureSize = [16, 16],
   isItemModel,
   isBlockShapedItemModel,
   playerHeadTextureData,
@@ -199,7 +194,6 @@ export async function loadModelMesh({
             },
         modelResourceLocation,
         textureLayer,
-        textureSize,
         tintindex: faceData.tintindex,
       })
 
