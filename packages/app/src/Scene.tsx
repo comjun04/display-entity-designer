@@ -7,6 +7,7 @@ import {
 import { Canvas, invalidate } from '@react-three/fiber'
 import { type FC, Suspense, lazy, useEffect, useRef } from 'react'
 import { Color, DoubleSide } from 'three'
+import { useShallow } from 'zustand/shallow'
 
 import CustomCameraControls from './CustomCameraControls'
 import DisplayentitiesRootGroup from './components/DisplayEntitiesRootGroup'
@@ -21,11 +22,20 @@ const Perf = lazy(() => import('./components/Perf'))
 const Scene: FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
-  const perfMonitorEnabled = useEditorStore(
-    (state) => state.settings.debug.perfMonitorEnabled,
-  )
-  const reducePixelRatio = useEditorStore(
-    (state) => state.settings.performance.reducePixelRatio,
+  const {
+    perfMonitorEnabled,
+    reducePixelRatio,
+    gizmoLocation,
+    gizmoMarginWidth,
+    gizmoMarginHeight,
+  } = useEditorStore(
+    useShallow((state) => ({
+      perfMonitorEnabled: state.settings.debug.perfMonitorEnabled,
+      reducePixelRatio: state.settings.performance.reducePixelRatio,
+      gizmoLocation: state.settings.appearance.gizmo.location,
+      gizmoMarginWidth: state.settings.appearance.gizmo.marginWidth,
+      gizmoMarginHeight: state.settings.appearance.gizmo.marginHeight,
+    })),
   )
 
   useEffect(() => {
@@ -129,7 +139,10 @@ const Scene: FC = () => {
         infiniteGrid
         side={DoubleSide}
       />
-      <GizmoHelper alignment="bottom-left" margin={[60, 60]}>
+      <GizmoHelper
+        alignment={gizmoLocation}
+        margin={[gizmoMarginWidth, gizmoMarginHeight]}
+      >
         <GizmoViewport />
       </GizmoHelper>
 

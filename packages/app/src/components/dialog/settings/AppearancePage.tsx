@@ -95,6 +95,101 @@ const AppearancePage: FC = () => {
             />
           </div>
         </div>
+
+        <div className="mt-4 text-lg font-bold">
+          {t(($) => $.dialog.settings.page.appearance.sections.gizmo.title)}
+        </div>
+        <div className="flex flex-row gap-4">
+          <div className="flex flex-row items-center gap-2">
+            <label htmlFor="settings_appearance_gizmo_location">
+              {t(
+                ($) =>
+                  $.dialog.settings.page.appearance.sections.quickActionPanel
+                    .options.location.title,
+              )}
+            </label>
+            <select
+              id="settings_appearance_gizmo_location"
+              className="flex-none rounded bg-neutral-900 px-2 py-1"
+              value={settings.appearance.gizmo.location}
+              onChange={(evt) => {
+                setSettings({
+                  appearance: {
+                    gizmo: {
+                      location: evt.target
+                        .value as Settings['appearance']['gizmo']['location'],
+                    },
+                  },
+                })
+              }}
+            >
+              <option value="bottom-left">bottom-left</option>
+              <option value="bottom-right">bottom-right</option>
+            </select>
+          </div>
+
+          <div className="flex flex-row items-center gap-2">
+            <span>
+              {t(
+                ($) =>
+                  $.dialog.settings.page.appearance.sections.gizmo.options
+                    .margin.title,
+              )}
+            </span>
+
+            {/* margin width */}
+            <label htmlFor="settings_appearance_gizmo_marginWidth">
+              {t(
+                ($) =>
+                  $.dialog.settings.page.appearance.sections.gizmo.options
+                    .margin.subOptions.width,
+              )}
+            </label>
+            <input
+              type="number"
+              id="settings_appearance_gizmo_marginHeight"
+              className="w-16 shrink rounded bg-neutral-900 py-2 pl-2 text-xs outline-none"
+              value={settings.appearance.gizmo.marginWidth}
+              onChange={(evt) => {
+                const newMargin = parseInt(evt.target.value)
+                if (!isFinite(newMargin)) return
+                setSettings({
+                  appearance: {
+                    gizmo: {
+                      marginWidth: newMargin,
+                    },
+                  },
+                })
+              }}
+            />
+
+            {/* margin height */}
+            <label htmlFor="settings_appearance_gizmo_marginHeight">
+              {t(
+                ($) =>
+                  $.dialog.settings.page.appearance.sections.gizmo.options
+                    .margin.subOptions.height,
+              )}
+            </label>
+            <input
+              type="number"
+              id="settings_appearance_gizmo_marginWidth"
+              className="w-16 shrink rounded bg-neutral-900 py-2 pl-2 text-xs outline-none"
+              value={settings.appearance.gizmo.marginHeight}
+              onChange={(evt) => {
+                const newMargin = parseInt(evt.target.value)
+                if (!isFinite(newMargin)) return
+                setSettings({
+                  appearance: {
+                    gizmo: {
+                      marginHeight: newMargin,
+                    },
+                  },
+                })
+              }}
+            />
+          </div>
+        </div>
       </div>
     </>
   )

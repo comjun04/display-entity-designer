@@ -79,6 +79,21 @@
                   "title": "여백"
                 }
               }
+            },
+            "gizmo": {
+              "title": "Gizmo",
+              "options": {
+                "location": {
+                  "title": "위치"
+                },
+                "margin": {
+                  "title": "여백",
+                  "subOptions": {
+                    "width": "가로",
+                    "height": "세로"
+                  }
+                }
+              }
             }
           }
         },

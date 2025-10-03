@@ -79,6 +79,21 @@
                   "title": "Margin"
                 }
               }
+            },
+            "gizmo": {
+              "title": "Gizmo",
+              "options": {
+                "location": {
+                  "title": "Location"
+                },
+                "margin": {
+                  "title": "Margin",
+                  "subOptions": {
+                    "width": "Width",
+                    "height": "Height"
+                  }
+                }
+              }
             }
           }
         },
