@@ -93,6 +93,7 @@ const DisplayEntity: FC<DisplayEntityProps> = ({ id }) => {
   const handleClick = useCallback(
     (event: ThreeEvent<MouseEvent>) => {
       if (thisEntity == null) return
+      if (useEditorStore.getState().headPainterMode) return
 
       const { usingTransformControl } = useEditorStore.getState()
       if (usingTransformControl) return
