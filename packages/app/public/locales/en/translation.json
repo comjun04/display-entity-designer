@@ -63,7 +63,21 @@
           }
         },
         "appearance": {
-          "title": "Appearance"
+          "title": "Appearance",
+          "sections": {
+            "quickActionPanel": {
+              "title": "Quick Action Panel",
+              "options": {
+                "location": {
+                  "title": "Location",
+                  "values": {
+                    "top": "Top",
+                    "bottom": "Bottom"
+                  }
+                }
+              }
+            }
+          }
         },
         "performance": {
           "title": "Performance",

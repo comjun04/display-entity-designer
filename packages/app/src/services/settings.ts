@@ -10,6 +10,15 @@ const settingsSchema = z.object({
       forceUnifont: z.boolean().default(false),
     })
     .prefault({}),
+  appearance: z
+    .object({
+      quickActionPanel: z
+        .object({
+          location: z.enum(['top', 'bottom']).default('top'),
+        })
+        .prefault({}),
+    })
+    .prefault({}),
   performance: z
     .object({
       reducePixelRatio: z.boolean().default(false),

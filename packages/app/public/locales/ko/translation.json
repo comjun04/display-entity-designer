@@ -63,7 +63,21 @@
           }
         },
         "appearance": {
-          "title": "외관"
+          "title": "외관",
+          "sections": {
+            "quickActionPanel": {
+              "title": "빠른 작업 패널",
+              "options": {
+                "location": {
+                  "title": "위치",
+                  "values": {
+                    "top": "위",
+                    "bottom": "아래"
+                  }
+                }
+              }
+            }
+          }
         },
         "performance": {
           "title": "성능",

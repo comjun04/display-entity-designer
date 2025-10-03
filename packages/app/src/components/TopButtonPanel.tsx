@@ -18,6 +18,8 @@ import { useShallow } from 'zustand/shallow'
 import { toggleGroup } from '@/services/actions'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
+import { useEditorStore } from '@/stores/editorStore'
+import { cn } from '@/utils'
 
 import FloatingButton from './FloatingButton'
 import {
@@ -45,9 +47,17 @@ const TopButtonPanel: FC = () => {
           state.entities.get(state.selectedEntityIds[0])?.kind === 'group',
       })),
     )
+  const panelLocation = useEditorStore(
+    (state) => state.settings.appearance.quickActionPanel.location,
+  )
 
   return (
-    <div className="absolute left-1/2 top-4 z-[5] -translate-x-1/2">
+    <div
+      className={cn(
+        'absolute left-1/2 z-[5] -translate-x-1/2',
+        panelLocation === 'top' ? 'top-4' : 'bottom-4',
+      )}
+    >
       <div className="flex flex-row rounded-lg bg-black">
         {/* Desktop - show all 'Add Display Entity' buttons */}
         <div className="hidden flex-row sm:flex">
