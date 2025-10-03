@@ -50,7 +50,7 @@ const TopButtonPanel: FC = () => {
     <div className="absolute left-1/2 top-4 z-[5] -translate-x-1/2">
       <div className="flex flex-row rounded-lg bg-black">
         {/* Desktop - show all 'Add Display Entity' buttons */}
-        <div className="flex hidden flex-row sm:block">
+        <div className="hidden flex-row sm:flex">
           <Tooltip
             content={t(($) => $.editor.topBar.blockDisplay)}
             placement="bottom"
