@@ -62,6 +62,9 @@
             "forceUnifont": "Force Unicode font (Unifont)"
           }
         },
+        "appearance": {
+          "title": "Appearance"
+        },
         "performance": {
           "title": "Performance",
           "options": {

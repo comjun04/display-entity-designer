@@ -62,6 +62,9 @@
             "forceUnifont": "Unicode 폰트 (Unifont)를 강제로 적용"
           }
         },
+        "appearance": {
+          "title": "외관"
+        },
         "performance": {
           "title": "성능",
           "options": {

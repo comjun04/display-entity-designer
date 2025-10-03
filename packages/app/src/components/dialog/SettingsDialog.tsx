@@ -7,6 +7,7 @@ import { cn } from '@/utils'
 
 import Dialog from './Dialog'
 import AboutPage from './settings/AboutPage'
+import AppearancePage from './settings/AppearancePage'
 import DebugOptionsPage from './settings/DebugOptionsPage'
 import GeneralPage from './settings/GeneralPage'
 import HotkeysPage from './settings/HotkeysPage'
@@ -14,6 +15,7 @@ import PerformancePage from './settings/PerformancePage'
 
 type SettingsPageType =
   | 'general'
+  | 'appearance'
   | 'performance'
   | 'hotkeys'
   | 'about'
@@ -54,6 +56,18 @@ const SettingsDialog: FC = () => {
               onClick={() => setSelectedPage('general')}
             >
               {t(($) => $.dialog.settings.page.general.title)}
+            </button>
+
+            <button
+              className={cn(
+                'w-full rounded px-2 py-1 text-start text-sm transition duration-150',
+                selectedPage === 'appearance'
+                  ? 'bg-neutral-700'
+                  : 'hover:bg-neutral-700/50',
+              )}
+              onClick={() => setSelectedPage('appearance')}
+            >
+              {t(($) => $.dialog.settings.page.appearance.title)}
             </button>
 
             <button
@@ -117,6 +131,9 @@ const SettingsDialog: FC = () => {
             <option value="general">
               {t(($) => $.dialog.settings.page.general.title)}
             </option>
+            <option value="appearance">
+              {t(($) => $.dialog.settings.page.appearance.title)}
+            </option>
             <option value="performance">
               {t(($) => $.dialog.settings.page.performance.title)}
             </option>
@@ -136,6 +153,9 @@ const SettingsDialog: FC = () => {
         <div className="h-full w-full py-4 xs:px-4">
           {/* General */}
           {selectedPage === 'general' && <GeneralPage />}
+
+          {/* Appearance */}
+          {selectedPage === 'appearance' && <AppearancePage />}
 
           {/* Performance */}
           {selectedPage === 'performance' && <PerformancePage />}
