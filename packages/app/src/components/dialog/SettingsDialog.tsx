@@ -40,7 +40,12 @@ const SettingsDialog: FC = () => {
       title={t(($) => $.dialog.settings.title)}
       open={isOpen}
       onClose={closeDialog}
-      className="relative z-50"
+      backdropClassName={cn(
+        selectedPage === 'appearance' && 'xs:backdrop-blur-none',
+      )}
+      innerPanelClassName={cn(
+        selectedPage === 'appearance' && 'bg-neutral-800/60',
+      )}
     >
       <div className="flex h-full w-full flex-col xs:flex-row">
         {/* Desktop - left side settings submenu list */}
