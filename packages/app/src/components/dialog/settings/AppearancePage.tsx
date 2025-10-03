@@ -2,6 +2,7 @@ import type { FC } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/shallow'
 
+import type { Settings } from '@/services/settings'
 import { useEditorStore } from '@/stores/editorStore'
 
 const AppearancePage: FC = () => {
@@ -27,44 +28,72 @@ const AppearancePage: FC = () => {
               $.dialog.settings.page.appearance.sections.quickActionPanel.title,
           )}
         </div>
-        <div className="flex flex-row items-center gap-2">
-          <label htmlFor="settings_appearance_quickActionPanel_location">
-            {t(
-              ($) =>
-                $.dialog.settings.page.appearance.sections.quickActionPanel
-                  .options.location.title,
-            )}
-          </label>
-          <select
-            id="settings_appearance_quickActionPanel_location"
-            className="flex-none rounded bg-neutral-900 px-2 py-1"
-            value={settings.appearance.quickActionPanel.location}
-            onChange={(evt) => {
-              setSettings({
-                appearance: {
-                  quickActionPanel: {
-                    location: evt.target
-                      .value as Settings['appearance']['quickActionPanel']['location'],
+        <div className="flex flex-row gap-4">
+          <div className="flex flex-row items-center gap-2">
+            <label htmlFor="settings_appearance_quickActionPanel_location">
+              {t(
+                ($) =>
+                  $.dialog.settings.page.appearance.sections.quickActionPanel
+                    .options.location.title,
+              )}
+            </label>
+            <select
+              id="settings_appearance_quickActionPanel_location"
+              className="flex-none rounded bg-neutral-900 px-2 py-1"
+              value={settings.appearance.quickActionPanel.location}
+              onChange={(evt) => {
+                setSettings({
+                  appearance: {
+                    quickActionPanel: {
+                      location: evt.target
+                        .value as Settings['appearance']['quickActionPanel']['location'],
+                    },
                   },
-                },
-              })
-            }}
-          >
-            <option value="top">
+                })
+              }}
+            >
+              <option value="top">
+                {t(
+                  ($) =>
+                    $.dialog.settings.page.appearance.sections.quickActionPanel
+                      .options.location.values.top,
+                )}
+              </option>
+              <option value="bottom">
+                {t(
+                  ($) =>
+                    $.dialog.settings.page.appearance.sections.quickActionPanel
+                      .options.location.values.bottom,
+                )}
+              </option>
+            </select>
+          </div>
+
+          <div className="flex flex-row items-center gap-2">
+            <label htmlFor="settings_appearance_quickActionPanel_margin">
               {t(
                 ($) =>
                   $.dialog.settings.page.appearance.sections.quickActionPanel
-                    .options.location.values.top,
+                    .options.margin.title,
               )}
-            </option>
-            <option value="bottom">
-              {t(
-                ($) =>
-                  $.dialog.settings.page.appearance.sections.quickActionPanel
-                    .options.location.values.bottom,
-              )}
-            </option>
-          </select>
+            </label>
+            <input
+              type="number"
+              className="w-16 shrink rounded bg-neutral-900 py-2 pl-2 text-xs outline-none"
+              value={settings.appearance.quickActionPanel.margin}
+              onChange={(evt) => {
+                const newMargin = parseInt(evt.target.value)
+                if (!isFinite(newMargin)) return
+                setSettings({
+                  appearance: {
+                    quickActionPanel: {
+                      margin: newMargin,
+                    },
+                  },
+                })
+              }}
+            />
+          </div>
         </div>
       </div>
     </>

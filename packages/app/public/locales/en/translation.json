@@ -74,6 +74,9 @@
                     "top": "Top",
                     "bottom": "Bottom"
                   }
+                },
+                "margin": {
+                  "title": "Margin"
                 }
               }
             }

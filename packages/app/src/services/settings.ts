@@ -15,6 +15,7 @@ const settingsSchema = z.object({
       quickActionPanel: z
         .object({
           location: z.enum(['top', 'bottom']).default('top'),
+          margin: z.number().default(16), // 16px = 1rem
         })
         .prefault({}),
     })
