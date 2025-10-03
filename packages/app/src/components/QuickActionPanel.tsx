@@ -28,7 +28,7 @@ import {
   DropdownMenuTrigger,
 } from './ui/DropdownMenu'
 
-const TopButtonPanel: FC = () => {
+const QuickActionPanel: FC = () => {
   const { t } = useTranslation()
 
   const { setOpenedDialog } = useDialogStore(
@@ -247,4 +247,4 @@ const TopButtonPanel: FC = () => {
   )
 }
 
-export default TopButtonPanel
+export default QuickActionPanel
