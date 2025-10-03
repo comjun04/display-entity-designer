@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { IoMdTrash } from 'react-icons/io'
 import { IoCubeOutline } from 'react-icons/io5'
 import {
+  LuBrush,
   LuChevronDown,
   LuCopyPlus,
   LuGroup,
@@ -18,6 +19,7 @@ import { useShallow } from 'zustand/shallow'
 import { toggleGroup } from '@/services/actions'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
+import { useEditorStore } from '@/stores/editorStore'
 
 import FloatingButton from './FloatingButton'
 import {
@@ -45,6 +47,7 @@ const TopButtonPanel: FC = () => {
           state.entities.get(state.selectedEntityIds[0])?.kind === 'group',
       })),
     )
+  const headPainterMode = useEditorStore((state) => state.headPainterMode)
 
   return (
     <div className="absolute left-1/2 top-4 z-[5] -translate-x-1/2">
@@ -60,6 +63,7 @@ const TopButtonPanel: FC = () => {
             closeDelay={0}
           >
             <FloatingButton
+              disabled={headPainterMode}
               onClick={() => {
                 setOpenedDialog('blockDisplaySelect')
               }}
@@ -106,7 +110,7 @@ const TopButtonPanel: FC = () => {
         </div>
         {/* Mobile - show dropdown menu for 'Add Display Entity' action */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger asChild disabled={headPainterMode}>
             <FloatingButton className="flex flex-row items-center gap-1 sm:hidden">
               <LuPlus size={24} />
               <LuChevronDown size={16} />
@@ -169,6 +173,25 @@ const TopButtonPanel: FC = () => {
             }}
           >
             <LuSmile size={24} />
+          </FloatingButton>
+        </Tooltip>
+
+        <Tooltip
+          content={t(($) => $.editor.topBar.headPainterMode)}
+          placement="bottom"
+          size="sm"
+          offset={0}
+          delay={300}
+          closeDelay={0}
+        >
+          <FloatingButton
+            onClick={() => {
+              const { headPainterMode, setHeadPainterMode } =
+                useEditorStore.getState()
+              setHeadPainterMode(!headPainterMode)
+            }}
+          >
+            <LuBrush size={24} />
           </FloatingButton>
         </Tooltip>
 

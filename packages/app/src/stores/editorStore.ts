@@ -44,6 +44,9 @@ type EditorState = {
   projectDirty: boolean
   setProjectDirty: (isDirty: boolean) => void
 
+  headPainterMode: boolean
+  setHeadPainterMode: (mode: boolean) => void
+
   settings: Settings
   setSettings: (newSettings: DeepPartial<Settings>) => void
 
@@ -124,6 +127,12 @@ export const useEditorStore = create(
       setProjectDirty: (isDirty) =>
         set((state) => {
           state.projectDirty = isDirty
+        }),
+
+      headPainterMode: false,
+      setHeadPainterMode: (mode) =>
+        set((state) => {
+          state.headPainterMode = mode
         }),
 
       settings: initialSettings,
