@@ -88,14 +88,15 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
               cellColor="#ffffff"
               sectionSize={0}
             />
-            {/* this is for detecting click area */}
             <mesh
-              rotation={[MathUtils.degToRad(90), 0, 0]}
+              rotation={[MathUtils.degToRad(-90), 0, MathUtils.degToRad(-90)]}
               onClick={(evt) => {
+                const localPos = evt.object.worldToLocal(evt.point.clone())
                 console.log(
-                  evt.point,
-                  evt.object.worldToLocal(evt.point.clone()),
+                  Math.floor((localPos.x + 0.25) * 16),
+                  Math.floor((localPos.y + 0.25) * 16),
                 )
+                console.log('top', evt.object.worldToLocal(evt.point.clone()))
               }}
             >
               <planeGeometry args={[0.5, 0.5]} />
@@ -115,12 +116,16 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
               cellColor="#ffffff"
               sectionSize={0}
             />
-            {/* this is for detecting click area */}
             <mesh
-              rotation={[MathUtils.degToRad(90), 0, 0]}
+              rotation={[MathUtils.degToRad(-90), 0, 0]}
               onClick={(evt) => {
+                const localPos = evt.object.worldToLocal(evt.point.clone())
                 console.log(
-                  evt.point,
+                  Math.floor((localPos.x + 0.25) * 16),
+                  Math.floor((localPos.y + 0.25) * 16),
+                )
+                console.log(
+                  'bottom',
                   evt.object.worldToLocal(evt.point.clone()),
                 )
               }}
@@ -142,14 +147,15 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
               cellColor="#ffffff"
               sectionSize={0}
             />
-            {/* this is for detecting click area */}
             <mesh
-              rotation={[MathUtils.degToRad(90), 0, 0]}
+              rotation={[MathUtils.degToRad(-90), 0, MathUtils.degToRad(90)]}
               onClick={(evt) => {
+                const localPos = evt.object.worldToLocal(evt.point.clone())
                 console.log(
-                  evt.point,
-                  evt.object.worldToLocal(evt.point.clone()),
+                  Math.floor((localPos.x + 0.25) * 16),
+                  Math.floor((localPos.y + 0.25) * 16),
                 )
+                console.log('front', evt.object.worldToLocal(evt.point.clone()))
               }}
             >
               <planeGeometry args={[0.5, 0.5]} />
@@ -169,11 +175,16 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
               cellColor="#ffffff"
               sectionSize={0}
             />
-            {/* this is for detecting click area */}
             <mesh
-              rotation={[MathUtils.degToRad(90), 0, 0]}
+              rotation={[MathUtils.degToRad(-90), 0, MathUtils.degToRad(-90)]}
               onClick={(evt) => {
+                const localPos = evt.object.worldToLocal(evt.point.clone())
                 console.log(
+                  Math.floor((localPos.x + 0.25) * 16),
+                  Math.floor((localPos.y + 0.25) * 16),
+                )
+                console.log(
+                  'back',
                   evt.point,
                   evt.object.worldToLocal(evt.point.clone()),
                 )
@@ -196,11 +207,16 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
               cellColor="#ffffff"
               sectionSize={0}
             />
-            {/* this is for detecting click area */}
             <mesh
-              rotation={[MathUtils.degToRad(90), 0, 0]}
+              rotation={[MathUtils.degToRad(-90), 0, 0]}
               onClick={(evt) => {
+                const localPos = evt.object.worldToLocal(evt.point.clone())
                 console.log(
+                  Math.floor((localPos.x + 0.25) * 16),
+                  Math.floor((localPos.y + 0.25) * 16),
+                )
+                console.log(
+                  'east',
                   evt.point,
                   evt.object.worldToLocal(evt.point.clone()),
                 )
@@ -223,11 +239,16 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
               cellColor="#ffffff"
               sectionSize={0}
             />
-            {/* this is for detecting click area */}
             <mesh
-              rotation={[MathUtils.degToRad(90), 0, 0]}
+              rotation={[MathUtils.degToRad(-90), 0, MathUtils.degToRad(180)]}
               onClick={(evt) => {
+                const localPos = evt.object.worldToLocal(evt.point.clone())
                 console.log(
+                  Math.floor((localPos.x + 0.25) * 16),
+                  Math.floor((localPos.y + 0.25) * 16),
+                )
+                console.log(
+                  'west',
                   evt.point,
                   evt.object.worldToLocal(evt.point.clone()),
                 )
