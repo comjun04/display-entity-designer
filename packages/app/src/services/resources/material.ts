@@ -108,13 +108,23 @@ export async function loadMaterial({
       const canvas = document.createElement('canvas')
       const ctx = canvas.getContext('2d')!
 
-      const { width, height } = img
-
-      // 텍스쳐 사진을 처음 로드했을 경우 맨 위 width x height 만큼 잘라서 적용
+      const { width } = img
       canvas.width = width
-      canvas.height = height
+      // 애니메이션이 있는 블록들은 세로로 각 애니메이션 프레임을 붙여놨으므로
+      // 맨 처음 프레임만 잘라서 로드
+      canvas.height = width
 
-      ctx.drawImage(img, 0, 0, width, height, 0, 0, width, height)
+      ctx.drawImage(
+        img,
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+        0,
+        0,
+        canvas.width,
+        canvas.height,
+      )
 
       const croppedTextureDataUrl = canvas.toDataURL()
       cachedCroppedTextureDataUrl = croppedTextureDataUrl
