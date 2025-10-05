@@ -27,7 +27,10 @@ type TextureData =
     }
   | {
       type: 'player_head'
-      playerHeadTextureUrl: string
+      playerHead: {
+        baked: boolean
+        url: string
+      }
     }
 export type LoadMaterialArgs = {
   textureData: TextureData
@@ -56,51 +59,61 @@ export async function loadMaterial({
 
   const materialKey =
     textureData.type === 'player_head'
-      ? `#player_head;${textureData.playerHeadTextureUrl.split('/').slice(-1)[0]}` // same as textureKey
+      ? `#player_head;${textureData.playerHead.url.split('/').slice(-1)[0]}` // same as textureKey
       : `${textureFileFromVersion};${textureData.resourceLocation};${textureColor}`
 
-  // 동시에 여러 번 로딩하지 않도록 key값을 기준으로 lock을 구현
-  if (!materialLoadMutexMap.has(materialKey)) {
-    materialLoadMutexMap.set(materialKey, new Mutex())
-  }
-  const mutex = materialLoadMutexMap.get(materialKey)!
-  return await mutex.runExclusive(async () => {
-    // check for cached
-    const { materials } = useClassObjectCacheStore.getState()
-    if (materials.has(materialKey)) {
-      return {
-        material: materials.get(materialKey)!,
-        materialKey,
-      }
+  if (textureData.type === 'vanilla' || textureData.playerHead.baked) {
+    // 동시에 여러 번 로딩하지 않도록 key값을 기준으로 lock을 구현
+    if (!materialLoadMutexMap.has(materialKey)) {
+      materialLoadMutexMap.set(materialKey, new Mutex())
     }
+    const mutex = materialLoadMutexMap.get(materialKey)!
+    return await mutex.runExclusive(async () => {
+      // check for cached
+      const { materials } = useClassObjectCacheStore.getState()
+      if (materials.has(materialKey)) {
+        return {
+          material: materials.get(materialKey)!,
+          materialKey,
+        }
+      }
 
-    logger.log(`Loading material for ${materialKey}`)
+      const material = await makeMaterial(textureData, textureColor)
 
-    // process texture
-
-    const { dataUrl } = await loadTextureImage(textureData)
-    const texture = await new TextureLoader().loadAsync(dataUrl)
-    // 텍스쳐 픽셀끼리 뭉쳐져서 blur되어 보이지 않게 설정
-    // https://discourse.threejs.org/t/low-resolution-texture-is-very-blurry-how-can-i-get-around-this-issue/29948
-    // https://github.com/mrdoob/three.js/blob/37d6f280a5cd642e801469bb048f52300d31258e/examples/webgl_geometry_minecraft.html#L154
-    texture.magFilter = NearestFilter
-    // SRGB로 설정해야 텍스쳐에 하얀색 끼가 들어가지 않고 제대로 보임임
-    texture.colorSpace = 'srgb'
-
-    // create material object and cache it
-    const material = new MeshStandardMaterial({
-      map: texture,
-      transparent: true,
-      //  transparent일 경우 빈 공간을 transparent 처리하면 opacity=0이 되는데
-      //  alphaTest > 0 이어야 빈 공간이 실제로 렌더링되지 않음 (안 할 경우 빈 공간이 다른 mesh도 안보이게 만듬)
-      alphaTest: 0.01,
-      toneMapped: false, // 인게임에서는 블록이 실제 텍스쳐보다 덜 선명하게 렌더링됨
-      color: textureColor,
+      setMaterial(materialKey, material)
+      return { material, materialKey }
     })
-
-    setMaterial(materialKey, material)
+  } else {
+    // do not cache unbaked player_head texture
+    const material = await makeMaterial(textureData, textureColor)
     return { material, materialKey }
+  }
+}
+
+const textureLoader = new TextureLoader()
+async function makeMaterial(textureData: TextureData, textureColor: number) {
+  // process texture
+
+  const { dataUrl } = await loadTextureImage(textureData)
+  const texture = await textureLoader.loadAsync(dataUrl)
+  // 텍스쳐 픽셀끼리 뭉쳐져서 blur되어 보이지 않게 설정
+  // https://discourse.threejs.org/t/low-resolution-texture-is-very-blurry-how-can-i-get-around-this-issue/29948
+  // https://github.com/mrdoob/three.js/blob/37d6f280a5cd642e801469bb048f52300d31258e/examples/webgl_geometry_minecraft.html#L154
+  texture.magFilter = NearestFilter
+  // SRGB로 설정해야 텍스쳐에 하얀색 끼가 들어가지 않고 제대로 보임임
+  texture.colorSpace = 'srgb'
+
+  // create material object and cache it
+  const material = new MeshStandardMaterial({
+    map: texture,
+    transparent: true,
+    //  transparent일 경우 빈 공간을 transparent 처리하면 opacity=0이 되는데
+    //  alphaTest > 0 이어야 빈 공간이 실제로 렌더링되지 않음 (안 할 경우 빈 공간이 다른 mesh도 안보이게 만듬)
+    alphaTest: 0.01,
+    toneMapped: false, // 인게임에서는 블록이 실제 텍스쳐보다 덜 선명하게 렌더링됨
+    color: textureColor,
   })
+  return material
 }
 
 async function getTextureFileFromVersion(textureData: TextureData) {
@@ -129,14 +142,14 @@ export async function loadTextureImage(textureData: TextureData) {
   const textureFileFromVersion = await getTextureFileFromVersion(textureData)
   const textureKey =
     textureData.type === 'player_head'
-      ? `#player_head;${textureData.playerHeadTextureUrl.split('/').slice(-1)[0]}`
+      ? `#player_head;${textureData.playerHead.url.split('/').slice(-1)[0]}`
       : `${textureFileFromVersion};${textureData.resourceLocation}`
 
   let cachedCroppedTextureDataUrl = croppedTextureDataUrls[textureKey]
   if (cachedCroppedTextureDataUrl == null) {
     const img = await imageLoader.loadAsync(
       textureData.type === 'player_head'
-        ? textureData.playerHeadTextureUrl
+        ? textureData.playerHead.url
         : await AssetFileInfosCache.instance.makeFullFileUrl(
             `/assets/minecraft/textures/${textureData.resourceLocation}.png`,
           ),

@@ -81,6 +81,7 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
         thisEntityPlayerHeadProperties != null &&
         headPainterMode && (
           <PlayerHeadPainter
+            entityId={id}
             playerHeadProperties={thisEntityPlayerHeadProperties}
           />
         )}

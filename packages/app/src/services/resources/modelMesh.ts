@@ -91,13 +91,25 @@ export async function loadModelMaterials({
             ? {
                 // baked texture url
                 type: 'player_head',
-                playerHeadTextureUrl: playerHeadTextureData.url,
+                playerHead: {
+                  baked: true,
+                  url: playerHeadTextureData.url,
+                },
               }
-            : {
-                // not baked texture
-                type: 'vanilla',
-                resourceLocation: 'entity/player/slim/steve',
-              }
+            : playerHeadTextureData?.baked === false
+              ? {
+                  // unbaked texture data url
+                  type: 'player_head',
+                  playerHead: {
+                    baked: false,
+                    url: playerHeadTextureData.paintTexture,
+                  },
+                }
+              : {
+                  // fallback
+                  type: 'vanilla',
+                  resourceLocation: 'entity/player/slim/steve',
+                }
           : {
               // not player_head
               type: 'vanilla',
@@ -175,18 +187,30 @@ export async function loadModelMesh({
 
       const { material, materialKey } = await loadMaterial({
         textureData: isPlayerHead
-          ? playerHeadTextureData?.baked &&
+          ? playerHeadTextureData?.baked === true &&
             isValidTextureUrl(playerHeadTextureData.url)
             ? {
                 // baked texture url
                 type: 'player_head',
-                playerHeadTextureUrl: playerHeadTextureData.url,
+                playerHead: {
+                  baked: true,
+                  url: playerHeadTextureData.url,
+                },
               }
-            : {
-                // not baked texture
-                type: 'vanilla',
-                resourceLocation: 'entity/player/slim/steve',
-              }
+            : playerHeadTextureData?.baked === false
+              ? {
+                  // unbaked texture data url
+                  type: 'player_head',
+                  playerHead: {
+                    baked: false,
+                    url: playerHeadTextureData.paintTexture,
+                  },
+                }
+              : {
+                  // fallback
+                  type: 'vanilla',
+                  resourceLocation: 'entity/player/slim/steve',
+                }
           : {
               // not player_head
               type: 'vanilla',

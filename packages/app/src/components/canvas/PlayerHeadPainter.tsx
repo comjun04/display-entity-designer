@@ -3,6 +3,7 @@ import { type FC, useCallback } from 'react'
 import { ImageLoader, MathUtils } from 'three'
 
 import { loadTextureImage } from '@/services/resources/material'
+import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import type { ModelFaceKey, PlayerHeadProperties } from '@/types'
 
 const imageLoader = new ImageLoader()
@@ -12,10 +13,12 @@ function getPixelIntegerPos(pos: number) {
 }
 
 type PlayerHeadPainterProps = {
+  entityId: string
   playerHeadProperties: PlayerHeadProperties
 }
 
 const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
+  entityId,
   playerHeadProperties,
 }) => {
   const handlePaint = useCallback(
@@ -23,7 +26,6 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
       console.log(side, x, y)
 
       const f = async () => {
-        let paintTexture: string
         const textureData = playerHeadProperties.texture
 
         let image: HTMLImageElement
@@ -31,7 +33,10 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
           // load texture from cdn, and just load it to canvas
           ;({ image } = await loadTextureImage({
             type: 'player_head',
-            playerHeadTextureUrl: textureData.url,
+            playerHead: {
+              baked: true,
+              url: textureData.url,
+            },
           })) // no resource fromVersion required on player_head
         } else if (textureData?.baked === false) {
           // load texture dataurl from properties obj, load it to canvas
@@ -52,10 +57,60 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
         ctx.drawImage(image, 0, 0, 64, 16, 0, 0, 64, 16)
 
         // TODO: draw
+        let baseX: number
+        let baseY: number
+        switch (side) {
+          case 'up':
+            baseX = 16
+            baseY = 0
+            break
+
+          case 'down':
+            baseX = 24
+            baseY = 0
+            break
+
+          case 'west':
+            baseX = 0
+            baseY = 8
+            break
+
+          case 'south':
+            baseX = 8
+            baseY = 8
+            break
+
+          case 'east':
+            baseX = 16
+            baseY = 8
+            break
+
+          case 'north':
+            baseX = 24
+            baseY = 8
+            break
+        }
+
+        // TODO: ability to change color
+        const imgData = ctx.createImageData(1, 1)
+        imgData.data[0] = 255
+        imgData.data[1] = 255
+        imgData.data[2] = 255
+        imgData.data[3] = 255
+        ctx.putImageData(imgData, baseX + x, baseY + y)
+
+        useDisplayEntityStore
+          .getState()
+          .setItemDisplayPlayerHeadProperties(entityId, {
+            texture: {
+              baked: false,
+              paintTexture: canvas.toDataURL(),
+            },
+          })
       }
       f().catch(console.error)
     },
-    [playerHeadProperties],
+    [entityId, playerHeadProperties],
   )
 
   return (
@@ -74,7 +129,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
           onClick={(evt) => {
             const localPos = evt.object.worldToLocal(evt.point.clone())
             handlePaint(
-              'top',
+              'up',
               getPixelIntegerPos(localPos.x),
               getPixelIntegerPos(localPos.y),
             )
@@ -102,7 +157,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
           onClick={(evt) => {
             const localPos = evt.object.worldToLocal(evt.point.clone())
             handlePaint(
-              'bottom',
+              'down',
               getPixelIntegerPos(localPos.x),
               getPixelIntegerPos(localPos.y),
             )
@@ -130,7 +185,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
           onClick={(evt) => {
             const localPos = evt.object.worldToLocal(evt.point.clone())
             handlePaint(
-              'front',
+              'south',
               getPixelIntegerPos(localPos.x),
               getPixelIntegerPos(localPos.y),
             )
@@ -158,7 +213,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
           onClick={(evt) => {
             const localPos = evt.object.worldToLocal(evt.point.clone())
             handlePaint(
-              'back',
+              'north',
               getPixelIntegerPos(localPos.x),
               getPixelIntegerPos(localPos.y),
             )
