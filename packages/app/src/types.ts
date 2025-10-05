@@ -156,6 +156,7 @@ export interface PlayerHeadProperties {
       }
     | {
         baked: false
+        paintTexture: string // base64 string of texture
       }
     | null
 }
@@ -270,8 +271,8 @@ export type BDEngineSaveDataItem = {
         Value: string
       }
       textureValueList?: string[] // maybe?
-      paintTexture?: unknown
-      defaultTextureValue?: string
+      paintTexture?: string // unbaked texture data url
+      defaultTextureValue?: string // baked texture url
     }
   | {
       isCollection: true

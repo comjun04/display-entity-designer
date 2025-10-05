@@ -20,16 +20,17 @@ const logger = getLogger('ResourceLoader/material')
 
 const materialLoadMutexMap = new Map<string, Mutex>()
 
+type TextureData =
+  | {
+      type: 'vanilla'
+      resourceLocation: string
+    }
+  | {
+      type: 'player_head'
+      playerHeadTextureUrl: string
+    }
 export type LoadMaterialArgs = {
-  textureData:
-    | {
-        type: 'vanilla'
-        resourceLocation: string
-      }
-    | {
-        type: 'player_head'
-        playerHeadTextureUrl: string
-      }
+  textureData: TextureData
   modelResourceLocation: string
   textureLayer?: string
   tintindex?: number
@@ -41,8 +42,6 @@ export async function loadMaterial({
   textureLayer,
   tintindex,
 }: LoadMaterialArgs) {
-  const { croppedTextureDataUrls, setCroppedTextureDataUrl } =
-    useCacheStore.getState()
   const { setMaterial } = useClassObjectCacheStore.getState()
 
   const { targetGameVersion } = useProjectStore.getState()
@@ -53,27 +52,11 @@ export async function loadMaterial({
     tintindex,
   )
 
-  let textureFileFromVersion = ''
-  if (textureData.type === 'vanilla') {
-    const assetFileInfo = await AssetFileInfosCache.instance.fetchFileInfo(
-      `/assets/minecraft/textures/${textureData.resourceLocation}.png`,
-    )
-    if (assetFileInfo == null) {
-      throw new Error(
-        `Cannot get info of texture asset file ${textureData.resourceLocation}`,
-      )
-    }
+  const textureFileFromVersion = await getTextureFileFromVersion(textureData)
 
-    textureFileFromVersion = assetFileInfo.fromVersion
-  }
-
-  const textureKey =
-    textureData.type === 'player_head'
-      ? `#player_head;${textureData.playerHeadTextureUrl.split('/').slice(-1)[0]}`
-      : `${textureFileFromVersion};${textureData.resourceLocation}`
   const materialKey =
     textureData.type === 'player_head'
-      ? textureKey
+      ? `#player_head;${textureData.playerHeadTextureUrl.split('/').slice(-1)[0]}` // same as textureKey
       : `${textureFileFromVersion};${textureData.resourceLocation};${textureColor}`
 
   // 동시에 여러 번 로딩하지 않도록 key값을 기준으로 lock을 구현
@@ -91,49 +74,12 @@ export async function loadMaterial({
       }
     }
 
-    logger.log(`Loading material for ${textureKey}`)
+    logger.log(`Loading material for ${materialKey}`)
 
     // process texture
 
-    let cachedCroppedTextureDataUrl = croppedTextureDataUrls[textureKey]
-    if (cachedCroppedTextureDataUrl == null) {
-      const img = await new ImageLoader().loadAsync(
-        textureData.type === 'player_head'
-          ? textureData.playerHeadTextureUrl
-          : await AssetFileInfosCache.instance.makeFullFileUrl(
-              `/assets/minecraft/textures/${textureData.resourceLocation}.png`,
-            ),
-      )
-
-      const canvas = document.createElement('canvas')
-      const ctx = canvas.getContext('2d')!
-
-      const { width } = img
-      canvas.width = width
-      // 애니메이션이 있는 블록들은 세로로 각 애니메이션 프레임을 붙여놨으므로
-      // 맨 처음 프레임만 잘라서 로드
-      canvas.height = width
-
-      ctx.drawImage(
-        img,
-        0,
-        0,
-        canvas.width,
-        canvas.height,
-        0,
-        0,
-        canvas.width,
-        canvas.height,
-      )
-
-      const croppedTextureDataUrl = canvas.toDataURL()
-      cachedCroppedTextureDataUrl = croppedTextureDataUrl
-      setCroppedTextureDataUrl(textureKey, croppedTextureDataUrl)
-    }
-
-    const texture = await new TextureLoader().loadAsync(
-      cachedCroppedTextureDataUrl,
-    )
+    const { dataUrl } = await loadTextureImage(textureData)
+    const texture = await new TextureLoader().loadAsync(dataUrl)
     // 텍스쳐 픽셀끼리 뭉쳐져서 blur되어 보이지 않게 설정
     // https://discourse.threejs.org/t/low-resolution-texture-is-very-blurry-how-can-i-get-around-this-issue/29948
     // https://github.com/mrdoob/three.js/blob/37d6f280a5cd642e801469bb048f52300d31258e/examples/webgl_geometry_minecraft.html#L154
@@ -155,4 +101,84 @@ export async function loadMaterial({
     setMaterial(materialKey, material)
     return { material, materialKey }
   })
+}
+
+async function getTextureFileFromVersion(textureData: TextureData) {
+  let textureFileFromVersion = ''
+  if (textureData.type === 'vanilla') {
+    const assetFileInfo = await AssetFileInfosCache.instance.fetchFileInfo(
+      `/assets/minecraft/textures/${textureData.resourceLocation}.png`,
+    )
+    if (assetFileInfo == null) {
+      throw new Error(
+        `Cannot get info of texture asset file ${textureData.resourceLocation}`,
+      )
+    }
+
+    textureFileFromVersion = assetFileInfo.fromVersion
+  }
+
+  return textureFileFromVersion
+}
+
+const imageLoader = new ImageLoader()
+export async function loadTextureImage(textureData: TextureData) {
+  const { croppedTextureDataUrls, setCroppedTextureDataUrl } =
+    useCacheStore.getState()
+
+  const textureFileFromVersion = await getTextureFileFromVersion(textureData)
+  const textureKey =
+    textureData.type === 'player_head'
+      ? `#player_head;${textureData.playerHeadTextureUrl.split('/').slice(-1)[0]}`
+      : `${textureFileFromVersion};${textureData.resourceLocation}`
+
+  let cachedCroppedTextureDataUrl = croppedTextureDataUrls[textureKey]
+  if (cachedCroppedTextureDataUrl == null) {
+    const img = await imageLoader.loadAsync(
+      textureData.type === 'player_head'
+        ? textureData.playerHeadTextureUrl
+        : await AssetFileInfosCache.instance.makeFullFileUrl(
+            `/assets/minecraft/textures/${textureData.resourceLocation}.png`,
+          ),
+    )
+
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')!
+
+    const { width } = img
+    canvas.width = width
+    // 애니메이션이 있는 블록들은 세로로 각 애니메이션 프레임을 붙여놨으므로
+    // 맨 처음 프레임만 잘라서 로드
+    canvas.height = width
+
+    ctx.drawImage(
+      img,
+      0,
+      0,
+      canvas.width,
+      canvas.height,
+      0,
+      0,
+      canvas.width,
+      canvas.height,
+    )
+
+    const croppedTextureDataUrl = canvas.toDataURL()
+    cachedCroppedTextureDataUrl = croppedTextureDataUrl
+    setCroppedTextureDataUrl(textureKey, croppedTextureDataUrl)
+
+    return {
+      image: img,
+      dataUrl: croppedTextureDataUrl,
+      textureFileFromVersion,
+    }
+  } else {
+    const img = new Image()
+    img.src = cachedCroppedTextureDataUrl
+    return {
+      image: img,
+      dataUrl: cachedCroppedTextureDataUrl,
+      textureFileFromVersion,
+    }
+  }
 }

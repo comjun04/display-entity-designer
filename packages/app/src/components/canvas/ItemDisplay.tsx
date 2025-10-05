@@ -1,7 +1,6 @@
-import { Grid } from '@react-three/drei'
 import type { ThreeEvent } from '@react-three/fiber'
 import { type FC, type MutableRefObject, memo, useRef } from 'react'
-import { Group, MathUtils } from 'three'
+import { Group } from 'three'
 import { useShallow } from 'zustand/shallow'
 
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
@@ -10,6 +9,7 @@ import { type Number3Tuple, isItemDisplayPlayerHead } from '@/types'
 
 import BoundingBox from './BoundingBox'
 import Model from './Model'
+import PlayerHeadPainter from './PlayerHeadPainter'
 
 type ItemDisplayProps = {
   id: string
@@ -77,189 +77,13 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
         />
       </group>
 
-      {thisEntityIsPlayerHead && headPainterMode && (
-        <>
-          {/* top */}
-          <group position={[0, 0.0001, 0]}>
-            <Grid
-              args={[0.5, 0.5]}
-              cellSize={0.5 / 8}
-              cellThickness={1}
-              cellColor="#ffffff"
-              sectionSize={0}
-            />
-            <mesh
-              rotation={[MathUtils.degToRad(-90), 0, MathUtils.degToRad(-90)]}
-              onClick={(evt) => {
-                const localPos = evt.object.worldToLocal(evt.point.clone())
-                console.log(
-                  Math.floor((localPos.x + 0.25) * 16),
-                  Math.floor((localPos.y + 0.25) * 16),
-                )
-                console.log('top', evt.object.worldToLocal(evt.point.clone()))
-              }}
-            >
-              <planeGeometry args={[0.5, 0.5]} />
-              <meshBasicMaterial transparent opacity={0} alphaTest={0.01} />
-            </mesh>
-          </group>
-
-          {/* bottom */}
-          <group
-            position={[0, -(0.5 + 0.0001), 0]}
-            rotation={[MathUtils.degToRad(180), 0, 0]}
-          >
-            <Grid
-              args={[0.5, 0.5]}
-              cellSize={0.5 / 8}
-              cellThickness={1}
-              cellColor="#ffffff"
-              sectionSize={0}
-            />
-            <mesh
-              rotation={[MathUtils.degToRad(-90), 0, 0]}
-              onClick={(evt) => {
-                const localPos = evt.object.worldToLocal(evt.point.clone())
-                console.log(
-                  Math.floor((localPos.x + 0.25) * 16),
-                  Math.floor((localPos.y + 0.25) * 16),
-                )
-                console.log(
-                  'bottom',
-                  evt.object.worldToLocal(evt.point.clone()),
-                )
-              }}
-            >
-              <planeGeometry args={[0.5, 0.5]} />
-              <meshBasicMaterial transparent opacity={0} alphaTest={0.01} />
-            </mesh>
-          </group>
-
-          {/* front (south) */}
-          <group
-            position={[0, -0.25, -(0.25 + 0.0001)]}
-            rotation={[MathUtils.degToRad(-90), 0, 0]}
-          >
-            <Grid
-              args={[0.5, 0.5]}
-              cellSize={0.5 / 8}
-              cellThickness={1}
-              cellColor="#ffffff"
-              sectionSize={0}
-            />
-            <mesh
-              rotation={[MathUtils.degToRad(-90), 0, MathUtils.degToRad(90)]}
-              onClick={(evt) => {
-                const localPos = evt.object.worldToLocal(evt.point.clone())
-                console.log(
-                  Math.floor((localPos.x + 0.25) * 16),
-                  Math.floor((localPos.y + 0.25) * 16),
-                )
-                console.log('front', evt.object.worldToLocal(evt.point.clone()))
-              }}
-            >
-              <planeGeometry args={[0.5, 0.5]} />
-              <meshBasicMaterial transparent opacity={0} alphaTest={0.01} />
-            </mesh>
-          </group>
-
-          {/* back (north) */}
-          <group
-            position={[0, -0.25, 0.25 + 0.0001]}
-            rotation={[MathUtils.degToRad(90), 0, 0]}
-          >
-            <Grid
-              args={[0.5, 0.5]}
-              cellSize={0.5 / 8}
-              cellThickness={1}
-              cellColor="#ffffff"
-              sectionSize={0}
-            />
-            <mesh
-              rotation={[MathUtils.degToRad(-90), 0, MathUtils.degToRad(-90)]}
-              onClick={(evt) => {
-                const localPos = evt.object.worldToLocal(evt.point.clone())
-                console.log(
-                  Math.floor((localPos.x + 0.25) * 16),
-                  Math.floor((localPos.y + 0.25) * 16),
-                )
-                console.log(
-                  'back',
-                  evt.point,
-                  evt.object.worldToLocal(evt.point.clone()),
-                )
-              }}
-            >
-              <planeGeometry args={[0.5, 0.5]} />
-              <meshBasicMaterial transparent opacity={0} alphaTest={0.01} />
-            </mesh>
-          </group>
-
-          {/* east */}
-          <group
-            position={[0.25 + 0.0001, -0.25, 0]}
-            rotation={[0, 0, MathUtils.degToRad(-90)]}
-          >
-            <Grid
-              args={[0.5, 0.5]}
-              cellSize={0.5 / 8}
-              cellThickness={1}
-              cellColor="#ffffff"
-              sectionSize={0}
-            />
-            <mesh
-              rotation={[MathUtils.degToRad(-90), 0, 0]}
-              onClick={(evt) => {
-                const localPos = evt.object.worldToLocal(evt.point.clone())
-                console.log(
-                  Math.floor((localPos.x + 0.25) * 16),
-                  Math.floor((localPos.y + 0.25) * 16),
-                )
-                console.log(
-                  'east',
-                  evt.point,
-                  evt.object.worldToLocal(evt.point.clone()),
-                )
-              }}
-            >
-              <planeGeometry args={[0.5, 0.5]} />
-              <meshBasicMaterial transparent opacity={0} alphaTest={0.01} />
-            </mesh>
-          </group>
-
-          {/* west */}
-          <group
-            position={[-(0.25 + 0.0001), -0.25, 0]}
-            rotation={[0, 0, MathUtils.degToRad(90)]}
-          >
-            <Grid
-              args={[0.5, 0.5]}
-              cellSize={0.5 / 8}
-              cellThickness={1}
-              cellColor="#ffffff"
-              sectionSize={0}
-            />
-            <mesh
-              rotation={[MathUtils.degToRad(-90), 0, MathUtils.degToRad(180)]}
-              onClick={(evt) => {
-                const localPos = evt.object.worldToLocal(evt.point.clone())
-                console.log(
-                  Math.floor((localPos.x + 0.25) * 16),
-                  Math.floor((localPos.y + 0.25) * 16),
-                )
-                console.log(
-                  'west',
-                  evt.point,
-                  evt.object.worldToLocal(evt.point.clone()),
-                )
-              }}
-            >
-              <planeGeometry args={[0.5, 0.5]} />
-              <meshBasicMaterial transparent opacity={0} alphaTest={0.01} />
-            </mesh>
-          </group>
-        </>
-      )}
+      {thisEntityIsPlayerHead &&
+        thisEntityPlayerHeadProperties != null &&
+        headPainterMode && (
+          <PlayerHeadPainter
+            playerHeadProperties={thisEntityPlayerHeadProperties}
+          />
+        )}
     </object3D>
   )
 }

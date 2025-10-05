@@ -1,5 +1,11 @@
 # Save file format changelog
 
+### Version `6`
+
+- Breaking change to `playerHeadProperties.texture` property if entity kind `item`
+  - Add unbaked texture data as data url to `texture.paintTexture` (only exist when `texture.baked` === `false`)
+  - Now `texture` must be null if neither baked or unbaked texture exist (previous versions set `texture.baked` to `false` on this case)
+
 ### Version `5`
 
 - Add `name` in `DisplayEntityGroup` (group name)

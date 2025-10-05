@@ -200,9 +200,7 @@ export const useDisplayEntityStore = create(
                 param.playerHeadProperties != null
                   ? param.playerHeadProperties
                   : {
-                      texture: {
-                        baked: false,
-                      },
+                      texture: null,
                     }
             }
           } else if (param.kind === 'text') {
@@ -805,13 +803,20 @@ export const useDisplayEntityStore = create(
                 // is player_head
                 entity.playerHeadProperties =
                   item.playerHeadProperties as PlayerHeadProperties
+
+                // savedata v5 -> v6
+                const { texture: textureData } = entity.playerHeadProperties
+                if (
+                  textureData?.baked === false &&
+                  textureData.paintTexture == null
+                ) {
+                  entity.playerHeadProperties.texture = null
+                }
               } else {
-                // savefile v1 -> v2
+                // savedata v1 -> v2
                 // fill default playerHeadProperties if not exist
                 entity.playerHeadProperties = {
-                  texture: {
-                    baked: false,
-                  },
+                  texture: null,
                 }
               }
             }
@@ -953,9 +958,12 @@ export const useDisplayEntityStore = create(
                         baked: true,
                         url: textureUrl,
                       }
-                    : {
-                        baked: false,
-                      },
+                    : item.paintTexture != null
+                      ? {
+                          baked: false,
+                          paintTexture: item.paintTexture,
+                        }
+                      : null,
               }
             }
           } else if ('isTextDisplay' in item && item.isTextDisplay) {

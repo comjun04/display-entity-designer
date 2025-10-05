@@ -27,7 +27,7 @@ interface DisplayEntitySaveData_V4 extends DisplayEntitySaveData_V3 {
 type DisplayEntitySaveData_Latest = DisplayEntitySaveData_V4
 
 const FILE_MAGIC = 'DEPL'
-const FILE_VERSION = 5
+const FILE_VERSION = 6
 
 const fileVersionArrayBuffer = new ArrayBuffer(4)
 const fileVersionDataView = new DataView(fileVersionArrayBuffer)
