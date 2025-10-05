@@ -23,7 +23,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
 }) => {
   const handlePaint = useCallback(
     (side: ModelFaceKey, x: number, y: number) => {
-      console.log(side, x, y)
+      // console.log(side, x, y)
 
       const f = async () => {
         const textureData = playerHeadProperties.texture
@@ -56,21 +56,21 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
         const ctx = canvas.getContext('2d')!
         ctx.drawImage(image, 0, 0, 64, 16, 0, 0, 64, 16)
 
-        // TODO: draw
+        // draw
         let baseX: number
         let baseY: number
         switch (side) {
           case 'up':
-            baseX = 16
+            baseX = 8
             baseY = 0
             break
 
           case 'down':
-            baseX = 24
+            baseX = 16
             baseY = 0
             break
 
-          case 'west':
+          case 'east':
             baseX = 0
             baseY = 8
             break
@@ -80,7 +80,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
             baseY = 8
             break
 
-          case 'east':
+          case 'west':
             baseX = 16
             baseY = 8
             break
@@ -91,13 +91,15 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
             break
         }
 
+        const shouldFlipY = side !== 'down'
+
         // TODO: ability to change color
         const imgData = ctx.createImageData(1, 1)
         imgData.data[0] = 255
         imgData.data[1] = 255
         imgData.data[2] = 255
         imgData.data[3] = 255
-        ctx.putImageData(imgData, baseX + x, baseY + y)
+        ctx.putImageData(imgData, baseX + x, baseY + (shouldFlipY ? 7 - y : y))
 
         useDisplayEntityStore
           .getState()
@@ -125,7 +127,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
           sectionSize={0}
         />
         <mesh
-          rotation={[MathUtils.degToRad(-90), 0, MathUtils.degToRad(-90)]}
+          rotation={[MathUtils.degToRad(-90), 0, MathUtils.degToRad(180)]}
           onClick={(evt) => {
             const localPos = evt.object.worldToLocal(evt.point.clone())
             handlePaint(
@@ -153,7 +155,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
           sectionSize={0}
         />
         <mesh
-          rotation={[MathUtils.degToRad(-90), 0, 0]}
+          rotation={[MathUtils.degToRad(-90), 0, MathUtils.degToRad(180)]}
           onClick={(evt) => {
             const localPos = evt.object.worldToLocal(evt.point.clone())
             handlePaint(
@@ -181,7 +183,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
           sectionSize={0}
         />
         <mesh
-          rotation={[MathUtils.degToRad(-90), 0, MathUtils.degToRad(90)]}
+          rotation={[MathUtils.degToRad(-90), 0, MathUtils.degToRad(180)]}
           onClick={(evt) => {
             const localPos = evt.object.worldToLocal(evt.point.clone())
             handlePaint(
@@ -209,7 +211,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
           sectionSize={0}
         />
         <mesh
-          rotation={[MathUtils.degToRad(-90), 0, MathUtils.degToRad(-90)]}
+          rotation={[MathUtils.degToRad(-90), 0, MathUtils.degToRad(0)]}
           onClick={(evt) => {
             const localPos = evt.object.worldToLocal(evt.point.clone())
             handlePaint(
@@ -237,7 +239,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
           sectionSize={0}
         />
         <mesh
-          rotation={[MathUtils.degToRad(-90), 0, 0]}
+          rotation={[MathUtils.degToRad(-90), 0, MathUtils.degToRad(90)]}
           onClick={(evt) => {
             const localPos = evt.object.worldToLocal(evt.point.clone())
             handlePaint(
@@ -265,7 +267,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
           sectionSize={0}
         />
         <mesh
-          rotation={[MathUtils.degToRad(-90), 0, MathUtils.degToRad(180)]}
+          rotation={[MathUtils.degToRad(-90), 0, MathUtils.degToRad(-90)]}
           onClick={(evt) => {
             const localPos = evt.object.worldToLocal(evt.point.clone())
             handlePaint(
