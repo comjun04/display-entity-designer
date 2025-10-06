@@ -1,9 +1,20 @@
 import { invalidate } from '@react-three/fiber'
 import { type FC, useEffect, useRef, useState } from 'react'
-import { Euler, MathUtils, Matrix4, Mesh, Quaternion, Vector3 } from 'three'
+import {
+  Euler,
+  MathUtils,
+  Matrix4,
+  Mesh,
+  type MeshStandardMaterial,
+  NearestFilter,
+  Quaternion,
+  TextureLoader,
+  Vector3,
+} from 'three'
 
 import useModelData from '@/hooks/useModelData'
 import { getLogger } from '@/services/loggerService'
+import { makeMaterial } from '@/services/resources/material'
 import { loadModelMesh } from '@/services/resources/modelMesh'
 import { useProjectStore } from '@/stores/projectStore'
 import type {
@@ -34,6 +45,7 @@ const ReverseHalfBlockTranslatedMatrix = new Matrix4().makeTranslation(
 )
 
 const logger = getLogger('Model')
+const textureLoader = new TextureLoader()
 
 const Model: FC<ModelNewProps> = ({
   initialResourceLocation,
@@ -44,6 +56,9 @@ const Model: FC<ModelNewProps> = ({
 }) => {
   const mergedMeshRef = useRef<Mesh>()
   const [meshLoaded, setMeshLoaded] = useState(false)
+
+  const prevResourceLocationRef = useRef(initialResourceLocation)
+  const prevPlayerHeadTextureDataRef = useRef(playerHeadTextureData)
 
   const targetGameVersion = useProjectStore((state) => state.targetGameVersion)
 
@@ -56,12 +71,7 @@ const Model: FC<ModelNewProps> = ({
   }, [targetGameVersion])
 
   useEffect(() => {
-    setMeshLoaded(false)
-  }, [playerHeadTextureData])
-
-  useEffect(() => {
     if (modelDataTemp == null || modelDataLoading) return
-    if (meshLoaded) return
 
     const { data: modelData, isBlockShapedItemModel } = modelDataTemp
     const isItemModel = stripMinecraftPrefix(
@@ -69,6 +79,78 @@ const Model: FC<ModelNewProps> = ({
     ).startsWith('item/')
 
     const fn = async () => {
+      // handle player_head related modification
+      if (
+        meshLoaded &&
+        prevResourceLocationRef.current === initialResourceLocation &&
+        initialResourceLocation === 'item/player_head'
+      ) {
+        console.log(
+          'Attempting to process player_head instead of creating new mesh',
+        )
+
+        const prevPlayerHeadTextureData = prevPlayerHeadTextureDataRef.current
+        if (
+          prevPlayerHeadTextureData?.baked === false &&
+          playerHeadTextureData?.baked === false
+        ) {
+          // prev and current has unbaked texture
+          if (
+            prevPlayerHeadTextureData?.paintTexture !==
+            playerHeadTextureData.paintTexture
+          ) {
+            // unbaked texture has changed, update material texture
+            // console.log('just update material texture')
+            const newTexture = await textureLoader.loadAsync(
+              playerHeadTextureData.paintTexture,
+            )
+            newTexture.magFilter = NearestFilter
+            newTexture.colorSpace = 'srgb'
+
+            const material = mergedMeshRef.current!
+              .material as MeshStandardMaterial
+            const old = material.map
+            material.map = newTexture
+            old?.dispose()
+          }
+        } else {
+          // recreate material and attach
+          // materials using unbaked playerHead texture are not cached,
+          // so we should replace if changing unbaked one from or to baked one (baked playerHead texture or vanilla texture)
+          // console.log('recreate material and attach')
+
+          const newMaterial = await makeMaterial(
+            playerHeadTextureData != null
+              ? {
+                  type: 'player_head',
+                  playerHead: playerHeadTextureData.baked
+                    ? {
+                        baked: true,
+                        url: playerHeadTextureData.url,
+                      }
+                    : {
+                        baked: false,
+                        url: playerHeadTextureData.paintTexture,
+                      },
+                }
+              : {
+                  type: 'vanilla',
+                  resourceLocation: 'entity/player/slim/steve',
+                },
+            0xffffff,
+          )
+
+          const old = mergedMeshRef.current!.material as MeshStandardMaterial
+          mergedMeshRef.current!.material = newMaterial
+          old.dispose()
+        }
+
+        prevPlayerHeadTextureDataRef.current = playerHeadTextureData
+        return
+      }
+
+      if (meshLoaded) return
+
       setMeshLoaded(false)
 
       const loadedMesh = await loadModelMesh({
@@ -89,6 +171,9 @@ const Model: FC<ModelNewProps> = ({
         mergedMeshRef.current.geometry.dispose()
       }
       mergedMeshRef.current = loadedMesh
+      prevResourceLocationRef.current = initialResourceLocation
+      prevPlayerHeadTextureDataRef.current = playerHeadTextureData
+
       setMeshLoaded(true)
     }
 

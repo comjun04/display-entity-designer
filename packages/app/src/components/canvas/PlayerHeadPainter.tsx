@@ -52,7 +52,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
         // load it to canvas
         const canvas = document.createElement('canvas')
         canvas.width = 64
-        canvas.height = 16
+        canvas.height = 64
         const ctx = canvas.getContext('2d')!
         ctx.drawImage(image, 0, 0, 64, 16, 0, 0, 64, 16)
 

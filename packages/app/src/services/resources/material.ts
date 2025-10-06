@@ -91,7 +91,10 @@ export async function loadMaterial({
 }
 
 const textureLoader = new TextureLoader()
-async function makeMaterial(textureData: TextureData, textureColor: number) {
+export async function makeMaterial(
+  textureData: TextureData,
+  textureColor: number,
+) {
   // process texture
 
   const { dataUrl } = await loadTextureImage(textureData)
