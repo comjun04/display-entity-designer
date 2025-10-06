@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import { type FC, useEffect } from 'react'
 
 import Scene from './Scene'
 import Sidebar from './Sidebar'
@@ -16,6 +16,18 @@ import { queryClient } from './query.ts'
 import AutosaveService from './services/autosave'
 import { useDialogStore } from './stores/dialogStore'
 import { useEditorStore } from './stores/editorStore'
+import { useProjectStore } from './stores/projectStore.ts'
+
+const BrowserTitleHandler: FC = () => {
+  const projectName = useProjectStore((state) => state.projectName)
+  const projectDirty = useEditorStore((state) => state.projectDirty)
+
+  useEffect(() => {
+    document.title = `${projectDirty ? '⬤ ' : ''}${projectName} - Display Entity Platform`
+  }, [projectName, projectDirty])
+
+  return null
+}
 
 function App() {
   useEffect(() => {
@@ -64,6 +76,8 @@ function App() {
         <ItemDisplaySelectDialog />
         <ExportToMinecraftDialog />
       </div>
+
+      <BrowserTitleHandler />
     </QueryClientProvider>
   )
 }
