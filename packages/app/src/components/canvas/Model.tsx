@@ -85,9 +85,11 @@ const Model: FC<ModelNewProps> = ({
         prevResourceLocationRef.current === initialResourceLocation &&
         initialResourceLocation === 'item/player_head'
       ) {
+        /*
         console.log(
           'Attempting to process player_head instead of creating new mesh',
         )
+        */
 
         const prevPlayerHeadTextureData = prevPlayerHeadTextureDataRef.current
         if (
@@ -107,11 +109,13 @@ const Model: FC<ModelNewProps> = ({
             newTexture.magFilter = NearestFilter
             newTexture.colorSpace = 'srgb'
 
-            const material = mergedMeshRef.current!
-              .material as MeshStandardMaterial
+            const material = mergedMeshRef.current!.material as
+              | MeshStandardMaterial
+              | MeshStandardMaterial[] // Material | Material[]
             const old = material.map
             material.map = newTexture
-            old?.dispose()
+            if (Array.isArray(old)) old.forEach((d) => d.dispose())
+            else old?.dispose()
           }
         } else {
           // recreate material and attach
@@ -140,12 +144,16 @@ const Model: FC<ModelNewProps> = ({
             0xffffff,
           )
 
-          const old = mergedMeshRef.current!.material as MeshStandardMaterial
+          const old = mergedMeshRef.current!.material as
+            | MeshStandardMaterial
+            | MeshStandardMaterial[] // Material | Material[]
           mergedMeshRef.current!.material = newMaterial
-          old.dispose()
+          if (Array.isArray(old)) old.forEach((d) => d.dispose())
+          else old?.dispose()
         }
 
         prevPlayerHeadTextureDataRef.current = playerHeadTextureData
+        invalidate()
         return
       }
 
