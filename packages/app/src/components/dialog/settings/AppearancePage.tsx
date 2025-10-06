@@ -22,7 +22,7 @@ const AppearancePage: FC = () => {
       </h3>
 
       <div className="mt-4 flex flex-col gap-2">
-        <div className="text-lg font-bold">
+        <div className="text-lg font-semibold">
           {t(
             ($) =>
               $.dialog.settings.page.appearance.sections.quickActionPanel.title,
@@ -96,7 +96,7 @@ const AppearancePage: FC = () => {
           </div>
         </div>
 
-        <div className="mt-4 text-lg font-bold">
+        <div className="mt-4 text-lg font-semibold">
           {t(($) => $.dialog.settings.page.appearance.sections.gizmo.title)}
         </div>
         <div className="flex flex-row gap-4">
