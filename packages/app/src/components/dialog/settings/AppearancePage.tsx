@@ -99,7 +99,7 @@ const AppearancePage: FC = () => {
         <div className="mt-4 text-lg font-semibold">
           {t(($) => $.dialog.settings.page.appearance.sections.gizmo.title)}
         </div>
-        <div className="flex flex-row gap-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:gap-4">
           <div className="flex flex-row items-center gap-2">
             <label htmlFor="settings_appearance_gizmo_location">
               {t(
