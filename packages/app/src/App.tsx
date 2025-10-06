@@ -5,7 +5,7 @@ import Scene from './Scene'
 import Sidebar from './Sidebar'
 import LeftButtonPanel from './components/LeftButtonPanel'
 import MobileBottomButtonPanel from './components/MobileBottomButtonPanel'
-import TopButtonPanel from './components/TopButtonPanel'
+import QuickActionPanel from './components/QuickActionPanel.tsx'
 import BlockDisplaySelectDialog from './components/dialog/BlockDisplaySelectDialog'
 import ExportToMinecraftDialog from './components/dialog/ExportToMinecraftDialog'
 import ItemDisplaySelectDialog from './components/dialog/ItemDisplaySelectDialog'
@@ -51,7 +51,7 @@ function App() {
 
           {/* floating buttons */}
           <LeftButtonPanel />
-          <TopButtonPanel />
+          <QuickActionPanel />
           <MobileBottomButtonPanel />
         </div>
 

@@ -62,6 +62,41 @@
             "forceUnifont": "Unicode 폰트 (Unifont)를 강제로 적용"
           }
         },
+        "appearance": {
+          "title": "외관",
+          "sections": {
+            "quickActionPanel": {
+              "title": "빠른 작업 패널",
+              "options": {
+                "location": {
+                  "title": "위치",
+                  "values": {
+                    "top": "위",
+                    "bottom": "아래"
+                  }
+                },
+                "margin": {
+                  "title": "여백"
+                }
+              }
+            },
+            "gizmo": {
+              "title": "Gizmo",
+              "options": {
+                "location": {
+                  "title": "위치"
+                },
+                "margin": {
+                  "title": "여백",
+                  "subOptions": {
+                    "width": "가로",
+                    "height": "세로"
+                  }
+                }
+              }
+            }
+          }
+        },
         "performance": {
           "title": "성능",
           "options": {

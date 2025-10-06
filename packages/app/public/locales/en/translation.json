@@ -62,6 +62,41 @@
             "forceUnifont": "Force Unicode font (Unifont)"
           }
         },
+        "appearance": {
+          "title": "Appearance",
+          "sections": {
+            "quickActionPanel": {
+              "title": "Quick Action Panel",
+              "options": {
+                "location": {
+                  "title": "Location",
+                  "values": {
+                    "top": "Top",
+                    "bottom": "Bottom"
+                  }
+                },
+                "margin": {
+                  "title": "Margin"
+                }
+              }
+            },
+            "gizmo": {
+              "title": "Gizmo",
+              "options": {
+                "location": {
+                  "title": "Location"
+                },
+                "margin": {
+                  "title": "Margin",
+                  "subOptions": {
+                    "width": "Width",
+                    "height": "Height"
+                  }
+                }
+              }
+            }
+          }
+        },
         "performance": {
           "title": "Performance",
           "options": {
