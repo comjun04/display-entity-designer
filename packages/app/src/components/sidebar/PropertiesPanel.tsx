@@ -68,7 +68,7 @@ const BlockDisplayProperties: FC = () => {
           <div key={key} className="flex flex-row items-center gap-2">
             <label className="flex-1 text-end">{key}</label>
             <select
-              className="flex-[2] rounded bg-neutral-800 px-2 py-1"
+              className="flex-[1] rounded bg-neutral-800 px-2 py-1"
               value={singleSelectedEntity.blockstates[key]}
               onChange={(evt) => {
                 const { setBDEntityBlockstates } =
@@ -120,7 +120,7 @@ const ItemDisplayProperties: FC = () => {
       <div className="flex flex-row items-center gap-2">
         <label className="flex-1 text-end">display</label>
         <select
-          className="flex-[2] rounded bg-neutral-800 px-2 py-1"
+          className="flex-1 rounded bg-neutral-800 px-2 py-1"
           value={singleSelectedEntity.display ?? 'none'}
           onChange={(evt) => {
             const { setEntityDisplayType } = useDisplayEntityStore.getState()
@@ -291,7 +291,7 @@ const TextDisplayProperties: FC = () => {
       <div className="flex flex-row items-center gap-2">
         <label className="flex-1 text-end">text</label>
         <textarea
-          className="min-h-24 min-w-0 flex-[2] rounded bg-neutral-800 py-1 pl-1 text-xs outline-none"
+          className="min-h-24 min-w-0 flex-1 rounded bg-neutral-800 py-1 pl-1 text-xs outline-none"
           value={singleSelectedEntity.text}
           onChange={(evt) => {
             useDisplayEntityStore
@@ -305,7 +305,7 @@ const TextDisplayProperties: FC = () => {
       <div className="flex flex-row items-center gap-2">
         <label className="flex-1 text-end">text color</label>
         <ColorPickerInput
-          className="flex-[2]"
+          className="flex-1"
           mode="rgb"
           value={singleSelectedEntity.textColor}
           onValueChange={(num) => {
@@ -322,7 +322,7 @@ const TextDisplayProperties: FC = () => {
         <input
           type="number"
           min={0}
-          className="min-w-0 flex-[2] rounded bg-neutral-800 py-1 pl-1 text-xs outline-none"
+          className="min-w-0 flex-1 rounded bg-neutral-800 py-1 pl-1 text-xs outline-none"
           value={singleSelectedEntity.lineWidth}
           onChange={(evt) => {
             const value = parseInt(evt.target.value)
@@ -339,7 +339,7 @@ const TextDisplayProperties: FC = () => {
       <div className="flex flex-row items-center gap-2">
         <label className="flex-1 text-end">alignment</label>
         <select
-          className="flex-[2] rounded bg-neutral-800 px-2 py-1"
+          className="flex-1 rounded bg-neutral-800 px-2 py-1"
           value={singleSelectedEntity.alignment}
           onChange={(evt) => {
             useDisplayEntityStore
@@ -358,7 +358,7 @@ const TextDisplayProperties: FC = () => {
       <div className="flex flex-row items-center gap-2">
         <label className="flex-1 text-end">background_color</label>
         <ColorPickerInput
-          className="flex-[2]"
+          className="flex-1"
           mode="argb"
           value={singleSelectedEntity.backgroundColor}
           onValueChange={(num) => {
@@ -372,7 +372,7 @@ const TextDisplayProperties: FC = () => {
       </div>
       <div className="flex flex-row items-center gap-2">
         <label className="flex-1 text-end">default_background</label>
-        <div className="flex-[2]">
+        <div className="flex-1">
           <Switch
             checked={singleSelectedEntity.defaultBackground}
             onChange={(value) => {
@@ -387,7 +387,7 @@ const TextDisplayProperties: FC = () => {
       </div>
       <div className="flex flex-row items-center gap-2">
         <label className="flex-1 text-end">see_through</label>
-        <div className="flex-[2]">
+        <div className="flex-1">
           <Switch
             checked={singleSelectedEntity.seeThrough}
             onChange={(value) => {
@@ -402,7 +402,7 @@ const TextDisplayProperties: FC = () => {
       </div>
       <div className="flex flex-row items-center gap-2">
         <label className="flex-1 text-end">shadow</label>
-        <div className="flex-[2]">
+        <div className="flex-1">
           <Switch
             checked={singleSelectedEntity.shadow}
             onChange={(value) => {
@@ -421,7 +421,7 @@ const TextDisplayProperties: FC = () => {
           type="number"
           min={0}
           max={255}
-          className="min-w-0 flex-[2] rounded bg-neutral-800 py-1 pl-1 text-xs outline-none"
+          className="min-w-0 flex-1 rounded bg-neutral-800 py-1 pl-1 text-xs outline-none"
           value={singleSelectedEntity.textOpacity}
           onChange={(evt) => {
             const value = parseInt(evt.target.value)
@@ -558,7 +558,7 @@ const GroupProperties: FC = () => {
           )}
         </label>
         <input
-          className="min-w-0 shrink rounded bg-neutral-800 py-1 pl-1 text-xs outline-none"
+          className="min-w-0 flex-1 shrink rounded bg-neutral-800 py-1 pl-1 text-xs outline-none"
           value={singleSelectedEntity.name}
           onChange={(evt) => {
             useDisplayEntityStore
@@ -589,7 +589,7 @@ const ProjectProperties: FC = () => {
       </div>
 
       <div className="flex flex-row items-center gap-2">
-        <label className="flex-1 text-end">
+        <label className="flex-1">
           {t(
             ($) =>
               $.sidebar.propertiesPanel.sections.project.properties.projectName
@@ -597,7 +597,7 @@ const ProjectProperties: FC = () => {
           )}
         </label>
         <input
-          className="min-w-0 shrink rounded bg-neutral-800 py-1 pl-1 text-xs outline-none"
+          className="min-w-0 flex-1 shrink rounded bg-neutral-800 py-1 pl-1 text-xs outline-none"
           value={projectName}
           onChange={(evt) => {
             setProjectName(evt.target.value)
@@ -606,7 +606,7 @@ const ProjectProperties: FC = () => {
       </div>
 
       <div className="flex flex-row items-center gap-2">
-        <label className="flex-1 text-end">
+        <label className="flex-1">
           {t(
             ($) =>
               $.sidebar.propertiesPanel.sections.project.properties
@@ -614,7 +614,7 @@ const ProjectProperties: FC = () => {
           )}
         </label>
         <select
-          className="flex-[2] rounded bg-neutral-800 px-2 py-1"
+          className="flex-1 rounded bg-neutral-800 px-2 py-1"
           value={targetGameVersion}
           onChange={(evt) => {
             const gameVersionData = GameVersions.find(
