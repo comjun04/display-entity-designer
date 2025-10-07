@@ -23,7 +23,7 @@ const BrowserTitleHandler: FC = () => {
   const projectDirty = useEditorStore((state) => state.projectDirty)
 
   useEffect(() => {
-    document.title = `${projectDirty ? '⬤ ' : ''}${projectName} - Display Entity Platform`
+    document.title = `${projectDirty ? '● ' : ''}${projectName} - Display Entity Platform`
   }, [projectName, projectDirty])
 
   return null
