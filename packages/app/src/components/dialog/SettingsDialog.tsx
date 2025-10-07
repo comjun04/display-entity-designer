@@ -49,8 +49,8 @@ const SettingsDialog: FC = () => {
     >
       <div className="flex h-full w-full flex-col sm:flex-row">
         {/* Desktop - left side settings submenu list */}
-        <div className="hidden w-[30%] border-r-2 border-neutral-700 p-4 sm:block">
-          <div className="mt-2 flex flex-col gap-1">
+        <div className="hidden w-[30%] border-r-2 border-neutral-700 px-4 sm:block">
+          <div className="flex flex-col gap-1">
             <button
               className={cn(
                 'w-full rounded px-2 py-1 text-start text-sm transition duration-150',
@@ -155,7 +155,7 @@ const SettingsDialog: FC = () => {
           </select>
         </div>
 
-        <div className="h-full w-full py-4 sm:px-4">
+        <div className="h-full w-full pt-4 sm:px-4 sm:pt-0">
           {/* General */}
           {selectedPage === 'general' && <GeneralPage />}
 
