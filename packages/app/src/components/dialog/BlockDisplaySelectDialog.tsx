@@ -31,7 +31,7 @@ const BlockDisplaySelectDialog: FC = () => {
 
   const closeDialog = () => setOpenedDialog(null)
 
-  const { data: blocksListResponse } = useQuery({
+  const { data: blocksListResponse, isLoading } = useQuery({
     queryKey: ['blocks.json', targetGameVersion],
     queryFn: firstOpened ? getBlockListQueryFn : skipToken,
     staleTime: Infinity,
@@ -77,6 +77,16 @@ const BlockDisplaySelectDialog: FC = () => {
             {block}
           </button>
         ))}
+
+        {isLoading &&
+          Array(15)
+            .fill(0)
+            .map((_, idx) => (
+              <div
+                key={idx}
+                className="h-6 w-full animate-pulse rounded-lg bg-neutral-700"
+              />
+            ))}
       </div>
     </Dialog>
   )

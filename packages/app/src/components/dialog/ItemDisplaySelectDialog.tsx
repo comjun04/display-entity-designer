@@ -31,7 +31,7 @@ const ItemDisplaySelectDialog: FC = () => {
 
   const closeDialog = () => setOpenedDialog(null)
 
-  const { data: itemListResponse } = useQuery({
+  const { data: itemListResponse, isLoading } = useQuery({
     queryKey: ['items.json', targetGameVersion],
     queryFn: firstOpened ? getItemListQueryFn : skipToken,
     staleTime: Infinity,
@@ -78,6 +78,16 @@ const ItemDisplaySelectDialog: FC = () => {
             {item}
           </button>
         ))}
+
+        {isLoading &&
+          Array(15)
+            .fill(0)
+            .map((_, idx) => (
+              <div
+                key={idx}
+                className="h-6 w-full animate-pulse rounded-lg bg-neutral-700"
+              />
+            ))}
       </div>
     </Dialog>
   )
