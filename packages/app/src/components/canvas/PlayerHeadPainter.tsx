@@ -4,6 +4,7 @@ import { ImageLoader, MathUtils } from 'three'
 
 import { loadTextureImage } from '@/services/resources/material'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
+import { useEditorStore } from '@/stores/editorStore'
 import type { ModelFaceKey, PlayerHeadProperties } from '@/types'
 
 const imageLoader = new ImageLoader()
@@ -115,6 +116,20 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
     [entityId, playerHeadProperties],
   )
 
+  const handlePointerDown = useCallback(() => {
+    console.log('pointerdown')
+    useEditorStore.getState().setHeadPainting(true)
+  }, [])
+  const handlePointerMove = useCallback(
+    (face: ModelFaceKey, x: number, y: number) => {
+      const { headPainting } = useEditorStore.getState()
+      if (headPainting) {
+        handlePaint(face, x, y)
+      }
+    },
+    [],
+  )
+
   return (
     <>
       {/* top */}
@@ -131,6 +146,15 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
           onClick={(evt) => {
             const localPos = evt.object.worldToLocal(evt.point.clone())
             handlePaint(
+              'up',
+              getPixelIntegerPos(localPos.x),
+              getPixelIntegerPos(localPos.y),
+            )
+          }}
+          onPointerDown={handlePointerDown}
+          onPointerMove={(evt) => {
+            const localPos = evt.object.worldToLocal(evt.point.clone())
+            handlePointerMove(
               'up',
               getPixelIntegerPos(localPos.x),
               getPixelIntegerPos(localPos.y),
@@ -164,6 +188,15 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
               getPixelIntegerPos(localPos.y),
             )
           }}
+          onPointerDown={handlePointerDown}
+          onPointerMove={(evt) => {
+            const localPos = evt.object.worldToLocal(evt.point.clone())
+            handlePointerMove(
+              'down',
+              getPixelIntegerPos(localPos.x),
+              getPixelIntegerPos(localPos.y),
+            )
+          }}
         >
           <planeGeometry args={[0.5, 0.5]} />
           <meshBasicMaterial transparent opacity={0} alphaTest={0.01} />
@@ -187,6 +220,15 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
           onClick={(evt) => {
             const localPos = evt.object.worldToLocal(evt.point.clone())
             handlePaint(
+              'south',
+              getPixelIntegerPos(localPos.x),
+              getPixelIntegerPos(localPos.y),
+            )
+          }}
+          onPointerDown={handlePointerDown}
+          onPointerMove={(evt) => {
+            const localPos = evt.object.worldToLocal(evt.point.clone())
+            handlePointerMove(
               'south',
               getPixelIntegerPos(localPos.x),
               getPixelIntegerPos(localPos.y),
@@ -220,6 +262,15 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
               getPixelIntegerPos(localPos.y),
             )
           }}
+          onPointerDown={handlePointerDown}
+          onPointerMove={(evt) => {
+            const localPos = evt.object.worldToLocal(evt.point.clone())
+            handlePointerMove(
+              'north',
+              getPixelIntegerPos(localPos.x),
+              getPixelIntegerPos(localPos.y),
+            )
+          }}
         >
           <planeGeometry args={[0.5, 0.5]} />
           <meshBasicMaterial transparent opacity={0} alphaTest={0.01} />
@@ -248,6 +299,15 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
               getPixelIntegerPos(localPos.y),
             )
           }}
+          onPointerDown={handlePointerDown}
+          onPointerMove={(evt) => {
+            const localPos = evt.object.worldToLocal(evt.point.clone())
+            handlePointerMove(
+              'east',
+              getPixelIntegerPos(localPos.x),
+              getPixelIntegerPos(localPos.y),
+            )
+          }}
         >
           <planeGeometry args={[0.5, 0.5]} />
           <meshBasicMaterial transparent opacity={0} alphaTest={0.01} />
@@ -271,6 +331,15 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
           onClick={(evt) => {
             const localPos = evt.object.worldToLocal(evt.point.clone())
             handlePaint(
+              'west',
+              getPixelIntegerPos(localPos.x),
+              getPixelIntegerPos(localPos.y),
+            )
+          }}
+          onPointerDown={handlePointerDown}
+          onPointerMove={(evt) => {
+            const localPos = evt.object.worldToLocal(evt.point.clone())
+            handlePointerMove(
               'west',
               getPixelIntegerPos(localPos.x),
               getPixelIntegerPos(localPos.y),

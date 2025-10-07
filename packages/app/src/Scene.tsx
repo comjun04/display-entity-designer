@@ -4,7 +4,7 @@ import {
   Grid,
   PerspectiveCamera,
 } from '@react-three/drei'
-import { Canvas, invalidate } from '@react-three/fiber'
+import { Canvas, invalidate, useThree } from '@react-three/fiber'
 import { type FC, Suspense, lazy, useEffect, useRef } from 'react'
 import { Color, DoubleSide } from 'three'
 
@@ -17,6 +17,45 @@ import { useDisplayEntityStore } from './stores/displayEntityStore'
 import { useEditorStore } from './stores/editorStore'
 
 const Perf = lazy(() => import('./components/Perf'))
+
+const InsideCanvas: FC = () => {
+  const headPainting = useEditorStore((state) => state.headPainting)
+
+  const controls = useThree((state) => state.controls)
+  const oldControlsEnabledRef = useRef<boolean>((controls as any)?.enabled)
+
+  useEffect(() => {
+    if (headPainting) {
+      if (controls != null) {
+        oldControlsEnabledRef.current = (controls as any).enabled
+        ;(controls as any).enabled = false
+      }
+    } else {
+      // only change when controls are disabled
+      // to prevent disabling controls on first render
+      if (controls != null && !(controls as any).enabled) {
+        ;(controls as any).enabled = oldControlsEnabledRef.current
+      }
+    }
+  }, [headPainting, controls])
+
+  useEffect(() => {
+    const fn = () => {
+      useEditorStore.getState().setHeadPainting(false)
+    }
+
+    if (headPainting) {
+      document.addEventListener('pointerup', fn)
+    } else {
+      document.removeEventListener('pointerup', fn)
+    }
+    return () => {
+      document.removeEventListener('pointerup', fn)
+    }
+  }, [headPainting])
+
+  return null
+}
 
 const Scene: FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -71,6 +110,8 @@ const Scene: FC = () => {
         }
       }}
     >
+      <InsideCanvas />
+
       {/* Axis lines */}
       <line>
         <bufferGeometry>
