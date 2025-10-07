@@ -41,15 +41,15 @@ const SettingsDialog: FC = () => {
       open={isOpen}
       onClose={closeDialog}
       backdropClassName={cn(
-        selectedPage === 'appearance' && 'xs:backdrop-blur-none',
+        selectedPage === 'appearance' && 'sm:backdrop-blur-none',
       )}
       innerPanelClassName={cn(
         selectedPage === 'appearance' && 'bg-neutral-800/60',
       )}
     >
-      <div className="flex h-full w-full flex-col xs:flex-row">
+      <div className="flex h-full w-full flex-col sm:flex-row">
         {/* Desktop - left side settings submenu list */}
-        <div className="hidden w-[30%] border-r-2 border-neutral-700 p-4 xs:block">
+        <div className="hidden w-[30%] border-r-2 border-neutral-700 p-4 sm:block">
           <div className="mt-2 flex flex-col gap-1">
             <button
               className={cn(
@@ -125,7 +125,7 @@ const SettingsDialog: FC = () => {
           </div>
         </div>
         {/* Mobile - submenu <select> element on top */}
-        <div className="xs:hidden">
+        <div className="sm:hidden">
           <select
             className="w-full rounded bg-neutral-900 p-2"
             value={selectedPage}
@@ -155,7 +155,7 @@ const SettingsDialog: FC = () => {
           </select>
         </div>
 
-        <div className="h-full w-full py-4 xs:px-4">
+        <div className="h-full w-full py-4 sm:px-4">
           {/* General */}
           {selectedPage === 'general' && <GeneralPage />}
 

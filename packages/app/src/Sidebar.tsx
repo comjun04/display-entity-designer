@@ -55,8 +55,8 @@ const Sidebar: FC = () => {
 
       <div
         className={cn(
-          'fixed right-0 top-0 z-50 h-full w-full max-w-[300px] bg-neutral-800 p-2 transition duration-200 ease-out xs:relative xs:max-w-none',
-          !mobileSidebarOpened && 'translate-x-full xs:translate-x-0',
+          'fixed right-0 top-0 z-50 h-full w-full max-w-[300px] bg-neutral-800 p-2 transition duration-200 ease-out sm:relative sm:max-w-none',
+          !mobileSidebarOpened && 'translate-x-full sm:translate-x-0',
         )}
         style={{
           width: desktopSidebarWidth,
