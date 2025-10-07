@@ -56,7 +56,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="relative h-full w-full overflow-hidden xs:flex xs:flex-row">
-        <div className="relative h-full w-full overflow-hidden">
+        <div className="relative h-full flex-1 overflow-hidden">
           {/* overflow-hidden is required to prevent child canvas width height from affecting parent div
               and correctly measure parent container size for canvas resizing */}
           <Scene />
