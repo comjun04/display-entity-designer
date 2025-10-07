@@ -7,6 +7,7 @@ import {
 import { Canvas, invalidate, useThree } from '@react-three/fiber'
 import { type FC, Suspense, lazy, useEffect, useRef } from 'react'
 import { Color, DoubleSide } from 'three'
+import { useShallow } from 'zustand/shallow'
 
 import CustomCameraControls from './CustomCameraControls'
 import DisplayentitiesRootGroup from './components/DisplayEntitiesRootGroup'
@@ -60,12 +61,14 @@ const InsideCanvas: FC = () => {
 const Scene: FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
-  const perfMonitorEnabled = useEditorStore(
-    (state) => state.settings.debug.perfMonitorEnabled,
-  )
-  const reducePixelRatio = useEditorStore(
-    (state) => state.settings.performance.reducePixelRatio,
-  )
+  const { perfMonitorEnabled, reducePixelRatio, headPainterMode } =
+    useEditorStore(
+      useShallow((state) => ({
+        perfMonitorEnabled: state.settings.debug.perfMonitorEnabled,
+        reducePixelRatio: state.settings.performance.reducePixelRatio,
+        headPainterMode: state.headPainterMode,
+      })),
+    )
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -163,6 +166,7 @@ const Scene: FC = () => {
       </PerspectiveCamera>
 
       <Grid
+        visible={!headPainterMode}
         cellSize={1 / 16}
         cellColor={0x777777}
         sectionColor={0x333333}
