@@ -1,6 +1,7 @@
 import { invalidate } from '@react-three/fiber'
 import { type FC, useEffect, useRef, useState } from 'react'
 import {
+  DataTexture,
   Euler,
   MathUtils,
   Matrix4,
@@ -8,7 +9,6 @@ import {
   type MeshStandardMaterial,
   NearestFilter,
   Quaternion,
-  TextureLoader,
   Vector3,
 } from 'three'
 
@@ -45,7 +45,6 @@ const ReverseHalfBlockTranslatedMatrix = new Matrix4().makeTranslation(
 )
 
 const logger = getLogger('Model')
-const textureLoader = new TextureLoader()
 
 const Model: FC<ModelNewProps> = ({
   initialResourceLocation,
@@ -98,14 +97,18 @@ const Model: FC<ModelNewProps> = ({
         ) {
           // prev and current has unbaked texture
           if (
-            prevPlayerHeadTextureData?.paintTexture !==
-            playerHeadTextureData.paintTexture
+            prevPlayerHeadTextureData?.paintTexturePixels !==
+            playerHeadTextureData.paintTexturePixels
           ) {
             // unbaked texture has changed, update material texture
             // console.log('just update material texture')
-            const newTexture = await textureLoader.loadAsync(
-              playerHeadTextureData.paintTexture,
+            const newTexture = new DataTexture(
+              new Uint8ClampedArray(playerHeadTextureData.paintTexturePixels),
+              64,
+              64,
             )
+            newTexture.needsUpdate = true
+            newTexture.flipY = true
             newTexture.magFilter = NearestFilter
             newTexture.colorSpace = 'srgb'
 
@@ -134,7 +137,8 @@ const Model: FC<ModelNewProps> = ({
                       }
                     : {
                         baked: false,
-                        url: playerHeadTextureData.paintTexture,
+                        paintTexturePixels:
+                          playerHeadTextureData.paintTexturePixels,
                       },
                 }
               : {

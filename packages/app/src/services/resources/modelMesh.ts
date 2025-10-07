@@ -102,7 +102,8 @@ export async function loadModelMaterials({
                   type: 'player_head',
                   playerHead: {
                     baked: false,
-                    url: playerHeadTextureData.paintTexture,
+                    paintTexturePixels:
+                      playerHeadTextureData.paintTexturePixels,
                   },
                 }
               : {
@@ -203,7 +204,8 @@ export async function loadModelMesh({
                   type: 'player_head',
                   playerHead: {
                     baked: false,
-                    url: playerHeadTextureData.paintTexture,
+                    paintTexturePixels:
+                      playerHeadTextureData.paintTexturePixels,
                   },
                 }
               : {

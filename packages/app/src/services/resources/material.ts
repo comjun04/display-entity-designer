@@ -1,8 +1,10 @@
 import { Mutex } from 'async-mutex'
 import {
+  DataTexture,
   ImageLoader,
   MeshStandardMaterial,
   NearestFilter,
+  type Texture,
   TextureLoader,
 } from 'three'
 
@@ -27,10 +29,15 @@ type TextureData =
     }
   | {
       type: 'player_head'
-      playerHead: {
-        baked: boolean
-        url: string
-      }
+      playerHead:
+        | {
+            baked: true
+            url: string
+          }
+        | {
+            baked: false
+            paintTexturePixels: number[]
+          }
     }
 export type LoadMaterialArgs = {
   textureData: TextureData
@@ -55,14 +62,20 @@ export async function loadMaterial({
     tintindex,
   )
 
-  const textureFileFromVersion = await getTextureFileFromVersion(textureData)
-
-  const materialKey =
-    textureData.type === 'player_head'
-      ? `#player_head;${textureData.playerHead.url.split('/').slice(-1)[0]}` // same as textureKey
-      : `${textureFileFromVersion};${textureData.resourceLocation};${textureColor}`
-
   if (textureData.type === 'vanilla' || textureData.playerHead.baked) {
+    const textureFileFromVersion = await getTextureFileFromVersion(textureData)
+
+    let materialKey: string
+    if (textureData.type === 'player_head') {
+      if (textureData.playerHead.baked) {
+        materialKey = `#player_head;${textureData.playerHead.url!.split('/').slice(-1)[0]}` // same as textureKey
+      } else {
+        throw new Error('This should not happen')
+      }
+    } else {
+      materialKey = `${textureFileFromVersion};${textureData.resourceLocation};${textureColor}`
+    }
+
     // 동시에 여러 번 로딩하지 않도록 key값을 기준으로 lock을 구현
     if (!materialLoadMutexMap.has(materialKey)) {
       materialLoadMutexMap.set(materialKey, new Mutex())
@@ -86,7 +99,7 @@ export async function loadMaterial({
   } else {
     // do not cache unbaked player_head texture
     const material = await makeMaterial(textureData, textureColor)
-    return { material, materialKey }
+    return { material, materialKey: '' }
   }
 }
 
@@ -97,8 +110,20 @@ export async function makeMaterial(
 ) {
   // process texture
 
-  const { dataUrl } = await loadTextureImage(textureData)
-  const texture = await textureLoader.loadAsync(dataUrl)
+  let texture: Texture
+  if (textureData.type === 'player_head' && !textureData.playerHead.baked) {
+    texture = new DataTexture(
+      new Uint8ClampedArray(textureData.playerHead.paintTexturePixels),
+      64,
+      64,
+    )
+    texture.needsUpdate = true
+    texture.flipY = true
+  } else {
+    const { dataUrl } = await loadTextureImage(textureData)
+    texture = await textureLoader.loadAsync(dataUrl)
+  }
+
   // 텍스쳐 픽셀끼리 뭉쳐져서 blur되어 보이지 않게 설정
   // https://discourse.threejs.org/t/low-resolution-texture-is-very-blurry-how-can-i-get-around-this-issue/29948
   // https://github.com/mrdoob/three.js/blob/37d6f280a5cd642e801469bb048f52300d31258e/examples/webgl_geometry_minecraft.html#L154
@@ -139,24 +164,43 @@ async function getTextureFileFromVersion(textureData: TextureData) {
 
 const imageLoader = new ImageLoader()
 export async function loadTextureImage(textureData: TextureData) {
+  if (textureData.type === 'player_head' && !textureData.playerHead.baked) {
+    throw new Error(
+      'Loading unbaked player_head texture is not supported. Consider using raw pixel array.',
+    )
+  }
+
   const { croppedTextureDataUrls, setCroppedTextureDataUrl } =
     useCacheStore.getState()
 
   const textureFileFromVersion = await getTextureFileFromVersion(textureData)
-  const textureKey =
-    textureData.type === 'player_head'
-      ? `#player_head;${textureData.playerHead.url.split('/').slice(-1)[0]}`
-      : `${textureFileFromVersion};${textureData.resourceLocation}`
+  let textureKey: string
+  if (textureData.type === 'player_head') {
+    if (textureData.playerHead.baked) {
+      textureKey = `#player_head;${textureData.playerHead.url.split('/').slice(-1)[0]}`
+    } else {
+      throw new Error('This should not happen')
+    }
+  } else {
+    textureKey = `${textureFileFromVersion};${textureData.resourceLocation}`
+  }
 
   let cachedCroppedTextureDataUrl = croppedTextureDataUrls[textureKey]
   if (cachedCroppedTextureDataUrl == null) {
-    const img = await imageLoader.loadAsync(
-      textureData.type === 'player_head'
-        ? textureData.playerHead.url
-        : await AssetFileInfosCache.instance.makeFullFileUrl(
-            `/assets/minecraft/textures/${textureData.resourceLocation}.png`,
-          ),
-    )
+    let imageUrl: string
+    if (textureData.type === 'player_head') {
+      if (textureData.playerHead.baked) {
+        imageUrl = textureData.playerHead.url
+      } else {
+        throw new Error('This should not happen')
+      }
+    } else {
+      imageUrl = await AssetFileInfosCache.instance.makeFullFileUrl(
+        `/assets/minecraft/textures/${textureData.resourceLocation}.png`,
+      )
+    }
+
+    const img = await imageLoader.loadAsync(imageUrl)
 
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')!

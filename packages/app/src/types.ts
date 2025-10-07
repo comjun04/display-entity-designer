@@ -156,7 +156,8 @@ export interface PlayerHeadProperties {
       }
     | {
         baked: false
-        paintTexture: string // base64 string of texture
+        // paintTexture: string // base64 string of texture
+        paintTexturePixels: number[]
       }
     | null
 }

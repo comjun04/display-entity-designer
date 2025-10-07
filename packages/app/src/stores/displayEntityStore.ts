@@ -135,6 +135,12 @@ export type DisplayEntityState = {
     data: PlayerHeadProperties,
     skipHistoryAdd?: boolean,
   ) => void
+  paintItemDisplayPlayerHeadTexture: (
+    entityId: string,
+    color: number,
+    x: number,
+    y: number,
+  ) => void
   setGroupName: (entityId: string, name: string) => void
   deleteEntities: (entityIds: string[], skipHistoryAdd?: boolean) => void
 
@@ -637,6 +643,49 @@ export const useDisplayEntityStore = create(
 
         entity.playerHeadProperties = data
       }),
+    paintItemDisplayPlayerHeadTexture: (entityId, color, x, y) => {
+      if (x < 0 || x >= 64) {
+        console.error(`x must be 0 ~ 63 but got ${x}`)
+        return
+      } else if (y < 0 || y >= 64) {
+        console.error(`y must be 0 ~ 63 but got ${y}`)
+        return
+      }
+
+      set((state) => {
+        const entity = state.entities.get(entityId)
+        if (entity == null) {
+          console.error(
+            `Attempted to set player_head properties on entity which does not exist: ${entityId}`,
+          )
+          return
+        } else if (!isItemDisplayPlayerHead(entity)) {
+          console.error(
+            `Attempted to set player_head properties on non player_head display`,
+          )
+          return
+        } else if (entity.playerHeadProperties.texture?.baked !== false) {
+          console.error(
+            'This method must be used on player_head item display entity with unbaked texture',
+          )
+          return
+        }
+
+        const r = (color >>> 16) & 0xff
+        const g = (color >>> 8) & 0xff
+        const b = color & 0xff
+
+        const idx = (y * 64 + x) * 4
+        entity.playerHeadProperties.texture.paintTexturePixels.splice(
+          idx,
+          4,
+          r,
+          g,
+          b,
+          255,
+        )
+      })
+    },
     setGroupName: (entityId, name) =>
       set((state) => {
         const entity = state.entities.get(entityId)
@@ -808,7 +857,7 @@ export const useDisplayEntityStore = create(
                 const { texture: textureData } = entity.playerHeadProperties
                 if (
                   textureData?.baked === false &&
-                  textureData.paintTexture == null
+                  textureData.paintTexturePixels == null
                 ) {
                   entity.playerHeadProperties.texture = null
                 }
@@ -951,6 +1000,18 @@ export const useDisplayEntityStore = create(
                 textureUrl = decodedTextureValue.textures.SKIN?.url
               }
 
+              let paintTexturePixels: number[] = []
+              if (item.paintTexture != null) {
+                const canvas = document.createElement('canvas')
+                const ctx = canvas.getContext('2d')!
+                const image = new HTMLImageElement()
+                image.src = item.paintTexture
+
+                ctx.drawImage(image, 0, 0, 64, 64)
+                const imageData = ctx.getImageData(0, 0, 64, 64)
+                paintTexturePixels = Array.from(imageData.data)
+              }
+
               entity.playerHeadProperties = {
                 texture:
                   textureUrl != null
@@ -961,7 +1022,7 @@ export const useDisplayEntityStore = create(
                     : item.paintTexture != null
                       ? {
                           baked: false,
-                          paintTexture: item.paintTexture,
+                          paintTexturePixels,
                         }
                       : null,
               }

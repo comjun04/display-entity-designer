@@ -1,13 +1,12 @@
 import { Grid } from '@react-three/drei'
-import { type FC, useCallback } from 'react'
-import { ImageLoader, MathUtils } from 'three'
+import { type ThreeEvent } from '@react-three/fiber'
+import { type FC } from 'react'
+import { MathUtils } from 'three'
 
 import { loadTextureImage } from '@/services/resources/material'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
 import type { ModelFaceKey, PlayerHeadProperties } from '@/types'
-
-const imageLoader = new ImageLoader()
 
 function getPixelIntegerPos(pos: number) {
   return Math.floor((pos + 0.25) * 16)
@@ -22,13 +21,23 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
   entityId,
   playerHeadProperties,
 }) => {
-  const handlePaint = useCallback(
-    (side: ModelFaceKey, x: number, y: number) => {
-      // console.log(side, x, y)
+  const handlePaint = (side: ModelFaceKey, x: number, y: number) => {
+    // console.log(side, x, y)
 
-      const f = async () => {
-        const textureData = playerHeadProperties.texture
+    const f = async () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = 64
+      canvas.height = 64
+      const ctx = canvas.getContext('2d')!
 
+      const textureData = playerHeadProperties.texture
+
+      if (textureData?.baked === false) {
+        // load texture dataurl from properties obj, load it to canvas
+        const imageData = new ImageData(64, 64)
+        imageData.data.set(textureData.paintTexturePixels, 0)
+        ctx.putImageData(imageData, 0, 0)
+      } else {
         let image: HTMLImageElement
         if (textureData?.baked === true) {
           // load texture from cdn, and just load it to canvas
@@ -39,9 +48,6 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
               url: textureData.url,
             },
           })) // no resource fromVersion required on player_head
-        } else if (textureData?.baked === false) {
-          // load texture dataurl from properties obj, load it to canvas
-          image = await imageLoader.loadAsync(textureData.paintTexture)
         } else {
           // load default steve texture to canvas
           ;({ image } = await loadTextureImage({
@@ -51,84 +57,112 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
         }
 
         // load it to canvas
-        const canvas = document.createElement('canvas')
-        canvas.width = 64
-        canvas.height = 64
-        const ctx = canvas.getContext('2d')!
         ctx.drawImage(image, 0, 0, 64, 16, 0, 0, 64, 16)
+      }
 
-        // draw
-        let baseX: number
-        let baseY: number
-        switch (side) {
-          case 'up':
-            baseX = 8
-            baseY = 0
-            break
+      // draw
+      let baseX: number
+      let baseY: number
+      switch (side) {
+        case 'up':
+          baseX = 8
+          baseY = 0
+          break
 
-          case 'down':
-            baseX = 16
-            baseY = 0
-            break
+        case 'down':
+          baseX = 16
+          baseY = 0
+          break
 
-          case 'east':
-            baseX = 0
-            baseY = 8
-            break
+        case 'east':
+          baseX = 0
+          baseY = 8
+          break
 
-          case 'south':
-            baseX = 8
-            baseY = 8
-            break
+        case 'south':
+          baseX = 8
+          baseY = 8
+          break
 
-          case 'west':
-            baseX = 16
-            baseY = 8
-            break
+        case 'west':
+          baseX = 16
+          baseY = 8
+          break
 
-          case 'north':
-            baseX = 24
-            baseY = 8
-            break
-        }
+        case 'north':
+          baseX = 24
+          baseY = 8
+          break
+      }
 
-        const shouldFlipY = side !== 'down'
+      const shouldFlipY = side !== 'down'
+      const pixelX = baseX + x
+      const pixelY = baseY + (shouldFlipY ? 7 - y : y)
 
-        // TODO: ability to change color
-        const imgData = ctx.createImageData(1, 1)
-        imgData.data[0] = 255
-        imgData.data[1] = 255
-        imgData.data[2] = 255
-        imgData.data[3] = 255
-        ctx.putImageData(imgData, baseX + x, baseY + (shouldFlipY ? 7 - y : y))
+      const existingPixel = ctx.getImageData(pixelX, pixelY, 1, 1)
+      if (
+        existingPixel.data[0] === 255 &&
+        existingPixel.data[1] === 255 &&
+        existingPixel.data[2] === 255 &&
+        existingPixel.data[3] === 255
+      ) {
+        // console.log('no change needed')
+        return
+      }
+
+      // TODO: ability to change color
+      const imgData = ctx.createImageData(1, 1)
+      imgData.data[0] = 255
+      imgData.data[1] = 255
+      imgData.data[2] = 255
+      imgData.data[3] = 255
+
+      if (textureData?.baked === false) {
+        useDisplayEntityStore
+          .getState()
+          .paintItemDisplayPlayerHeadTexture(entityId, 0xffffff, pixelX, pixelY)
+      } else {
+        ctx.putImageData(imgData, pixelX, pixelY)
+
+        const finalImageData = ctx.getImageData(0, 0, 64, 64)
 
         useDisplayEntityStore
           .getState()
           .setItemDisplayPlayerHeadProperties(entityId, {
             texture: {
               baked: false,
-              paintTexture: canvas.toDataURL(),
+              paintTexturePixels: Array.from(finalImageData.data),
             },
           })
       }
-      f().catch(console.error)
-    },
-    [entityId, playerHeadProperties],
-  )
+    }
+    f().catch(console.error)
+  }
 
-  const handlePointerDown = useCallback(() => {
-    console.log('pointerdown')
+  const handlePointerDown = (
+    evt: ThreeEvent<PointerEvent>,
+    face: ModelFaceKey,
+  ) => {
     useEditorStore.getState().setHeadPainting(true)
-  }, [])
-  const handlePointerMove = useCallback(
-    (face: ModelFaceKey, x: number, y: number) => {
-      const { headPainting } = useEditorStore.getState()
-      if (headPainting) {
-        handlePaint(face, x, y)
-      }
-    },
-    [],
-  )
+
+    const localPos = evt.object.worldToLocal(evt.point.clone())
+    handlePaint(
+      face,
+      getPixelIntegerPos(localPos.x),
+      getPixelIntegerPos(localPos.y),
+    )
+  }
+  const handlePointerMove = (face: ModelFaceKey, x: number, y: number) => {
+    // handlePaint() loads texture as image and processes it when not unbaked state
+    // which lags if we call multiple times
+    // since pointermove event can be called multiple times when mouse/touchpoint moves, so just block it
+    if (playerHeadProperties.texture?.baked !== false) return
+
+    const { headPainting } = useEditorStore.getState()
+    if (headPainting) {
+      handlePaint(face, x, y)
+    }
+  }
 
   return (
     <>
@@ -151,7 +185,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
               getPixelIntegerPos(localPos.y),
             )
           }}
-          onPointerDown={handlePointerDown}
+          onPointerDown={(evt) => handlePointerDown(evt, 'up')}
           onPointerMove={(evt) => {
             const localPos = evt.object.worldToLocal(evt.point.clone())
             handlePointerMove(
@@ -188,7 +222,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
               getPixelIntegerPos(localPos.y),
             )
           }}
-          onPointerDown={handlePointerDown}
+          onPointerDown={(evt) => handlePointerDown(evt, 'down')}
           onPointerMove={(evt) => {
             const localPos = evt.object.worldToLocal(evt.point.clone())
             handlePointerMove(
@@ -225,7 +259,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
               getPixelIntegerPos(localPos.y),
             )
           }}
-          onPointerDown={handlePointerDown}
+          onPointerDown={(evt) => handlePointerDown(evt, 'south')}
           onPointerMove={(evt) => {
             const localPos = evt.object.worldToLocal(evt.point.clone())
             handlePointerMove(
@@ -262,7 +296,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
               getPixelIntegerPos(localPos.y),
             )
           }}
-          onPointerDown={handlePointerDown}
+          onPointerDown={(evt) => handlePointerDown(evt, 'north')}
           onPointerMove={(evt) => {
             const localPos = evt.object.worldToLocal(evt.point.clone())
             handlePointerMove(
@@ -299,7 +333,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
               getPixelIntegerPos(localPos.y),
             )
           }}
-          onPointerDown={handlePointerDown}
+          onPointerDown={(evt) => handlePointerDown(evt, 'east')}
           onPointerMove={(evt) => {
             const localPos = evt.object.worldToLocal(evt.point.clone())
             handlePointerMove(
@@ -336,7 +370,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
               getPixelIntegerPos(localPos.y),
             )
           }}
-          onPointerDown={handlePointerDown}
+          onPointerDown={(evt) => handlePointerDown(evt, 'west')}
           onPointerMove={(evt) => {
             const localPos = evt.object.worldToLocal(evt.point.clone())
             handlePointerMove(
