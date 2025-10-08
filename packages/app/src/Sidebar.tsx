@@ -1,6 +1,7 @@
 import type { FC } from 'react'
 import { useShallow } from 'zustand/shallow'
 
+import HeadPainterPanel from './components/sidebar/HeadPainterPanel'
 import ObjectsPanel from './components/sidebar/ObjectsPanel'
 import PropertiesPanel from './components/sidebar/PropertiesPanel'
 import TransformsPanel from './components/sidebar/TransformsPanel'
@@ -8,12 +9,14 @@ import { useEditorStore } from './stores/editorStore'
 import { cn } from './utils'
 
 const Sidebar: FC = () => {
-  const { mobileSidebarOpened, setMobileSidebarOpened } = useEditorStore(
-    useShallow((state) => ({
-      mobileSidebarOpened: state.mobileSidebarOpened,
-      setMobileSidebarOpened: state.setMobileSidebarOpened,
-    })),
-  )
+  const { mobileSidebarOpened, setMobileSidebarOpened, headPainterMode } =
+    useEditorStore(
+      useShallow((state) => ({
+        mobileSidebarOpened: state.mobileSidebarOpened,
+        setMobileSidebarOpened: state.setMobileSidebarOpened,
+        headPainterMode: state.headPainterMode,
+      })),
+    )
 
   return (
     <>
@@ -33,6 +36,8 @@ const Sidebar: FC = () => {
         <ObjectsPanel />
         <TransformsPanel />
         <PropertiesPanel />
+
+        {headPainterMode && <HeadPainterPanel />}
       </div>
     </>
   )

@@ -48,6 +48,8 @@ type EditorState = {
   setHeadPainterMode: (mode: boolean) => void
   headPainting: boolean
   setHeadPainting: (painting: boolean) => void
+  headPainterBrushColor: number
+  setHeadPainterBrushColor: (color: number) => void
 
   settings: Settings
   setSettings: (newSettings: DeepPartial<Settings>) => void
@@ -140,6 +142,11 @@ export const useEditorStore = create(
       setHeadPainting: (painting) =>
         set((state) => {
           state.headPainting = painting
+        }),
+      headPainterBrushColor: 0xffffff,
+      setHeadPainterBrushColor: (color) =>
+        set((state) => {
+          state.headPainterBrushColor = color
         }),
 
       settings: initialSettings,

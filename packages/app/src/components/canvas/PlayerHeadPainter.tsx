@@ -99,29 +99,37 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
       const pixelX = baseX + x
       const pixelY = baseY + (shouldFlipY ? 7 - y : y)
 
+      const { headPainterBrushColor } = useEditorStore.getState()
+      const brushColor_R = (headPainterBrushColor >>> 16) & 0xff
+      const brushColor_G = (headPainterBrushColor >>> 8) & 0xff
+      const brushColor_B = headPainterBrushColor & 0xff
       const existingPixel = ctx.getImageData(pixelX, pixelY, 1, 1)
       if (
-        existingPixel.data[0] === 255 &&
-        existingPixel.data[1] === 255 &&
-        existingPixel.data[2] === 255 &&
+        existingPixel.data[0] === brushColor_R &&
+        existingPixel.data[1] === brushColor_G &&
+        existingPixel.data[2] === brushColor_B &&
         existingPixel.data[3] === 255
       ) {
         // console.log('no change needed')
         return
       }
 
-      // TODO: ability to change color
-      const imgData = ctx.createImageData(1, 1)
-      imgData.data[0] = 255
-      imgData.data[1] = 255
-      imgData.data[2] = 255
-      imgData.data[3] = 255
-
       if (textureData?.baked === false) {
         useDisplayEntityStore
           .getState()
-          .paintItemDisplayPlayerHeadTexture(entityId, 0xffffff, pixelX, pixelY)
+          .paintItemDisplayPlayerHeadTexture(
+            entityId,
+            headPainterBrushColor,
+            pixelX,
+            pixelY,
+          )
       } else {
+        const imgData = ctx.createImageData(1, 1)
+        imgData.data[0] = brushColor_R
+        imgData.data[1] = brushColor_G
+        imgData.data[2] = brushColor_B
+        imgData.data[3] = 255
+
         ctx.putImageData(imgData, pixelX, pixelY)
 
         const finalImageData = ctx.getImageData(0, 0, 64, 64)
