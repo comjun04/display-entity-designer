@@ -36,11 +36,11 @@ const logger = getLogger('LeftButtonPanel')
 const LeftButtonPanel: FC = () => {
   const { t } = useTranslation()
 
-  const { mode, setMode, headPainterMode } = useEditorStore(
+  const { mode, setMode, headPainterEnabled } = useEditorStore(
     useShallow((state) => ({
       mode: state.mode,
       setMode: state.setMode,
-      headPainterMode: state.headPainterMode,
+      headPainterEnabled: state.headPainter.enabled,
     })),
   )
   const { setOpenedDialog } = useDialogStore(
@@ -167,7 +167,7 @@ const LeftButtonPanel: FC = () => {
       >
         <FloatingButton
           active={mode === 'translate'}
-          disabled={headPainterMode}
+          disabled={headPainterEnabled}
           onClick={() => setMode('translate')}
         >
           <IoMove size={24} />
@@ -183,7 +183,7 @@ const LeftButtonPanel: FC = () => {
       >
         <FloatingButton
           active={mode === 'rotate'}
-          disabled={headPainterMode}
+          disabled={headPainterEnabled}
           onClick={() => setMode('rotate')}
         >
           <LuRotate3D size={24} />
@@ -199,7 +199,7 @@ const LeftButtonPanel: FC = () => {
       >
         <FloatingButton
           active={mode === 'scale'}
-          disabled={headPainterMode}
+          disabled={headPainterEnabled}
           onClick={() => setMode('scale')}
         >
           <LuMoveDiagonal size={24} />

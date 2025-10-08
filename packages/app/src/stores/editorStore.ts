@@ -44,12 +44,16 @@ type EditorState = {
   projectDirty: boolean
   setProjectDirty: (isDirty: boolean) => void
 
-  headPainterMode: boolean
-  setHeadPainterMode: (mode: boolean) => void
-  headPainting: boolean
-  setHeadPainting: (painting: boolean) => void
-  headPainterBrushColor: number
-  setHeadPainterBrushColor: (color: number) => void
+  headPainter: {
+    enabled: boolean
+    setEnabled: (enabled: boolean) => void
+
+    nowPainting: boolean
+    setNowPainting: (painting: boolean) => void
+
+    brushColor: number
+    setBrushColor: (color: number) => void
+  }
 
   settings: Settings
   setSettings: (newSettings: DeepPartial<Settings>) => void
@@ -133,21 +137,25 @@ export const useEditorStore = create(
           state.projectDirty = isDirty
         }),
 
-      headPainterMode: false,
-      setHeadPainterMode: (mode) =>
-        set((state) => {
-          state.headPainterMode = mode
-        }),
-      headPainting: false,
-      setHeadPainting: (painting) =>
-        set((state) => {
-          state.headPainting = painting
-        }),
-      headPainterBrushColor: 0xffffff,
-      setHeadPainterBrushColor: (color) =>
-        set((state) => {
-          state.headPainterBrushColor = color
-        }),
+      headPainter: {
+        enabled: false,
+        setEnabled: (enabled) =>
+          set((state) => {
+            state.headPainter.enabled = enabled
+          }),
+
+        nowPainting: false,
+        setNowPainting: (painting) =>
+          set((state) => {
+            state.headPainter.nowPainting = painting
+          }),
+
+        brushColor: 0xffffff,
+        setBrushColor: (color) =>
+          set((state) => {
+            state.headPainter.brushColor = color
+          }),
+      },
 
       settings: initialSettings,
       setSettings: (newSettings) =>

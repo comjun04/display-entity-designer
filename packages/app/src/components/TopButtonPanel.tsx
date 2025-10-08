@@ -47,7 +47,9 @@ const TopButtonPanel: FC = () => {
           state.entities.get(state.selectedEntityIds[0])?.kind === 'group',
       })),
     )
-  const headPainterMode = useEditorStore((state) => state.headPainterMode)
+  const headPainterEnabled = useEditorStore(
+    (state) => state.headPainter.enabled,
+  )
 
   return (
     <div className="absolute left-1/2 top-4 z-[5] -translate-x-1/2">
@@ -63,7 +65,7 @@ const TopButtonPanel: FC = () => {
             closeDelay={0}
           >
             <FloatingButton
-              disabled={headPainterMode}
+              disabled={headPainterEnabled}
               onClick={() => {
                 setOpenedDialog('blockDisplaySelect')
               }}
@@ -110,7 +112,7 @@ const TopButtonPanel: FC = () => {
         </div>
         {/* Mobile - show dropdown menu for 'Add Display Entity' action */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild disabled={headPainterMode}>
+          <DropdownMenuTrigger asChild disabled={headPainterEnabled}>
             <FloatingButton className="flex flex-row items-center gap-1 sm:hidden">
               <LuPlus size={24} />
               <LuChevronDown size={16} />
@@ -186,9 +188,13 @@ const TopButtonPanel: FC = () => {
         >
           <FloatingButton
             onClick={() => {
-              const { headPainterMode, setHeadPainterMode } =
-                useEditorStore.getState()
-              setHeadPainterMode(!headPainterMode)
+              const {
+                headPainter: {
+                  enabled: headPainterEnabled,
+                  setEnabled: setHeadPainterEnabled,
+                },
+              } = useEditorStore.getState()
+              setHeadPainterEnabled(!headPainterEnabled)
             }}
           >
             <LuBrush size={24} />

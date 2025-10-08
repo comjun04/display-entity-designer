@@ -54,7 +54,9 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
       }
     }),
   )
-  const headPainterMode = useEditorStore((state) => state.headPainterMode)
+  const headPainterEnabled = useEditorStore(
+    (state) => state.headPainter.enabled,
+  )
 
   const boundingBoxTargetRef = useRef<Group>(null)
 
@@ -79,7 +81,7 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
 
       {thisEntityIsPlayerHead &&
         thisEntityPlayerHeadProperties != null &&
-        headPainterMode && (
+        headPainterEnabled && (
           <PlayerHeadPainter
             entityId={id}
             playerHeadProperties={thisEntityPlayerHeadProperties}

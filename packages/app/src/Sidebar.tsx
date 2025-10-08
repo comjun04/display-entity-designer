@@ -9,12 +9,12 @@ import { useEditorStore } from './stores/editorStore'
 import { cn } from './utils'
 
 const Sidebar: FC = () => {
-  const { mobileSidebarOpened, setMobileSidebarOpened, headPainterMode } =
+  const { mobileSidebarOpened, setMobileSidebarOpened, headPainterEnabled } =
     useEditorStore(
       useShallow((state) => ({
         mobileSidebarOpened: state.mobileSidebarOpened,
         setMobileSidebarOpened: state.setMobileSidebarOpened,
-        headPainterMode: state.headPainterMode,
+        headPainterEnabled: state.headPainter.enabled,
       })),
     )
 
@@ -37,7 +37,7 @@ const Sidebar: FC = () => {
         <TransformsPanel />
         <PropertiesPanel />
 
-        {headPainterMode && <HeadPainterPanel />}
+        {headPainterEnabled && <HeadPainterPanel />}
       </div>
     </>
   )

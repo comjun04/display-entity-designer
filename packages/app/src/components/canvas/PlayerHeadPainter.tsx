@@ -99,10 +99,12 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
       const pixelX = baseX + x
       const pixelY = baseY + (shouldFlipY ? 7 - y : y)
 
-      const { headPainterBrushColor } = useEditorStore.getState()
-      const brushColor_R = (headPainterBrushColor >>> 16) & 0xff
-      const brushColor_G = (headPainterBrushColor >>> 8) & 0xff
-      const brushColor_B = headPainterBrushColor & 0xff
+      const {
+        headPainter: { brushColor },
+      } = useEditorStore.getState()
+      const brushColor_R = (brushColor >>> 16) & 0xff
+      const brushColor_G = (brushColor >>> 8) & 0xff
+      const brushColor_B = brushColor & 0xff
       const existingPixel = ctx.getImageData(pixelX, pixelY, 1, 1)
       if (
         existingPixel.data[0] === brushColor_R &&
@@ -119,7 +121,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
           .getState()
           .paintItemDisplayPlayerHeadTexture(
             entityId,
-            headPainterBrushColor,
+            brushColor,
             pixelX,
             pixelY,
           )
@@ -151,7 +153,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
     evt: ThreeEvent<PointerEvent>,
     face: ModelFaceKey,
   ) => {
-    useEditorStore.getState().setHeadPainting(true)
+    useEditorStore.getState().headPainter.setNowPainting(true)
 
     const localPos = evt.object.worldToLocal(evt.point.clone())
     handlePaint(
@@ -166,7 +168,9 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
     // since pointermove event can be called multiple times when mouse/touchpoint moves, so just block it
     if (playerHeadProperties.texture?.baked !== false) return
 
-    const { headPainting } = useEditorStore.getState()
+    const {
+      headPainter: { nowPainting: headPainting },
+    } = useEditorStore.getState()
     if (headPainting) {
       handlePaint(face, x, y)
     }

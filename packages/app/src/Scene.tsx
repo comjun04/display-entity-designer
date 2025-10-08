@@ -20,7 +20,7 @@ import { useEditorStore } from './stores/editorStore'
 const Perf = lazy(() => import('./components/Perf'))
 
 const InsideCanvas: FC = () => {
-  const headPainting = useEditorStore((state) => state.headPainting)
+  const headPainting = useEditorStore((state) => state.headPainter.nowPainting)
 
   const controls = useThree((state) => state.controls)
   const oldControlsEnabledRef = useRef<boolean>((controls as any)?.enabled)
@@ -42,7 +42,7 @@ const InsideCanvas: FC = () => {
 
   useEffect(() => {
     const fn = () => {
-      useEditorStore.getState().setHeadPainting(false)
+      useEditorStore.getState().headPainter.setNowPainting(false)
     }
 
     if (headPainting) {
@@ -61,12 +61,12 @@ const InsideCanvas: FC = () => {
 const Scene: FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
-  const { perfMonitorEnabled, reducePixelRatio, headPainterMode } =
+  const { perfMonitorEnabled, reducePixelRatio, headPainterEnabled } =
     useEditorStore(
       useShallow((state) => ({
         perfMonitorEnabled: state.settings.debug.perfMonitorEnabled,
         reducePixelRatio: state.settings.performance.reducePixelRatio,
-        headPainterMode: state.headPainterMode,
+        headPainterEnabled: state.headPainter.enabled,
       })),
     )
 
@@ -166,7 +166,7 @@ const Scene: FC = () => {
       </PerspectiveCamera>
 
       <Grid
-        visible={!headPainterMode}
+        visible={!headPainterEnabled}
         cellSize={1 / 16}
         cellColor={0x777777}
         sectionColor={0x333333}

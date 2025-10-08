@@ -6,9 +6,7 @@ import { SidePanel, SidePanelContent, SidePanelTitle } from '../SidePanel'
 import { ColorPickerInput } from '../ui/ColorPicker'
 
 const HeadPainterPanel: FC = () => {
-  const headPainterBrushColor = useEditorStore(
-    (state) => state.headPainterBrushColor,
-  )
+  const brushColor = useEditorStore((state) => state.headPainter.brushColor)
 
   return (
     <SidePanel>
@@ -19,9 +17,9 @@ const HeadPainterPanel: FC = () => {
           <ColorPickerInput
             className="flex-[2]"
             mode="rgb"
-            value={headPainterBrushColor}
+            value={brushColor}
             onValueChange={(color) => {
-              useEditorStore.getState().setHeadPainterBrushColor(color)
+              useEditorStore.getState().headPainter.setBrushColor(color)
             }}
           />
         </div>
