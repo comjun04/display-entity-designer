@@ -1,6 +1,6 @@
 import { Grid } from '@react-three/drei'
 import { type ThreeEvent } from '@react-three/fiber'
-import { type FC } from 'react'
+import { type FC, useMemo } from 'react'
 import { MathUtils } from 'three'
 
 import { loadTextureImage } from '@/services/resources/material'
@@ -21,6 +21,15 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
   entityId,
   playerHeadProperties,
 }) => {
+  const headPainterLayer = useEditorStore((state) => state.headPainter.layer)
+
+  const layerSize = headPainterLayer === 'second' ? 0.53125 : 0.5
+  const gridSize = useMemo(
+    () => [layerSize, layerSize] satisfies [number, number],
+    [layerSize],
+  )
+  const gridCellSize = layerSize / 8
+
   const handlePaint = (side: ModelFaceKey, x: number, y: number) => {
     // console.log(side, x, y)
 
@@ -60,6 +69,10 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
         ctx.drawImage(image, 0, 0, 64, 16, 0, 0, 64, 16)
       }
 
+      const {
+        headPainter: { brushColor, layer },
+      } = useEditorStore.getState()
+
       // draw
       let baseX: number
       let baseY: number
@@ -94,14 +107,14 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
           baseY = 8
           break
       }
+      if (layer === 'second') {
+        baseX += 32
+      }
 
       const shouldFlipY = side !== 'down'
       const pixelX = baseX + x
       const pixelY = baseY + (shouldFlipY ? 7 - y : y)
 
-      const {
-        headPainter: { brushColor },
-      } = useEditorStore.getState()
       const brushColor_R = (brushColor >>> 16) & 0xff
       const brushColor_G = (brushColor >>> 8) & 0xff
       const brushColor_B = brushColor & 0xff
@@ -179,10 +192,10 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
   return (
     <>
       {/* top */}
-      <group position={[0, 0.0001, 0]}>
+      <group position={[0, (layerSize - 0.5) / 2 + 0.0001, 0]}>
         <Grid
-          args={[0.5, 0.5]}
-          cellSize={0.5 / 8}
+          args={gridSize}
+          cellSize={gridCellSize}
           cellThickness={1}
           cellColor="#ffffff"
           sectionSize={0}
@@ -207,19 +220,19 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
             )
           }}
         >
-          <planeGeometry args={[0.5, 0.5]} />
+          <planeGeometry args={gridSize} />
           <meshBasicMaterial transparent opacity={0} alphaTest={0.01} />
         </mesh>
       </group>
 
       {/* bottom */}
       <group
-        position={[0, -(0.5 + 0.0001), 0]}
+        position={[0, -((layerSize + 0.5) / 2 + 0.0001), 0]}
         rotation={[MathUtils.degToRad(180), 0, 0]}
       >
         <Grid
-          args={[0.5, 0.5]}
-          cellSize={0.5 / 8}
+          args={gridSize}
+          cellSize={gridCellSize}
           cellThickness={1}
           cellColor="#ffffff"
           sectionSize={0}
@@ -244,19 +257,19 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
             )
           }}
         >
-          <planeGeometry args={[0.5, 0.5]} />
+          <planeGeometry args={gridSize} />
           <meshBasicMaterial transparent opacity={0} alphaTest={0.01} />
         </mesh>
       </group>
 
       {/* front (south) */}
       <group
-        position={[0, -0.25, -(0.25 + 0.0001)]}
+        position={[0, -0.25, -(layerSize / 2 + 0.0001)]}
         rotation={[MathUtils.degToRad(-90), 0, 0]}
       >
         <Grid
-          args={[0.5, 0.5]}
-          cellSize={0.5 / 8}
+          args={gridSize}
+          cellSize={gridCellSize}
           cellThickness={1}
           cellColor="#ffffff"
           sectionSize={0}
@@ -281,19 +294,19 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
             )
           }}
         >
-          <planeGeometry args={[0.5, 0.5]} />
+          <planeGeometry args={gridSize} />
           <meshBasicMaterial transparent opacity={0} alphaTest={0.01} />
         </mesh>
       </group>
 
       {/* back (north) */}
       <group
-        position={[0, -0.25, 0.25 + 0.0001]}
+        position={[0, -0.25, layerSize / 2 + 0.0001]}
         rotation={[MathUtils.degToRad(90), 0, 0]}
       >
         <Grid
-          args={[0.5, 0.5]}
-          cellSize={0.5 / 8}
+          args={gridSize}
+          cellSize={gridCellSize}
           cellThickness={1}
           cellColor="#ffffff"
           sectionSize={0}
@@ -318,19 +331,19 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
             )
           }}
         >
-          <planeGeometry args={[0.5, 0.5]} />
+          <planeGeometry args={gridSize} />
           <meshBasicMaterial transparent opacity={0} alphaTest={0.01} />
         </mesh>
       </group>
 
       {/* east */}
       <group
-        position={[0.25 + 0.0001, -0.25, 0]}
+        position={[layerSize / 2 + 0.0001, -0.25, 0]}
         rotation={[0, 0, MathUtils.degToRad(-90)]}
       >
         <Grid
-          args={[0.5, 0.5]}
-          cellSize={0.5 / 8}
+          args={gridSize}
+          cellSize={gridCellSize}
           cellThickness={1}
           cellColor="#ffffff"
           sectionSize={0}
@@ -355,19 +368,19 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
             )
           }}
         >
-          <planeGeometry args={[0.5, 0.5]} />
+          <planeGeometry args={gridSize} />
           <meshBasicMaterial transparent opacity={0} alphaTest={0.01} />
         </mesh>
       </group>
 
       {/* west */}
       <group
-        position={[-(0.25 + 0.0001), -0.25, 0]}
+        position={[-(layerSize / 2 + 0.0001), -0.25, 0]}
         rotation={[0, 0, MathUtils.degToRad(90)]}
       >
         <Grid
-          args={[0.5, 0.5]}
-          cellSize={0.5 / 8}
+          args={gridSize}
+          cellSize={gridCellSize}
           cellThickness={1}
           cellColor="#ffffff"
           sectionSize={0}
@@ -392,7 +405,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
             )
           }}
         >
-          <planeGeometry args={[0.5, 0.5]} />
+          <planeGeometry args={gridSize} />
           <meshBasicMaterial transparent opacity={0} alphaTest={0.01} />
         </mesh>
       </group>

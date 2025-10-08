@@ -18,6 +18,8 @@ type TransformationData = {
   size: Number3Tuple
 }
 
+type HeadPainterLayer = 'base' | 'second'
+
 type EditorState = {
   mode: EditorMode
   setMode: (newMode: EditorMode) => void
@@ -53,6 +55,9 @@ type EditorState = {
 
     brushColor: number
     setBrushColor: (color: number) => void
+
+    layer: HeadPainterLayer
+    setLayer: (layer: HeadPainterLayer) => void
   }
 
   settings: Settings
@@ -154,6 +159,12 @@ export const useEditorStore = create(
         setBrushColor: (color) =>
           set((state) => {
             state.headPainter.brushColor = color
+          }),
+
+        layer: 'second',
+        setLayer: (layer) =>
+          set((state) => {
+            state.headPainter.layer = layer
           }),
       },
 
