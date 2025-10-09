@@ -43,19 +43,18 @@ const InsideCanvas: FC = () => {
 
   useEffect(() => {
     const fn = () => {
+      const { nowPainting } = useEditorStore.getState().headPainter
+      if (!nowPainting) return
+
       useEditorStore.getState().headPainter.setNowPainting(false)
       useHistoryStore.getState().playerHead.flushToHistory()
     }
 
-    if (headPainting) {
-      document.addEventListener('pointerup', fn)
-    } else {
-      document.removeEventListener('pointerup', fn)
-    }
+    document.addEventListener('pointerup', fn)
     return () => {
       document.removeEventListener('pointerup', fn)
     }
-  }, [headPainting])
+  }, [])
 
   return null
 }
