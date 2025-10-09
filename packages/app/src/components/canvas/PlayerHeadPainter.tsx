@@ -9,10 +9,6 @@ import { useEditorStore } from '@/stores/editorStore'
 import { useHistoryStore } from '@/stores/historyStore'
 import type { ModelFaceKey, PlayerHeadProperties } from '@/types'
 
-function getPixelIntegerPos(pos: number) {
-  return Math.floor((pos + 0.25) * 16)
-}
-
 type PlayerHeadPainterProps = {
   entityId: string
   playerHeadProperties: PlayerHeadProperties
@@ -30,6 +26,9 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
     [layerSize],
   )
   const gridCellSize = layerSize / 8
+  const getPixelIntegerPos = (pos: number) => {
+    return Math.floor(((pos + layerSize / 2) / layerSize) * 8)
+  }
 
   const handlePaint = (side: ModelFaceKey, x: number, y: number) => {
     // console.log(side, x, y)
