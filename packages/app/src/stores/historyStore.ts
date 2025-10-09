@@ -3,7 +3,12 @@ import { immer } from 'zustand/middleware/immer'
 
 import AutosaveService from '@/services/autosave'
 import { getLogger } from '@/services/loggerService'
-import type { History, Number3Tuple } from '@/types'
+import {
+  type History,
+  type Number3Tuple,
+  type PlayerHeadProperties,
+  isItemDisplayPlayerHead,
+} from '@/types'
 
 import { useEditorStore } from './editorStore'
 
@@ -17,6 +22,15 @@ interface HistoryStoreState {
   undoHistory: () => void
   redoHistory: () => void
   clearHistory: () => void
+
+  playerHead: {
+    textureDataListBeforePaint: Map<string, PlayerHeadProperties['texture']>
+    storeTextureDataBeforePaint: (
+      entityId: string,
+      data: PlayerHeadProperties['texture'],
+    ) => void
+    flushToHistory: () => void
+  }
 }
 
 export const useHistoryStore = create(
@@ -165,6 +179,71 @@ export const useHistoryStore = create(
         state.undoStack.length = 0
         state.redoStack.length = 0
       }),
+
+    playerHead: {
+      textureDataListBeforePaint: new Map(),
+      storeTextureDataBeforePaint: (entityId, data) =>
+        set((state) => {
+          if (state.playerHead.textureDataListBeforePaint.has(entityId)) {
+            // data already exist, ignoring
+            return
+          }
+
+          logger.debug(
+            `playerHead.storeTextureDataBeforePaint(): storing player head data of entity ${entityId}`,
+          )
+          state.playerHead.textureDataListBeforePaint.set(entityId, data)
+        }),
+      flushToHistory: () =>
+        import('./displayEntityStore')
+          .then(({ useDisplayEntityStore }) => {
+            const { entities } = useDisplayEntityStore.getState()
+            const { textureDataListBeforePaint } = get().playerHead
+
+            const historyEntitiesData = [
+              ...textureDataListBeforePaint.entries(),
+            ]
+              .map(([entityId, data]) => {
+                const entity = entities.get(entityId)!
+                if (!isItemDisplayPlayerHead(entity)) {
+                  // this should not happen
+                  logger.error(
+                    `playerHead.flushToHistory(): entity ${entityId} is not an item display player_head but ${entity.kind}. This should happen, ignoring.`,
+                  )
+                  return null
+                }
+
+                return {
+                  id: entityId,
+                  beforeState: {
+                    kind: 'item' as const,
+                    playerHeadProperties: {
+                      texture: data,
+                    },
+                  },
+                  afterState: {
+                    kind: 'item' as const,
+                    playerHeadProperties: entity.playerHeadProperties,
+                  },
+                }
+              })
+              .filter((d) => d != null)
+
+            set((state) => {
+              state.undoStack.push({
+                type: 'changeProperties',
+                entities: historyEntitiesData,
+              })
+              state.redoStack.length = 0
+
+              state.playerHead.textureDataListBeforePaint.clear()
+            })
+
+            AutosaveService.instance.markOperationPerformed()
+            useEditorStore.getState().setProjectDirty(true)
+          })
+          .catch(console.error),
+    },
   })),
 )
 

@@ -6,6 +6,7 @@ import { MathUtils } from 'three'
 import { loadTextureImage } from '@/services/resources/material'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
+import { useHistoryStore } from '@/stores/historyStore'
 import type { ModelFaceKey, PlayerHeadProperties } from '@/types'
 
 function getPixelIntegerPos(pos: number) {
@@ -167,6 +168,12 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
     face: ModelFaceKey,
   ) => {
     useEditorStore.getState().headPainter.setNowPainting(true)
+    useHistoryStore
+      .getState()
+      .playerHead.storeTextureDataBeforePaint(
+        entityId,
+        playerHeadProperties.texture,
+      )
 
     const localPos = evt.object.worldToLocal(evt.point.clone())
     handlePaint(
@@ -185,6 +192,12 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
       headPainter: { nowPainting: headPainting },
     } = useEditorStore.getState()
     if (headPainting) {
+      useHistoryStore
+        .getState()
+        .playerHead.storeTextureDataBeforePaint(
+          entityId,
+          playerHeadProperties.texture,
+        )
       handlePaint(face, x, y)
     }
   }

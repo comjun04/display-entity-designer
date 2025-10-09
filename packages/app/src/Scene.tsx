@@ -16,6 +16,7 @@ import ShortcutHandler from './components/ShortcutHandler'
 import TransformControls from './components/TransformControls'
 import { useDisplayEntityStore } from './stores/displayEntityStore'
 import { useEditorStore } from './stores/editorStore'
+import { useHistoryStore } from './stores/historyStore'
 
 const Perf = lazy(() => import('./components/Perf'))
 
@@ -43,6 +44,7 @@ const InsideCanvas: FC = () => {
   useEffect(() => {
     const fn = () => {
       useEditorStore.getState().headPainter.setNowPainting(false)
+      useHistoryStore.getState().playerHead.flushToHistory()
     }
 
     if (headPainting) {
