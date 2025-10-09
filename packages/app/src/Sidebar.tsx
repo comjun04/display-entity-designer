@@ -22,7 +22,6 @@ const Sidebar: FC = () => {
   useEffect(() => {
     const handlePointerMove = (evt: PointerEvent) => {
       setDesktopSidebarWidth(document.body.clientWidth - evt.clientX)
-      console.log(evt.clientX)
     }
     const handlePointerUp = () => {
       setHandlerDragging(false)
