@@ -15,6 +15,11 @@ const settingsSchema = z.object({
       reducePixelRatio: z.boolean().default(false),
     })
     .prefault({}),
+  headPainter: z
+    .object({
+      mineskinApiKey: z.string().default(''),
+    })
+    .prefault({}),
   debug: z
     .object({
       testOption: z.boolean().default(false),

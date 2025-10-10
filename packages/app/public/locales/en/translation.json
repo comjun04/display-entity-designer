@@ -95,6 +95,17 @@
             }
           }
         },
+        "headPainter": {
+          "title": "Head Painter",
+          "options": {
+            "mineskinApiKey": {
+              "title": "MineSkin API Key",
+              "buttons": {
+                "save": "Save"
+              }
+            }
+          }
+        },
         "about": {
           "title": "About"
         },

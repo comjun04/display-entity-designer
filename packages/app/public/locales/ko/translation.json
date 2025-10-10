@@ -95,6 +95,17 @@
             }
           }
         },
+        "headPainter": {
+          "title": "Head Painter",
+          "options": {
+            "mineskinApiKey": {
+              "title": "MineSkin API 키",
+              "buttons": {
+                "save": "저장"
+              }
+            }
+          }
+        },
         "about": {
           "title": "정보"
         },
