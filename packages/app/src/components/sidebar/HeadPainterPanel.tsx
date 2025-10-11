@@ -10,10 +10,12 @@ import { SidePanel, SidePanelContent, SidePanelTitle } from '../SidePanel'
 import { ColorPickerInput } from '../ui/ColorPicker'
 
 const HeadPainterPanel: FC = () => {
-  const { brushColor, layer } = useEditorStore(
+  const { brushColor, layer, mineskinApiKeyFilled } = useEditorStore(
     useShallow((state) => ({
       brushColor: state.headPainter.brushColor,
       layer: state.headPainter.layer,
+      mineskinApiKeyFilled:
+        state.settings.headPainter.mineskinApiKey.length > 0,
     })),
   )
   const unbakedHeadsCount = useDisplayEntityStore((state) => {
@@ -94,7 +96,19 @@ const HeadPainterPanel: FC = () => {
                   {unbakedHeadsCount === 1 ? 'head' : 'heads'} with unbaked
                   texture.
                 </span>
-                <button className="rounded bg-stone-700 p-1">
+                {!mineskinApiKeyFilled && (
+                  <span>
+                    You need to enter your MineSkin API Key in settings to bake
+                    textures.
+                  </span>
+                )}
+                <button
+                  className={cn(
+                    'rounded bg-stone-700 p-1',
+                    !mineskinApiKeyFilled && 'bg-stone-700/50 text-gray-500',
+                  )}
+                  disabled={!mineskinApiKeyFilled}
+                >
                   Bake textures
                 </button>
               </>
