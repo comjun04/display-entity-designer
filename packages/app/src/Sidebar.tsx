@@ -34,10 +34,9 @@ const Sidebar: FC = () => {
         )}
       >
         <ObjectsPanel />
+        {headPainterEnabled && <HeadPainterPanel />}
         <TransformsPanel />
         <PropertiesPanel />
-
-        {headPainterEnabled && <HeadPainterPanel />}
       </div>
     </>
   )
