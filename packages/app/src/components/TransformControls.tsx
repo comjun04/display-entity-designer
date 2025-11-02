@@ -50,10 +50,11 @@ const TransformControls: FC = () => {
           : undefined,
     })),
   )
-  const { mode, setUsingTransformControl, setSelectionBaseTransformation } =
+  const { mode, rotationSpace, setUsingTransformControl, setSelectionBaseTransformation } =
     useEditorStore(
       useShallow((state) => ({
         mode: state.mode,
+        rotationSpace: state.rotationSpace,
         setUsingTransformControl: state.setUsingTransformControl,
         setSelectionBaseTransformation: state.setSelectionBaseTransformation,
       })),
@@ -169,6 +170,7 @@ const TransformControls: FC = () => {
       <TransformControlsImpl
         object={pivotRef}
         mode={mode}
+        space={rotationSpace}
         translationSnap={shiftPressed ? 0.00125 : 0.0625}
         rotationSnap={Math.PI / 12} // 15도
         scaleSnap={0.0625}

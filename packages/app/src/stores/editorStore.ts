@@ -12,6 +12,7 @@ const logger = getLogger('editorStore')
 // ==========
 
 type EditorMode = 'translate' | 'rotate' | 'scale'
+type RotationSpace = 'world' | 'local'
 type TransformationData = {
   position: Number3Tuple
   rotation: Number3Tuple
@@ -21,6 +22,9 @@ type TransformationData = {
 type EditorState = {
   mode: EditorMode
   setMode: (newMode: EditorMode) => void
+
+  rotationSpace: RotationSpace
+  setRotationSpace: (space: RotationSpace) => void
 
   mobileSidebarOpened: boolean
   setMobileSidebarOpened: (opened: boolean) => void
@@ -61,6 +65,12 @@ export const useEditorStore = create(
       setMode: (newMode) =>
         set((state) => {
           state.mode = newMode
+        }),
+
+      rotationSpace: 'world',
+      setRotationSpace: (space) =>
+        set((state) => {
+          state.rotationSpace = space
         }),
 
       mobileSidebarOpened: false,
