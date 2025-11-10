@@ -26,6 +26,8 @@ import { useEditorStore } from '@/stores/editorStore'
 import { useEntityRefStore } from '@/stores/entityRefStore'
 import type { Number3Tuple } from '@/types'
 
+const SCALE_SNAP = 0.0625
+
 const infinityVector = new Vector3(Infinity, Infinity, Infinity)
 const minusInfinityVector = new Vector3(-Infinity, -Infinity, -Infinity)
 const dummyBox = new Box3(infinityVector.clone(), minusInfinityVector.clone())
@@ -304,6 +306,8 @@ const TransformControls: FC = () => {
           pivotInitialPosition.current.copy(pivot.position)
           pivotInitialQuaternion.current.copy(pivot.quaternion)
 
+          pivot.scale.set(1, 1, 1)
+
           // pivot rotation 리셋
           // pivotRef.current.rotation.set(0, 0, 0)
         }}
@@ -340,6 +344,33 @@ const TransformControls: FC = () => {
                 .clone()
                 .premultiply(transformData.quaternion)
               transformData.object.quaternion.copy(quat2)
+            } else {
+              const alteredScale = transformData.scale
+                .clone()
+                .multiply(pivot.scale)
+              const scaleToApply = transformData.scale.clone()
+              ;(['x', 'y', 'z'] as const).forEach((axis) => {
+                if (
+                  target.axis != null &&
+                  target.axis.toLowerCase().includes(axis)
+                ) {
+                  const initialAxisScale = transformData.scale[axis]
+                  const axisScaleDiff = alteredScale[axis] - initialAxisScale
+
+                  let finalAxisScale =
+                    initialAxisScale +
+                    Math.round(axisScaleDiff / SCALE_SNAP) * SCALE_SNAP
+                  finalAxisScale = Math.max(
+                    Math.abs(finalAxisScale),
+                    Number.EPSILON,
+                  )
+
+                  scaleToApply[axis] = finalAxisScale
+                }
+              })
+
+              // transformData.object.scale.copy(pivot.scale)
+              transformData.object.scale.copy(scaleToApply)
             }
           }
 
