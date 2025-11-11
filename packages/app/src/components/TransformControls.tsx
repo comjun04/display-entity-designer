@@ -126,31 +126,31 @@ const TransformControls: FC = () => {
     )
 
     selectedEntityInitialTransformations.current = []
+    console.log(selectedEntityInitialTransformations.current)
 
-    const tempPositionVec = new Vector3()
-    const tempRotationQuat = new Quaternion()
     const tempEuler = new Euler()
-    const tempScaleVec = new Vector3()
     for (const entity of selectedEntities) {
       const refData = useEntityRefStore.getState().entityRefs.get(entity.id)!
       const object = refData.objectRef.current
 
-      tempPositionVec.set(...entity.position)
-      tempRotationQuat.setFromEuler(tempEuler.set(...entity.rotation))
-      tempScaleVec.set(...entity.size)
+      const positionVec = new Vector3(...entity.position)
+      const rotationQuat = new Quaternion().setFromEuler(
+        tempEuler.set(...entity.rotation),
+      )
+      const scaleVec = new Vector3(...entity.size)
 
       selectedEntityInitialTransformations.current.push({
         id: entity.id,
         object,
-        position: tempPositionVec,
-        quaternion: tempRotationQuat,
-        scale: tempScaleVec,
+        position: positionVec,
+        quaternion: rotationQuat,
+        scale: scaleVec,
       })
 
       // 선택된 entity가 selectedEntityIds 리스트에서 맨 첫 번째일 경우 기준점으로 설정
       if (entity.id === firstSelectedEntityId) {
-        pivot.position.copy(tempPositionVec)
-        pivot.quaternion.copy(tempRotationQuat)
+        pivot.position.copy(positionVec)
+        pivot.quaternion.copy(rotationQuat)
         pivot.scale.set(1, 1, 1)
 
         pivotInitialPosition.current.copy(pivot.position)
@@ -206,9 +206,15 @@ const TransformControls: FC = () => {
                   selectedEntityInitialTransformations.current.find(
                     (d) => d.id === entity.id,
                   )!
+                console.log(selectedEntityInitialTransformations.current.length)
 
                 const entityRefPosition = initialTransform.object.position
                 initialTransform.position.copy(entityRefPosition)
+                console.log(
+                  'set',
+                  initialTransform.id,
+                  initialTransform.position,
+                )
 
                 return {
                   id: entity.id,
