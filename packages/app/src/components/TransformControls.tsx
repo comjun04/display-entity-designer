@@ -127,30 +127,30 @@ const TransformControls: FC = () => {
 
     selectedEntityInitialTransformations.current = []
 
+    const tempPositionVec = new Vector3()
+    const tempRotationQuat = new Quaternion()
     const tempEuler = new Euler()
-
+    const tempScaleVec = new Vector3()
     for (const entity of selectedEntities) {
       const refData = useEntityRefStore.getState().entityRefs.get(entity.id)!
       const object = refData.objectRef.current
 
-      const positionVector = new Vector3(...entity.position)
-      const rotationQuaternion = new Quaternion().setFromEuler(
-        tempEuler.set(...entity.rotation),
-      )
-      const scaleVector = new Vector3(...entity.size)
+      tempPositionVec.set(...entity.position)
+      tempRotationQuat.setFromEuler(tempEuler.set(...entity.rotation))
+      tempScaleVec.set(...entity.size)
 
       selectedEntityInitialTransformations.current.push({
         id: entity.id,
         object,
-        position: positionVector,
-        quaternion: rotationQuaternion,
-        scale: scaleVector,
+        position: tempPositionVec,
+        quaternion: tempRotationQuat,
+        scale: tempScaleVec,
       })
 
       // 선택된 entity가 selectedEntityIds 리스트에서 맨 첫 번째일 경우 기준점으로 설정
       if (entity.id === firstSelectedEntityId) {
-        pivot.position.copy(positionVector)
-        pivot.quaternion.copy(rotationQuaternion)
+        pivot.position.copy(tempPositionVec)
+        pivot.quaternion.copy(tempRotationQuat)
         pivot.scale.set(1, 1, 1)
 
         pivotInitialPosition.current.copy(pivot.position)
@@ -217,6 +217,7 @@ const TransformControls: FC = () => {
               })
             batchSetEntityTransformation(batchUpdateData)
           } else if (mode === 'rotate') {
+            const tempEuler = new Euler()
             const batchUpdateData = [...entities.values()]
               .filter((e) => selectedEntityIds.includes(e.id))
               .map((entity) => {
@@ -227,9 +228,8 @@ const TransformControls: FC = () => {
 
                 const newPosition = initialTransform.object.position
 
-                const newRotationQuaternion =
-                  initialTransform.object.quaternion.clone()
-                const newRotationEuler = new Euler()
+                const newRotationQuaternion = initialTransform.object.quaternion
+                const newRotationEulerArr = tempEuler
                   .setFromQuaternion(newRotationQuaternion)
                   .toArray()
                   .slice(0, 3) as Number3Tuple
@@ -239,7 +239,7 @@ const TransformControls: FC = () => {
 
                 return {
                   id: entity.id,
-                  rotation: newRotationEuler,
+                  rotation: newRotationEulerArr,
                   translation: newPosition.toArray(),
                 }
               })
@@ -292,28 +292,32 @@ const TransformControls: FC = () => {
             .clone()
             .premultiply(pivotInitialQuaternion.current.clone().invert())
 
+          // share objects inside loop instead of creating new one every iteration
+          const relativePosFromPivot = new Vector3()
+          const newPos = new Vector3()
+          const newQuat = new Quaternion()
+
+          const alteredScale = new Vector3()
+          const scaleToApply = new Vector3()
+
           for (const transformData of selectedEntityInitialTransformations.current) {
             if (mode !== 'scale') {
-              const relativePosFromPivot = transformData.position
-                .clone()
+              relativePosFromPivot
+                .copy(transformData.position)
                 .sub(pivotInitialPosition.current)
 
-              const newPos = relativePosFromPivot
-                .clone()
+              newPos
+                .copy(relativePosFromPivot)
                 .applyQuaternion(pivotQuatDelta)
                 .multiply(pivot.scale)
                 .add(pivot.position)
               transformData.object.position.copy(newPos)
 
-              const quat2 = pivotQuatDelta
-                .clone()
-                .premultiply(transformData.quaternion)
-              transformData.object.quaternion.copy(quat2)
+              newQuat.copy(pivotQuatDelta).premultiply(transformData.quaternion)
+              transformData.object.quaternion.copy(newQuat)
             } else {
-              const alteredScale = transformData.scale
-                .clone()
-                .multiply(pivot.scale)
-              const scaleToApply = transformData.scale.clone()
+              alteredScale.copy(transformData.scale).multiply(pivot.scale)
+              scaleToApply.copy(transformData.scale)
               ;(['x', 'y', 'z'] as const).forEach((axis) => {
                 if (
                   target.axis != null &&
