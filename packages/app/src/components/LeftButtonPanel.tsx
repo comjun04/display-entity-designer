@@ -206,7 +206,7 @@ const LeftButtonPanel: FC = () => {
       </Tooltip>
 
       <Tooltip
-        content="Toggle Rotation Space"
+        content={t(($) => $.editor.changeSpaceMode)}
         placement="right"
         size="sm"
         delay={300}

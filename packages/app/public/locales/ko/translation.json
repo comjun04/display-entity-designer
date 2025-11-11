@@ -179,6 +179,7 @@
       "rotate": "회전 모드",
       "scale": "크기 조절 모드"
     },
+    "changeSpaceMode": "공간 모드 변경",
     "topBar": {
       "blockDisplay": "블록 디스플레이",
       "itemDisplay": "아이템 디스플레이",

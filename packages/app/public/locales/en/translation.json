@@ -179,6 +179,7 @@
       "rotate": "Rotate mode",
       "scale": "Scale mode"
     },
+    "changeSpaceMode": "Change Space Mode",
     "topBar": {
       "blockDisplay": "Block Display",
       "itemDisplay": "Item Display",
