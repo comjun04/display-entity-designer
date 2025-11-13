@@ -76,6 +76,7 @@ const TransformControls: FC = () => {
 
   const pivotInitialPosition = useRef(new Vector3())
   const pivotInitialQuaternion = useRef(new Quaternion())
+  const pivotInitialQuaternionWorld = useRef(new Quaternion())
   const selectedEntityInitialTransformations = useRef<
     {
       id: string
@@ -126,7 +127,6 @@ const TransformControls: FC = () => {
     )
 
     selectedEntityInitialTransformations.current = []
-    console.log(selectedEntityInitialTransformations.current)
 
     const tempEuler = new Euler()
     for (const entity of selectedEntities) {
@@ -155,6 +155,7 @@ const TransformControls: FC = () => {
 
         pivotInitialPosition.current.copy(pivot.position)
         pivotInitialQuaternion.current.copy(pivot.quaternion)
+        pivot.getWorldQuaternion(pivotInitialQuaternionWorld.current)
       }
     }
 
@@ -206,15 +207,9 @@ const TransformControls: FC = () => {
                   selectedEntityInitialTransformations.current.find(
                     (d) => d.id === entity.id,
                   )!
-                console.log(selectedEntityInitialTransformations.current.length)
 
                 const entityRefPosition = initialTransform.object.position
                 initialTransform.position.copy(entityRefPosition)
-                console.log(
-                  'set',
-                  initialTransform.id,
-                  initialTransform.position,
-                )
 
                 return {
                   id: entity.id,
@@ -281,6 +276,7 @@ const TransformControls: FC = () => {
 
           pivotInitialPosition.current.copy(pivot.position)
           pivotInitialQuaternion.current.copy(pivot.quaternion)
+          pivot.getWorldQuaternion(pivotInitialQuaternionWorld.current)
 
           pivot.scale.set(1, 1, 1)
         }}
@@ -293,10 +289,12 @@ const TransformControls: FC = () => {
           // state를 건드리기 전에 object3d에 먼저 scale 값을 세팅해야 음수 값일 경우 음수 <-> 양수로 계속 바뀌면서 생기는 깜빡거림을 방지할 수 있음
           target.object.scale.fromArray(absoluteScale)
 
-          // pivot quaternion currently moving - pivot quaternion before moving
-          const pivotQuatDelta = pivot.quaternion
+          const pivotWorldQuat = new Quaternion()
+          pivot.getWorldQuaternion(pivotWorldQuat)
+          // pivot quaternion currently moving - pivot quaternion before moving (all in world space)
+          const pivotQuatDeltaWorld = pivotWorldQuat
             .clone()
-            .premultiply(pivotInitialQuaternion.current.clone().invert())
+            .multiply(pivotInitialQuaternionWorld.current.clone().invert())
 
           // share objects inside loop instead of creating new one every iteration
           const relativePosFromPivot = new Vector3()
@@ -306,21 +304,42 @@ const TransformControls: FC = () => {
           const alteredScale = new Vector3()
           const scaleToApply = new Vector3()
 
+          // 1. Get the shared parent's world quaternion
+          const parentQuatWorld = new Quaternion()
+          selectedEntityInitialTransformations.current[0].object.parent!.getWorldQuaternion(
+            parentQuatWorld,
+          )
+          // 2. Precompute conversion (used for all children)
+          const parentQuatWorldInv = parentQuatWorld.clone().invert()
+
           for (const transformData of selectedEntityInitialTransformations.current) {
             if (mode !== 'scale') {
               relativePosFromPivot
                 .copy(transformData.position)
                 .sub(pivotInitialPosition.current)
 
+              /**
+               * localQ = parentWorldQ⁻¹ * newWorldQ
+               * newWorldQ = worldDeltaQ * currentWorldQ
+               * currentWorldQ = parentWorldQ * object.localQ
+               *
+               * newLocalQ = parentWorldQ⁻¹ * worldDeltaQ * parentWorldQ * object.localQ
+               */
+              newQuat
+                .copy(parentQuatWorldInv)
+                .multiply(pivotQuatDeltaWorld)
+                .multiply(parentQuatWorld)
+                .multiply(transformData.quaternion)
+              transformData.object.quaternion.copy(newQuat)
+
+              // =====
+
               newPos
                 .copy(relativePosFromPivot)
-                .applyQuaternion(pivotQuatDelta)
+                .applyQuaternion(pivotQuatDeltaWorld)
                 .multiply(pivot.scale)
                 .add(pivot.position)
               transformData.object.position.copy(newPos)
-
-              newQuat.copy(pivotQuatDelta).premultiply(transformData.quaternion)
-              transformData.object.quaternion.copy(newQuat)
             } else {
               alteredScale.copy(transformData.scale).multiply(pivot.scale)
               scaleToApply.copy(transformData.scale)
