@@ -20,6 +20,7 @@ import {
 import { TransformControls as OriginalTransformControls } from 'three/examples/jsm/Addons.js'
 import { useShallow } from 'zustand/shallow'
 
+import { getLogger } from '@/services/loggerService'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { useEntityRefStore } from '@/stores/entityRefStore'
@@ -30,6 +31,8 @@ const SCALE_SNAP = 0.0625
 const infinityVector = new Vector3(Infinity, Infinity, Infinity)
 const minusInfinityVector = new Vector3(-Infinity, -Infinity, -Infinity)
 const dummyBox = new Box3(infinityVector.clone(), minusInfinityVector.clone())
+
+const logger = getLogger('TransformControls')
 
 const TransformControls: FC = () => {
   const { selectedEntityIds, batchSetEntityTransformation } =
@@ -103,6 +106,7 @@ const TransformControls: FC = () => {
 
   // reparent pivot when first selected entity is changed
   useEffect(() => {
+    logger.debug('reparenting pivot')
     const { rootGroupRefData } = useEntityRefStore.getState()
 
     if (firstSelectedEntityRefData != null) {
@@ -193,9 +197,11 @@ const TransformControls: FC = () => {
         enabled={selectedEntityIds.length > 0}
         onMouseDown={() => {
           setUsingTransformControl(true)
+          logger.debug('onMouseDown')
         }}
         onMouseUp={() => {
           setUsingTransformControl(false)
+          logger.debug('onMouseUp')
 
           const entities = useDisplayEntityStore.getState().entities
 
