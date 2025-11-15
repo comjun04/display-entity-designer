@@ -42,6 +42,18 @@ const TransformControls: FC = () => {
         batchSetEntityTransformation: state.batchSetEntityTransformation,
       })),
     )
+  const firstSelectedEntityTransformation = useDisplayEntityStore(
+    useShallow((state) => {
+      const firstSelectedEntityId = state.selectedEntityIds[0]
+      if (firstSelectedEntityId == null) return null
+
+      const firstSelectedEntity = state.entities.get(firstSelectedEntityId)
+      if (firstSelectedEntity == null) return null
+
+      const { position, rotation, size } = firstSelectedEntity
+      return { position, rotation, size }
+    }),
+  )
 
   const firstSelectedEntityId =
     selectedEntityIds.length > 0 ? selectedEntityIds[0] : null
@@ -150,23 +162,37 @@ const TransformControls: FC = () => {
         quaternion: rotationQuat,
         scale: scaleVec,
       })
-
-      // 선택된 entity가 selectedEntityIds 리스트에서 맨 첫 번째일 경우 기준점으로 설정
-      if (entity.id === firstSelectedEntityId) {
-        pivot.position.copy(positionVec)
-        pivot.quaternion.copy(rotationQuat)
-        pivot.scale.set(1, 1, 1)
-
-        pivotInitialPosition.current.copy(pivot.position)
-        pivotInitialQuaternion.current.copy(pivot.quaternion)
-        pivot.getWorldQuaternion(pivotInitialQuaternionWorld.current)
-      }
     }
 
     if (selectedEntityIds.length > 1) {
       updateBoundingBox()
     }
-  }, [selectedEntityIds, firstSelectedEntityId, updateBoundingBox, pivot])
+  }, [
+    // entities,
+    selectedEntityIds,
+    firstSelectedEntityId,
+    updateBoundingBox,
+  ])
+
+  // update pivot position and rotation when first selected entity's transform data changed
+  useEffect(() => {
+    if (firstSelectedEntityTransformation == null) return
+
+    pivot.position.set(...firstSelectedEntityTransformation.position)
+    pivot.rotation.set(...firstSelectedEntityTransformation.rotation)
+    pivot.scale.set(1, 1, 1)
+    pivot.updateMatrix()
+
+    pivotInitialPosition.current.copy(pivot.position)
+    pivotInitialQuaternion.current.copy(pivot.quaternion)
+    pivot.getWorldQuaternion(pivotInitialQuaternionWorld.current)
+
+    logger.debug(
+      'updating pivot position and rotation on firstSelectedEntityTransformation change',
+      pivot.position.toArray(),
+      pivot.rotation.toArray(),
+    )
+  }, [firstSelectedEntityTransformation, pivot])
 
   useEffect(() => {
     const handler = (evt: KeyboardEvent) => {
