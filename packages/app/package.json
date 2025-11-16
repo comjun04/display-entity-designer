@@ -1,7 +1,7 @@
 {
   "name": "app",
   "private": true,
-  "version": "1.5.1",
+  "version": "1.6.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -22,6 +22,7 @@
     "@react-three/drei": "^9.114.3",
     "@react-three/fiber": "^8.18.0",
     "@tanstack/react-query": "^5.90.2",
+    "@tanstack/react-virtual": "^3.13.12",
     "@types/three": "^0.179.0",
     "@uiw/react-color-sketch": "^2.7.1",
     "async-mutex": "^0.5.0",

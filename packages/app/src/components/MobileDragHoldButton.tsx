@@ -25,7 +25,7 @@ const MobileDragHoldButton: FC = () => {
   return (
     <FloatingButton
       className={cn(
-        'xs:hidden',
+        'sm:hidden',
         !alwaysDragMode && mobileDragHoldButtonPressed && 'bg-gray-800',
       )}
       active={alwaysDragMode}

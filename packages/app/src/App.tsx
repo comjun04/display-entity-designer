@@ -1,11 +1,11 @@
 import { QueryClientProvider } from '@tanstack/react-query'
-import { useEffect } from 'react'
+import { type FC, useEffect } from 'react'
 
 import Scene from './Scene'
 import Sidebar from './Sidebar'
 import LeftButtonPanel from './components/LeftButtonPanel'
 import MobileBottomButtonPanel from './components/MobileBottomButtonPanel'
-import TopButtonPanel from './components/TopButtonPanel'
+import QuickActionPanel from './components/QuickActionPanel.tsx'
 import BlockDisplaySelectDialog from './components/dialog/BlockDisplaySelectDialog'
 import ExportToMinecraftDialog from './components/dialog/ExportToMinecraftDialog'
 import ItemDisplaySelectDialog from './components/dialog/ItemDisplaySelectDialog'
@@ -16,6 +16,18 @@ import { queryClient } from './query.ts'
 import AutosaveService from './services/autosave'
 import { useDialogStore } from './stores/dialogStore'
 import { useEditorStore } from './stores/editorStore'
+import { useProjectStore } from './stores/projectStore.ts'
+
+const BrowserTitleHandler: FC = () => {
+  const projectName = useProjectStore((state) => state.projectName)
+  const projectDirty = useEditorStore((state) => state.projectDirty)
+
+  useEffect(() => {
+    document.title = `${projectDirty ? '● ' : ''}${projectName} - Display Entity Platform`
+  }, [projectName, projectDirty])
+
+  return null
+}
 
 function App() {
   useEffect(() => {
@@ -43,15 +55,15 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="relative h-full w-full overflow-hidden xs:flex xs:flex-row">
-        <div className="relative h-full w-full overflow-hidden">
+      <div className="relative flex h-full w-full overflow-hidden">
+        <div className="relative h-full flex-1 overflow-hidden">
           {/* overflow-hidden is required to prevent child canvas width height from affecting parent div
               and correctly measure parent container size for canvas resizing */}
           <Scene />
 
           {/* floating buttons */}
           <LeftButtonPanel />
-          <TopButtonPanel />
+          <QuickActionPanel />
           <MobileBottomButtonPanel />
         </div>
 
@@ -64,6 +76,8 @@ function App() {
         <ItemDisplaySelectDialog />
         <ExportToMinecraftDialog />
       </div>
+
+      <BrowserTitleHandler />
     </QueryClientProvider>
   )
 }

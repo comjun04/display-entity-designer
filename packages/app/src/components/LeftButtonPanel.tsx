@@ -36,10 +36,13 @@ const logger = getLogger('LeftButtonPanel')
 const LeftButtonPanel: FC = () => {
   const { t } = useTranslation()
 
-  const { mode, setMode } = useEditorStore(
+  const { mode, setMode, rotationSpace, setRotationSpace } = useEditorStore(
     useShallow((state) => ({
       mode: state.mode,
       setMode: state.setMode,
+
+      rotationSpace: state.rotationSpace,
+      setRotationSpace: state.setRotationSpace,
     })),
   )
   const { setOpenedDialog } = useDialogStore(
@@ -199,6 +202,22 @@ const LeftButtonPanel: FC = () => {
           onClick={() => setMode('scale')}
         >
           <LuMoveDiagonal size={24} />
+        </FloatingButton>
+      </Tooltip>
+
+      <Tooltip
+        content={t(($) => $.editor.changeSpaceMode)}
+        placement="right"
+        size="sm"
+        delay={300}
+        closeDelay={0}
+      >
+        <FloatingButton
+          onClick={() => {
+            setRotationSpace(rotationSpace === 'world' ? 'local' : 'world')
+          }}
+        >
+          {rotationSpace === 'world' ? 'World' : 'Local'}
         </FloatingButton>
       </Tooltip>
 

@@ -10,6 +10,25 @@ const settingsSchema = z.object({
       forceUnifont: z.boolean().default(false),
     })
     .prefault({}),
+  appearance: z
+    .object({
+      quickActionPanel: z
+        .object({
+          location: z.enum(['top', 'bottom']).default('top'),
+          margin: z.number().default(16), // 16px = 1rem
+        })
+        .prefault({}),
+      gizmo: z
+        .object({
+          location: z
+            .enum(['bottom-left', 'bottom-right'])
+            .default('bottom-left'),
+          marginWidth: z.number().default(60),
+          marginHeight: z.number().default(60),
+        })
+        .prefault({}),
+    })
+    .prefault({}),
   performance: z
     .object({
       reducePixelRatio: z.boolean().default(false),
