@@ -8,7 +8,7 @@ export const BackendHost = import.meta.env.VITE_BACKEND_HOST
 export const GameVersions = [
   {
     id: '1.21.9',
-    label: '1.21.9',
+    label: '1.21.9 ~ 1.21.10',
   },
   {
     id: '1.21.7',
