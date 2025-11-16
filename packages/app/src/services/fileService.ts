@@ -1,3 +1,6 @@
+import { t } from 'i18next'
+import { toast } from 'sonner'
+
 import { LatestGameVersion, LegacyHardcodedGameVersion } from '@/constants'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
@@ -125,6 +128,8 @@ export async function saveToFile() {
   tempElement.click() // trigger download
 
   URL.revokeObjectURL(objectUrl)
+
+  toast.success(t(($) => $.toast.projectSaved))
 
   useEditorStore.getState().setProjectDirty(false)
   // delete autosave because user already saved to local disk
