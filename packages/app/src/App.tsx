@@ -3,6 +3,7 @@ import { type FC, useEffect } from 'react'
 
 import Scene from './Scene'
 import Sidebar from './Sidebar'
+import ToastContainer from './ToastContainer.tsx'
 import LeftButtonPanel from './components/LeftButtonPanel'
 import MobileBottomButtonPanel from './components/MobileBottomButtonPanel'
 import QuickActionPanel from './components/QuickActionPanel.tsx'
@@ -78,6 +79,8 @@ function App() {
       </div>
 
       <BrowserTitleHandler />
+
+      <ToastContainer />
     </QueryClientProvider>
   )
 }
