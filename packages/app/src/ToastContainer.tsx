@@ -8,7 +8,14 @@ const ToastContainer: FC = () => {
   // which prevents toast elements from receiving pointer events without using portal itself
   return createPortal(
     <div id="ToastContainer">
-      <Toaster />
+      <Toaster
+        theme="dark"
+        richColors
+        visibleToasts={5}
+        offset={8}
+        mobileOffset={8}
+        gap={8}
+      />
     </div>,
     document.body,
   )
