@@ -1,3 +1,4 @@
+import { useDebouncedEffect } from '@react-hookz/web'
 import { type FC, useEffect, useState } from 'react'
 import { LuEllipsisVertical } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
@@ -9,14 +10,21 @@ import { useEditorStore } from './stores/editorStore'
 import { cn } from './utils'
 
 const Sidebar: FC = () => {
-  const { mobileSidebarOpened, setMobileSidebarOpened } = useEditorStore(
+  const {
+    mobileSidebarOpened,
+    setMobileSidebarOpened,
+    initialDesktopSidebarWidth,
+  } = useEditorStore(
     useShallow((state) => ({
       mobileSidebarOpened: state.mobileSidebarOpened,
       setMobileSidebarOpened: state.setMobileSidebarOpened,
+      initialDesktopSidebarWidth: state.settings.appearance.sidebar.width,
     })),
   )
 
-  const [desktopSidebarWidth, setDesktopSidebarWidth] = useState(400)
+  const [desktopSidebarWidth, setDesktopSidebarWidth] = useState(
+    initialDesktopSidebarWidth,
+  )
   const [handlerDragging, setHandlerDragging] = useState(false)
 
   // resize desktop sidebar width on drag
@@ -61,6 +69,19 @@ const Sidebar: FC = () => {
       window.removeEventListener('resize', handler)
     }
   }, [desktopSidebarWidth])
+
+  // save sidebar width to settings on idle state
+  useDebouncedEffect(
+    () => {
+      useEditorStore.getState().setSettings({
+        appearance: {
+          sidebar: { width: desktopSidebarWidth },
+        },
+      })
+    },
+    [desktopSidebarWidth],
+    500,
+  )
 
   return (
     <>

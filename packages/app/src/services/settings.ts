@@ -27,6 +27,11 @@ const settingsSchema = z.object({
           marginHeight: z.number().default(60),
         })
         .prefault({}),
+      sidebar: z
+        .object({
+          width: z.number().default(400),
+        })
+        .prefault({}),
     })
     .prefault({}),
   performance: z
