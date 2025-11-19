@@ -19,9 +19,14 @@ const Sidebar: FC = () => {
   const [desktopSidebarWidth, setDesktopSidebarWidth] = useState(400)
   const [handlerDragging, setHandlerDragging] = useState(false)
 
+  // resize desktop sidebar width on drag
   useEffect(() => {
     const handlePointerMove = (evt: PointerEvent) => {
-      setDesktopSidebarWidth(document.body.clientWidth - evt.clientX)
+      const newWidth = Math.min(
+        window.innerWidth - evt.clientX,
+        (window.innerWidth / 10) * 8,
+      )
+      setDesktopSidebarWidth(newWidth)
     }
     const handlePointerUp = () => {
       setHandlerDragging(false)
@@ -40,6 +45,22 @@ const Sidebar: FC = () => {
       document.removeEventListener('pointerup', handlePointerUp)
     }
   }, [handlerDragging])
+
+  // resize desktop sidebar width on window width change
+  useEffect(() => {
+    const handler = () => {
+      const newWidth = Math.min(
+        desktopSidebarWidth,
+        (window.innerWidth / 10) * 8,
+      )
+      setDesktopSidebarWidth(newWidth)
+    }
+
+    window.addEventListener('resize', handler)
+    return () => {
+      window.removeEventListener('resize', handler)
+    }
+  }, [desktopSidebarWidth])
 
   return (
     <>
