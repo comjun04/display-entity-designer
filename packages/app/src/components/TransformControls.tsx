@@ -197,6 +197,10 @@ const TransformControls: FC = () => {
   useEffect(() => {
     const handler = (evt: KeyboardEvent) => {
       setShiftPressed(evt.shiftKey)
+
+      if (evt.key === 'Alt') {
+        useEditorStore.getState().setMode('translate')
+      }
     }
 
     document.addEventListener('keydown', handler)
