@@ -1,6 +1,37 @@
 import type { FC } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import type { Settings } from '@/services/settings'
+import { useEditorStore } from '@/stores/editorStore'
+
+interface HotkeyInputProps {
+  id: keyof Settings['hotkeys']
+}
+const HotkeyInput: FC<HotkeyInputProps> = ({ id }) => {
+  const rawKeysStr = useEditorStore((state) => state.settings.hotkeys[id])
+
+  const formattedKeysStr = rawKeysStr
+    .split(' ')
+    .map((rawKey) => {
+      if (rawKey === 'Control') {
+        return 'Ctrl'
+      }
+      if (rawKey.length === 1) {
+        // print single-character keys like alphabets as uppercase
+        return rawKey.toUpperCase()
+      }
+
+      return rawKey
+    })
+    .join(' ')
+
+  return (
+    <div className="w-full max-w-[12rem] rounded bg-neutral-700/70 px-2 py-1">
+      {formattedKeysStr}
+    </div>
+  )
+}
+
 const HotkeysPage: FC = () => {
   const { t } = useTranslation()
 
@@ -25,9 +56,7 @@ const HotkeysPage: FC = () => {
                     .openFromFile,
               )}
             </span>
-            <div className="w-full max-w-[12rem] rounded bg-neutral-700/70 px-2 py-1">
-              Ctrl + O
-            </div>
+            <HotkeyInput id="general.openFromFile" />
           </div>
           <div className="mt-1 flex flex-row items-center gap-2">
             <span className="grow px-3">
@@ -37,9 +66,7 @@ const HotkeysPage: FC = () => {
                     .saveToFile,
               )}
             </span>
-            <div className="w-full max-w-[12rem] rounded bg-neutral-700/70 px-2 py-1">
-              Ctrl + S
-            </div>
+            <HotkeyInput id="general.saveToFile" />
           </div>
           <div className="mt-1 flex flex-row items-center gap-2">
             <span className="grow px-3">
@@ -49,9 +76,7 @@ const HotkeysPage: FC = () => {
                     .openSettings,
               )}
             </span>
-            <div className="w-full max-w-[12rem] rounded bg-neutral-700/70 px-2 py-1">
-              Ctrl + ,
-            </div>
+            <HotkeyInput id="general.openSettings" />
           </div>
           <div className="mt-1 flex flex-row items-center gap-2">
             <span className="grow px-3">
@@ -60,9 +85,7 @@ const HotkeysPage: FC = () => {
                   $.dialog.settings.page.hotkeys.categories.general.items.undo,
               )}
             </span>
-            <div className="w-full max-w-[12rem] rounded bg-neutral-700/70 px-2 py-1">
-              Ctrl + Z
-            </div>
+            <HotkeyInput id="general.undo" />
           </div>
           <div className="mt-1 flex flex-row items-center gap-2">
             <span className="grow px-3">
@@ -71,9 +94,7 @@ const HotkeysPage: FC = () => {
                   $.dialog.settings.page.hotkeys.categories.general.items.redo,
               )}
             </span>
-            <div className="w-full max-w-[12rem] rounded bg-neutral-700/70 px-2 py-1">
-              Ctrl + Y
-            </div>
+            <HotkeyInput id="general.redo" />
           </div>
         </div>
       </div>
@@ -90,9 +111,7 @@ const HotkeysPage: FC = () => {
                     .translateMode,
               )}
             </span>
-            <div className="w-full max-w-[12rem] rounded bg-neutral-700/70 px-2 py-1">
-              T
-            </div>
+            <HotkeyInput id="editor.translateMode" />
           </div>
           <div className="mt-1 flex flex-row items-center gap-2">
             <span className="grow px-3">
