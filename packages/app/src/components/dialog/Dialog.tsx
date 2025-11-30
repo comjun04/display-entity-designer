@@ -16,6 +16,9 @@ type DialogProps = {
   // whether to use large static size for dialog.
   // dialog will be fullscreen on mobile when this is set to true
   useLargeStaticSize?: boolean
+  // whether to enable modal mode.
+  // modal mode disables closing dialog by clicking backdrop and removes close button
+  modal?: boolean
   title?: string
   children?: ReactNode
 }
@@ -25,13 +28,18 @@ const Dialog: FC<DialogProps> = ({
   onClose,
   className,
   useLargeStaticSize = true,
+  modal = false,
   title,
   children,
 }) => {
   return (
     <OriginalDialog
       open={open}
-      onClose={() => onClose?.()}
+      onClose={() => {
+        if (!modal) {
+          onClose?.()
+        }
+      }}
       className={cn('relative z-50', className)}
     >
       <DialogBackdrop
@@ -59,9 +67,11 @@ const Dialog: FC<DialogProps> = ({
         >
           <DialogTitle className="flex flex-row items-center">
             <span className="grow text-2xl font-bold">{title}</span>
-            <button onClick={onClose}>
-              <LuX size={24} />
-            </button>
+            {!modal && (
+              <button onClick={onClose}>
+                <LuX size={24} />
+              </button>
+            )}
           </DialogTitle>
 
           {children}
