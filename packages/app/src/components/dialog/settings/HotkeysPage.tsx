@@ -13,6 +13,11 @@ import type { Settings } from '@/services/settings'
 import { useEditorStore } from '@/stores/editorStore'
 import { cn } from '@/utils'
 
+const SPECIAL_KEYS = ['Control', 'Alt', 'Shift']
+function isValidKeyCombo(keys: string[]) {
+  return keys.some((key) => !SPECIAL_KEYS.includes(key))
+}
+
 const HotkeySettingsContext = createContext<{
   currentlyEditingKeyId: string | null
   setCurrentlyEditingKeyId: (newKey: string | null) => void
@@ -35,18 +40,44 @@ const HotkeyInput: FC<HotkeyInputProps> = ({ id }) => {
 
   const pressedKeys = useSet<string>()
 
+  const keyList = editMode
+    ? [...pressedKeys.values()]
+    : (rawKeysStr ?? '').split(' ')
+  const validKeyCombination = isValidKeyCombo(keyList)
+  const formattedKeysStr = keyList
+    .map((rawKey) => {
+      if (rawKey === 'Control') {
+        return 'Ctrl'
+      }
+      if (rawKey.length === 1) {
+        // print single-character keys like alphabets as uppercase
+        return rawKey.toUpperCase()
+      }
+
+      return rawKey
+    })
+    .join(' ')
+
   const saveChanges = useCallback(() => {
-    const newValue =
-      pressedKeys.size > 0 ? [...pressedKeys.values()].join(' ') : null
+    const newKeys = [...pressedKeys.values()]
+    if (newKeys.length > 0 && !isValidKeyCombo(newKeys)) {
+      return false
+    }
+
+    const newKeysStr = newKeys.length > 0 ? newKeys.join(' ') : null
     useEditorStore.getState().setSettings({
       hotkeys: {
-        [id]: newValue,
+        [id]: newKeysStr,
       },
     })
+
+    return true
   }, [id, pressedKeys])
 
   useEffect(() => {
-    if (editMode) {
+    // pre-fill pressedKeys with current value
+    // to avoid flickering between editMode change and this effect run
+    if (!editMode) {
       pressedKeys.clear()
       if (rawKeysStr != null) {
         rawKeysStr.split(' ').forEach((key) => {
@@ -62,8 +93,10 @@ const HotkeyInput: FC<HotkeyInputProps> = ({ id }) => {
       if (!editMode) return
 
       if (evt.key === 'Enter') {
-        saveChanges()
-        setCurrentlyEditingKeyId(null)
+        if (saveChanges()) {
+          // if save successful, exit edit mode
+          setCurrentlyEditingKeyId(null)
+        }
         return
       } else if (evt.key === 'Escape') {
         // discard changes
@@ -90,28 +123,13 @@ const HotkeyInput: FC<HotkeyInputProps> = ({ id }) => {
     }
   }, [editMode, pressedKeys, setCurrentlyEditingKeyId, saveChanges])
 
-  const formattedKeysStr = (
-    editMode ? [...pressedKeys.values()] : (rawKeysStr ?? '').split(' ')
-  )
-    .map((rawKey) => {
-      if (rawKey === 'Control') {
-        return 'Ctrl'
-      }
-      if (rawKey.length === 1) {
-        // print single-character keys like alphabets as uppercase
-        return rawKey.toUpperCase()
-      }
-
-      return rawKey
-    })
-    .join(' ')
-
   return (
     <div
       className={cn(
         'w-full max-w-[12rem] rounded border-2 border-transparent bg-neutral-700/70 px-2 py-1 transition',
         editMode && 'border-neutral-400',
         hotkeyUnset && 'italic text-gray-500',
+        !validKeyCombination && 'bg-red-500/30',
       )}
       onClick={() => {
         if (editMode) {
