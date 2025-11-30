@@ -1,6 +1,7 @@
 import { type FC } from 'react'
 import { useShallow } from 'zustand/shallow'
 
+import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { isItemDisplayPlayerHead } from '@/types'
@@ -108,6 +109,11 @@ const HeadPainterPanel: FC = () => {
                     !mineskinApiKeyFilled && 'bg-stone-700/50 text-gray-500',
                   )}
                   disabled={!mineskinApiKeyFilled}
+                  onClick={() => {
+                    useDialogStore
+                      .getState()
+                      .setOpenedDialog('bakingPlayerHeads')
+                  }}
                 >
                   Bake textures
                 </button>
