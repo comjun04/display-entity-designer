@@ -1,17 +1,98 @@
-import type { FC } from 'react'
+import { useSet } from '@react-hookz/web'
+import {
+  type FC,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 
 import type { Settings } from '@/services/settings'
 import { useEditorStore } from '@/stores/editorStore'
+import { cn } from '@/utils'
+
+const HotkeySettingsContext = createContext<{
+  currentlyEditingKeyId: string | null
+  setCurrentlyEditingKeyId: (newKey: string | null) => void
+}>({
+  currentlyEditingKeyId: null,
+  setCurrentlyEditingKeyId: () => {},
+})
 
 interface HotkeyInputProps {
   id: keyof Settings['hotkeys']
 }
 const HotkeyInput: FC<HotkeyInputProps> = ({ id }) => {
   const rawKeysStr = useEditorStore((state) => state.settings.hotkeys[id])
+  const hotkeyUnset = rawKeysStr == null
 
-  const formattedKeysStr = rawKeysStr
-    .split(' ')
+  const { currentlyEditingKeyId, setCurrentlyEditingKeyId } = useContext(
+    HotkeySettingsContext,
+  )
+  const editMode = currentlyEditingKeyId === id
+
+  const pressedKeys = useSet<string>()
+
+  const saveChanges = useCallback(() => {
+    const newValue =
+      pressedKeys.size > 0 ? [...pressedKeys.values()].join(' ') : null
+    useEditorStore.getState().setSettings({
+      hotkeys: {
+        [id]: newValue,
+      },
+    })
+  }, [id, pressedKeys])
+
+  useEffect(() => {
+    if (editMode) {
+      pressedKeys.clear()
+      if (rawKeysStr != null) {
+        rawKeysStr.split(' ').forEach((key) => {
+          pressedKeys.add(key)
+        })
+      }
+    }
+  }, [editMode, pressedKeys, rawKeysStr])
+
+  // detect key input on edit mode
+  useEffect(() => {
+    const handler = (evt: KeyboardEvent) => {
+      if (!editMode) return
+
+      if (evt.key === 'Enter') {
+        saveChanges()
+        setCurrentlyEditingKeyId(null)
+        return
+      } else if (evt.key === 'Escape') {
+        // discard changes
+        setCurrentlyEditingKeyId(null)
+        return
+      }
+
+      pressedKeys.clear()
+      if (evt.ctrlKey) {
+        pressedKeys.add('Control')
+      }
+      if (evt.altKey) {
+        pressedKeys.add('Alt')
+      }
+      if (evt.shiftKey) {
+        pressedKeys.add('Shift')
+      }
+      pressedKeys.add(evt.key)
+    }
+
+    window.addEventListener('keydown', handler)
+    return () => {
+      window.removeEventListener('keydown', handler)
+    }
+  }, [editMode, pressedKeys, setCurrentlyEditingKeyId, saveChanges])
+
+  const formattedKeysStr = (
+    editMode ? [...pressedKeys.values()] : (rawKeysStr ?? '').split(' ')
+  )
     .map((rawKey) => {
       if (rawKey === 'Control') {
         return 'Ctrl'
@@ -26,8 +107,20 @@ const HotkeyInput: FC<HotkeyInputProps> = ({ id }) => {
     .join(' ')
 
   return (
-    <div className="w-full max-w-[12rem] rounded bg-neutral-700/70 px-2 py-1">
-      {formattedKeysStr}
+    <div
+      className={cn(
+        'w-full max-w-[12rem] rounded border-2 border-transparent bg-neutral-700/70 px-2 py-1 transition',
+        editMode && 'border-neutral-400',
+        hotkeyUnset && 'italic text-gray-500',
+      )}
+      onClick={() => {
+        if (editMode) {
+          saveChanges()
+        }
+        setCurrentlyEditingKeyId(editMode ? null : id)
+      }}
+    >
+      {hotkeyUnset ? 'unset' : formattedKeysStr}
     </div>
   )
 }
@@ -35,8 +128,17 @@ const HotkeyInput: FC<HotkeyInputProps> = ({ id }) => {
 const HotkeysPage: FC = () => {
   const { t } = useTranslation()
 
+  const [currentlyEditingKey, setCurrentlyEditingKey] = useState<string | null>(
+    null,
+  )
+
   return (
-    <>
+    <HotkeySettingsContext.Provider
+      value={{
+        currentlyEditingKeyId: currentlyEditingKey,
+        setCurrentlyEditingKeyId: setCurrentlyEditingKey,
+      }}
+    >
       <h3 className="text-xl font-bold">
         {t(($) => $.dialog.settings.page.hotkeys.title)}
       </h3>
@@ -175,7 +277,7 @@ const HotkeysPage: FC = () => {
           </div>
         </div>
       </div>
-    </>
+    </HotkeySettingsContext.Provider>
   )
 }
 

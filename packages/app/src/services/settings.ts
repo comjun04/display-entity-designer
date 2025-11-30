@@ -58,20 +58,22 @@ const settingsSchema = z.object({
   // hotkey settings
   // values must be `KeyboardEvent.key` value, multiple key inputs are deliminated by space
   // key value list: https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
-  hotkeys: z.record(z.enum(HotkeyKeys), z.string()).prefault({
-    // default hotkey settings
-    'general.openFromFile': 'Control O',
-    'general.saveToFile': 'Control S',
-    'general.openSettings': 'Control ,',
-    'general.undo': 'Control Z',
-    'general.redo': 'Control Y',
-    'editor.translateMode': 'T',
-    'editor.rotateMode': 'R',
-    'editor.scaleMode': 'S',
-    'editor.duplicate': 'D',
-    'editor.groupOrUngroup': 'G',
-    'editor.deleteEntity': 'Delete',
-  }),
+  hotkeys: z
+    .record(z.enum(HotkeyKeys), z.union([z.string(), z.null()]))
+    .prefault({
+      // default hotkey settings
+      'general.openFromFile': 'Control O',
+      'general.saveToFile': 'Control S',
+      'general.openSettings': 'Control ,',
+      'general.undo': 'Control Z',
+      'general.redo': 'Control Y',
+      'editor.translateMode': 'T',
+      'editor.rotateMode': 'R',
+      'editor.scaleMode': 'S',
+      'editor.duplicate': 'D',
+      'editor.groupOrUngroup': 'G',
+      'editor.deleteEntity': 'Delete',
+    }),
   debug: z
     .object({
       testOption: z.boolean().default(false),
