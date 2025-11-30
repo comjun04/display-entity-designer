@@ -14,8 +14,12 @@ import { useEditorStore } from '@/stores/editorStore'
 import { cn } from '@/utils'
 
 const SPECIAL_KEYS = ['Control', 'Alt', 'Shift']
+const BLOCKED_KEYS = ['Unidentified']
 function isValidKeyCombo(keys: string[]) {
-  return keys.some((key) => !SPECIAL_KEYS.includes(key))
+  return (
+    keys.some((key) => !SPECIAL_KEYS.includes(key)) &&
+    keys.every((key) => !BLOCKED_KEYS.includes(key))
+  )
 }
 
 const HotkeySettingsContext = createContext<{
