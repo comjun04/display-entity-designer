@@ -63,7 +63,13 @@ const HotkeyInput: FC<HotkeyInputProps> = ({ id }) => {
     .join(' ')
 
   const saveChanges = useCallback(() => {
-    const newKeys = [...pressedKeys.values()]
+    const newKeys = [...pressedKeys.values()].map((key) => {
+      if (key.length === 1) {
+        return key.toLowerCase()
+      }
+
+      return key
+    })
     if (newKeys.length > 0 && !isValidKeyCombo(newKeys)) {
       return false
     }

@@ -1,8 +1,9 @@
-import { type FC, useEffect } from 'react'
+import { type FC, useEffect, useMemo } from 'react'
 
 import { toggleGroup } from '@/services/actions'
 import { openFromFile, saveToFile } from '@/services/fileService'
 import { getLogger } from '@/services/loggerService'
+import type { HotkeyKeysEnum } from '@/services/settings'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
@@ -10,7 +11,26 @@ import { useHistoryStore } from '@/stores/historyStore'
 
 const logger = getLogger('ShortcutHandler')
 
+const SPECIAL_KEYS = ['Control', 'Alt', 'Shift']
+
 const ShortcutHandler: FC = () => {
+  const hotkeys = useEditorStore((state) => state.settings.hotkeys)
+  // Record<hotkeyValue, hotkeyId[]>
+  const shortcutRecord = useMemo(() => {
+    const record: Record<string, HotkeyKeysEnum[]> = {}
+    for (const [hotkeyId, hotkey] of Object.entries(hotkeys)) {
+      if (hotkey == null) continue
+
+      if (hotkey in record) {
+        record[hotkey].push(hotkeyId as HotkeyKeysEnum)
+      } else {
+        record[hotkey] = [hotkeyId as HotkeyKeysEnum]
+      }
+    }
+
+    return record
+  }, [hotkeys])
+
   useEffect(() => {
     const focusableElements = ['input', 'textarea']
     const { undoHistory, redoHistory } = useHistoryStore.getState()
@@ -36,67 +56,83 @@ const ShortcutHandler: FC = () => {
         useDisplayEntityStore.getState()
       const { setMode } = useEditorStore.getState()
 
-      // 단축키 처리
-      switch (evt.key) {
-        case 't':
-          if (!evt.ctrlKey && !evt.altKey && !evt.shiftKey) {
-            setMode('translate')
-          }
-          break
-        case 'r':
-          if (!evt.ctrlKey && !evt.altKey && !evt.shiftKey) {
-            setMode('rotate')
-          }
-          break
-        case 's':
-          if (evt.ctrlKey) {
+      const hotkeyArr: string[] = []
+      if (evt.ctrlKey) {
+        hotkeyArr.push('Control')
+      }
+      if (evt.altKey) {
+        hotkeyArr.push('Alt')
+      }
+      if (evt.shiftKey) {
+        hotkeyArr.push('Shift')
+      }
+
+      if (!SPECIAL_KEYS.includes(evt.key)) {
+        // single alphabetical keys can be detected as uppercase when combined with Shift key
+        // so change to lowercase to match with savedata
+        hotkeyArr.push(evt.key.length === 1 ? evt.key.toLowerCase() : evt.key)
+      }
+
+      const hotkeyStr = hotkeyArr.join(' ')
+
+      const hotkeyAssociatedActions = shortcutRecord[hotkeyStr]
+      if (hotkeyAssociatedActions == null) {
+        return
+      }
+
+      // process shortcut associated action
+      for (const action of hotkeyAssociatedActions) {
+        switch (action) {
+          // general
+          case 'general.openFromFile':
+            evt.preventDefault()
+            openFromFile()
+            break
+          case 'general.saveToFile':
             evt.preventDefault()
             saveToFile().catch((...err) => {
               logger.error('Unexpected error when saving to file:', ...err)
             })
-          } else if (!evt.altKey && !evt.shiftKey) {
-            setMode('scale')
-          }
-          break
-        case 'o':
-          if (evt.ctrlKey) {
-            evt.preventDefault()
-            openFromFile()
-          }
-          break
-        case 'd':
-          if (!evt.ctrlKey && !evt.altKey && !evt.shiftKey) {
-            duplicateSelected()
-          }
-          break
-        case 'g':
-          if (!evt.ctrlKey && !evt.altKey && !evt.shiftKey) {
-            toggleGroup()
-          }
-          break
-        case 'Delete':
-          deleteEntities(selectedEntityIds)
-          break
-        case ',':
-          if (evt.ctrlKey) {
+            break
+          case 'general.openSettings':
             setOpenedDialog('settings')
-          }
-          break
-        case 'z':
-          if (evt.ctrlKey) {
+            break
+          case 'general.undo':
             undoHistory()
-          }
-          break
-        case 'y':
-          if (evt.ctrlKey) {
+            break
+          case 'general.redo':
             redoHistory()
-          }
+            break
+
+          // editor
+          case 'editor.translateMode':
+            setMode('translate')
+            break
+          case 'editor.rotateMode':
+            setMode('rotate')
+            break
+          case 'editor.scaleMode':
+            setMode('scale')
+            break
+          case 'editor.duplicate':
+            duplicateSelected()
+            break
+          case 'editor.groupOrUngroup':
+            toggleGroup()
+            break
+          case 'editor.deleteEntity':
+            deleteEntities(selectedEntityIds)
+            break
+
+          default:
+            logger.warn('unknown shortcut action:', action)
+        }
       }
     }
 
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
-  }, [])
+  }, [shortcutRecord])
 
   return null
 }
