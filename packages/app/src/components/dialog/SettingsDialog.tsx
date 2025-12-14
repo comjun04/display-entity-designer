@@ -10,14 +10,14 @@ import AboutPage from './settings/AboutPage'
 import AppearancePage from './settings/AppearancePage'
 import DebugOptionsPage from './settings/DebugOptionsPage'
 import GeneralPage from './settings/GeneralPage'
-import HotkeysPage from './settings/HotkeysPage'
 import PerformancePage from './settings/PerformancePage'
+import ShortcutsPage from './settings/ShortcutsPage'
 
 type SettingsPageType =
   | 'general'
   | 'appearance'
   | 'performance'
-  | 'hotkeys'
+  | 'shortcuts'
   | 'about'
   | 'debug'
 
@@ -89,13 +89,13 @@ const SettingsDialog: FC = () => {
             <button
               className={cn(
                 'w-full rounded px-2 py-1 text-start text-sm transition duration-150',
-                selectedPage === 'hotkeys'
+                selectedPage === 'shortcuts'
                   ? 'bg-neutral-700'
                   : 'hover:bg-neutral-700/50',
               )}
-              onClick={() => setSelectedPage('hotkeys')}
+              onClick={() => setSelectedPage('shortcuts')}
             >
-              {t(($) => $.dialog.settings.page.hotkeys.title)}
+              {t(($) => $.dialog.settings.page.shortcuts.title)}
             </button>
 
             <hr className="border-t-2 border-neutral-700" />
@@ -142,8 +142,8 @@ const SettingsDialog: FC = () => {
             <option value="performance">
               {t(($) => $.dialog.settings.page.performance.title)}
             </option>
-            <option value="hotkeys">
-              {t(($) => $.dialog.settings.page.hotkeys.title)}
+            <option value="shortcuts">
+              {t(($) => $.dialog.settings.page.shortcuts.title)}
             </option>
             <option disabled>----------</option>
             <option value="about">
@@ -165,8 +165,8 @@ const SettingsDialog: FC = () => {
           {/* Performance */}
           {selectedPage === 'performance' && <PerformancePage />}
 
-          {/* Hotkeys */}
-          {selectedPage === 'hotkeys' && <HotkeysPage />}
+          {/* Shortcuts */}
+          {selectedPage === 'shortcuts' && <ShortcutsPage />}
 
           {/* About */}
           {selectedPage === 'about' && <AboutPage />}

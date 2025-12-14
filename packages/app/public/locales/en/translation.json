@@ -104,9 +104,9 @@
             "reducePixelRatio": "Reduce Pixel Ratio to 1"
           }
         },
-        "hotkeys": {
-          "title": "Hotkeys",
-          "changingHotkeyNotSupported": "*Changing hotkeys are not yet supported.",
+        "shortcuts": {
+          "title": "Shortcuts",
+          "changingShortcutNotSupported": "*Changing shortcuts are not yet supported.",
           "categories": {
             "general": {
               "title": "General",

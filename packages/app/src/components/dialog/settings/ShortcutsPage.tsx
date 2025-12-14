@@ -22,7 +22,7 @@ function isValidKeyCombo(keys: string[]) {
   )
 }
 
-const HotkeySettingsContext = createContext<{
+const ShortcutSettingsContext = createContext<{
   currentlyEditingKeyId: string | null
   setCurrentlyEditingKeyId: (newKey: string | null) => void
 }>({
@@ -30,15 +30,15 @@ const HotkeySettingsContext = createContext<{
   setCurrentlyEditingKeyId: () => {},
 })
 
-interface HotkeyInputProps {
-  id: keyof Settings['hotkeys']
+interface ShortcutKeyInputProps {
+  id: keyof Settings['shortcuts']
 }
-const HotkeyInput: FC<HotkeyInputProps> = ({ id }) => {
-  const rawKeysStr = useEditorStore((state) => state.settings.hotkeys[id])
-  const hotkeyUnset = rawKeysStr == null
+const ShortcutKeyInput: FC<ShortcutKeyInputProps> = ({ id }) => {
+  const rawKeysStr = useEditorStore((state) => state.settings.shortcuts[id])
+  const shortcutUnset = rawKeysStr == null
 
   const { currentlyEditingKeyId, setCurrentlyEditingKeyId } = useContext(
-    HotkeySettingsContext,
+    ShortcutSettingsContext,
   )
   const editMode = currentlyEditingKeyId === id
 
@@ -76,7 +76,7 @@ const HotkeyInput: FC<HotkeyInputProps> = ({ id }) => {
 
     const newKeysStr = newKeys.length > 0 ? newKeys.join(' ') : null
     useEditorStore.getState().setSettings({
-      hotkeys: {
+      shortcuts: {
         [id]: newKeysStr,
       },
     })
@@ -138,7 +138,7 @@ const HotkeyInput: FC<HotkeyInputProps> = ({ id }) => {
       className={cn(
         'w-full max-w-[12rem] rounded border-2 border-transparent bg-neutral-700/70 px-2 py-1 transition',
         editMode && 'border-neutral-400',
-        hotkeyUnset && 'italic text-gray-500',
+        shortcutUnset && 'italic text-gray-500',
         !validKeyCombination && 'bg-red-500/30',
       )}
       onClick={() => {
@@ -148,12 +148,12 @@ const HotkeyInput: FC<HotkeyInputProps> = ({ id }) => {
         setCurrentlyEditingKeyId(editMode ? null : id)
       }}
     >
-      {hotkeyUnset ? 'unset' : formattedKeysStr}
+      {shortcutUnset ? 'unset' : formattedKeysStr}
     </div>
   )
 }
 
-const HotkeysPage: FC = () => {
+const ShortcutsPage: FC = () => {
   const { t } = useTranslation()
 
   const [currentlyEditingKey, setCurrentlyEditingKey] = useState<string | null>(
@@ -161,93 +161,97 @@ const HotkeysPage: FC = () => {
   )
 
   return (
-    <HotkeySettingsContext.Provider
+    <ShortcutSettingsContext.Provider
       value={{
         currentlyEditingKeyId: currentlyEditingKey,
         setCurrentlyEditingKeyId: setCurrentlyEditingKey,
       }}
     >
       <h3 className="text-xl font-bold">
-        {t(($) => $.dialog.settings.page.hotkeys.title)}
+        {t(($) => $.dialog.settings.page.shortcuts.title)}
       </h3>
       <div className="mt-2 text-sm text-neutral-500">
-        {t(($) => $.dialog.settings.page.hotkeys.changingHotkeyNotSupported)}
+        {t(
+          ($) => $.dialog.settings.page.shortcuts.changingShortcutNotSupported,
+        )}
       </div>
       <div className="mt-2">
         <div className="rounded bg-neutral-800 px-3 py-1 text-gray-400">
-          {t(($) => $.dialog.settings.page.hotkeys.categories.general.title)}
+          {t(($) => $.dialog.settings.page.shortcuts.categories.general.title)}
         </div>
         <div className="flex flex-col">
           <div className="mt-1 flex flex-row items-center gap-2">
             <span className="grow px-3">
               {t(
                 ($) =>
-                  $.dialog.settings.page.hotkeys.categories.general.items
+                  $.dialog.settings.page.shortcuts.categories.general.items
                     .openFromFile,
               )}
             </span>
-            <HotkeyInput id="general.openFromFile" />
+            <ShortcutKeyInput id="general.openFromFile" />
           </div>
           <div className="mt-1 flex flex-row items-center gap-2">
             <span className="grow px-3">
               {t(
                 ($) =>
-                  $.dialog.settings.page.hotkeys.categories.general.items
+                  $.dialog.settings.page.shortcuts.categories.general.items
                     .saveToFile,
               )}
             </span>
-            <HotkeyInput id="general.saveToFile" />
+            <ShortcutKeyInput id="general.saveToFile" />
           </div>
           <div className="mt-1 flex flex-row items-center gap-2">
             <span className="grow px-3">
               {t(
                 ($) =>
-                  $.dialog.settings.page.hotkeys.categories.general.items
+                  $.dialog.settings.page.shortcuts.categories.general.items
                     .openSettings,
               )}
             </span>
-            <HotkeyInput id="general.openSettings" />
+            <ShortcutKeyInput id="general.openSettings" />
           </div>
           <div className="mt-1 flex flex-row items-center gap-2">
             <span className="grow px-3">
               {t(
                 ($) =>
-                  $.dialog.settings.page.hotkeys.categories.general.items.undo,
+                  $.dialog.settings.page.shortcuts.categories.general.items
+                    .undo,
               )}
             </span>
-            <HotkeyInput id="general.undo" />
+            <ShortcutKeyInput id="general.undo" />
           </div>
           <div className="mt-1 flex flex-row items-center gap-2">
             <span className="grow px-3">
               {t(
                 ($) =>
-                  $.dialog.settings.page.hotkeys.categories.general.items.redo,
+                  $.dialog.settings.page.shortcuts.categories.general.items
+                    .redo,
               )}
             </span>
-            <HotkeyInput id="general.redo" />
+            <ShortcutKeyInput id="general.redo" />
           </div>
         </div>
       </div>
       <div className="mt-1">
         <div className="rounded bg-neutral-800 px-3 py-1 text-gray-400">
-          {t(($) => $.dialog.settings.page.hotkeys.categories.editor.title)}
+          {t(($) => $.dialog.settings.page.shortcuts.categories.editor.title)}
         </div>
         <div className="flex flex-col">
           <div className="mt-1 flex flex-row items-center gap-2">
             <span className="grow px-3">
               {t(
                 ($) =>
-                  $.dialog.settings.page.hotkeys.categories.editor.items
+                  $.dialog.settings.page.shortcuts.categories.editor.items
                     .translateMode,
               )}
             </span>
-            <HotkeyInput id="editor.translateMode" />
+            <ShortcutKeyInput id="editor.translateMode" />
           </div>
           <div className="mt-1 flex flex-row items-center gap-2">
             <span className="grow px-3">
               {t(
                 ($) =>
-                  $.dialog.settings.page.hotkeys.categories.editor.items
+                  $.dialog.settings.page.shortcuts.categories.editor.items
                     .rotateMode,
               )}
             </span>
@@ -259,7 +263,7 @@ const HotkeysPage: FC = () => {
             <span className="grow px-3">
               {t(
                 ($) =>
-                  $.dialog.settings.page.hotkeys.categories.editor.items
+                  $.dialog.settings.page.shortcuts.categories.editor.items
                     .scaleMode,
               )}
             </span>
@@ -271,7 +275,7 @@ const HotkeysPage: FC = () => {
             <span className="grow px-3">
               {t(
                 ($) =>
-                  $.dialog.settings.page.hotkeys.categories.editor.items
+                  $.dialog.settings.page.shortcuts.categories.editor.items
                     .duplicate,
               )}
             </span>
@@ -283,7 +287,7 @@ const HotkeysPage: FC = () => {
             <span className="grow px-3">
               {t(
                 ($) =>
-                  $.dialog.settings.page.hotkeys.categories.editor.items
+                  $.dialog.settings.page.shortcuts.categories.editor.items
                     .groupOrUngroup,
               )}
             </span>
@@ -295,7 +299,7 @@ const HotkeysPage: FC = () => {
             <span className="grow px-3">
               {t(
                 ($) =>
-                  $.dialog.settings.page.hotkeys.categories.editor.items
+                  $.dialog.settings.page.shortcuts.categories.editor.items
                     .deleteEntity,
               )}
             </span>
@@ -305,8 +309,8 @@ const HotkeysPage: FC = () => {
           </div>
         </div>
       </div>
-    </HotkeySettingsContext.Provider>
+    </ShortcutSettingsContext.Provider>
   )
 }
 
-export default HotkeysPage
+export default ShortcutsPage

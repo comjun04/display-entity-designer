@@ -104,9 +104,9 @@
             "reducePixelRatio": "픽셀 비율을 1로 줄이기"
           }
         },
-        "hotkeys": {
+        "shortcuts": {
           "title": "단축키",
-          "changingHotkeyNotSupported": "*단축키 변경은 아직 지원되지 않습니다.",
+          "changingShortcutNotSupported": "*단축키 변경은 아직 지원되지 않습니다.",
           "categories": {
             "general": {
               "title": "일반",
