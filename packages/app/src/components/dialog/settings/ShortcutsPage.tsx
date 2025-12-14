@@ -11,7 +11,7 @@ import { useTranslation } from 'react-i18next'
 
 import type { Settings } from '@/services/settings'
 import { useEditorStore } from '@/stores/editorStore'
-import { cn } from '@/utils'
+import { cn, getFormattedShortcutKeyString } from '@/utils'
 
 const SPECIAL_KEYS = ['Control', 'Alt', 'Shift']
 const BLOCKED_KEYS = ['Unidentified']
@@ -48,19 +48,7 @@ const ShortcutKeyInput: FC<ShortcutKeyInputProps> = ({ id }) => {
     ? [...pressedKeys.values()]
     : (rawKeysStr ?? '').split(' ')
   const validKeyCombination = isValidKeyCombo(keyList)
-  const formattedKeysStr = keyList
-    .map((rawKey) => {
-      if (rawKey === 'Control') {
-        return 'Ctrl'
-      }
-      if (rawKey.length === 1) {
-        // print single-character keys like alphabets as uppercase
-        return rawKey.toUpperCase()
-      }
-
-      return rawKey
-    })
-    .join(' ')
+  const formattedKeysStr = getFormattedShortcutKeyString(keyList)
 
   const saveChanges = useCallback(() => {
     const newKeys = [...pressedKeys.values()].map((key) => {
