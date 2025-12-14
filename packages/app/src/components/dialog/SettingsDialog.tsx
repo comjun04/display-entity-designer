@@ -47,7 +47,7 @@ const SettingsDialog: FC = () => {
         selectedPage === 'appearance' && 'bg-neutral-800/60',
       )}
     >
-      <div className="flex h-full w-full flex-col sm:flex-row">
+      <div className="flex h-full w-full flex-col overflow-auto sm:flex-row">
         {/* Desktop - left side settings submenu list */}
         <div className="hidden w-[30%] border-r-2 border-neutral-700 px-4 sm:block">
           <div className="flex flex-col gap-1">
@@ -155,7 +155,7 @@ const SettingsDialog: FC = () => {
           </select>
         </div>
 
-        <div className="h-full w-full pt-4 sm:px-4 sm:pt-0">
+        <div className="h-full w-full overflow-auto pt-4 sm:px-4 sm:pt-0">
           {/* General */}
           {selectedPage === 'general' && <GeneralPage />}
 
