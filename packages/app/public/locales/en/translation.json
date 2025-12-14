@@ -106,7 +106,9 @@
         },
         "shortcuts": {
           "title": "Shortcuts",
-          "changingShortcutNotSupported": "*Changing shortcuts are not yet supported.",
+          "desc": "Customize shortcuts for various actions",
+          "howto": "Click the right side block to change shortcut.",
+          "shortcutNotWorkInThisPage": "Shortcuts will not work while this page is open.",
           "categories": {
             "general": {
               "title": "General",

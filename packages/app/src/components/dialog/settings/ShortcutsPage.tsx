@@ -170,10 +170,16 @@ const ShortcutsPage: FC = () => {
       <h3 className="text-xl font-bold">
         {t(($) => $.dialog.settings.page.shortcuts.title)}
       </h3>
-      <div className="mt-2 text-sm text-neutral-500">
-        {t(
-          ($) => $.dialog.settings.page.shortcuts.changingShortcutNotSupported,
-        )}
+      <div className="text-gray-500">
+        {t(($) => $.dialog.settings.page.shortcuts.desc)}
+      </div>
+      <div className="mt-2 flex flex-row items-center gap-2 rounded bg-neutral-700 px-3 py-2">
+        <span className="grow">
+          {t(($) => $.dialog.settings.page.shortcuts.howto)}
+        </span>
+      </div>
+      <div className="mt-2 rounded bg-yellow-800 px-3 py-2">
+        {t(($) => $.dialog.settings.page.shortcuts.shortcutNotWorkInThisPage)}
       </div>
       <div className="mt-2">
         <div className="rounded bg-neutral-800 px-3 py-1 text-gray-400">

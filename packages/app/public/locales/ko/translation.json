@@ -106,7 +106,9 @@
         },
         "shortcuts": {
           "title": "단축키",
-          "changingShortcutNotSupported": "*단축키 변경은 아직 지원되지 않습니다.",
+          "desc": "여러 작업에 대한 단축키 사용자 지정",
+          "howto": "단축키를 변경하려면 우측 블록을 클릭하세요.",
+          "shortcutNotWorkInThisPage": "이 페이지가 열려 있는 동안에는 단축키가 작동하지 않습니다.",
           "categories": {
             "general": {
               "title": "일반",
