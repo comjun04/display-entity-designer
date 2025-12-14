@@ -40,6 +40,14 @@ const ShortcutHandler: FC = () => {
     const handler = (evt: KeyboardEvent) => {
       const { openedDialog, setOpenedDialog } = useDialogStore.getState()
 
+      // prevent default browser actions first
+      // ctrl + o (open file)
+      // ctrl + s (save page)
+      // ctrl + p (print page)
+      if (['p', 'o', 's'].includes(evt.key.toLowerCase()) && evt.ctrlKey) {
+        evt.preventDefault()
+      }
+
       // <input>이나 <textarea>에 focus가 잡혀 있다면 이벤트를 처리하지 않음
       if (
         focusableElements.includes(
