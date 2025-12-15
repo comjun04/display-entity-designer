@@ -37,7 +37,6 @@ interface ShortcutKeyInputProps {
 }
 const ShortcutKeyInput: FC<ShortcutKeyInputProps> = ({ id }) => {
   const rawKeysStr = useEditorStore((state) => state.settings.shortcuts[id])
-  const shortcutUnset = rawKeysStr == null
 
   const { currentlyEditingKeyId, setCurrentlyEditingKeyId } = useContext(
     ShortcutSettingsContext,
@@ -45,6 +44,7 @@ const ShortcutKeyInput: FC<ShortcutKeyInputProps> = ({ id }) => {
   const editMode = currentlyEditingKeyId === id
 
   const pressedKeys = useSet<string>()
+  const shortcutUnset = pressedKeys.size < 1
 
   const keyList = editMode
     ? [...pressedKeys.values()]
@@ -162,10 +162,8 @@ const ShortcutKeyInput: FC<ShortcutKeyInputProps> = ({ id }) => {
           onClick={(evt) => {
             evt.stopPropagation()
 
-            // save keybind as unset
+            // set keybind as unset
             pressedKeys.clear()
-            saveChanges()
-            setCurrentlyEditingKeyId(null)
           }}
         >
           <LuEraser size={14} />
@@ -176,8 +174,7 @@ const ShortcutKeyInput: FC<ShortcutKeyInputProps> = ({ id }) => {
             evt.stopPropagation()
 
             // save changes
-            if (validKeyCombination) {
-              saveChanges()
+            if (saveChanges()) {
               setCurrentlyEditingKeyId(null)
             }
           }}
