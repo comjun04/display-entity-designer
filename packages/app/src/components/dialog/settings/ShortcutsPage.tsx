@@ -1,3 +1,4 @@
+import { Tooltip } from '@heroui/tooltip'
 import { useSet } from '@react-hookz/web'
 import {
   type FC,
@@ -146,41 +147,64 @@ const ShortcutKeyInput: FC<ShortcutKeyInputProps> = ({ id }) => {
           editMode && 'group-hover:pointer-events-auto group-hover:opacity-100',
         )}
       >
-        <button
-          className="rounded p-1 transition-colors duration-150 hover:bg-neutral-900"
-          onClick={(evt) => {
-            evt.stopPropagation()
-
-            // discard changes
-            setCurrentlyEditingKeyId(null)
-          }}
+        <Tooltip
+          content="Undo changes"
+          placement="top"
+          size="sm"
+          closeDelay={0}
         >
-          <LuUndo size={14} />
-        </button>
-        <button
-          className="rounded p-1 transition-colors duration-150 hover:bg-neutral-900"
-          onClick={(evt) => {
-            evt.stopPropagation()
+          <button
+            className="rounded p-1 transition-colors duration-150 hover:bg-neutral-900"
+            onClick={(evt) => {
+              evt.stopPropagation()
 
-            // set keybind as unset
-            pressedKeys.clear()
-          }}
-        >
-          <LuEraser size={14} />
-        </button>
-        <button
-          className="rounded p-1 transition-colors duration-150 hover:bg-neutral-900"
-          onClick={(evt) => {
-            evt.stopPropagation()
-
-            // save changes
-            if (saveChanges()) {
+              // discard changes
               setCurrentlyEditingKeyId(null)
-            }
-          }}
+            }}
+          >
+            <LuUndo size={14} />
+          </button>
+        </Tooltip>
+
+        <Tooltip
+          content="Unset keybind"
+          placement="top"
+          size="sm"
+          closeDelay={0}
         >
-          <LuCheck size={14} />
-        </button>
+          <button
+            className="rounded p-1 transition-colors duration-150 hover:bg-neutral-900"
+            onClick={(evt) => {
+              evt.stopPropagation()
+
+              // set keybind as unset
+              pressedKeys.clear()
+            }}
+          >
+            <LuEraser size={14} />
+          </button>
+        </Tooltip>
+
+        <Tooltip
+          content="Save keybind"
+          placement="top"
+          size="sm"
+          closeDelay={0}
+        >
+          <button
+            className="rounded p-1 transition-colors duration-150 hover:bg-neutral-900"
+            onClick={(evt) => {
+              evt.stopPropagation()
+
+              // save changes
+              if (saveChanges()) {
+                setCurrentlyEditingKeyId(null)
+              }
+            }}
+          >
+            <LuCheck size={14} />
+          </button>
+        </Tooltip>
       </div>
     </div>
   )
