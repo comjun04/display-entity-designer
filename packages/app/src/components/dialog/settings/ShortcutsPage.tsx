@@ -37,6 +37,8 @@ interface ShortcutKeyInputProps {
   id: keyof Settings['shortcuts']
 }
 const ShortcutKeyInput: FC<ShortcutKeyInputProps> = ({ id }) => {
+  const { t } = useTranslation()
+
   const rawKeysStr = useEditorStore((state) => state.settings.shortcuts[id])
 
   const { currentlyEditingKeyId, setCurrentlyEditingKeyId } = useContext(
@@ -139,7 +141,11 @@ const ShortcutKeyInput: FC<ShortcutKeyInputProps> = ({ id }) => {
         setCurrentlyEditingKeyId(editMode ? null : id)
       }}
     >
-      <span>{shortcutUnset ? 'unset' : formattedKeysStr}</span>
+      <span>
+        {shortcutUnset
+          ? t(($) => $.dialog.settings.page.shortcuts.unset)
+          : formattedKeysStr}
+      </span>
       <div
         className={cn(
           'absolute right-1 top-1/2 flex -translate-y-1/2 flex-row items-center rounded bg-neutral-800/70 text-white transition duration-150',
@@ -148,7 +154,7 @@ const ShortcutKeyInput: FC<ShortcutKeyInputProps> = ({ id }) => {
         )}
       >
         <Tooltip
-          content="Undo changes"
+          content={t(($) => $.dialog.settings.page.shortcuts.buttons.undo)}
           placement="top"
           size="sm"
           closeDelay={0}
@@ -167,7 +173,7 @@ const ShortcutKeyInput: FC<ShortcutKeyInputProps> = ({ id }) => {
         </Tooltip>
 
         <Tooltip
-          content="Unset keybind"
+          content={t(($) => $.dialog.settings.page.shortcuts.buttons.unset)}
           placement="top"
           size="sm"
           closeDelay={0}
@@ -186,7 +192,7 @@ const ShortcutKeyInput: FC<ShortcutKeyInputProps> = ({ id }) => {
         </Tooltip>
 
         <Tooltip
-          content="Save keybind"
+          content={t(($) => $.dialog.settings.page.shortcuts.buttons.save)}
           placement="top"
           size="sm"
           closeDelay={0}

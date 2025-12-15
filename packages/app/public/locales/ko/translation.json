@@ -109,6 +109,12 @@
           "desc": "여러 작업에 대한 단축키 사용자 지정",
           "howto": "단축키를 변경하려면 우측 블록을 클릭하세요.",
           "shortcutNotWorkInThisPage": "이 페이지가 열려 있는 동안에는 단축키가 작동하지 않습니다.",
+          "unset": "설정되지 않음",
+          "buttons": {
+            "undo": "변경 사항 되돌리기",
+            "unset": "단축키 해제",
+            "save": "단축키 저장"
+          },
           "categories": {
             "general": {
               "title": "일반",

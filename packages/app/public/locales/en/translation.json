@@ -109,6 +109,12 @@
           "desc": "Customize shortcuts for various actions",
           "howto": "Click the right side block to change shortcut.",
           "shortcutNotWorkInThisPage": "Shortcuts will not work while this page is open.",
+          "unset": "unset",
+          "buttons": {
+            "undo": "Undo changes",
+            "unset": "Unset keybind",
+            "save": "Save keybind"
+          },
           "categories": {
             "general": {
               "title": "General",
