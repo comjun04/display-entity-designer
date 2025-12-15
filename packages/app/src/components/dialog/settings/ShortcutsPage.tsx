@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react'
 import { useTranslation } from 'react-i18next'
+import { LuCheck, LuEraser, LuUndo } from 'react-icons/lu'
 
 import type { Settings } from '@/services/settings'
 import { useEditorStore } from '@/stores/editorStore'
@@ -124,7 +125,7 @@ const ShortcutKeyInput: FC<ShortcutKeyInputProps> = ({ id }) => {
   return (
     <div
       className={cn(
-        'w-full max-w-[12rem] rounded border-2 border-transparent bg-neutral-700/70 px-2 py-1 transition',
+        'group relative w-full max-w-[12rem] rounded border-2 border-transparent bg-neutral-700/70 px-2 py-1 transition-colors',
         editMode && 'border-neutral-400',
         shortcutUnset && 'italic text-gray-500',
         !validKeyCombination && 'bg-red-500/30',
@@ -136,7 +137,53 @@ const ShortcutKeyInput: FC<ShortcutKeyInputProps> = ({ id }) => {
         setCurrentlyEditingKeyId(editMode ? null : id)
       }}
     >
-      {shortcutUnset ? 'unset' : formattedKeysStr}
+      <span>{shortcutUnset ? 'unset' : formattedKeysStr}</span>
+      <div
+        className={cn(
+          'absolute right-1 top-1/2 flex -translate-y-1/2 flex-row items-center rounded bg-neutral-800/70 text-white transition duration-150',
+          'pointer-events-none opacity-0',
+          editMode && 'group-hover:pointer-events-auto group-hover:opacity-100',
+        )}
+      >
+        <button
+          className="rounded p-1 transition-colors duration-150 hover:bg-neutral-900"
+          onClick={(evt) => {
+            evt.stopPropagation()
+
+            // discard changes
+            setCurrentlyEditingKeyId(null)
+          }}
+        >
+          <LuUndo size={14} />
+        </button>
+        <button
+          className="rounded p-1 transition-colors duration-150 hover:bg-neutral-900"
+          onClick={(evt) => {
+            evt.stopPropagation()
+
+            // save keybind as unset
+            pressedKeys.clear()
+            saveChanges()
+            setCurrentlyEditingKeyId(null)
+          }}
+        >
+          <LuEraser size={14} />
+        </button>
+        <button
+          className="rounded p-1 transition-colors duration-150 hover:bg-neutral-900"
+          onClick={(evt) => {
+            evt.stopPropagation()
+
+            // save changes
+            if (validKeyCombination) {
+              saveChanges()
+              setCurrentlyEditingKeyId(null)
+            }
+          }}
+        >
+          <LuCheck size={14} />
+        </button>
+      </div>
     </div>
   )
 }
