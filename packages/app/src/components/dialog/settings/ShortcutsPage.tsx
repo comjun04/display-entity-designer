@@ -249,9 +249,7 @@ const ShortcutsPage: FC = () => {
                     .rotateMode,
               )}
             </span>
-            <div className="w-full max-w-[12rem] rounded bg-neutral-700/70 px-2 py-1">
-              R
-            </div>
+            <ShortcutKeyInput id="editor.rotateMode" />
           </div>
           <div className="mt-1 flex flex-row items-center gap-2">
             <span className="grow px-3">
@@ -261,9 +259,7 @@ const ShortcutsPage: FC = () => {
                     .scaleMode,
               )}
             </span>
-            <div className="w-full max-w-[12rem] rounded bg-neutral-700/70 px-2 py-1">
-              S
-            </div>
+            <ShortcutKeyInput id="editor.scaleMode" />
           </div>
           <div className="mt-1 flex flex-row items-center gap-2">
             <span className="grow px-3">
@@ -273,9 +269,7 @@ const ShortcutsPage: FC = () => {
                     .duplicate,
               )}
             </span>
-            <div className="w-full max-w-[12rem] rounded bg-neutral-700/70 px-2 py-1">
-              D
-            </div>
+            <ShortcutKeyInput id="editor.duplicate" />
           </div>
           <div className="mt-1 flex flex-row items-center gap-2">
             <span className="grow px-3">
@@ -285,9 +279,7 @@ const ShortcutsPage: FC = () => {
                     .groupOrUngroup,
               )}
             </span>
-            <div className="w-full max-w-[12rem] rounded bg-neutral-700/70 px-2 py-1">
-              G
-            </div>
+            <ShortcutKeyInput id="editor.groupOrUngroup" />
           </div>
           <div className="mt-1 flex flex-row items-center gap-2">
             <span className="grow px-3">
@@ -297,9 +289,7 @@ const ShortcutsPage: FC = () => {
                     .deleteEntity,
               )}
             </span>
-            <div className="w-full max-w-[12rem] rounded bg-neutral-700/70 px-2 py-1">
-              Delete
-            </div>
+            <ShortcutKeyInput id="editor.deleteEntity" />
           </div>
         </div>
       </div>
