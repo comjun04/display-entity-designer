@@ -18,8 +18,9 @@ const SPECIAL_KEYS = ['Control', 'Alt', 'Shift']
 const BLOCKED_KEYS = ['Unidentified']
 function isValidKeyCombo(keys: string[]) {
   return (
-    keys.some((key) => !SPECIAL_KEYS.includes(key)) &&
-    keys.every((key) => !BLOCKED_KEYS.includes(key))
+    keys.length < 1 || // pass if keybind is unset
+    (keys.some((key) => !SPECIAL_KEYS.includes(key)) &&
+      keys.every((key) => !BLOCKED_KEYS.includes(key)))
   )
 }
 
