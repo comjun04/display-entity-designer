@@ -99,7 +99,9 @@ export async function loadMaterial({
     if (cachedCroppedTextureDataUrl == null) {
       const img = await new ImageLoader().loadAsync(
         textureData.type === 'player_head'
-          ? textureData.playerHeadTextureUrl
+          ? // minecraft texture url can be provided as http:
+            // so to prevent mixed content error/warning, match protocol with current page
+            matchUrlProtocolWithCurrentPage(textureData.playerHeadTextureUrl)
           : await AssetFileInfosCache.instance.makeFullFileUrl(
               `/assets/minecraft/textures/${textureData.resourceLocation}.png`,
             ),
@@ -155,4 +157,10 @@ export async function loadMaterial({
     setMaterial(materialKey, material)
     return { material, materialKey }
   })
+}
+
+function matchUrlProtocolWithCurrentPage(url: string) {
+  const urlObj = new URL(url)
+  urlObj.protocol = window.location.protocol // match http/https protocol with current page to prevent mixed content error
+  return urlObj.toString()
 }
