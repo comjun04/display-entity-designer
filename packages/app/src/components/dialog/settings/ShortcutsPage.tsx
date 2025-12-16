@@ -39,19 +39,19 @@ interface ShortcutKeyInputProps {
 const ShortcutKeyInput: FC<ShortcutKeyInputProps> = ({ id }) => {
   const { t } = useTranslation()
 
-  const rawKeysStr = useEditorStore((state) => state.settings.shortcuts[id])
+  const rawKeysStr = useEditorStore(
+    (state) => state.settings.shortcuts[id] ?? '',
+  )
 
   const { currentlyEditingKeyId, setCurrentlyEditingKeyId } = useContext(
     ShortcutSettingsContext,
   )
   const editMode = currentlyEditingKeyId === id
 
-  const pressedKeys = useSet<string>()
+  const pressedKeys = useSet<string>(rawKeysStr.split(' '))
   const shortcutUnset = pressedKeys.size < 1
 
-  const keyList = editMode
-    ? [...pressedKeys.values()]
-    : (rawKeysStr ?? '').split(' ')
+  const keyList = editMode ? [...pressedKeys.values()] : rawKeysStr.split(' ')
   const validKeyCombination = isValidKeyCombo(keyList)
   const formattedKeysStr = getFormattedShortcutKeyString(keyList)
 
@@ -82,11 +82,9 @@ const ShortcutKeyInput: FC<ShortcutKeyInputProps> = ({ id }) => {
     // to avoid flickering between editMode change and this effect run
     if (!editMode) {
       pressedKeys.clear()
-      if (rawKeysStr != null) {
-        rawKeysStr.split(' ').forEach((key) => {
-          pressedKeys.add(key)
-        })
-      }
+      rawKeysStr.split(' ').forEach((key) => {
+        if (key.length > 0) pressedKeys.add(key)
+      })
     }
   }, [editMode, pressedKeys, rawKeysStr])
 
