@@ -493,3 +493,21 @@ export function getTextureColor(
 
   return 0xffffff
 }
+
+export function getFormattedShortcutKeyString(rawKeysInput: string | string[]) {
+  const rawKeys = Array.isArray(rawKeysInput)
+    ? rawKeysInput
+    : rawKeysInput.split(' ')
+  const keys = rawKeys.map((key) => {
+    if (key === 'Control') {
+      return 'Ctrl'
+    }
+    if (key.length === 1) {
+      // print single-character keys like alphabets as uppercase
+      return key.toUpperCase()
+    }
+
+    return key
+  })
+  return keys.join(' + ')
+}
