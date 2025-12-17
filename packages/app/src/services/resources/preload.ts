@@ -35,18 +35,26 @@ export async function preloadResources(entities: DisplayEntity[]) {
     }
   }
 
-  for (const applyModelInfo of applyModelInfoList) {
-    const modelData = await loadModel(applyModelInfo.model)
-    const { data } = modelData
+  const batchLoadResults = await Promise.allSettled(
+    applyModelInfoList.map(async (applyModelInfo) => {
+      const modelData = await loadModel(applyModelInfo.model)
+      const { data } = modelData
 
-    await loadModelMaterials({
-      modelResourceLocation: applyModelInfo.model,
-      elements: data.elements,
-      textures: data.textures,
-      isItemModel: false,
-      playerHeadTextureData: applyModelInfo.playerHeadTextureData,
-    })
-  }
+      await loadModelMaterials({
+        modelResourceLocation: applyModelInfo.model,
+        elements: data.elements,
+        textures: data.textures,
+        isItemModel: false,
+        playerHeadTextureData: applyModelInfo.playerHeadTextureData,
+      })
+    }),
+  )
+  const batchLoadSuccessCount = batchLoadResults.filter(
+    (d) => d.status === 'fulfilled',
+  ).length
+  logger.debug(
+    `preLoadResources(): total ${batchLoadResults.length}, success ${batchLoadSuccessCount}, failed ${batchLoadResults.length - batchLoadSuccessCount}`,
+  )
 
   logger.log('preLoadResources(): finish preloading resources')
 }
