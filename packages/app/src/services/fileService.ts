@@ -124,12 +124,13 @@ export async function openProjectFile(file: Blob): Promise<boolean> {
 }
 
 export async function saveToFile() {
+  const { projectName } = useProjectStore.getState()
   const saveDataBlob = await createSaveData()
 
   const objectUrl = URL.createObjectURL(saveDataBlob)
   const tempElement = document.createElement('a')
   tempElement.href = objectUrl
-  tempElement.download = 'project.depl'
+  tempElement.download = `${projectName}.depl`
   tempElement.click() // trigger download
 
   URL.revokeObjectURL(objectUrl)
