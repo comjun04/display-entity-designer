@@ -11,6 +11,7 @@ const ToastContainer: FC = () => {
       <Toaster
         theme="dark"
         richColors
+        closeButton
         visibleToasts={5}
         offset={8}
         mobileOffset={8}
