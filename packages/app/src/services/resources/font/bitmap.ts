@@ -1,3 +1,4 @@
+import { Mutex } from 'async-mutex'
 import { CanvasTexture, ImageLoader } from 'three'
 
 import fetcher from '@/fetcher'
@@ -46,61 +47,64 @@ export async function createCharTexture(char: string) {
   }
 }
 
+const fontProvidersLoadMutex = new Mutex()
 async function getGlyphData(char: string) {
-  const { fontProviders, setFontProviders } = useCacheStore.getState()
+  return await fontProvidersLoadMutex.runExclusive(async () => {
+    const { fontProviders, setFontProviders } = useCacheStore.getState()
 
-  // load character providers
-  let defaultFontProviders = fontProviders['provider.default']
-  if (fontProviders['provider.default'] == null) {
-    const {
-      data: { providers },
-    } = await fetcher<CDNFontProviderResponse>(
-      '/assets/minecraft/font/include/default.json',
-      true,
-    )
-    setFontProviders('provider.default', providers)
-    defaultFontProviders = providers
-  }
+    // load character providers
+    let defaultFontProviders = fontProviders['provider.default']
+    if (fontProviders['provider.default'] == null) {
+      const {
+        data: { providers },
+      } = await fetcher<CDNFontProviderResponse>(
+        '/assets/minecraft/font/include/default.json',
+        true,
+      )
+      setFontProviders('provider.default', providers)
+      defaultFontProviders = providers
+    }
 
-  // find character
-  for (const provider of defaultFontProviders.filter(
-    (provider) => provider.type === 'bitmap',
-  )) {
-    for (let i = 0; i < provider.chars.length; i++) {
-      const idx = provider.chars[i].indexOf(char[0])
-      if (idx >= 0) {
-        const img = await imageLoader.loadAsync(
-          await AssetFileInfosCache.instance.makeFullFileUrl(
-            `/assets/minecraft/textures/${stripMinecraftPrefix(provider.file)}`,
-          ),
-        )
+    // find character
+    for (const provider of defaultFontProviders.filter(
+      (provider) => provider.type === 'bitmap',
+    )) {
+      for (let i = 0; i < provider.chars.length; i++) {
+        const idx = provider.chars[i].indexOf(char[0])
+        if (idx >= 0) {
+          const img = await imageLoader.loadAsync(
+            await AssetFileInfosCache.instance.makeFullFileUrl(
+              `/assets/minecraft/textures/${stripMinecraftPrefix(provider.file)}`,
+            ),
+          )
 
-        const width = img.width / provider.chars[0].length
-        const height = provider.height ?? 8
-        const actualCharHeight = img.height / provider.chars.length
-        // net.minecraft.client.gui.font.providers.BitmapProvider.Definition#load()
-        const heightRatio = height / actualCharHeight
-        const actualWidth = getActualGlyphWidth(
-          img,
-          idx,
-          i,
-          width,
-          actualCharHeight,
-        )
+          const width = img.width / provider.chars[0].length
+          const height = provider.height ?? 8
+          const actualCharHeight = img.height / provider.chars.length
+          // net.minecraft.client.gui.font.providers.BitmapProvider.Definition#load()
+          const heightRatio = height / actualCharHeight
+          const actualWidth = getActualGlyphWidth(
+            img,
+            idx,
+            i,
+            width,
+            actualCharHeight,
+          )
 
-        return {
-          file: provider.file,
-          width,
-          height,
-          actualWidth,
-          advance: Math.round(actualWidth * heightRatio) + 1,
-          ascent: provider.ascent,
-          row: i,
-          col: idx,
+          return {
+            file: provider.file,
+            width,
+            height,
+            actualWidth,
+            advance: Math.round(actualWidth * heightRatio) + 1,
+            ascent: provider.ascent,
+            row: i,
+            col: idx,
+          }
         }
       }
     }
-  }
+  })
 }
 
 function getActualGlyphWidth(
