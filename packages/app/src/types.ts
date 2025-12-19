@@ -351,3 +351,24 @@ type HistoryChangePropertiesState =
           HistoryChangePropertiesStateCommonOmitKeys | 'children'
         >
       >)
+
+// mineskin
+
+export interface MineSkinAPIV2_QueueSkinGenerationBody {
+  url: string // image url or base64 data uri
+  variant?: 'classic' | 'slim' | 'unknown'
+  name?: string
+  visibility?: 'public' | 'unlisted' | 'private'
+  cape?: string // uuid
+}
+
+export interface MineSkinAPIV2_QueueSkinGenerationResponse {
+  success: boolean
+  job: {
+    id: string
+    status: 'unknown' | 'waiting' | 'active' | 'failed' | 'completed'
+    result?: string
+    timestamp?: number
+    eta?: number
+  }
+}
