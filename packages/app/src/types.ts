@@ -362,13 +362,31 @@ export interface MineSkinAPIV2_QueueSkinGenerationBody {
   cape?: string // uuid
 }
 
-export interface MineSkinAPIV2_QueueSkinGenerationResponse {
-  success: boolean
-  job: {
+export type MineSkinAPIV2_QueueSkinGenerationResponse =
+  | {
+      success: true
+      job: {
+        id: string
+        status: 'unknown' | 'waiting' | 'active' | 'failed' | 'completed'
+        result?: string
+        timestamp?: number
+        eta?: number
+      }
+    }
+  | {
+      success: false
+      errors: {
+        code: string
+        message: string
+      }[]
+    }
+
+export interface MineSkinAPIV2_ListQueueJobsResponse {
+  jobs: {
     id: string
     status: 'unknown' | 'waiting' | 'active' | 'failed' | 'completed'
     result?: string
     timestamp?: number
     eta?: number
-  }
+  }[]
 }

@@ -1,4 +1,8 @@
 export interface HeadBakerWorkerMessage {
   cmd: 'run'
-  heads: string[]
+  mineskinApiKey: string
+  heads: {
+    entityId: string
+    texturePixels: number[]
+  }[]
 }
