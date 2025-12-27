@@ -390,3 +390,22 @@ export interface MineSkinAPIV2_ListQueueJobsResponse {
     eta?: number
   }[]
 }
+
+export type MineSkinAPIV2_QueueJobDetailResponse =
+  | {
+      success: true
+      skin: {
+        texture: {
+          url: {
+            skin: string
+          }
+        }
+      }
+    }
+  | {
+      success: false
+      errors: {
+        code: string
+        message: string
+      }[]
+    }

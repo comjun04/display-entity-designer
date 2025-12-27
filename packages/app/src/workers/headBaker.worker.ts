@@ -1,169 +1,305 @@
 import type {
   MineSkinAPIV2_ListQueueJobsResponse,
+  MineSkinAPIV2_QueueJobDetailResponse,
   MineSkinAPIV2_QueueSkinGenerationResponse,
 } from '@/types'
-import type { HeadBakerWorkerMessage } from '@/types/workers'
+import type {
+  HeadBakerWorkerMessage,
+  HeadBakerWorkerResponse,
+} from '@/types/workers'
 
-const CONCURRENT_JOBS_LIMIT = 10
-
-let running = false
-const jobs: ({
-  jobId?: string
+interface QueueItem {
   entityId: string
-  playerHeadSkinImage: Blob
-} & (
+  image: Blob
+}
+
+interface ActiveJob {
+  entityId: string
+  jobId: string
+}
+
+type HeadState =
   | {
+      entityId: string
       status: 'queued'
     }
   | {
-      status: 'generating' | 'error' | 'completed'
-      requestId: string
+      entityId: string
+      status: 'generating'
     }
   | {
+      entityId: string
       status: 'completed'
       generatedData: {
         skinUrl: string
       }
     }
-))[] = []
-
-self.onmessage = async (evt: MessageEvent<HeadBakerWorkerMessage>) => {
-  try {
-    if (evt.data.cmd !== 'run') {
-      console.error('unknown worker command')
-      return
-    }
-    if (running) {
-      console.error('worker already running')
-      return
-    }
-    running = true
-
-    const canvas = new OffscreenCanvas(64, 64)
-    const ctx = canvas.getContext('2d', {
-      willReadFrequently: true,
-    })!
-    for (const headData of evt.data.heads) {
-      // aa
-      const imageData = new ImageData(64, 64)
-      for (let i = 0; i < headData.texturePixels.length; i++) {
-        imageData.data[i] = headData.texturePixels[i]
-      }
-      ctx.putImageData(imageData, 0, 0)
-      const blob = await canvas.convertToBlob({ type: 'image/png' })
-
-      jobs.push({
-        status: 'queued',
-        entityId: headData.entityId,
-        playerHeadSkinImage: blob,
-      })
+  | {
+      entityId: string
+      status: 'error'
     }
 
-    await run(evt.data.mineskinApiKey)
+const headState = new Map<string, HeadState>()
 
-    // done
-  } catch (err) {
-    console.error(err)
-  }
+const MAX_CONCURRENT = 10
+const POLL_INTERVAL_MS = 1000
+
+const pendingQueue: QueueItem[] = []
+const activeJobs = new Map<string, ActiveJob>() // jobId -> job
+
+let apiKey = ''
+let workerRunning = false
+let pollerRunning = false
+
+function log(...content: unknown[]) {
+  console.log('[worker:headBaker]', ...content)
 }
 
-async function run(apiKey: string) {
-  // step 1.
+// Utility: pixels -> PNG Blob
+async function pixelsToPNG(pixels: number[]): Promise<Blob> {
+  const size = 64
+  const canvas = new OffscreenCanvas(size, size)
+  const ctx = canvas.getContext('2d')!
 
-  for (let i = 0; i < jobs.length; i++) {
-    const jobsChunk = jobs.slice(i, CONCURRENT_JOBS_LIMIT + i)
+  ctx.putImageData(
+    new ImageData(new Uint8ClampedArray(pixels), size, size),
+    0,
+    0,
+  )
 
-    // queue skin generation
-    const queueRes = await Promise.allSettled(
-      jobsChunk.map(async (job) => {
-        const formData = new FormData()
-        formData.append('file', job.playerHeadSkinImage)
-        formData.append('visibility', 'unlisted')
+  return canvas.convertToBlob({ type: 'image/png' })
+}
 
-        const response = (await fetch('https://api.mineskin.org/v2/queue', {
-          method: 'POST',
-          headers: {
-            'User-Agent': 'depl',
-            'MineSkin-User-Agent': 'depl', // `User-Agent` is not changeable on browsers, so use custom header
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: formData,
-        }).then((res) =>
-          res.json(),
-        )) as MineSkinAPIV2_QueueSkinGenerationResponse
-        return response
-      }),
-    )
+// Helper: Emit Incremental Update
+function emitUpdate(updated: HeadState[]) {
+  if (updated.length === 0) return
 
-    queueRes.forEach((res, idx) => {
-      const job = jobsChunk[idx]
-      if (res.status == 'rejected' || !res.value.success) {
-        job.status = 'error'
-        return
-      }
+  const stats = {
+    total: headState.size,
+    generating: 0,
+    error: 0,
+    completed: 0,
+  }
+  for (const state of headState.values()) {
+    switch (state.status) {
+      case 'generating':
+        stats.generating++
+        break
+      case 'error':
+        stats.error++
+        break
+      case 'completed':
+        stats.completed++
+        break
+    }
+  }
 
-      const res2 = res.value
-      job.jobId = res2.job.id
-      switch (res2.job.status) {
-        case 'waiting':
-        case 'active': {
-          job.status = 'generating'
-          break
-        }
+  self.postMessage({
+    type: 'update',
+    stats,
+    heads: updated,
+  } satisfies HeadBakerWorkerResponse)
+}
 
-        case 'completed': {
-          job.status = 'completed'
-          break
-        }
+// Submit Job (only when slot available)
+async function submitJob(item: QueueItem) {
+  const formData = new FormData()
+  formData.append('file', item.image)
+  formData.append('visibility', 'unlisted')
 
-        case 'failed': {
-          job.status = 'error'
-        }
-      }
+  const res = await fetch('https://api.mineskin.org/v2/queue', {
+    method: 'POST',
+    headers: {
+      'User-Agent': 'depl',
+      'MineSkin-User-Agent': 'depl', // `User-Agent` is not changeable on browsers, so use custom header
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: formData,
+  }).then((r) => r.json() as Promise<MineSkinAPIV2_QueueSkinGenerationResponse>)
+
+  if (!res.success) {
+    headState.set(item.entityId, {
+      entityId: item.entityId,
+      status: 'error',
     })
 
-    while (true) {
-      const pendingJobs = jobsChunk.filter((job) => job.status === 'generating')
-      if (pendingJobs.length < 1) break
+    emitUpdate([
+      {
+        entityId: item.entityId,
+        status: 'error',
+      },
+    ])
 
-      const listQueueRes = (await fetch('https://api.mineskin.org/v2/queue', {
-        headers: {
-          'User-Agent': 'depl',
-          'MineSkin-User-Agent': 'depl',
-          Authorization: `Bearer ${apiKey}`,
-        },
-      }).then((res) => res.json())) as MineSkinAPIV2_ListQueueJobsResponse
+    return
+  }
 
-      for (const job of pendingJobs) {
-        const match = listQueueRes.jobs.find((d) => d.id === job.jobId)
-        if (match == null) {
-          job.status = 'error'
-          continue
-        }
+  activeJobs.set(res.job.id, {
+    entityId: item.entityId,
+    jobId: res.job.id,
+  })
 
-        switch (match.status) {
-          case 'completed': {
-            job.status = 'completed'
-            break
-          }
+  headState.set(item.entityId, {
+    entityId: item.entityId,
+    status: 'generating',
+  })
 
-          case 'failed':
-          case 'unknown': {
-            job.status = 'error'
-            break
-          }
-        }
-      }
+  emitUpdate([
+    {
+      entityId: item.entityId,
+      status: 'generating',
+    },
+  ])
+}
 
-      await delay(1000)
-    }
+// Fetch Job Detail (single job)
+async function fetchJobSkinUrl(jobId: string) {
+  const res = await fetch(`https://api.mineskin.org/v2/queue/${jobId}`, {
+    headers: {
+      'User-Agent': 'depl',
+      'MineSkin-User-Agent': 'depl', // `User-Agent` is not changeable on browsers, so use custom header
+      Authorization: `Bearer ${apiKey}`,
+    },
+  }).then((r) => r.json() as Promise<MineSkinAPIV2_QueueJobDetailResponse>)
 
-    i += CONCURRENT_JOBS_LIMIT
+  if (!res.success) {
+    console.error(res.errors)
+    throw new Error('Failed to fetch job skin url')
+  }
+  const skinUrl = res.skin.texture.url.skin
+  return skinUrl
+}
+
+// Scheduler (fills up to `MAX_CONCURRENT` jobs)
+async function schedule() {
+  const items: QueueItem[] = []
+  const count = Math.max(
+    Math.min(MAX_CONCURRENT - activeJobs.size, pendingQueue.length),
+    0,
+  ) // 0 < available slot count < pendingQueue.length
+  log(`schedule(): adding ${count} new jobs to the queue`)
+  for (let i = 0; i < count; i++) {
+    items.push(pendingQueue.shift()!)
+  }
+  // submit job at the same time to reduce delay between api requests
+  await Promise.allSettled(items.map((item) => submitJob(item)))
+
+  if (!pollerRunning && activeJobs.size > 0) {
+    pollerRunning = true
+    await pollLoop()
   }
 }
 
-function delay(timeMillis: number) {
-  return new Promise<void>((resolve) => {
-    setTimeout(() => resolve(), timeMillis)
-  })
+// Central Poller (single loop)
+async function pollLoop() {
+  while (activeJobs.size > 0) {
+    await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS))
+
+    const res = await fetch('https://api.mineskin.org/v2/queue', {
+      headers: {
+        'User-Agent': 'depl',
+        'MineSkin-User-Agent': 'depl', // `User-Agent` is not changeable on browsers, so use custom header
+        Authorization: `Bearer ${apiKey}`,
+      },
+    }).then((r) => r.json() as Promise<MineSkinAPIV2_ListQueueJobsResponse>)
+
+    for (const job of res.jobs) {
+      if (!activeJobs.has(job.id)) continue
+
+      const active = activeJobs.get(job.id)!
+
+      if (job.status === 'completed') {
+        activeJobs.delete(job.id)
+
+        try {
+          // fetch actual generated skin data
+          const skinUrl = await fetchJobSkinUrl(job.id)
+
+          const completed = {
+            entityId: active.entityId,
+            status: 'completed' as const,
+            generatedData: {
+              skinUrl,
+            },
+          }
+
+          headState.set(active.entityId, completed)
+          emitUpdate([completed])
+        } catch (err) {
+          console.error(err)
+          const errored = {
+            entityId: active.entityId,
+            status: 'error' as const,
+          }
+
+          headState.set(active.entityId, errored)
+          emitUpdate([errored])
+        }
+      }
+
+      if (job.status === 'failed') {
+        activeJobs.delete(job.id)
+
+        const errored = {
+          entityId: active.entityId,
+          status: 'error' as const,
+        }
+
+        headState.set(active.entityId, errored)
+        emitUpdate([errored])
+      }
+    }
+
+    // refill slots
+    await schedule()
+  }
+
+  pollerRunning = false
+
+  if (pendingQueue.length === 0) {
+    const heads = [...headState.values()].filter(
+      (head) => head.status === 'completed' || head.status === 'error',
+    )
+    if (heads.length !== headState.size) {
+      throw new Error(
+        `Unexpected unprocessed ${headState.size - heads.length} heads found`,
+      )
+    }
+
+    self.postMessage({
+      type: 'done',
+      heads,
+    } satisfies HeadBakerWorkerResponse)
+  }
+}
+
+// Worker Message Handler
+self.onmessage = async (evt: MessageEvent<HeadBakerWorkerMessage>) => {
+  const msg = evt.data
+  if (msg.cmd !== 'run') return
+
+  if (workerRunning) {
+    console.error('worker already running')
+    return
+  }
+  workerRunning = true
+  log('starting, total heads:', msg.heads.length)
+
+  apiKey = msg.mineskinApiKey
+
+  for (const head of msg.heads) {
+    const image = await pixelsToPNG(head.texturePixels)
+
+    pendingQueue.push({
+      entityId: head.entityId,
+      image,
+    })
+
+    headState.set(head.entityId, {
+      entityId: head.entityId,
+      status: 'queued',
+    })
+  }
+  log('finished transforming custom head skin pixels to png images')
+
+  await schedule()
 }

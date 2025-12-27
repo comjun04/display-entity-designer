@@ -1,11 +1,14 @@
-import { type FC, useEffect, useRef } from 'react'
+import { type FC, useEffect, useRef, useState } from 'react'
 import { useShallow } from 'zustand/shallow'
 
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { isItemDisplayPlayerHead } from '@/types'
-import type { HeadBakerWorkerMessage } from '@/types/workers'
+import type {
+  HeadBakerWorkerMessage,
+  HeadBakerWorkerResponse,
+} from '@/types/workers'
 
 import Dialog from './Dialog'
 
@@ -16,6 +19,13 @@ const PlayerHeadBakingDialog: FC = () => {
       setOpenedDialog: state.setOpenedDialog,
     })),
   )
+
+  const [total, setTotal] = useState(0)
+  const [stats, setStats] = useState({
+    generating: 0,
+    error: 0,
+    completed: 0,
+  })
 
   const workerRef = useRef<Worker>()
   useEffect(() => {
@@ -47,6 +57,13 @@ const PlayerHeadBakingDialog: FC = () => {
           }
         })
         .filter((d) => d != null)
+      setTotal(unbakedHeads.length)
+      // reset stats
+      setStats({
+        generating: 0,
+        error: 0,
+        completed: 0,
+      })
 
       workerRef.current?.postMessage({
         cmd: 'run',
@@ -54,6 +71,21 @@ const PlayerHeadBakingDialog: FC = () => {
           useEditorStore.getState().settings.headPainter.mineskinApiKey,
         heads: unbakedHeads,
       } satisfies HeadBakerWorkerMessage)
+
+      workerRef.current?.addEventListener(
+        'message',
+        (evt: MessageEvent<HeadBakerWorkerResponse>) => {
+          console.log(evt.data)
+
+          if (evt.data.type === 'update') {
+            setStats({
+              generating: evt.data.stats.generating,
+              error: evt.data.stats.error,
+              completed: evt.data.stats.completed,
+            })
+          }
+        },
+      )
     }
   }, [isOpen])
 
@@ -61,10 +93,15 @@ const PlayerHeadBakingDialog: FC = () => {
     <Dialog
       title="Baking Player Heads..."
       useLargeStaticSize={false}
-      modal
+      // modal
       open={isOpen}
       onClose={() => setOpenedDialog(null)}
-    ></Dialog>
+    >
+      <div>Total: {total}</div>
+      <div>Generating: {stats.generating}</div>
+      <div>Error: {stats.error}</div>
+      <div>Completed: {stats.completed}</div>
+    </Dialog>
   )
 }
 
