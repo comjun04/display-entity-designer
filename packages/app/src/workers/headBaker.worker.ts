@@ -133,6 +133,24 @@ async function submitJob(item: QueueItem) {
     return
   }
 
+  if (res.skin != null) {
+    // the skin for this custom head was already generated and ready to use
+    // TODO: switch to completed
+    headState.set(item.entityId, {
+      entityId: item.entityId,
+      status: 'completed',
+      generatedData: { skinUrl: res.skin.texture.url.skin },
+    })
+    emitUpdate([
+      {
+        entityId: item.entityId,
+        status: 'completed',
+        generatedData: { skinUrl: res.skin.texture.url.skin },
+      },
+    ])
+    return
+  }
+
   activeJobs.set(res.job.id, {
     entityId: item.entityId,
     jobId: res.job.id,
@@ -183,7 +201,7 @@ async function schedule() {
   // submit job at the same time to reduce delay between api requests
   await Promise.allSettled(items.map((item) => submitJob(item)))
 
-  if (!pollerRunning && activeJobs.size > 0) {
+  if (!pollerRunning) {
     pollerRunning = true
     await pollLoop()
   }
@@ -191,7 +209,7 @@ async function schedule() {
 
 // Central Poller (single loop)
 async function pollLoop() {
-  while (activeJobs.size > 0) {
+  while (activeJobs.size > 0 || pendingQueue.length > 0) {
     await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS))
 
     const res = await fetch('https://api.mineskin.org/v2/queue', {

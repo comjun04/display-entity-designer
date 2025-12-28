@@ -372,6 +372,13 @@ export type MineSkinAPIV2_QueueSkinGenerationResponse =
         timestamp?: number
         eta?: number
       }
+      skin?: {
+        texture: {
+          url: {
+            skin: string
+          }
+        }
+      }
     }
   | {
       success: false
