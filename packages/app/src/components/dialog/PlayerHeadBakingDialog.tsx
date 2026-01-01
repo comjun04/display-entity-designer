@@ -10,6 +10,7 @@ import type {
   HeadBakerWorkerResponse,
 } from '@/types/workers'
 
+import { MultiSegmentProgress } from '../ui/MultiSegmentProgress'
 import Dialog from './Dialog'
 
 const PlayerHeadBakingDialog: FC = () => {
@@ -89,6 +90,9 @@ const PlayerHeadBakingDialog: FC = () => {
     }
   }, [isOpen])
 
+  const headsWaitingInQueue =
+    total - stats.generating - stats.error - stats.completed
+
   return (
     <Dialog
       title="Baking Player Heads..."
@@ -97,6 +101,31 @@ const PlayerHeadBakingDialog: FC = () => {
       open={isOpen}
       onClose={() => setOpenedDialog(null)}
     >
+      <MultiSegmentProgress
+        segments={[
+          {
+            id: 'completed',
+            value: stats.completed,
+            className: 'bg-green-800',
+          },
+          {
+            id: 'error',
+            value: stats.error,
+            className: 'bg-red-800',
+          },
+          {
+            id: 'generating',
+            value: stats.generating,
+            className: 'bg-yellow-800',
+          },
+          {
+            id: 'queued',
+            value: headsWaitingInQueue,
+            className: 'bg-gray-700',
+          },
+        ]}
+        normalize
+      />
       <div>Total: {total}</div>
       <div>Generating: {stats.generating}</div>
       <div>Error: {stats.error}</div>
