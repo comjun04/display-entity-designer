@@ -109,12 +109,13 @@ const PlayerHeadBakingDialog: FC = () => {
 
   const headsWaitingInQueue =
     total - stats.generating - stats.error - stats.completed
+  const finished = headsWaitingInQueue < 1 && stats.generating < 1
 
   return (
     <Dialog
       title="Baking Player Heads..."
       useLargeStaticSize={false}
-      // modal
+      modal={!finished}
       open={isOpen}
       onClose={() => setOpenedDialog(null)}
     >
