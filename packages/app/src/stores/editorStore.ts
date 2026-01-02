@@ -161,7 +161,7 @@ export const useEditorStore = create(
             state.headPainter.brushColor = color
           }),
 
-        layer: 'second',
+        layer: 'base',
         setLayer: (layer) =>
           set((state) => {
             state.headPainter.layer = layer
