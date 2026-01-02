@@ -66,6 +66,9 @@ const PlayerHeadBakingDialog: FC = () => {
         completed: 0,
       })
 
+      const { setItemDisplayPlayerHeadProperties } =
+        useDisplayEntityStore.getState()
+
       workerRef.current?.postMessage({
         cmd: 'run',
         mineskinApiKey:
@@ -76,13 +79,25 @@ const PlayerHeadBakingDialog: FC = () => {
       workerRef.current?.addEventListener(
         'message',
         (evt: MessageEvent<HeadBakerWorkerResponse>) => {
-          console.log(evt.data)
+          const data = evt.data
+          console.log(data)
 
-          if (evt.data.type === 'update') {
+          if (data.type === 'update') {
+            data.heads
+              .filter((headData) => headData.status === 'completed')
+              .forEach((headData) => {
+                setItemDisplayPlayerHeadProperties(headData.entityId, {
+                  texture: {
+                    baked: true,
+                    url: headData.generatedData.skinUrl,
+                  },
+                })
+              })
+
             setStats({
-              generating: evt.data.stats.generating,
-              error: evt.data.stats.error,
-              completed: evt.data.stats.completed,
+              generating: data.stats.generating,
+              error: data.stats.error,
+              completed: data.stats.completed,
             })
           }
         },
