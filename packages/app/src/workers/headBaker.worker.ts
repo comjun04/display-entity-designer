@@ -39,10 +39,10 @@ type HeadState =
       status: 'error'
     }
 
-const headState = new Map<string, HeadState>()
-
 const MAX_CONCURRENT = 10
 const POLL_INTERVAL_MS = 1000
+
+const headState = new Map<string, HeadState>()
 
 const pendingQueue: QueueItem[] = []
 const activeJobs = new Map<string, ActiveJob>() // jobId -> job
@@ -53,6 +53,15 @@ let pollerRunning = false
 
 function log(...content: unknown[]) {
   console.log('[worker:headBaker]', ...content)
+}
+
+const USER_AGENT = `display-entity-platform/${__VERSION__} (${import.meta.env.VITE_WORKER_USERAGENT_BROADCAST_URL})`
+function getRequestHeaders() {
+  return {
+    'User-Agent': USER_AGENT,
+    'MineSkin-User-Agent': USER_AGENT, // `User-Agent` is not changeable on browsers, so use custom header
+    Authorization: `Bearer ${apiKey}`,
+  }
 }
 
 // Utility: pixels -> PNG Blob
@@ -109,11 +118,7 @@ async function submitJob(item: QueueItem) {
 
   const res = await fetch('https://api.mineskin.org/v2/queue', {
     method: 'POST',
-    headers: {
-      'User-Agent': 'depl',
-      'MineSkin-User-Agent': 'depl', // `User-Agent` is not changeable on browsers, so use custom header
-      Authorization: `Bearer ${apiKey}`,
-    },
+    headers: getRequestHeaders(),
     body: formData,
   }).then((r) => r.json() as Promise<MineSkinAPIV2_QueueSkinGenerationResponse>)
 
@@ -172,11 +177,7 @@ async function submitJob(item: QueueItem) {
 // Fetch Job Detail (single job)
 async function fetchJobSkinUrl(jobId: string) {
   const res = await fetch(`https://api.mineskin.org/v2/queue/${jobId}`, {
-    headers: {
-      'User-Agent': 'depl',
-      'MineSkin-User-Agent': 'depl', // `User-Agent` is not changeable on browsers, so use custom header
-      Authorization: `Bearer ${apiKey}`,
-    },
+    headers: getRequestHeaders(),
   }).then((r) => r.json() as Promise<MineSkinAPIV2_QueueJobDetailResponse>)
 
   if (!res.success) {
@@ -213,11 +214,7 @@ async function pollLoop() {
     await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS))
 
     const res = await fetch('https://api.mineskin.org/v2/queue', {
-      headers: {
-        'User-Agent': 'depl',
-        'MineSkin-User-Agent': 'depl', // `User-Agent` is not changeable on browsers, so use custom header
-        Authorization: `Bearer ${apiKey}`,
-      },
+      headers: getRequestHeaders(),
     }).then((r) => r.json() as Promise<MineSkinAPIV2_ListQueueJobsResponse>)
 
     for (const job of res.jobs) {
