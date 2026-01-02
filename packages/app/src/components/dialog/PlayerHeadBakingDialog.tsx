@@ -1,6 +1,7 @@
 import { type FC, useEffect, useRef, useState } from 'react'
 import { useShallow } from 'zustand/shallow'
 
+import { getLogger } from '@/services/loggerService'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
@@ -12,6 +13,8 @@ import type {
 
 import { MultiSegmentProgress } from '../ui/MultiSegmentProgress'
 import Dialog from './Dialog'
+
+const logger = getLogger('PlayerHeadBakingDialog')
 
 const PlayerHeadBakingDialog: FC = () => {
   const { isOpen, setOpenedDialog } = useDialogStore(
@@ -80,7 +83,7 @@ const PlayerHeadBakingDialog: FC = () => {
         'message',
         (evt: MessageEvent<HeadBakerWorkerResponse>) => {
           const data = evt.data
-          console.log(data)
+          logger.debug('incoming worker message', data)
 
           if (data.type === 'update') {
             data.heads
