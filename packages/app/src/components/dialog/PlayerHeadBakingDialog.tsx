@@ -33,17 +33,12 @@ const PlayerHeadBakingDialog: FC = () => {
 
   const workerRef = useRef<Worker>()
   useEffect(() => {
-    workerRef.current = new Worker(
-      new URL('../../workers/headBaker.worker.ts', import.meta.url),
-      { type: 'module' },
-    )
-    return () => {
-      workerRef.current?.terminate()
-    }
-  }, [])
-
-  useEffect(() => {
     if (isOpen) {
+      workerRef.current = new Worker(
+        new URL('../../workers/headBaker.worker.ts', import.meta.url),
+        { type: 'module' },
+      )
+
       const unbakedHeads = [
         ...useDisplayEntityStore.getState().entities.values(),
       ]
@@ -105,6 +100,10 @@ const PlayerHeadBakingDialog: FC = () => {
           }
         },
       )
+    }
+
+    return () => {
+      workerRef.current?.terminate()
     }
   }, [isOpen])
 
