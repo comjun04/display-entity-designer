@@ -106,7 +106,7 @@ const PlayerHeadBakingDialog: FC = () => {
           {
             id: 'completed',
             value: stats.completed,
-            className: 'bg-green-800',
+            className: 'bg-green-700',
           },
           {
             id: 'error',
@@ -126,10 +126,30 @@ const PlayerHeadBakingDialog: FC = () => {
         ]}
         normalize
       />
-      <div>Total: {total}</div>
-      <div>Generating: {stats.generating}</div>
-      <div>Error: {stats.error}</div>
-      <div>Completed: {stats.completed}</div>
+
+      <div className="flex flex-col gap-1">
+        <div>
+          <span>Total: {total}</span>
+        </div>
+        <div className="flex flex-col gap-1 sm:flex-row sm:gap-4">
+          <div className="flex flex-row items-center gap-2">
+            <div className="h-4 w-12 rounded bg-gray-700" />
+            <span>Waiting: {headsWaitingInQueue}</span>
+          </div>
+          <div className="flex flex-row items-center gap-2">
+            <div className="h-4 w-12 rounded bg-yellow-700" />
+            <span>Generating: {stats.generating}</span>
+          </div>
+          <div className="flex flex-row items-center gap-2">
+            <div className="h-4 w-12 rounded bg-red-800" />
+            <span>Error: {stats.error}</span>
+          </div>
+          <div className="flex flex-row items-center gap-2">
+            <div className="h-4 w-12 rounded bg-green-800" />
+            <span>Completed: {stats.completed}</span>
+          </div>
+        </div>
+      </div>
     </Dialog>
   )
 }
