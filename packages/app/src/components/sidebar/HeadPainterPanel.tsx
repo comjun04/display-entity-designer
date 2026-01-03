@@ -55,29 +55,31 @@ const HeadPainterPanel: FC = () => {
 
           <div className="flex flex-row items-center gap-2">
             <label className="flex-1 text-end">Layer</label>
-            <div className="flex flex-1 flex-row gap-1 rounded bg-neutral-700 p-1">
-              <button
-                className={cn(
-                  'rounded px-3 py-1',
-                  layer === 'base' && 'bg-blue-500',
-                )}
-                onClick={() => {
-                  useEditorStore.getState().headPainter.setLayer('base')
-                }}
-              >
-                Base
-              </button>
-              <button
-                className={cn(
-                  'rounded px-3 py-1',
-                  layer === 'second' && 'bg-blue-500',
-                )}
-                onClick={() => {
-                  useEditorStore.getState().headPainter.setLayer('second')
-                }}
-              >
-                Second
-              </button>
+            <div className="flex-1">
+              <div className="flex w-fit flex-row gap-1 rounded bg-neutral-700 p-1">
+                <button
+                  className={cn(
+                    'rounded px-3 py-1',
+                    layer === 'base' && 'bg-blue-500',
+                  )}
+                  onClick={() => {
+                    useEditorStore.getState().headPainter.setLayer('base')
+                  }}
+                >
+                  Base
+                </button>
+                <button
+                  className={cn(
+                    'rounded px-3 py-1',
+                    layer === 'second' && 'bg-blue-500',
+                  )}
+                  onClick={() => {
+                    useEditorStore.getState().headPainter.setLayer('second')
+                  }}
+                >
+                  Second
+                </button>
+              </div>
             </div>
           </div>
 
