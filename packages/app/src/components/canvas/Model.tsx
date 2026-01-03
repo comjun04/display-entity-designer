@@ -115,10 +115,19 @@ const Model: FC<ModelNewProps> = ({
             const material = mergedMeshRef.current!.material as
               | MeshStandardMaterial
               | MeshStandardMaterial[] // Material | Material[]
-            const old = material.map
-            material.map = newTexture
-            if (Array.isArray(old)) old.forEach((d) => d.dispose())
-            else old?.dispose()
+            const materials = Array.isArray(material) ? material : [material]
+
+            if (materials.length > 1) {
+              logger.warn(
+                'Detected multiple materials inside mesh. This is not intended',
+              )
+            }
+
+            materials.forEach((material) => {
+              const old = material.map
+              material.map = newTexture
+              old?.dispose()
+            })
           }
         } else {
           // recreate material and attach
