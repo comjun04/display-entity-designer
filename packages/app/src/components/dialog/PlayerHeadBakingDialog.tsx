@@ -1,4 +1,4 @@
-import { type FC, useEffect, useRef, useState } from 'react'
+import { type FC, useCallback, useEffect, useRef, useState } from 'react'
 import { useShallow } from 'zustand/shallow'
 
 import { getLogger } from '@/services/loggerService'
@@ -23,7 +23,12 @@ const PlayerHeadBakingDialog: FC = () => {
       setOpenedDialog: state.setOpenedDialog,
     })),
   )
+  const closeDialog = useCallback(
+    () => setOpenedDialog(null),
+    [setOpenedDialog],
+  )
 
+  const [running, setRunning] = useState(false)
   const [total, setTotal] = useState(0)
   const [stats, setStats] = useState({
     generating: 0,
@@ -73,6 +78,7 @@ const PlayerHeadBakingDialog: FC = () => {
           useEditorStore.getState().settings.headPainter.mineskinApiKey,
         heads: unbakedHeads,
       } satisfies HeadBakerWorkerMessage)
+      setRunning(true)
 
       workerRef.current?.addEventListener(
         'message',
@@ -97,6 +103,8 @@ const PlayerHeadBakingDialog: FC = () => {
               error: data.stats.error,
               completed: data.stats.completed,
             })
+          } else if (data.type === 'done') {
+            setRunning(false)
           }
         },
       )
@@ -109,15 +117,14 @@ const PlayerHeadBakingDialog: FC = () => {
 
   const headsWaitingInQueue =
     total - stats.generating - stats.error - stats.completed
-  const finished = headsWaitingInQueue < 1 && stats.generating < 1
 
   return (
     <Dialog
       title="Baking Player Heads..."
       useLargeStaticSize={false}
-      modal={!finished}
+      modal={running}
       open={isOpen}
-      onClose={() => setOpenedDialog(null)}
+      onClose={closeDialog}
     >
       <MultiSegmentProgress
         segments={[
@@ -167,6 +174,26 @@ const PlayerHeadBakingDialog: FC = () => {
             <span>Completed: {stats.completed}</span>
           </div>
         </div>
+      </div>
+
+      <div className="flex flex-row justify-end gap-2">
+        <button
+          className="rounded bg-red-700 px-3 py-2 transition disabled:opacity-30"
+          disabled={!running}
+          onClick={() => {
+            workerRef.current?.terminate()
+            setRunning(false)
+          }}
+        >
+          Cancel
+        </button>
+        <button
+          className="rounded bg-gray-700 px-3 py-2 transition disabled:opacity-30"
+          disabled={running}
+          onClick={closeDialog}
+        >
+          Close
+        </button>
       </div>
     </Dialog>
   )
