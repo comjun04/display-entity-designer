@@ -14,8 +14,8 @@ interface QueueItem {
 }
 
 interface ActiveJob {
-  entityId: string
   jobId: string
+  entityIds: Set<string>
 }
 
 type HeadState =
@@ -141,6 +141,7 @@ async function submitJob(item: QueueItem) {
   if (res.skin != null) {
     // the skin for this custom head was already generated and ready to use
     // TODO: switch to completed
+    console.warn(item.entityId, 'alreadyGenerated')
     headState.set(item.entityId, {
       entityId: item.entityId,
       status: 'completed',
@@ -156,10 +157,15 @@ async function submitJob(item: QueueItem) {
     return
   }
 
-  activeJobs.set(res.job.id, {
-    entityId: item.entityId,
-    jobId: res.job.id,
-  })
+  const existingJob = activeJobs.get(res.job.id)
+  if (existingJob != null) {
+    existingJob.entityIds.add(item.entityId)
+  } else {
+    activeJobs.set(res.job.id, {
+      jobId: res.job.id,
+      entityIds: new Set([item.entityId]),
+    })
+  }
 
   headState.set(item.entityId, {
     entityId: item.entityId,
@@ -190,17 +196,15 @@ async function fetchJobSkinUrl(jobId: string) {
 
 // Scheduler (fills up to `MAX_CONCURRENT` jobs)
 async function schedule() {
-  const items: QueueItem[] = []
   const count = Math.max(
     Math.min(MAX_CONCURRENT - activeJobs.size, pendingQueue.length),
     0,
   ) // 0 < available slot count < pendingQueue.length
   log(`schedule(): adding ${count} new jobs to the queue`)
-  for (let i = 0; i < count; i++) {
-    items.push(pendingQueue.shift()!)
-  }
+  const items = pendingQueue.slice(0, count)
   // submit job at the same time to reduce delay between api requests
   await Promise.allSettled(items.map((item) => submitJob(item)))
+  pendingQueue.splice(0, count)
 
   if (!pollerRunning) {
     pollerRunning = true
@@ -220,7 +224,7 @@ async function pollLoop() {
     for (const job of res.jobs) {
       if (!activeJobs.has(job.id)) continue
 
-      const active = activeJobs.get(job.id)!
+      const jobDetail = activeJobs.get(job.id)!
 
       if (job.status === 'completed') {
         activeJobs.delete(job.id)
@@ -229,38 +233,54 @@ async function pollLoop() {
           // fetch actual generated skin data
           const skinUrl = await fetchJobSkinUrl(job.id)
 
-          const completed = {
-            entityId: active.entityId,
-            status: 'completed' as const,
-            generatedData: {
-              skinUrl,
-            },
+          const updatedHeadStateList = [...jobDetail.entityIds.values()].map(
+            (entityId) => ({
+              entityId,
+              status: 'completed' as const,
+              generatedData: {
+                skinUrl,
+              },
+            }),
+          )
+
+          for (const state of updatedHeadStateList) {
+            headState.set(state.entityId, state)
           }
 
-          headState.set(active.entityId, completed)
-          emitUpdate([completed])
+          emitUpdate(updatedHeadStateList)
         } catch (err) {
           console.error(err)
-          const errored = {
-            entityId: active.entityId,
-            status: 'error' as const,
+
+          const updatedHeadStateList = [...jobDetail.entityIds.values()].map(
+            (entityId) => ({
+              entityId,
+              status: 'error' as const,
+            }),
+          )
+
+          for (const state of updatedHeadStateList) {
+            headState.set(state.entityId, state)
           }
 
-          headState.set(active.entityId, errored)
-          emitUpdate([errored])
+          emitUpdate(updatedHeadStateList)
         }
       }
 
       if (job.status === 'failed') {
         activeJobs.delete(job.id)
 
-        const errored = {
-          entityId: active.entityId,
-          status: 'error' as const,
+        const updatedHeadStateList = [...jobDetail.entityIds.values()].map(
+          (entityId) => ({
+            entityId,
+            status: 'error' as const,
+          }),
+        )
+
+        for (const state of updatedHeadStateList) {
+          headState.set(state.entityId, state)
         }
 
-        headState.set(active.entityId, errored)
-        emitUpdate([errored])
+        emitUpdate(updatedHeadStateList)
       }
     }
 
@@ -270,19 +290,19 @@ async function pollLoop() {
 
   pollerRunning = false
 
-  if (pendingQueue.length === 0) {
-    const heads = [...headState.values()].filter(
+  if (pendingQueue.length < 1) {
+    const finishedHeads = [...headState.values()].filter(
       (head) => head.status === 'completed' || head.status === 'error',
     )
-    if (heads.length !== headState.size) {
+    if (finishedHeads.length !== headState.size) {
       throw new Error(
-        `Unexpected unprocessed ${headState.size - heads.length} heads found`,
+        `Unexpected unprocessed ${headState.size - finishedHeads.length} heads found`,
       )
     }
 
     self.postMessage({
       type: 'done',
-      heads,
+      heads: finishedHeads,
     } satisfies HeadBakerWorkerResponse)
   }
 }
