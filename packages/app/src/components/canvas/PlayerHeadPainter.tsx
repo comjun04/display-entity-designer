@@ -1,13 +1,127 @@
 import { Grid } from '@react-three/drei'
-import { type ThreeEvent } from '@react-three/fiber'
 import { type FC, useMemo } from 'react'
 import { MathUtils } from 'three'
 
 import { loadTextureImage } from '@/services/resources/material'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
-import { useEditorStore } from '@/stores/editorStore'
+import { type HeadPainterLayer, useEditorStore } from '@/stores/editorStore'
 import { useHistoryStore } from '@/stores/historyStore'
-import type { ModelFaceKey, PlayerHeadProperties } from '@/types'
+import type { ModelFaceKey, Number3Tuple, PlayerHeadProperties } from '@/types'
+
+interface SideProps {
+  face: ModelFaceKey
+  layer: HeadPainterLayer
+  handlePaint: (side: ModelFaceKey, x: number, y: number) => void
+  handlePointerDown: (face: ModelFaceKey, x: number, y: number) => void
+  handlePointerMove: (face: ModelFaceKey, x: number, y: number) => void
+}
+const Side: FC<SideProps> = ({
+  face,
+  layer,
+  handlePaint,
+  handlePointerDown,
+  handlePointerMove,
+}) => {
+  const layerSize = layer === 'second' ? 0.53125 : 0.5
+  const gridSize = useMemo(
+    () => [layerSize, layerSize] satisfies [number, number],
+    [layerSize],
+  )
+  const gridCellSize = layerSize / 8
+
+  const groupPosition = useMemo<Number3Tuple>(() => {
+    switch (face) {
+      case 'up':
+        return [0, (layerSize - 0.5) / 2 + 0.0001, 0]
+      case 'down':
+        return [0, -((layerSize + 0.5) / 2 + 0.0001), 0]
+      case 'south':
+        return [0, -0.25, -(layerSize / 2 + 0.0001)]
+      case 'north':
+        return [0, -0.25, layerSize / 2 + 0.0001]
+      case 'east':
+        return [layerSize / 2 + 0.0001, -0.25, 0]
+      case 'west':
+        return [-(layerSize / 2 + 0.0001), -0.25, 0]
+    }
+  }, [face, layerSize])
+  const groupRotation = useMemo<Number3Tuple>(() => {
+    switch (face) {
+      case 'up':
+        return [0, 0, 0]
+      case 'down':
+        return [MathUtils.degToRad(180), 0, 0]
+      case 'south':
+        return [MathUtils.degToRad(-90), 0, 0]
+      case 'north':
+        return [MathUtils.degToRad(90), 0, 0]
+      case 'east':
+        return [0, 0, MathUtils.degToRad(-90)]
+      case 'west':
+        return [0, 0, MathUtils.degToRad(90)]
+    }
+  }, [face])
+  const innerMeshRotation = useMemo<Number3Tuple>(() => {
+    switch (face) {
+      case 'up':
+      case 'down':
+      case 'south':
+        return [MathUtils.degToRad(-90), 0, MathUtils.degToRad(180)]
+      case 'north':
+        return [MathUtils.degToRad(-90), 0, MathUtils.degToRad(0)]
+      case 'east':
+        return [MathUtils.degToRad(-90), 0, MathUtils.degToRad(90)]
+      case 'west':
+        return [MathUtils.degToRad(-90), 0, MathUtils.degToRad(-90)]
+    }
+  }, [face])
+
+  const getPixelIntegerPos = (pos: number) => {
+    return Math.floor(((pos + layerSize / 2) / layerSize) * 8)
+  }
+
+  return (
+    <group position={groupPosition} rotation={groupRotation}>
+      <Grid
+        args={gridSize}
+        cellSize={gridCellSize}
+        cellThickness={1}
+        cellColor="#ffffff"
+        sectionSize={0}
+      />
+      <mesh
+        rotation={innerMeshRotation}
+        onClick={(evt) => {
+          const localPos = evt.object.worldToLocal(evt.point.clone())
+          handlePaint(
+            face,
+            getPixelIntegerPos(localPos.x),
+            getPixelIntegerPos(localPos.y),
+          )
+        }}
+        onPointerDown={(evt) => {
+          const localPos = evt.object.worldToLocal(evt.point.clone())
+          handlePointerDown(
+            face,
+            getPixelIntegerPos(localPos.x),
+            getPixelIntegerPos(localPos.y),
+          )
+        }}
+        onPointerMove={(evt) => {
+          const localPos = evt.object.worldToLocal(evt.point.clone())
+          handlePointerMove(
+            face,
+            getPixelIntegerPos(localPos.x),
+            getPixelIntegerPos(localPos.y),
+          )
+        }}
+      >
+        <planeGeometry args={gridSize} />
+        <meshBasicMaterial transparent opacity={0} alphaTest={0.01} />
+      </mesh>
+    </group>
+  )
+}
 
 type PlayerHeadPainterProps = {
   entityId: string
@@ -19,16 +133,6 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
   playerHeadProperties,
 }) => {
   const headPainterLayer = useEditorStore((state) => state.headPainter.layer)
-
-  const layerSize = headPainterLayer === 'second' ? 0.53125 : 0.5
-  const gridSize = useMemo(
-    () => [layerSize, layerSize] satisfies [number, number],
-    [layerSize],
-  )
-  const gridCellSize = layerSize / 8
-  const getPixelIntegerPos = (pos: number) => {
-    return Math.floor(((pos + layerSize / 2) / layerSize) * 8)
-  }
 
   const handlePaint = (side: ModelFaceKey, x: number, y: number) => {
     // console.log(side, x, y)
@@ -162,10 +266,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
     f().catch(console.error)
   }
 
-  const handlePointerDown = (
-    evt: ThreeEvent<PointerEvent>,
-    face: ModelFaceKey,
-  ) => {
+  const handlePointerDown = (face: ModelFaceKey, x: number, y: number) => {
     useEditorStore.getState().headPainter.setNowPainting(true)
     useHistoryStore
       .getState()
@@ -174,12 +275,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
         playerHeadProperties.texture,
       )
 
-    const localPos = evt.object.worldToLocal(evt.point.clone())
-    handlePaint(
-      face,
-      getPixelIntegerPos(localPos.x),
-      getPixelIntegerPos(localPos.y),
-    )
+    handlePaint(face, x, y)
   }
   const handlePointerMove = (face: ModelFaceKey, x: number, y: number) => {
     // handlePaint() loads texture as image and processes it when not unbaked state
@@ -204,223 +300,58 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
   return (
     <>
       {/* top */}
-      <group position={[0, (layerSize - 0.5) / 2 + 0.0001, 0]}>
-        <Grid
-          args={gridSize}
-          cellSize={gridCellSize}
-          cellThickness={1}
-          cellColor="#ffffff"
-          sectionSize={0}
-        />
-        <mesh
-          rotation={[MathUtils.degToRad(-90), 0, MathUtils.degToRad(180)]}
-          onClick={(evt) => {
-            const localPos = evt.object.worldToLocal(evt.point.clone())
-            handlePaint(
-              'up',
-              getPixelIntegerPos(localPos.x),
-              getPixelIntegerPos(localPos.y),
-            )
-          }}
-          onPointerDown={(evt) => handlePointerDown(evt, 'up')}
-          onPointerMove={(evt) => {
-            const localPos = evt.object.worldToLocal(evt.point.clone())
-            handlePointerMove(
-              'up',
-              getPixelIntegerPos(localPos.x),
-              getPixelIntegerPos(localPos.y),
-            )
-          }}
-        >
-          <planeGeometry args={gridSize} />
-          <meshBasicMaterial transparent opacity={0} alphaTest={0.01} />
-        </mesh>
-      </group>
+      <Side
+        face="up"
+        layer={headPainterLayer}
+        handlePaint={handlePaint}
+        handlePointerDown={handlePointerDown}
+        handlePointerMove={handlePointerMove}
+      />
 
       {/* bottom */}
-      <group
-        position={[0, -((layerSize + 0.5) / 2 + 0.0001), 0]}
-        rotation={[MathUtils.degToRad(180), 0, 0]}
-      >
-        <Grid
-          args={gridSize}
-          cellSize={gridCellSize}
-          cellThickness={1}
-          cellColor="#ffffff"
-          sectionSize={0}
-        />
-        <mesh
-          rotation={[MathUtils.degToRad(-90), 0, MathUtils.degToRad(180)]}
-          onClick={(evt) => {
-            const localPos = evt.object.worldToLocal(evt.point.clone())
-            handlePaint(
-              'down',
-              getPixelIntegerPos(localPos.x),
-              getPixelIntegerPos(localPos.y),
-            )
-          }}
-          onPointerDown={(evt) => handlePointerDown(evt, 'down')}
-          onPointerMove={(evt) => {
-            const localPos = evt.object.worldToLocal(evt.point.clone())
-            handlePointerMove(
-              'down',
-              getPixelIntegerPos(localPos.x),
-              getPixelIntegerPos(localPos.y),
-            )
-          }}
-        >
-          <planeGeometry args={gridSize} />
-          <meshBasicMaterial transparent opacity={0} alphaTest={0.01} />
-        </mesh>
-      </group>
+      <Side
+        face="down"
+        layer={headPainterLayer}
+        handlePaint={handlePaint}
+        handlePointerDown={handlePointerDown}
+        handlePointerMove={handlePointerMove}
+      />
 
       {/* front (south) */}
-      <group
-        position={[0, -0.25, -(layerSize / 2 + 0.0001)]}
-        rotation={[MathUtils.degToRad(-90), 0, 0]}
-      >
-        <Grid
-          args={gridSize}
-          cellSize={gridCellSize}
-          cellThickness={1}
-          cellColor="#ffffff"
-          sectionSize={0}
-        />
-        <mesh
-          rotation={[MathUtils.degToRad(-90), 0, MathUtils.degToRad(180)]}
-          onClick={(evt) => {
-            const localPos = evt.object.worldToLocal(evt.point.clone())
-            handlePaint(
-              'south',
-              getPixelIntegerPos(localPos.x),
-              getPixelIntegerPos(localPos.y),
-            )
-          }}
-          onPointerDown={(evt) => handlePointerDown(evt, 'south')}
-          onPointerMove={(evt) => {
-            const localPos = evt.object.worldToLocal(evt.point.clone())
-            handlePointerMove(
-              'south',
-              getPixelIntegerPos(localPos.x),
-              getPixelIntegerPos(localPos.y),
-            )
-          }}
-        >
-          <planeGeometry args={gridSize} />
-          <meshBasicMaterial transparent opacity={0} alphaTest={0.01} />
-        </mesh>
-      </group>
+      <Side
+        face="south"
+        layer={headPainterLayer}
+        handlePaint={handlePaint}
+        handlePointerDown={handlePointerDown}
+        handlePointerMove={handlePointerMove}
+      />
 
       {/* back (north) */}
-      <group
-        position={[0, -0.25, layerSize / 2 + 0.0001]}
-        rotation={[MathUtils.degToRad(90), 0, 0]}
-      >
-        <Grid
-          args={gridSize}
-          cellSize={gridCellSize}
-          cellThickness={1}
-          cellColor="#ffffff"
-          sectionSize={0}
-        />
-        <mesh
-          rotation={[MathUtils.degToRad(-90), 0, MathUtils.degToRad(0)]}
-          onClick={(evt) => {
-            const localPos = evt.object.worldToLocal(evt.point.clone())
-            handlePaint(
-              'north',
-              getPixelIntegerPos(localPos.x),
-              getPixelIntegerPos(localPos.y),
-            )
-          }}
-          onPointerDown={(evt) => handlePointerDown(evt, 'north')}
-          onPointerMove={(evt) => {
-            const localPos = evt.object.worldToLocal(evt.point.clone())
-            handlePointerMove(
-              'north',
-              getPixelIntegerPos(localPos.x),
-              getPixelIntegerPos(localPos.y),
-            )
-          }}
-        >
-          <planeGeometry args={gridSize} />
-          <meshBasicMaterial transparent opacity={0} alphaTest={0.01} />
-        </mesh>
-      </group>
+      <Side
+        face="north"
+        layer={headPainterLayer}
+        handlePaint={handlePaint}
+        handlePointerDown={handlePointerDown}
+        handlePointerMove={handlePointerMove}
+      />
 
       {/* east */}
-      <group
-        position={[layerSize / 2 + 0.0001, -0.25, 0]}
-        rotation={[0, 0, MathUtils.degToRad(-90)]}
-      >
-        <Grid
-          args={gridSize}
-          cellSize={gridCellSize}
-          cellThickness={1}
-          cellColor="#ffffff"
-          sectionSize={0}
-        />
-        <mesh
-          rotation={[MathUtils.degToRad(-90), 0, MathUtils.degToRad(90)]}
-          onClick={(evt) => {
-            const localPos = evt.object.worldToLocal(evt.point.clone())
-            handlePaint(
-              'east',
-              getPixelIntegerPos(localPos.x),
-              getPixelIntegerPos(localPos.y),
-            )
-          }}
-          onPointerDown={(evt) => handlePointerDown(evt, 'east')}
-          onPointerMove={(evt) => {
-            const localPos = evt.object.worldToLocal(evt.point.clone())
-            handlePointerMove(
-              'east',
-              getPixelIntegerPos(localPos.x),
-              getPixelIntegerPos(localPos.y),
-            )
-          }}
-        >
-          <planeGeometry args={gridSize} />
-          <meshBasicMaterial transparent opacity={0} alphaTest={0.01} />
-        </mesh>
-      </group>
+      <Side
+        face="east"
+        layer={headPainterLayer}
+        handlePaint={handlePaint}
+        handlePointerDown={handlePointerDown}
+        handlePointerMove={handlePointerMove}
+      />
 
       {/* west */}
-      <group
-        position={[-(layerSize / 2 + 0.0001), -0.25, 0]}
-        rotation={[0, 0, MathUtils.degToRad(90)]}
-      >
-        <Grid
-          args={gridSize}
-          cellSize={gridCellSize}
-          cellThickness={1}
-          cellColor="#ffffff"
-          sectionSize={0}
-        />
-        <mesh
-          rotation={[MathUtils.degToRad(-90), 0, MathUtils.degToRad(-90)]}
-          onClick={(evt) => {
-            const localPos = evt.object.worldToLocal(evt.point.clone())
-            handlePaint(
-              'west',
-              getPixelIntegerPos(localPos.x),
-              getPixelIntegerPos(localPos.y),
-            )
-          }}
-          onPointerDown={(evt) => handlePointerDown(evt, 'west')}
-          onPointerMove={(evt) => {
-            const localPos = evt.object.worldToLocal(evt.point.clone())
-            handlePointerMove(
-              'west',
-              getPixelIntegerPos(localPos.x),
-              getPixelIntegerPos(localPos.y),
-            )
-          }}
-        >
-          <planeGeometry args={gridSize} />
-          <meshBasicMaterial transparent opacity={0} alphaTest={0.01} />
-        </mesh>
-      </group>
+      <Side
+        face="west"
+        layer={headPainterLayer}
+        handlePaint={handlePaint}
+        handlePointerDown={handlePointerDown}
+        handlePointerMove={handlePointerMove}
+      />
     </>
   )
 }

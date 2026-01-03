@@ -18,7 +18,7 @@ type TransformationData = {
   size: Number3Tuple
 }
 
-type HeadPainterLayer = 'base' | 'second'
+export type HeadPainterLayer = 'base' | 'second'
 
 type EditorState = {
   mode: EditorMode
