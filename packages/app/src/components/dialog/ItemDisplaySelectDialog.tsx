@@ -1,4 +1,5 @@
 import { skipToken, useQuery } from '@tanstack/react-query'
+import { useVirtualizer } from '@tanstack/react-virtual'
 import { type FC, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/shallow'
@@ -10,17 +11,81 @@ import { useProjectStore } from '@/stores/projectStore'
 
 import Dialog from './Dialog'
 
+interface VirtualListProps {
+  items: string[]
+  isLoading: boolean
+}
+const VirtualList: FC<VirtualListProps> = ({
+  items: virtualItemList,
+  isLoading,
+}) => {
+  const createNewEntity = useDisplayEntityStore((state) => state.createNew)
+  const setOpenedDialog = useDialogStore((state) => state.setOpenedDialog)
+
+  // virtualizing
+  const [parentRef, setParentRef] = useState<HTMLDivElement | null>(null)
+  const virtualizer = useVirtualizer({
+    count: isLoading ? 15 : virtualItemList.length,
+    getScrollElement: () => parentRef,
+    estimateSize: () => 24,
+    overscan: 10,
+    gap: 4,
+  })
+
+  return (
+    <div
+      className="h-full overflow-auto rounded-lg p-1"
+      ref={(element) => setParentRef(element)}
+    >
+      <div
+        className="relative w-full"
+        style={{
+          height: virtualizer.getTotalSize(),
+        }}
+      >
+        {virtualizer.getVirtualItems().map((virtualItem) => {
+          const item = virtualItemList[virtualItem.index]
+          return (
+            <button
+              key={virtualItem.key}
+              className="absolute left-0 top-0 w-full rounded-lg bg-neutral-700 p-1 text-center text-xs transition duration-150 hover:bg-neutral-700/50"
+              style={{
+                height: virtualItem.size,
+                transform: `translateY(${virtualItem.start}px)`,
+              }}
+              onClick={() => {
+                createNewEntity([{ kind: 'item', type: item }])
+                setOpenedDialog(null)
+              }}
+            >
+              {item}
+            </button>
+          )
+        })}
+
+        {isLoading && (
+          <div className="flex flex-col gap-1">
+            {Array(15)
+              .fill(0)
+              .map((_, idx) => (
+                <div
+                  key={idx}
+                  className="h-6 w-full animate-pulse rounded-lg bg-neutral-700/70"
+                />
+              ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 const ItemDisplaySelectDialog: FC = () => {
   const { t } = useTranslation()
 
   const [firstOpened, setFirstOpened] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const { createNewEntity } = useDisplayEntityStore(
-    useShallow((state) => ({
-      createNewEntity: state.createNew,
-    })),
-  )
   const { isOpen, setOpenedDialog } = useDialogStore(
     useShallow((state) => ({
       isOpen: state.openedDialog === 'itemDisplaySelect',
@@ -31,7 +96,7 @@ const ItemDisplaySelectDialog: FC = () => {
 
   const closeDialog = () => setOpenedDialog(null)
 
-  const { data: itemListResponse } = useQuery({
+  const { data: itemListResponse, isLoading } = useQuery({
     queryKey: ['items.json', targetGameVersion],
     queryFn: firstOpened ? getItemListQueryFn : skipToken,
     staleTime: Infinity,
@@ -65,20 +130,7 @@ const ItemDisplaySelectDialog: FC = () => {
         />
       </div>
 
-      <div className="flex h-full flex-col gap-1 overflow-auto rounded-lg p-1">
-        {searchResult.map((item) => (
-          <button
-            key={item}
-            className="rounded-lg bg-neutral-700 p-1 text-center text-xs transition duration-150 hover:bg-neutral-700/50"
-            onClick={() => {
-              createNewEntity([{ kind: 'item', type: item }])
-              setOpenedDialog(null)
-            }}
-          >
-            {item}
-          </button>
-        ))}
-      </div>
+      <VirtualList items={searchResult} isLoading={isLoading} />
     </Dialog>
   )
 }

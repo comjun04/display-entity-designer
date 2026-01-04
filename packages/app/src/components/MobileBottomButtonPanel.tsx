@@ -14,7 +14,7 @@ const MobileBottomButtonPanel: FC = () => {
   )
 
   return (
-    <div className="fixed bottom-4 right-4 flex flex-col gap-2 xs:hidden">
+    <div className="fixed bottom-4 right-4 flex flex-col gap-2 sm:hidden">
       <FullscreenToggle />
       <button
         className="rounded-lg bg-black p-2"

@@ -7,16 +7,18 @@ import { cn } from '@/utils'
 
 import Dialog from './Dialog'
 import AboutPage from './settings/AboutPage'
+import AppearancePage from './settings/AppearancePage'
 import DebugOptionsPage from './settings/DebugOptionsPage'
 import GeneralPage from './settings/GeneralPage'
 import HeadPainterPage from './settings/HeadPainterPage'
-import HotkeysPage from './settings/HotkeysPage'
 import PerformancePage from './settings/PerformancePage'
+import ShortcutsPage from './settings/ShortcutsPage'
 
 type SettingsPageType =
   | 'general'
+  | 'appearance'
   | 'performance'
-  | 'hotkeys'
+  | 'shortcuts'
   | 'headPainter'
   | 'about'
   | 'debug'
@@ -40,12 +42,17 @@ const SettingsDialog: FC = () => {
       title={t(($) => $.dialog.settings.title)}
       open={isOpen}
       onClose={closeDialog}
-      className="relative z-50"
+      backdropClassName={cn(
+        selectedPage === 'appearance' && 'sm:backdrop-blur-none',
+      )}
+      innerPanelClassName={cn(
+        selectedPage === 'appearance' && 'bg-neutral-800/60',
+      )}
     >
-      <div className="flex h-full w-full flex-col xs:flex-row">
+      <div className="flex h-full w-full flex-col overflow-auto sm:flex-row">
         {/* Desktop - left side settings submenu list */}
-        <div className="hidden w-[30%] border-r-2 border-neutral-700 p-4 xs:block">
-          <div className="mt-2 flex flex-col gap-1">
+        <div className="hidden w-[30%] border-r-2 border-neutral-700 px-4 sm:block">
+          <div className="flex flex-col gap-1">
             <button
               className={cn(
                 'w-full rounded px-2 py-1 text-start text-sm transition duration-150',
@@ -56,6 +63,18 @@ const SettingsDialog: FC = () => {
               onClick={() => setSelectedPage('general')}
             >
               {t(($) => $.dialog.settings.page.general.title)}
+            </button>
+
+            <button
+              className={cn(
+                'w-full rounded px-2 py-1 text-start text-sm transition duration-150',
+                selectedPage === 'appearance'
+                  ? 'bg-neutral-700'
+                  : 'hover:bg-neutral-700/50',
+              )}
+              onClick={() => setSelectedPage('appearance')}
+            >
+              {t(($) => $.dialog.settings.page.appearance.title)}
             </button>
 
             <button
@@ -72,13 +91,13 @@ const SettingsDialog: FC = () => {
             <button
               className={cn(
                 'w-full rounded px-2 py-1 text-start text-sm transition duration-150',
-                selectedPage === 'hotkeys'
+                selectedPage === 'shortcuts'
                   ? 'bg-neutral-700'
                   : 'hover:bg-neutral-700/50',
               )}
-              onClick={() => setSelectedPage('hotkeys')}
+              onClick={() => setSelectedPage('shortcuts')}
             >
-              {t(($) => $.dialog.settings.page.hotkeys.title)}
+              {t(($) => $.dialog.settings.page.shortcuts.title)}
             </button>
             <button
               className={cn(
@@ -119,7 +138,7 @@ const SettingsDialog: FC = () => {
           </div>
         </div>
         {/* Mobile - submenu <select> element on top */}
-        <div className="xs:hidden">
+        <div className="sm:hidden">
           <select
             className="w-full rounded bg-neutral-900 p-2"
             value={selectedPage}
@@ -130,11 +149,14 @@ const SettingsDialog: FC = () => {
             <option value="general">
               {t(($) => $.dialog.settings.page.general.title)}
             </option>
+            <option value="appearance">
+              {t(($) => $.dialog.settings.page.appearance.title)}
+            </option>
             <option value="performance">
               {t(($) => $.dialog.settings.page.performance.title)}
             </option>
-            <option value="hotkeys">
-              {t(($) => $.dialog.settings.page.hotkeys.title)}
+            <option value="shortcuts">
+              {t(($) => $.dialog.settings.page.shortcuts.title)}
             </option>
             <option value="headPainter">
               {t(($) => $.dialog.settings.page.headPainter.title)}
@@ -149,15 +171,18 @@ const SettingsDialog: FC = () => {
           </select>
         </div>
 
-        <div className="h-full w-full py-4 xs:px-4">
+        <div className="h-full w-full overflow-auto pt-4 sm:px-4 sm:pt-0">
           {/* General */}
           {selectedPage === 'general' && <GeneralPage />}
+
+          {/* Appearance */}
+          {selectedPage === 'appearance' && <AppearancePage />}
 
           {/* Performance */}
           {selectedPage === 'performance' && <PerformancePage />}
 
-          {/* Hotkeys */}
-          {selectedPage === 'hotkeys' && <HotkeysPage />}
+          {/* Shortcuts */}
+          {selectedPage === 'shortcuts' && <ShortcutsPage />}
 
           {/* Head Painter */}
           {selectedPage === 'headPainter' && <HeadPainterPage />}

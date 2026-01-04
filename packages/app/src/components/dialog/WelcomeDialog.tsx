@@ -46,7 +46,7 @@ const WelcomeDialog: FC = () => {
       onClose={closeDialog}
       className="relative z-50"
     >
-      <div className="flex h-full flex-col gap-2">
+      <div className="flex h-full flex-col gap-2 overflow-auto">
         <Title />
         <div className="h-full overflow-y-auto pb-8 pt-4">
           <div className="flex flex-col gap-2 sm:flex-row">

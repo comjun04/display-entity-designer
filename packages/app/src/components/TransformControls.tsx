@@ -1,9 +1,9 @@
 import { TransformControls as TransformControlsImpl } from '@react-three/drei'
 import {
   type FC,
-  type MutableRefObject,
   useCallback,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from 'react'
@@ -20,24 +20,40 @@ import {
 import { TransformControls as OriginalTransformControls } from 'three/examples/jsm/Addons.js'
 import { useShallow } from 'zustand/shallow'
 
+import { getLogger } from '@/services/loggerService'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { useEntityRefStore } from '@/stores/entityRefStore'
 import type { Number3Tuple } from '@/types'
 
+const SCALE_SNAP = 0.0625
+
 const infinityVector = new Vector3(Infinity, Infinity, Infinity)
 const minusInfinityVector = new Vector3(-Infinity, -Infinity, -Infinity)
 const dummyBox = new Box3(infinityVector.clone(), minusInfinityVector.clone())
 
+const logger = getLogger('TransformControls')
+
 const TransformControls: FC = () => {
-  const { entities, selectedEntityIds, batchSetEntityTransformation } =
+  const { selectedEntityIds, batchSetEntityTransformation } =
     useDisplayEntityStore(
       useShallow((state) => ({
-        entities: state.entities,
         selectedEntityIds: state.selectedEntityIds,
         batchSetEntityTransformation: state.batchSetEntityTransformation,
       })),
     )
+  const firstSelectedEntityTransformation = useDisplayEntityStore(
+    useShallow((state) => {
+      const firstSelectedEntityId = state.selectedEntityIds[0]
+      if (firstSelectedEntityId == null) return null
+
+      const firstSelectedEntity = state.entities.get(firstSelectedEntityId)
+      if (firstSelectedEntity == null) return null
+
+      const { position, rotation, size } = firstSelectedEntity
+      return { position, rotation, size }
+    }),
+  )
 
   const firstSelectedEntityId =
     selectedEntityIds.length > 0 ? selectedEntityIds[0] : null
@@ -50,21 +66,32 @@ const TransformControls: FC = () => {
           : undefined,
     })),
   )
-  const { mode, setUsingTransformControl, setSelectionBaseTransformation } =
-    useEditorStore(
-      useShallow((state) => ({
-        mode: state.mode,
-        setUsingTransformControl: state.setUsingTransformControl,
-        setSelectionBaseTransformation: state.setSelectionBaseTransformation,
-      })),
-    )
+  const {
+    mode,
+    rotationSpace,
+    setUsingTransformControl,
+    setSelectionBaseTransformation,
+  } = useEditorStore(
+    useShallow((state) => ({
+      mode: state.mode,
+      rotationSpace: state.rotationSpace,
+      setUsingTransformControl: state.setUsingTransformControl,
+      setSelectionBaseTransformation: state.setSelectionBaseTransformation,
+    })),
+  )
 
   const [shiftPressed, setShiftPressed] = useState(false)
 
-  const pivotRef = useRef<Group>(null) as MutableRefObject<Group>
+  const pivot = useMemo(() => {
+    const group = new Group()
+    group.name = 'Pivot'
+    return group
+  }, [])
   const boundingBoxHelperRef = useRef<Box3Helper>(null)
 
   const pivotInitialPosition = useRef(new Vector3())
+  const pivotInitialQuaternion = useRef(new Quaternion())
+  const pivotInitialQuaternionWorld = useRef(new Quaternion())
   const selectedEntityInitialTransformations = useRef<
     {
       id: string
@@ -89,67 +116,83 @@ const TransformControls: FC = () => {
     })
   }, [selectedEntityIds])
 
+  // reparent pivot when first selected entity is changed
   useEffect(() => {
-    if (pivotRef.current == null) return
+    logger.debug('reparenting pivot')
+    const { rootGroupRefData } = useEntityRefStore.getState()
 
-    if (firstSelectedEntityRefData) {
-      // pivot을 해당 entity의 world position으로 이동
-      // (local position은 entity가 그룹 안에 속해 있을 경우 상대적인 값으로 지정되므로 사용할 수 없음)
-      firstSelectedEntityRefData.objectRef.current.getWorldPosition(
-        pivotRef.current.position,
-      )
-      pivotRef.current.rotation.copy(
-        firstSelectedEntityRefData.objectRef.current.rotation,
-      )
-      pivotRef.current.scale.set(1, 1, 1)
+    if (firstSelectedEntityRefData != null) {
+      const parent =
+        firstSelectedEntityRefData.objectRef.current.parent ??
+        rootGroupRefData.objectRef.current
+      parent.add(pivot)
+    } else {
+      const parent = rootGroupRefData.objectRef.current
+      parent.add(pivot)
     }
-
-    pivotInitialPosition.current.copy(pivotRef.current.position)
-  }, [firstSelectedEntityRefData, selectedEntityIds])
+  }, [firstSelectedEntityRefData, pivot])
 
   useEffect(() => {
     updateBoundingBox()
   }, [selectedEntityIds, updateBoundingBox])
 
   useEffect(() => {
+    const { entities } = useDisplayEntityStore.getState()
     const selectedEntities = [...entities.values()].filter((e) =>
       selectedEntityIds.includes(e.id),
     )
 
     selectedEntityInitialTransformations.current = []
 
+    const tempEuler = new Euler()
     for (const entity of selectedEntities) {
       const refData = useEntityRefStore.getState().entityRefs.get(entity.id)!
       const object = refData.objectRef.current
 
-      const positionVector = new Vector3(...entity.position)
-      const rotationEuler = new Euler(...entity.rotation)
-      const scaleVector = new Vector3(...entity.size)
+      const positionVec = new Vector3(...entity.position)
+      const rotationQuat = new Quaternion().setFromEuler(
+        tempEuler.set(...entity.rotation),
+      )
+      const scaleVec = new Vector3(...entity.size)
 
       selectedEntityInitialTransformations.current.push({
         id: entity.id,
         object,
-        position: positionVector,
-        quaternion: new Quaternion().setFromEuler(rotationEuler),
-        scale: scaleVector,
+        position: positionVec,
+        quaternion: rotationQuat,
+        scale: scaleVec,
       })
-
-      // 선택된 entity가 selectedEntityIds 리스트에서 맨 첫 번째일 경우 기준점으로 설정
-      if (entity.id === firstSelectedEntityId) {
-        // pivot을 해당 entity의 world position으로 이동
-        // (local position은 entity가 그룹 안에 속해 있을 경우 상대적인 값으로 지정되므로 사용할 수 없음)
-        object.getWorldPosition(pivotRef.current.position)
-        pivotInitialPosition.current.copy(pivotRef.current.position)
-      }
     }
-
-    // pivot rotation 리셋
-    pivotRef.current.rotation.set(0, 0, 0)
 
     if (selectedEntityIds.length > 1) {
       updateBoundingBox()
     }
-  }, [entities, selectedEntityIds, firstSelectedEntityId, updateBoundingBox])
+  }, [
+    // entities,
+    selectedEntityIds,
+    firstSelectedEntityId,
+    updateBoundingBox,
+  ])
+
+  // update pivot position and rotation when first selected entity's transform data changed
+  useEffect(() => {
+    if (firstSelectedEntityTransformation == null) return
+
+    pivot.position.set(...firstSelectedEntityTransformation.position)
+    pivot.rotation.set(...firstSelectedEntityTransformation.rotation)
+    pivot.scale.set(1, 1, 1)
+    pivot.updateMatrix()
+
+    pivotInitialPosition.current.copy(pivot.position)
+    pivotInitialQuaternion.current.copy(pivot.quaternion)
+    pivot.getWorldQuaternion(pivotInitialQuaternionWorld.current)
+
+    logger.debug(
+      'updating pivot position and rotation on firstSelectedEntityTransformation change',
+      pivot.position.toArray(),
+      pivot.rotation.toArray(),
+    )
+  }, [firstSelectedEntityTransformation, pivot])
 
   useEffect(() => {
     const handler = (evt: KeyboardEvent) => {
@@ -167,8 +210,9 @@ const TransformControls: FC = () => {
   return (
     <>
       <TransformControlsImpl
-        object={pivotRef}
+        object={pivot}
         mode={mode}
+        space={rotationSpace}
         translationSnap={shiftPressed ? 0.00125 : 0.0625}
         rotationSnap={Math.PI / 12} // 15도
         scaleSnap={0.0625}
@@ -179,9 +223,11 @@ const TransformControls: FC = () => {
         enabled={selectedEntityIds.length > 0}
         onMouseDown={() => {
           setUsingTransformControl(true)
+          logger.debug('onMouseDown')
         }}
         onMouseUp={() => {
           setUsingTransformControl(false)
+          logger.debug('onMouseUp')
 
           const entities = useDisplayEntityStore.getState().entities
 
@@ -204,6 +250,7 @@ const TransformControls: FC = () => {
               })
             batchSetEntityTransformation(batchUpdateData)
           } else if (mode === 'rotate') {
+            const tempEuler = new Euler()
             const batchUpdateData = [...entities.values()]
               .filter((e) => selectedEntityIds.includes(e.id))
               .map((entity) => {
@@ -214,11 +261,8 @@ const TransformControls: FC = () => {
 
                 const newPosition = initialTransform.object.position
 
-                const newRotationQuaternion = new Quaternion()
-                initialTransform.object.getWorldQuaternion(
-                  newRotationQuaternion,
-                )
-                const newRotationEuler = new Euler()
+                const newRotationQuaternion = initialTransform.object.quaternion
+                const newRotationEulerArr = tempEuler
                   .setFromQuaternion(newRotationQuaternion)
                   .toArray()
                   .slice(0, 3) as Number3Tuple
@@ -228,15 +272,13 @@ const TransformControls: FC = () => {
 
                 return {
                   id: entity.id,
-                  rotation: newRotationEuler,
+                  rotation: newRotationEulerArr,
                   translation: newPosition.toArray(),
                 }
               })
 
             batchSetEntityTransformation(batchUpdateData)
           } else if (mode === 'scale') {
-            pivotRef.current.scale.set(1, 1, 1)
-
             const batchUpdateData = [...entities.values()]
               .filter((e) => selectedEntityIds.includes(e.id))
               .map((entity) => {
@@ -264,14 +306,13 @@ const TransformControls: FC = () => {
             batchSetEntityTransformation(batchUpdateData)
           }
 
-          pivotInitialPosition.current.copy(pivotRef.current.position)
+          pivotInitialPosition.current.copy(pivot.position)
+          pivotInitialQuaternion.current.copy(pivot.quaternion)
+          pivot.getWorldQuaternion(pivotInitialQuaternionWorld.current)
 
-          // pivot rotation 리셋
-          pivotRef.current.rotation.set(0, 0, 0)
+          pivot.scale.set(1, 1, 1)
         }}
         onObjectChange={(e) => {
-          if (pivotRef.current == null) return
-
           const target = (e as Event<string, OriginalTransformControls>).target
           // scale은 양수 값만 가질 수 있음
           const absoluteScale = target.object.scale
@@ -280,62 +321,82 @@ const TransformControls: FC = () => {
           // state를 건드리기 전에 object3d에 먼저 scale 값을 세팅해야 음수 값일 경우 음수 <-> 양수로 계속 바뀌면서 생기는 깜빡거림을 방지할 수 있음
           target.object.scale.fromArray(absoluteScale)
 
-          for (const selectedEntityId of selectedEntityIds) {
-            const initialTransformation =
-              selectedEntityInitialTransformations.current.find(
-                (d) => d.id === selectedEntityId,
-              )!
-            const objectRef = initialTransformation.object
+          const pivotWorldQuat = new Quaternion()
+          pivot.getWorldQuaternion(pivotWorldQuat)
+          // pivot quaternion currently moving - pivot quaternion before moving (all in world space)
+          const pivotQuatDeltaWorld = pivotWorldQuat
+            .clone()
+            .multiply(pivotInitialQuaternionWorld.current.clone().invert())
 
-            const pivotCurrentPositionOnLocalSpace =
-              objectRef.parent!.worldToLocal(pivotRef.current.position.clone())
+          // share objects inside loop instead of creating new one every iteration
+          const relativePosFromPivot = new Vector3()
+          const newPos = new Vector3()
+          const newQuat = new Quaternion()
 
-            const relativePosition = initialTransformation.position
-              .clone()
-              .sub(
-                objectRef.parent!.worldToLocal(
-                  pivotInitialPosition.current.clone(),
-                ),
-              )
+          const alteredScale = new Vector3()
+          const scaleToApply = new Vector3()
 
-            // pivot quaternion 회전값 (pivot quaternion은 처음에 (0,0,0)으로 초기화됨)
-            const relativeQuaternion = pivotRef.current.quaternion
+          // 1. Get the shared parent's world quaternion
+          const parentQuatWorld = new Quaternion()
+          selectedEntityInitialTransformations.current[0].object.parent!.getWorldQuaternion(
+            parentQuatWorld,
+          )
+          // 2. Precompute conversion (used for all children)
+          const parentQuatWorldInv = parentQuatWorld.clone().invert()
 
-            /*
-             * pivot 현재 quaternion + entity 초기 quaternion
-             * 이게 object의 quaternion에 들어감 (방향을 결정)
-             * cross(relativeQuaternion, initialTransformation.quaternion)
-             *
-             * Three.js `Object3D#rotateOnWorldAxis()` 참조
-             * https://github.com/mrdoob/three.js/blob/e8af245aaac4f65d2f1f4df5a302bd19599d899e/src/core/Object3D.js#L192
-             */
-            const quaternion = initialTransformation.quaternion
-              .clone()
-              .premultiply(relativeQuaternion)
+          for (const transformData of selectedEntityInitialTransformations.current) {
+            if (mode !== 'scale') {
+              relativePosFromPivot
+                .copy(transformData.position)
+                .sub(pivotInitialPosition.current)
 
-            if (mode === 'scale') {
-              objectRef.position
-                .copy(relativePosition)
-                // position 축은 rotation과 상관없이 고정이라 특정 rotation 방향대로 scale을 주고 싶으면 먼저 rotation을 없애고 작업해야 함
-                .applyQuaternion(quaternion.clone().invert()) // 적용된 rotation을 revert하여 기본 rotation으로 만들기
-                .multiply(pivotRef.current.scale) // 그리고 나서 position scale 적용
-                .applyQuaternion(quaternion) // rotation 다시 적용
-              objectRef.position.add(pivotCurrentPositionOnLocalSpace)
+              /**
+               * localQ = parentWorldQ⁻¹ * newWorldQ
+               * newWorldQ = worldDeltaQ * currentWorldQ
+               * currentWorldQ = parentWorldQ * object.localQ
+               *
+               * newLocalQ = parentWorldQ⁻¹ * worldDeltaQ * parentWorldQ * object.localQ
+               */
+              newQuat
+                .copy(parentQuatWorldInv)
+                .multiply(pivotQuatDeltaWorld)
+                .multiply(parentQuatWorld)
+                .multiply(transformData.quaternion)
+              transformData.object.quaternion.copy(newQuat)
 
-              objectRef.scale.copy(
-                initialTransformation.scale
-                  .clone()
-                  .multiply(pivotRef.current.scale),
-              )
+              // =====
+
+              newPos
+                .copy(relativePosFromPivot)
+                .applyQuaternion(pivotQuatDeltaWorld)
+                .multiply(pivot.scale)
+                .add(pivot.position)
+              transformData.object.position.copy(newPos)
             } else {
-              objectRef.position
-                .copy(relativePosition)
-                .applyQuaternion(relativeQuaternion)
-                .add(pivotCurrentPositionOnLocalSpace)
-            }
+              alteredScale.copy(transformData.scale).multiply(pivot.scale)
+              scaleToApply.copy(transformData.scale)
+              ;(['x', 'y', 'z'] as const).forEach((axis) => {
+                if (
+                  target.axis != null &&
+                  target.axis.toLowerCase().includes(axis)
+                ) {
+                  const initialAxisScale = transformData.scale[axis]
+                  const axisScaleDiff = alteredScale[axis] - initialAxisScale
 
-            // 새로 바라볼 방향으로 설정
-            objectRef.quaternion.copy(quaternion)
+                  let finalAxisScale =
+                    initialAxisScale +
+                    Math.round(axisScaleDiff / SCALE_SNAP) * SCALE_SNAP
+                  finalAxisScale = Math.max(
+                    Math.abs(finalAxisScale),
+                    Number.EPSILON,
+                  )
+
+                  scaleToApply[axis] = finalAxisScale
+                }
+              })
+
+              transformData.object.scale.copy(scaleToApply)
+            }
           }
 
           if (selectedEntityIds.length > 0) {
@@ -357,8 +418,6 @@ const TransformControls: FC = () => {
           updateBoundingBox()
         }}
       />
-
-      <group name="pivot" ref={pivotRef} />
 
       <box3Helper
         args={[dummyBox, 'white']}

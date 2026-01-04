@@ -13,6 +13,8 @@ type DialogProps = {
   open: boolean
   onClose?: () => void
   className?: string
+  backdropClassName?: string
+  innerPanelClassName?: string
   // whether to use large static size for dialog.
   // dialog will be fullscreen on mobile when this is set to true
   useLargeStaticSize?: boolean
@@ -27,6 +29,8 @@ const Dialog: FC<DialogProps> = ({
   open,
   onClose,
   className,
+  backdropClassName,
+  innerPanelClassName,
   useLargeStaticSize = true,
   modal = false,
   title,
@@ -46,14 +50,15 @@ const Dialog: FC<DialogProps> = ({
         transition
         className={cn(
           'fixed inset-0 bg-black/30 duration-200 ease-out data-[closed]:opacity-0',
-          useLargeStaticSize ? 'xs:backdrop-blur-sm' : 'backdrop-blur-sm',
+          useLargeStaticSize ? 'sm:backdrop-blur-sm' : 'backdrop-blur-sm',
+          backdropClassName,
         )}
       />
 
       <div
         className={cn(
           'fixed inset-0 flex w-screen items-center justify-center',
-          useLargeStaticSize ? 'xs:p-4' : 'p-4',
+          useLargeStaticSize ? 'sm:p-4' : 'p-4',
         )}
       >
         <DialogPanel
@@ -61,8 +66,9 @@ const Dialog: FC<DialogProps> = ({
           className={cn(
             'flex w-full max-w-screen-md select-none flex-col gap-2 bg-neutral-800 p-4 duration-200 ease-out data-[closed]:scale-95 data-[closed]:opacity-0',
             useLargeStaticSize
-              ? 'h-full xs:h-[75vh] xs:rounded-xl'
+              ? 'h-full sm:h-[75vh] sm:rounded-xl'
               : 'rounded-xl',
+            innerPanelClassName,
           )}
         >
           <DialogTitle className="flex flex-row items-center">

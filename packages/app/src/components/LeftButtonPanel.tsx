@@ -17,6 +17,7 @@ import { getLogger } from '@/services/loggerService'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { useHistoryStore } from '@/stores/historyStore'
+import { getFormattedShortcutKeyString } from '@/utils'
 
 import FloatingButton from './FloatingButton'
 import MobileDragHoldButton from './MobileDragHoldButton'
@@ -36,11 +37,24 @@ const logger = getLogger('LeftButtonPanel')
 const LeftButtonPanel: FC = () => {
   const { t } = useTranslation()
 
-  const { mode, setMode, headPainterEnabled } = useEditorStore(
+  const {
+    mode,
+    setMode,
+    rotationSpace,
+    setRotationSpace,
+    headPainterEnabled,
+    shortcutSettings,
+  } = useEditorStore(
     useShallow((state) => ({
       mode: state.mode,
       setMode: state.setMode,
+
+      rotationSpace: state.rotationSpace,
+      setRotationSpace: state.setRotationSpace,
+
       headPainterEnabled: state.headPainter.enabled,
+
+      shortcutSettings: state.settings.shortcuts,
     })),
   )
   const { setOpenedDialog } = useDialogStore(
@@ -75,7 +89,11 @@ const LeftButtonPanel: FC = () => {
           <DropdownMenuItem className="w-full" onClick={openFromFile}>
             <div className="flex w-full flex-row items-center gap-2 text-sm">
               <span className="grow">{t(($) => $.menu.open)}</span>
-              <span className="text-xs text-neutral-500">Ctrl + O</span>
+              <span className="text-xs text-neutral-500">
+                {getFormattedShortcutKeyString(
+                  shortcutSettings['general.openFromFile'] ?? '',
+                )}
+              </span>
             </div>
           </DropdownMenuItem>
           <DropdownMenuItem
@@ -88,7 +106,11 @@ const LeftButtonPanel: FC = () => {
           >
             <div className="flex w-full flex-row items-center gap-2 text-sm">
               <span className="grow">{t(($) => $.menu.save)}</span>
-              <span className="text-xs text-neutral-500">Ctrl + S</span>
+              <span className="text-xs text-neutral-500">
+                {getFormattedShortcutKeyString(
+                  shortcutSettings['general.saveToFile'] ?? '',
+                )}
+              </span>
             </div>
           </DropdownMenuItem>
 
@@ -127,7 +149,11 @@ const LeftButtonPanel: FC = () => {
           >
             <div className="flex w-full flex-row items-center gap-2 text-sm">
               <div className="grow">{t(($) => $.menu.settings)}</div>
-              <span className="text-xs text-neutral-500">Ctrl + ,</span>
+              <span className="text-xs text-neutral-500">
+                {getFormattedShortcutKeyString(
+                  shortcutSettings['general.openSettings'] ?? '',
+                )}
+              </span>
             </div>
           </DropdownMenuItem>
         </DropdownMenuContent>
@@ -135,7 +161,9 @@ const LeftButtonPanel: FC = () => {
 
       <div className="flex flex-row gap-2">
         <Tooltip
-          content={t(($) => $.editor.undo)}
+          content={`${t(($) => $.editor.undo)} (${getFormattedShortcutKeyString(
+            shortcutSettings['general.undo'] ?? '',
+          )})`}
           placement="bottom"
           size="sm"
           delay={300}
@@ -146,7 +174,9 @@ const LeftButtonPanel: FC = () => {
           </FloatingButton>
         </Tooltip>
         <Tooltip
-          content={t(($) => $.editor.redo)}
+          content={`${t(($) => $.editor.redo)} (${getFormattedShortcutKeyString(
+            shortcutSettings['general.redo'] ?? '',
+          )})`}
           placement="bottom"
           size="sm"
           delay={300}
@@ -159,7 +189,9 @@ const LeftButtonPanel: FC = () => {
       </div>
 
       <Tooltip
-        content={t(($) => $.editor.modes.translate)}
+        content={`${t(($) => $.editor.modes.translate)} (${getFormattedShortcutKeyString(
+          shortcutSettings['editor.translateMode'] ?? '',
+        )})`}
         placement="right"
         size="sm"
         delay={300}
@@ -175,7 +207,9 @@ const LeftButtonPanel: FC = () => {
       </Tooltip>
 
       <Tooltip
-        content={t(($) => $.editor.modes.rotate)}
+        content={`${t(($) => $.editor.modes.rotate)} (${getFormattedShortcutKeyString(
+          shortcutSettings['editor.rotateMode'] ?? '',
+        )})`}
         placement="right"
         size="sm"
         delay={300}
@@ -191,7 +225,9 @@ const LeftButtonPanel: FC = () => {
       </Tooltip>
 
       <Tooltip
-        content={t(($) => $.editor.modes.scale)}
+        content={`${t(($) => $.editor.modes.scale)} (${getFormattedShortcutKeyString(
+          shortcutSettings['editor.scaleMode'] ?? '',
+        )})`}
         placement="right"
         size="sm"
         delay={300}
@@ -203,6 +239,22 @@ const LeftButtonPanel: FC = () => {
           onClick={() => setMode('scale')}
         >
           <LuMoveDiagonal size={24} />
+        </FloatingButton>
+      </Tooltip>
+
+      <Tooltip
+        content={t(($) => $.editor.changeSpaceMode)}
+        placement="right"
+        size="sm"
+        delay={300}
+        closeDelay={0}
+      >
+        <FloatingButton
+          onClick={() => {
+            setRotationSpace(rotationSpace === 'world' ? 'local' : 'world')
+          }}
+        >
+          {rotationSpace === 'world' ? 'World' : 'Local'}
         </FloatingButton>
       </Tooltip>
 

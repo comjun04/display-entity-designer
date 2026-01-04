@@ -268,8 +268,15 @@ export const useDisplayEntityStore = create(
     },
     setSelected: (ids) =>
       set((state) => {
-        if (state.selectedEntityIds[0] !== ids[0]) {
-          const firstSelectedEntity = state.entities.get(ids[0])
+        const allEntityIds = [...state.entities.keys()]
+        const newlySelectedEntityIds = ids
+          .filter((id) => state.entities.has(id))
+          .sort((a, b) => allEntityIds.indexOf(a) - allEntityIds.indexOf(b))
+
+        if (state.selectedEntityIds[0] !== newlySelectedEntityIds[0]) {
+          const firstSelectedEntity = state.entities.get(
+            newlySelectedEntityIds[0],
+          )
 
           useEditorStore.getState().setSelectionBaseTransformation({
             position: firstSelectedEntity?.position,
@@ -278,7 +285,7 @@ export const useDisplayEntityStore = create(
           })
         }
 
-        state.selectedEntityIds = ids
+        state.selectedEntityIds = newlySelectedEntityIds
 
         const f = (id: string) => {
           if (state.selectedEntityIdsIncludingParent.has(id)) {
@@ -292,7 +299,7 @@ export const useDisplayEntityStore = create(
           }
         }
         state.selectedEntityIdsIncludingParent.clear()
-        for (const id of ids) {
+        for (const id of newlySelectedEntityIds) {
           f(id)
         }
       }),

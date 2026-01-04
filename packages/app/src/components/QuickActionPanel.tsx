@@ -29,7 +29,7 @@ import {
   DropdownMenuTrigger,
 } from './ui/DropdownMenu'
 
-const TopButtonPanel: FC = () => {
+const QuickActionPanel: FC = () => {
   const { t } = useTranslation()
 
   const { setOpenedDialog } = useDialogStore(
@@ -51,11 +51,24 @@ const TopButtonPanel: FC = () => {
     (state) => state.headPainter.enabled,
   )
 
+  const { panelLocation, panelMargin } = useEditorStore(
+    useShallow((state) => ({
+      panelLocation: state.settings.appearance.quickActionPanel.location,
+      panelMargin: state.settings.appearance.quickActionPanel.margin,
+    })),
+  )
+
   return (
-    <div className="absolute left-1/2 top-4 z-[5] -translate-x-1/2">
+    <div
+      className="absolute left-1/2 z-[5] -translate-x-1/2"
+      style={{
+        top: panelLocation === 'top' ? panelMargin : undefined,
+        bottom: panelLocation === 'bottom' ? panelMargin : undefined,
+      }}
+    >
       <div className="flex flex-row rounded-lg bg-black">
         {/* Desktop - show all 'Add Display Entity' buttons */}
-        <div className="flex hidden flex-row sm:block">
+        <div className="hidden flex-row sm:flex">
           <Tooltip
             content={t(($) => $.editor.topBar.blockDisplay)}
             placement="bottom"
@@ -262,4 +275,4 @@ const TopButtonPanel: FC = () => {
   )
 }
 
-export default TopButtonPanel
+export default QuickActionPanel

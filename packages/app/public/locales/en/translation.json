@@ -16,11 +16,12 @@
       },
       "showWelcomeOnStartup": "Show Welcome on Startup",
       "changeLogs": [
-        "Now supports Minecraft 1.21.9!",
-        "You can now duplicate selected entities by pressing button on top button panel or using hotkey.",
-        "Groups in Objects panel now collapses when group itself or its children entities/groups are not selected. This fixes massive UI lag when working with large projects.",
-        "Now you can name your project and individual groups.",
-        "Reduced geometries when generating builtin item model (most non-block items). This may improve performance a little.",
+        "Now supports Minecraft 1.21.10 (resources are same as 1.21.9)",
+        "Finally fixed editor bugs that made weird behavior when transforming multi-selected entities, or transforming entity inside multiple groups.",
+        "Add Appearance page in settings. Now you can move quick action bar (previously topbar) location and change margin, and you can change gizmo location and margin.",
+        "Now there will be indication in page title when opened project has unsaved changes.",
+        "Now you can resize sidebar.",
+        "Reduced lag when opening block display or item display add dialog",
         "...and several fixes to improve the app!"
       ]
     },
@@ -62,15 +63,58 @@
             "forceUnifont": "Force Unicode font (Unifont)"
           }
         },
+        "appearance": {
+          "title": "Appearance",
+          "sections": {
+            "quickActionPanel": {
+              "title": "Quick Action Panel",
+              "options": {
+                "location": {
+                  "title": "Location",
+                  "values": {
+                    "top": "Top",
+                    "bottom": "Bottom"
+                  }
+                },
+                "margin": {
+                  "title": "Margin"
+                }
+              }
+            },
+            "gizmo": {
+              "title": "Gizmo",
+              "options": {
+                "location": {
+                  "title": "Location"
+                },
+                "margin": {
+                  "title": "Margin",
+                  "subOptions": {
+                    "width": "Width",
+                    "height": "Height"
+                  }
+                }
+              }
+            }
+          }
+        },
         "performance": {
           "title": "Performance",
           "options": {
             "reducePixelRatio": "Reduce Pixel Ratio to 1"
           }
         },
-        "hotkeys": {
-          "title": "Hotkeys",
-          "changingHotkeyNotSupported": "*Changing hotkeys are not yet supported.",
+        "shortcuts": {
+          "title": "Shortcuts",
+          "desc": "Customize shortcuts for various actions",
+          "howto": "Click the right side block to change shortcut.",
+          "shortcutNotWorkInThisPage": "Shortcuts will not work while this page is open.",
+          "unset": "unset",
+          "buttons": {
+            "undo": "Undo changes",
+            "unset": "Unset keybind",
+            "save": "Save keybind"
+          },
           "categories": {
             "general": {
               "title": "General",
@@ -155,6 +199,7 @@
       "rotate": "Rotate mode",
       "scale": "Scale mode"
     },
+    "changeSpaceMode": "Change Space Mode",
     "topBar": {
       "blockDisplay": "Block Display",
       "itemDisplay": "Item Display",
@@ -229,5 +274,8 @@
         }
       }
     }
+  },
+  "toast": {
+    "projectSaved": "Saved project"
   }
 }

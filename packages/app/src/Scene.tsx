@@ -62,14 +62,23 @@ const InsideCanvas: FC = () => {
 const Scene: FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
 
-  const { perfMonitorEnabled, reducePixelRatio, headPainterEnabled } =
-    useEditorStore(
-      useShallow((state) => ({
-        perfMonitorEnabled: state.settings.debug.perfMonitorEnabled,
-        reducePixelRatio: state.settings.performance.reducePixelRatio,
-        headPainterEnabled: state.headPainter.enabled,
-      })),
-    )
+  const {
+    perfMonitorEnabled,
+    reducePixelRatio,
+    headPainterEnabled,
+    gizmoLocation,
+    gizmoMarginWidth,
+    gizmoMarginHeight,
+  } = useEditorStore(
+    useShallow((state) => ({
+      perfMonitorEnabled: state.settings.debug.perfMonitorEnabled,
+      reducePixelRatio: state.settings.performance.reducePixelRatio,
+      headPainterEnabled: state.headPainter.enabled,
+      gizmoLocation: state.settings.appearance.gizmo.location,
+      gizmoMarginWidth: state.settings.appearance.gizmo.marginWidth,
+      gizmoMarginHeight: state.settings.appearance.gizmo.marginHeight,
+    })),
+  )
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -175,7 +184,10 @@ const Scene: FC = () => {
         infiniteGrid
         side={DoubleSide}
       />
-      <GizmoHelper alignment="bottom-left" margin={[60, 60]}>
+      <GizmoHelper
+        alignment={gizmoLocation}
+        margin={[gizmoMarginWidth, gizmoMarginHeight]}
+      >
         <GizmoViewport />
       </GizmoHelper>
 

@@ -16,10 +16,6 @@ import {
 import { useProjectStore } from '@/stores/projectStore'
 import { getTextureColor } from '@/utils'
 
-import { getLogger } from '../loggerService'
-
-const logger = getLogger('ResourceLoader/material')
-
 const materialLoadMutexMap = new Map<string, Mutex>()
 
 type TextureData =
@@ -68,7 +64,7 @@ export async function loadMaterial({
     let materialKey: string
     if (textureData.type === 'player_head') {
       if (textureData.playerHead.baked) {
-        materialKey = `#player_head;${textureData.playerHead.url!.split('/').slice(-1)[0]}` // same as textureKey
+        materialKey = `#player_head;${textureData.playerHead.url.split('/').slice(-1)[0]}` // same as textureKey
       } else {
         throw new Error('This should not happen')
       }
@@ -190,7 +186,9 @@ export async function loadTextureImage(textureData: TextureData) {
     let imageUrl: string
     if (textureData.type === 'player_head') {
       if (textureData.playerHead.baked) {
-        imageUrl = textureData.playerHead.url
+        // minecraft texture url can be provided as http:
+        // so to prevent mixed content error/warning, match protocol with current page
+        imageUrl = matchUrlProtocolWithCurrentPage(textureData.playerHead.url)
       } else {
         throw new Error('This should not happen')
       }
@@ -241,4 +239,10 @@ export async function loadTextureImage(textureData: TextureData) {
       textureFileFromVersion,
     }
   }
+}
+
+function matchUrlProtocolWithCurrentPage(url: string) {
+  const urlObj = new URL(url)
+  urlObj.protocol = window.location.protocol // match http/https protocol with current page to prevent mixed content error
+  return urlObj.toString()
 }

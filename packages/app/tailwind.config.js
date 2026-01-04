@@ -10,13 +10,7 @@ export default {
     // For individual installation, please note that you should add ./node_modules/@heroui/theme/dist/components/popover.js to your tailwind.config.js file instead since tooltip reuses popover styles.
     '../../node_modules/@heroui/theme/dist/components/popover.js',
   ],
-  theme: {
-    extend: {
-      screens: {
-        'xs': '400px'
-      }
-    },
-  },
+  theme: {},
   darkMode: 'class',
   plugins: [tailwindAnimate, heroui()],
 }

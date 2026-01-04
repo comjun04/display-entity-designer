@@ -20,7 +20,7 @@ export const useProjectStore = create(
       })
     },
 
-    projectName: '',
+    projectName: 'Untitled',
     setProjectName: (name) =>
       set((state) => {
         state.projectName = name
