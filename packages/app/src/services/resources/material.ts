@@ -25,7 +25,9 @@ type TextureData =
     }
   | {
       type: 'player_head'
-      playerHead:
+      playerHead: {
+        showSecondLayer: boolean
+      } & (
         | {
             baked: true
             url: string
@@ -34,6 +36,7 @@ type TextureData =
             baked: false
             paintTexturePixels: number[]
           }
+      )
     }
 export type LoadMaterialArgs = {
   textureData: TextureData
@@ -64,7 +67,7 @@ export async function loadMaterial({
     let materialKey: string
     if (textureData.type === 'player_head') {
       if (textureData.playerHead.baked) {
-        materialKey = `#player_head;${textureData.playerHead.url.split('/').slice(-1)[0]}` // same as textureKey
+        materialKey = `#player_head;${textureData.playerHead.url.split('/').slice(-1)[0]};${textureData.playerHead.showSecondLayer}` // same as textureKey
       } else {
         throw new Error('This should not happen')
       }
@@ -173,7 +176,7 @@ export async function loadTextureImage(textureData: TextureData) {
   let textureKey: string
   if (textureData.type === 'player_head') {
     if (textureData.playerHead.baked) {
-      textureKey = `#player_head;${textureData.playerHead.url.split('/').slice(-1)[0]}`
+      textureKey = `#player_head;${textureData.playerHead.url.split('/').slice(-1)[0]};${textureData.playerHead.showSecondLayer}`
     } else {
       throw new Error('This should not happen')
     }
@@ -220,6 +223,14 @@ export async function loadTextureImage(textureData: TextureData) {
       canvas.width,
       canvas.height,
     )
+
+    if (
+      textureData.type === 'player_head' &&
+      !textureData.playerHead.showSecondLayer
+    ) {
+      // erase second layer part
+      ctx.clearRect(32, 0, 32, 16)
+    }
 
     const croppedTextureDataUrl = canvas.toDataURL()
     cachedCroppedTextureDataUrl = croppedTextureDataUrl

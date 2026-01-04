@@ -29,7 +29,10 @@ type ModelNewProps = {
   displayType?: ModelDisplayPositionKey
   xRotation?: number
   yRotation?: number
-  playerHeadTextureData?: NonNullable<PlayerHeadProperties['texture']>
+  playerHeadData?: {
+    textureData: NonNullable<PlayerHeadProperties['texture']>
+    showSecondLayer: boolean
+  }
 }
 
 const OriginVec = new Vector3()
@@ -51,13 +54,13 @@ const Model: FC<ModelNewProps> = ({
   displayType,
   xRotation = 0,
   yRotation = 0,
-  playerHeadTextureData,
+  playerHeadData,
 }) => {
   const mergedMeshRef = useRef<Mesh>()
   const [meshLoaded, setMeshLoaded] = useState(false)
 
   const prevResourceLocationRef = useRef(initialResourceLocation)
-  const prevPlayerHeadTextureDataRef = useRef(playerHeadTextureData)
+  const prevPlayerHeadTextureDataRef = useRef(playerHeadData?.textureData)
 
   const targetGameVersion = useProjectStore((state) => state.targetGameVersion)
 
@@ -93,17 +96,19 @@ const Model: FC<ModelNewProps> = ({
         const prevPlayerHeadTextureData = prevPlayerHeadTextureDataRef.current
         if (
           prevPlayerHeadTextureData?.baked === false &&
-          playerHeadTextureData?.baked === false
+          playerHeadData?.textureData.baked === false
         ) {
           // prev and current has unbaked texture
           if (
             prevPlayerHeadTextureData?.paintTexturePixels !==
-            playerHeadTextureData.paintTexturePixels
+            playerHeadData?.textureData.paintTexturePixels
           ) {
             // unbaked texture has changed, update material texture
             // console.log('just update material texture')
             const newTexture = new DataTexture(
-              new Uint8ClampedArray(playerHeadTextureData.paintTexturePixels),
+              new Uint8ClampedArray(
+                playerHeadData?.textureData.paintTexturePixels,
+              ),
               64,
               64,
             )
@@ -136,18 +141,20 @@ const Model: FC<ModelNewProps> = ({
           // console.log('recreate material and attach')
 
           const newMaterial = await makeMaterial(
-            playerHeadTextureData != null
+            playerHeadData != null
               ? {
                   type: 'player_head',
-                  playerHead: playerHeadTextureData.baked
+                  playerHead: playerHeadData.textureData.baked
                     ? {
                         baked: true,
-                        url: playerHeadTextureData.url,
+                        url: playerHeadData.textureData.url,
+                        showSecondLayer: playerHeadData.showSecondLayer,
                       }
                     : {
                         baked: false,
                         paintTexturePixels:
-                          playerHeadTextureData.paintTexturePixels,
+                          playerHeadData.textureData.paintTexturePixels,
+                        showSecondLayer: playerHeadData.showSecondLayer,
                       },
                 }
               : {
@@ -165,7 +172,7 @@ const Model: FC<ModelNewProps> = ({
           else old?.dispose()
         }
 
-        prevPlayerHeadTextureDataRef.current = playerHeadTextureData
+        prevPlayerHeadTextureDataRef.current = playerHeadData?.textureData
         invalidate()
         return
       }
@@ -180,7 +187,7 @@ const Model: FC<ModelNewProps> = ({
         textures: modelData.textures,
         isItemModel,
         isBlockShapedItemModel,
-        playerHeadTextureData,
+        playerHeadData,
       })
 
       if (loadedMesh == null) {
@@ -193,7 +200,7 @@ const Model: FC<ModelNewProps> = ({
       }
       mergedMeshRef.current = loadedMesh
       prevResourceLocationRef.current = initialResourceLocation
-      prevPlayerHeadTextureDataRef.current = playerHeadTextureData
+      prevPlayerHeadTextureDataRef.current = playerHeadData?.textureData
 
       setMeshLoaded(true)
     }
@@ -208,7 +215,7 @@ const Model: FC<ModelNewProps> = ({
     modelDataTemp,
     modelDataLoading,
     meshLoaded,
-    playerHeadTextureData,
+    playerHeadData,
   ])
 
   useEffect(() => {

@@ -141,7 +141,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
       const canvas = document.createElement('canvas')
       canvas.width = 64
       canvas.height = 64
-      const ctx = canvas.getContext('2d')!
+      const ctx = canvas.getContext('2d', { willReadFrequently: true })!
 
       const textureData = playerHeadProperties.texture
 
@@ -159,6 +159,7 @@ const PlayerHeadPainter: FC<PlayerHeadPainterProps> = ({
             playerHead: {
               baked: true,
               url: textureData.url,
+              showSecondLayer: headPainterLayer === 'second',
             },
           })) // no resource fromVersion required on player_head
         } else {

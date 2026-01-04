@@ -45,7 +45,10 @@ export type LoadModelMaterialsArgs = {
   elements: ModelElement[]
   textures: Record<string, string>
   isItemModel: boolean
-  playerHeadTextureData?: NonNullable<PlayerHeadProperties['texture']>
+  playerHeadData?: {
+    textureData: NonNullable<PlayerHeadProperties['texture']>
+    showSecondLayer: boolean
+  }
 }
 
 /**
@@ -59,7 +62,7 @@ export async function loadModelMaterials({
   elements,
   textures,
   isItemModel,
-  playerHeadTextureData,
+  playerHeadData,
 }: LoadModelMaterialsArgs) {
   // player_head check
   const isPlayerHead = modelResourceLocation === 'item/player_head'
@@ -86,24 +89,26 @@ export async function loadModelMaterials({
 
       await loadMaterial({
         textureData: isPlayerHead
-          ? playerHeadTextureData?.baked &&
-            isValidTextureUrl(playerHeadTextureData.url)
+          ? playerHeadData?.textureData.baked &&
+            isValidTextureUrl(playerHeadData.textureData.url)
             ? {
                 // baked texture url
                 type: 'player_head',
                 playerHead: {
                   baked: true,
-                  url: playerHeadTextureData.url,
+                  url: playerHeadData.textureData.url,
+                  showSecondLayer: playerHeadData.showSecondLayer,
                 },
               }
-            : playerHeadTextureData?.baked === false
+            : playerHeadData?.textureData.baked === false
               ? {
                   // unbaked texture data url
                   type: 'player_head',
                   playerHead: {
                     baked: false,
                     paintTexturePixels:
-                      playerHeadTextureData.paintTexturePixels,
+                      playerHeadData.textureData.paintTexturePixels,
+                    showSecondLayer: playerHeadData.showSecondLayer,
                   },
                 }
               : {
@@ -130,7 +135,10 @@ export type LoadModelMeshArgs = {
   textures: Record<string, string>
   isItemModel: boolean
   isBlockShapedItemModel: boolean
-  playerHeadTextureData?: NonNullable<PlayerHeadProperties['texture']>
+  playerHeadData?: {
+    textureData: NonNullable<PlayerHeadProperties['texture']>
+    showSecondLayer: boolean
+  }
 }
 export async function loadModelMesh({
   modelResourceLocation,
@@ -138,7 +146,7 @@ export async function loadModelMesh({
   textures,
   isItemModel,
   isBlockShapedItemModel,
-  playerHeadTextureData,
+  playerHeadData,
 }: LoadModelMeshArgs) {
   const mergedGeometries: BufferGeometry[] = []
   const fullGeometryGroups: GeometryGroup[] = []
@@ -188,24 +196,26 @@ export async function loadModelMesh({
 
       const { material, materialKey } = await loadMaterial({
         textureData: isPlayerHead
-          ? playerHeadTextureData?.baked === true &&
-            isValidTextureUrl(playerHeadTextureData.url)
+          ? playerHeadData?.textureData.baked === true &&
+            isValidTextureUrl(playerHeadData.textureData.url)
             ? {
                 // baked texture url
                 type: 'player_head',
                 playerHead: {
                   baked: true,
-                  url: playerHeadTextureData.url,
+                  url: playerHeadData.textureData.url,
+                  showSecondLayer: playerHeadData.showSecondLayer,
                 },
               }
-            : playerHeadTextureData?.baked === false
+            : playerHeadData?.textureData.baked === false
               ? {
                   // unbaked texture data url
                   type: 'player_head',
                   playerHead: {
                     baked: false,
                     paintTexturePixels:
-                      playerHeadTextureData.paintTexturePixels,
+                      playerHeadData.textureData.paintTexturePixels,
+                    showSecondLayer: playerHeadData.showSecondLayer,
                   },
                 }
               : {

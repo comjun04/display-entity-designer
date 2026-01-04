@@ -1,5 +1,5 @@
 import type { ThreeEvent } from '@react-three/fiber'
-import { type FC, type MutableRefObject, memo, useRef } from 'react'
+import { type FC, type MutableRefObject, memo, useMemo, useRef } from 'react'
 import { Group } from 'three'
 import { useShallow } from 'zustand/shallow'
 
@@ -54,11 +54,30 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
       }
     }),
   )
-  const headPainterEnabled = useEditorStore(
-    (state) => state.headPainter.enabled,
+  const { headPainterEnabled, headPainterLayer } = useEditorStore(
+    useShallow((state) => ({
+      headPainterEnabled: state.headPainter.enabled,
+      headPainterLayer: state.headPainter.layer,
+    })),
   )
 
   const boundingBoxTargetRef = useRef<Group>(null)
+
+  const playerHeadData = useMemo(
+    () =>
+      thisEntityPlayerHeadProperties?.texture != null
+        ? {
+            textureData: thisEntityPlayerHeadProperties?.texture,
+            showSecondLayer:
+              !headPainterEnabled || headPainterLayer === 'second',
+          }
+        : undefined,
+    [
+      headPainterEnabled,
+      headPainterLayer,
+      thisEntityPlayerHeadProperties?.texture,
+    ],
+  )
 
   return (
     <object3D ref={ref}>
@@ -73,9 +92,7 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
         <MemoizedModel
           initialResourceLocation={`item/${type}`}
           displayType={thisEntityDisplay ?? undefined}
-          playerHeadTextureData={
-            thisEntityPlayerHeadProperties?.texture ?? undefined
-          }
+          playerHeadData={playerHeadData}
         />
       </group>
 

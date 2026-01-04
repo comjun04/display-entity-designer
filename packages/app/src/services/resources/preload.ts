@@ -64,7 +64,13 @@ export async function preloadResources(entities: DisplayEntity[]) {
         elements: data.elements,
         textures: data.textures,
         isItemModel: false,
-        playerHeadTextureData: applyModelInfo.playerHeadTextureData,
+        playerHeadData:
+          applyModelInfo.playerHeadTextureData != null
+            ? {
+                textureData: applyModelInfo.playerHeadTextureData,
+                showSecondLayer: true,
+              }
+            : undefined,
       })
     }),
   )
