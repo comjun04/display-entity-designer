@@ -55,7 +55,7 @@ const SettingsDialog: FC = () => {
           <div className="flex flex-col gap-1">
             <button
               className={cn(
-                'w-full rounded px-2 py-1 text-start text-sm transition duration-150',
+                'w-full rounded-sm px-2 py-1 text-start text-sm transition duration-150',
                 selectedPage === 'general'
                   ? 'bg-neutral-700'
                   : 'hover:bg-neutral-700/50',
@@ -67,7 +67,7 @@ const SettingsDialog: FC = () => {
 
             <button
               className={cn(
-                'w-full rounded px-2 py-1 text-start text-sm transition duration-150',
+                'w-full rounded-sm px-2 py-1 text-start text-sm transition duration-150',
                 selectedPage === 'appearance'
                   ? 'bg-neutral-700'
                   : 'hover:bg-neutral-700/50',
@@ -79,7 +79,7 @@ const SettingsDialog: FC = () => {
 
             <button
               className={cn(
-                'w-full rounded px-2 py-1 text-start text-sm transition duration-150',
+                'w-full rounded-sm px-2 py-1 text-start text-sm transition duration-150',
                 selectedPage === 'performance'
                   ? 'bg-neutral-700'
                   : 'hover:bg-neutral-700/50',
@@ -90,7 +90,7 @@ const SettingsDialog: FC = () => {
             </button>
             <button
               className={cn(
-                'w-full rounded px-2 py-1 text-start text-sm transition duration-150',
+                'w-full rounded-sm px-2 py-1 text-start text-sm transition duration-150',
                 selectedPage === 'shortcuts'
                   ? 'bg-neutral-700'
                   : 'hover:bg-neutral-700/50',
@@ -101,7 +101,7 @@ const SettingsDialog: FC = () => {
             </button>
             <button
               className={cn(
-                'w-full rounded px-2 py-1 text-start text-sm transition duration-150',
+                'w-full rounded-sm px-2 py-1 text-start text-sm transition duration-150',
                 selectedPage === 'headPainter'
                   ? 'bg-neutral-700'
                   : 'hover:bg-neutral-700/50',
@@ -115,7 +115,7 @@ const SettingsDialog: FC = () => {
 
             <button
               className={cn(
-                'w-full rounded px-2 py-1 text-start text-sm transition duration-150',
+                'w-full rounded-sm px-2 py-1 text-start text-sm transition duration-150',
                 selectedPage === 'about'
                   ? 'bg-neutral-700'
                   : 'hover:bg-neutral-700/50',
@@ -126,7 +126,7 @@ const SettingsDialog: FC = () => {
             </button>
             <button
               className={cn(
-                'w-full rounded px-2 py-1 text-start text-sm transition duration-150',
+                'w-full rounded-sm px-2 py-1 text-start text-sm transition duration-150',
                 selectedPage === 'debug'
                   ? 'bg-neutral-700'
                   : 'hover:bg-neutral-700/50',
@@ -140,7 +140,7 @@ const SettingsDialog: FC = () => {
         {/* Mobile - submenu <select> element on top */}
         <div className="sm:hidden">
           <select
-            className="w-full rounded bg-neutral-900 p-2"
+            className="w-full rounded-sm bg-neutral-900 p-2"
             value={selectedPage}
             onChange={(evt) =>
               setSelectedPage(evt.target.value as SettingsPageType)

@@ -33,7 +33,7 @@ const ColorPickerInput = forwardRef<
       <input
         type="text"
         disabled
-        className="min-w-0 rounded-l bg-neutral-800 py-1 pl-1 text-xs outline-none"
+        className="min-w-0 rounded-l bg-neutral-800 py-1 pl-1 text-xs outline-hidden"
         value={'#' + transformedValueHex}
       />
       <Popover>
@@ -46,7 +46,7 @@ const ColorPickerInput = forwardRef<
         <PopoverPanel
           transition
           anchor="top end"
-          className="z-50 transition duration-200 data-[closed]:translate-y-1 data-[closed]:opacity-0"
+          className="z-50 transition duration-200 data-closed:translate-y-1 data-closed:opacity-0"
         >
           <Sketch
             color={transformedValueHex}

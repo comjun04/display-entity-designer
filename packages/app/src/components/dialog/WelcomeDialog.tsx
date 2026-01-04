@@ -48,7 +48,7 @@ const WelcomeDialog: FC = () => {
     >
       <div className="flex h-full flex-col gap-2 overflow-auto">
         <Title />
-        <div className="h-full overflow-y-auto pb-8 pt-4">
+        <div className="h-full overflow-y-auto pt-4 pb-8">
           <div className="flex flex-col gap-2 sm:flex-row">
             <div className="flex-1">
               {/* v1.3.0 */}
@@ -65,7 +65,7 @@ const WelcomeDialog: FC = () => {
             </div>
             <div className="flex flex-1 flex-col gap-2">
               <button
-                className="flex flex-row items-center gap-2 rounded bg-neutral-900 px-4 py-2"
+                className="flex flex-row items-center gap-2 rounded-sm bg-neutral-900 px-4 py-2"
                 onClick={() => {
                   closeDialog()
                   newProject()
@@ -75,7 +75,7 @@ const WelcomeDialog: FC = () => {
                 <span>{t(($) => $.dialog.welcome.action.new)}</span>
               </button>
               <button
-                className="flex flex-row items-center gap-2 rounded bg-neutral-900 px-4 py-2"
+                className="flex flex-row items-center gap-2 rounded-sm bg-neutral-900 px-4 py-2"
                 onClick={() => {
                   openFromFile()
                   closeDialog()
@@ -85,11 +85,11 @@ const WelcomeDialog: FC = () => {
                 <span>{t(($) => $.dialog.welcome.action.open)}</span>
               </button>
               {showRecoverSessionSection && (
-                <div className="flex flex-col gap-2 rounded bg-neutral-700 p-4">
+                <div className="flex flex-col gap-2 rounded-sm bg-neutral-700 p-4">
                   <div>{t(($) => $.dialog.welcome.recoverProject.desc)}</div>
 
                   <button
-                    className="flex flex-row items-center gap-2 rounded bg-neutral-900 px-4 py-2"
+                    className="flex flex-row items-center gap-2 rounded-sm bg-neutral-900 px-4 py-2"
                     onClick={() => {
                       closeDialog()
                       autosaveService.loadSave().catch(console.error)

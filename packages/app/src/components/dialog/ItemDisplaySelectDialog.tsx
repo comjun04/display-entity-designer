@@ -48,7 +48,7 @@ const VirtualList: FC<VirtualListProps> = ({
           return (
             <button
               key={virtualItem.key}
-              className="absolute left-0 top-0 w-full rounded-lg bg-neutral-700 p-1 text-center text-xs transition duration-150 hover:bg-neutral-700/50"
+              className="absolute top-0 left-0 w-full rounded-lg bg-neutral-700 p-1 text-center text-xs transition duration-150 hover:bg-neutral-700/50"
               style={{
                 height: virtualItem.size,
                 transform: `translateY(${virtualItem.start}px)`,
@@ -124,7 +124,7 @@ const ItemDisplaySelectDialog: FC = () => {
         <span>{t(($) => $.dialog.itemDisplaySelect.search.label)}</span>
         <input
           type="text"
-          className="grow rounded px-2 py-1 text-sm outline-none"
+          className="grow rounded-sm px-2 py-1 text-sm outline-hidden"
           value={searchQuery}
           onChange={(evt) => setSearchQuery(evt.target.value)}
         />

@@ -223,7 +223,7 @@ const TransformsPanel: FC = () => {
       <SidePanelContent>
         {/* Translation */}
         <div>
-          <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
+          <div className="rounded-sm bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
             Translation
           </div>
           <XYZInput
@@ -234,7 +234,7 @@ const TransformsPanel: FC = () => {
         </div>
 
         <div className="mt-2">
-          <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
+          <div className="rounded-sm bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
             Rotation
           </div>
           {/* temp */}
@@ -246,7 +246,7 @@ const TransformsPanel: FC = () => {
         </div>
 
         <div className="mt-2">
-          <div className="rounded bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
+          <div className="rounded-sm bg-neutral-700 p-1 px-2 text-xs font-bold text-neutral-400">
             Scale
           </div>
           {/* temp */}

@@ -49,8 +49,8 @@ const Dialog: FC<DialogProps> = ({
       <DialogBackdrop
         transition
         className={cn(
-          'fixed inset-0 bg-black/30 duration-200 ease-out data-[closed]:opacity-0',
-          useLargeStaticSize ? 'sm:backdrop-blur-sm' : 'backdrop-blur-sm',
+          'fixed inset-0 bg-black/30 duration-200 ease-out data-closed:opacity-0',
+          useLargeStaticSize ? 'sm:backdrop-blur-xs' : 'backdrop-blur-xs',
           backdropClassName,
         )}
       />
@@ -64,7 +64,7 @@ const Dialog: FC<DialogProps> = ({
         <DialogPanel
           transition
           className={cn(
-            'flex w-full max-w-screen-md select-none flex-col gap-2 bg-neutral-800 p-4 duration-200 ease-out data-[closed]:scale-95 data-[closed]:opacity-0',
+            'flex w-full max-w-(--breakpoint-md) flex-col gap-2 bg-neutral-800 p-4 duration-200 ease-out select-none data-closed:scale-95 data-closed:opacity-0',
             useLargeStaticSize
               ? 'h-full sm:h-[75vh] sm:rounded-xl'
               : 'rounded-xl',

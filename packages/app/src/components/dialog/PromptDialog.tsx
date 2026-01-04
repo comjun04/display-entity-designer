@@ -31,7 +31,7 @@ const PromptDialog: FC = () => {
         <div>{promptDialogData.content}</div>
         <div className="flex flex-row-reverse gap-2">
           <button
-            className="rounded bg-blue-500 px-4 py-2"
+            className="rounded-sm bg-blue-500 px-4 py-2"
             onClick={() => {
               promptDialogData.onChoice?.(true)
               setOpenedDialog(null)
@@ -40,7 +40,7 @@ const PromptDialog: FC = () => {
             {promptDialogData.buttonText.positive}
           </button>
           <button
-            className="rounded bg-gray-700 px-4 py-2"
+            className="rounded-sm bg-gray-700 px-4 py-2"
             onClick={closeDialog}
           >
             {promptDialogData.buttonText.negative}

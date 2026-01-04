@@ -11,7 +11,7 @@ const FloatingButton = forwardRef<HTMLButtonElement, FloatingButtonProps>(
     return (
       <button
         className={cn(
-          'rounded-lg p-2 outline-none',
+          'rounded-lg p-2 outline-hidden',
           disabled
             ? 'bg-black text-neutral-600'
             : active
