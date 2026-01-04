@@ -16,12 +16,13 @@
       },
       "showWelcomeOnStartup": "Show Welcome on Startup",
       "changeLogs": [
-        "Now supports Minecraft 1.21.10 (resources are same as 1.21.9)",
-        "Finally fixed editor bugs that made weird behavior when transforming multi-selected entities, or transforming entity inside multiple groups.",
-        "Add Appearance page in settings. Now you can move quick action bar (previously topbar) location and change margin, and you can change gizmo location and margin.",
-        "Now there will be indication in page title when opened project has unsaved changes.",
-        "Now you can resize sidebar.",
-        "Reduced lag when opening block display or item display add dialog",
+        "Now supports Minecraft 1.21.11!",
+        "Added Player Head Painter, where you can now paint your own player head and bake it to use in-game!",
+        "Now you can change shortcuts. Configure as you want!",
+        "Improved asset loading by load them parallel.",
+        "Added toast system. More notifications will be added soon.",
+        "Sidebar width is now limited to 80% of window width.",
+        "Now changed sidebar width will be saved, no need to resize each time when opening the app.",
         "...and several fixes to improve the app!"
       ]
     },
