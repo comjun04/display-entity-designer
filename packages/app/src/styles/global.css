@@ -2,7 +2,7 @@
 layer(base);
 
 @import 'tailwindcss';
-
+@plugin '../../src/hero.ts';
 @source '../../../../node_modules/@heroui/theme/dist/components/popover.js';
 
 /* darkMode: class */
