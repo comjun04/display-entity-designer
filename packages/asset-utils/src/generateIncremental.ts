@@ -34,6 +34,7 @@ import {
   compare as semverCompare,
 } from 'semver'
 import { glob } from 'glob'
+import { parseArgs } from 'util'
 
 // these minecraft versions does not include resource/feature addition or changes, just bugfixes
 const versionsToSkip = [
@@ -48,8 +49,23 @@ const versionsToSkip = [
 
 // =====
 
-const args = process.argv
-const mcVersion = args[2]
+const args = process.argv.slice(2)
+
+const argsParseResult = parseArgs({
+  args,
+  strict: false,
+  options: {
+    force: { type: 'boolean', short: 'f' },
+  },
+})
+const forceGenerateMode = argsParseResult.values.force
+if (forceGenerateMode) {
+  console.warn(
+    '[WARN] Force generation mode activated. This will ignore already generated data and regenerate again.',
+  )
+}
+
+const mcVersion = argsParseResult.positionals[0]
 const semveredMcVersion = semverCoerce(mcVersion)?.version
 if (semveredMcVersion == null) {
   console.error(`Invalid version ${mcVersion}`)
@@ -125,8 +141,11 @@ for (const versionToDownload of versions) {
 
   // skip if metadata.json exists with correct format
   // this skips versions with already generated data from re-generating
-  const metadataFilePath = pathJoin(outputFolderPath, 'metadata.json')
-  if (existsSync(pathJoin(outputFolderPath, 'metadata.json'))) {
+  if (
+    !forceGenerateMode &&
+    existsSync(pathJoin(outputFolderPath, 'metadata.json'))
+  ) {
+    const metadataFilePath = pathJoin(outputFolderPath, 'metadata.json')
     try {
       const metadata = JSON.parse(
         await readFile(metadataFilePath, 'utf8'),
