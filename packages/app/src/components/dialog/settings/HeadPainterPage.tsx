@@ -1,6 +1,7 @@
 import { type FC, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { LuEye, LuEyeClosed } from 'react-icons/lu'
+import { toast } from 'sonner'
 import { useShallow } from 'zustand/shallow'
 
 import { useEditorStore } from '@/stores/editorStore'
@@ -68,6 +69,13 @@ const HeadPainterPage: FC = () => {
               setSettings({
                 headPainter: { mineskinApiKey: tempApiKeyInput },
               })
+              toast.success(
+                t(
+                  ($) =>
+                    $.dialog.settings.page.headPainter.options.mineskinApiKey
+                      .toasts.saveSuccess,
+                ),
+              )
             }}
           >
             {t(

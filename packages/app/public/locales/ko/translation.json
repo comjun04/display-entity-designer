@@ -146,6 +146,9 @@
               "title": "MineSkin API 키",
               "buttons": {
                 "save": "저장"
+              },
+              "toasts": {
+                "saveSuccess": "MineSkin API 키를 저장했습니다"
               }
             }
           }
