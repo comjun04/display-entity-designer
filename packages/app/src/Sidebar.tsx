@@ -3,6 +3,7 @@ import { type FC, useEffect, useState } from 'react'
 import { LuEllipsisVertical } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
+import HeadPainterPanel from './components/sidebar/HeadPainterPanel'
 import ObjectsPanel from './components/sidebar/ObjectsPanel'
 import PropertiesPanel from './components/sidebar/PropertiesPanel'
 import TransformsPanel from './components/sidebar/TransformsPanel'
@@ -14,11 +15,13 @@ const Sidebar: FC = () => {
     mobileSidebarOpened,
     setMobileSidebarOpened,
     initialDesktopSidebarWidth,
+    headPainterEnabled,
   } = useEditorStore(
     useShallow((state) => ({
       mobileSidebarOpened: state.mobileSidebarOpened,
       setMobileSidebarOpened: state.setMobileSidebarOpened,
       initialDesktopSidebarWidth: state.settings.appearance.sidebar.width,
+      headPainterEnabled: state.headPainter.enabled,
     })),
   )
 
@@ -118,6 +121,7 @@ const Sidebar: FC = () => {
 
         <div className="flex h-full flex-col gap-2 overflow-y-auto">
           <ObjectsPanel />
+          {headPainterEnabled && <HeadPainterPanel />}
           <TransformsPanel />
           <PropertiesPanel />
         </div>

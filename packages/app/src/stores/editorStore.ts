@@ -19,6 +19,8 @@ type TransformationData = {
   size: Number3Tuple
 }
 
+export type HeadPainterLayer = 'base' | 'second'
+
 type EditorState = {
   mode: EditorMode
   setMode: (newMode: EditorMode) => void
@@ -47,6 +49,20 @@ type EditorState = {
 
   projectDirty: boolean
   setProjectDirty: (isDirty: boolean) => void
+
+  headPainter: {
+    enabled: boolean
+    setEnabled: (enabled: boolean) => void
+
+    nowPainting: boolean
+    setNowPainting: (painting: boolean) => void
+
+    brushColor: number
+    setBrushColor: (color: number) => void
+
+    layer: HeadPainterLayer
+    setLayer: (layer: HeadPainterLayer) => void
+  }
 
   settings: Settings
   setSettings: (newSettings: DeepPartial<Settings>) => void
@@ -135,6 +151,32 @@ export const useEditorStore = create(
         set((state) => {
           state.projectDirty = isDirty
         }),
+
+      headPainter: {
+        enabled: false,
+        setEnabled: (enabled) =>
+          set((state) => {
+            state.headPainter.enabled = enabled
+          }),
+
+        nowPainting: false,
+        setNowPainting: (painting) =>
+          set((state) => {
+            state.headPainter.nowPainting = painting
+          }),
+
+        brushColor: 0xffffff,
+        setBrushColor: (color) =>
+          set((state) => {
+            state.headPainter.brushColor = color
+          }),
+
+        layer: 'base',
+        setLayer: (layer) =>
+          set((state) => {
+            state.headPainter.layer = layer
+          }),
+      },
 
       settings: initialSettings,
       setSettings: (newSettings) =>

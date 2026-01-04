@@ -57,6 +57,7 @@ const settingsSchema = z.object({
       reducePixelRatio: z.boolean().default(false),
     })
     .prefault({}),
+
   // shortcut settings
   // values must be `KeyboardEvent.key` value, multiple key inputs are deliminated by space
   // key value list: https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_key_values
@@ -76,6 +77,11 @@ const settingsSchema = z.object({
       'editor.groupOrUngroup': 'g',
       'editor.deleteEntity': 'Delete',
     }),
+  headPainter: z
+    .object({
+      mineskinApiKey: z.string().default(''),
+    })
+    .prefault({}),
   debug: z
     .object({
       testOption: z.boolean().default(false),

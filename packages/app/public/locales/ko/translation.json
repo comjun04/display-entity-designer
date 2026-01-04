@@ -139,6 +139,20 @@
             }
           }
         },
+        "headPainter": {
+          "title": "Head Painter",
+          "options": {
+            "mineskinApiKey": {
+              "title": "MineSkin API 키",
+              "buttons": {
+                "save": "저장"
+              },
+              "toasts": {
+                "saveSuccess": "MineSkin API 키를 저장했습니다"
+              }
+            }
+          }
+        },
         "about": {
           "title": "정보"
         },
@@ -194,6 +208,7 @@
       "itemDisplay": "아이템 디스플레이",
       "textDisplay": "텍스트 디스플레이",
       "addPlayerHead": "플레이어 머리 추가",
+      "headPainterMode": "헤드 페인터 모드 토글",
       "duplicate": "복제",
       "group": "그룹",
       "ungroup": "그룹 해제",

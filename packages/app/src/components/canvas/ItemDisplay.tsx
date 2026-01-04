@@ -1,13 +1,15 @@
 import type { ThreeEvent } from '@react-three/fiber'
-import { type FC, type MutableRefObject, memo } from 'react'
+import { type FC, type MutableRefObject, memo, useMemo, useRef } from 'react'
 import { Group } from 'three'
 import { useShallow } from 'zustand/shallow'
 
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
+import { useEditorStore } from '@/stores/editorStore'
 import { type Number3Tuple, isItemDisplayPlayerHead } from '@/types'
 
 import BoundingBox from './BoundingBox'
 import Model from './Model'
+import PlayerHeadPainter from './PlayerHeadPainter'
 
 type ItemDisplayProps = {
   id: string
@@ -33,6 +35,7 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
   const {
     thisEntitySelected,
     thisEntityDisplay,
+    thisEntityIsPlayerHead,
     thisEntityPlayerHeadProperties,
   } = useDisplayEntityStore(
     useShallow((state) => {
@@ -42,6 +45,8 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
         thisEntitySelected: state.selectedEntityIds.includes(id),
         thisEntityDisplay:
           thisEntity?.kind === 'item' ? thisEntity.display : undefined,
+        thisEntityIsPlayerHead:
+          thisEntity != null && isItemDisplayPlayerHead(thisEntity),
         thisEntityPlayerHeadProperties:
           thisEntity != null && isItemDisplayPlayerHead(thisEntity)
             ? thisEntity.playerHeadProperties
@@ -49,25 +54,56 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
       }
     }),
   )
+  const { headPainterEnabled, headPainterLayer } = useEditorStore(
+    useShallow((state) => ({
+      headPainterEnabled: state.headPainter.enabled,
+      headPainterLayer: state.headPainter.layer,
+    })),
+  )
+
+  const boundingBoxTargetRef = useRef<Group>(null)
+
+  const playerHeadData = useMemo(
+    () =>
+      thisEntityPlayerHeadProperties?.texture != null
+        ? {
+            textureData: thisEntityPlayerHeadProperties?.texture,
+            showSecondLayer:
+              !headPainterEnabled || headPainterLayer === 'second',
+          }
+        : undefined,
+    [
+      headPainterEnabled,
+      headPainterLayer,
+      thisEntityPlayerHeadProperties?.texture,
+    ],
+  )
 
   return (
     <object3D ref={ref}>
       {/* {thisEntitySelected && <Helper type={BoxHelper} args={['gold']} />} */}
       <BoundingBox
-        object={ref?.current}
+        object={boundingBoxTargetRef.current ?? undefined}
         visible={thisEntitySelected}
         color="#06b6d4" // tailwind v3 cyan-500
       />
 
-      <group onClick={onClick}>
+      <group onClick={onClick} ref={boundingBoxTargetRef}>
         <MemoizedModel
           initialResourceLocation={`item/${type}`}
           displayType={thisEntityDisplay ?? undefined}
-          playerHeadTextureData={
-            thisEntityPlayerHeadProperties?.texture ?? undefined
-          }
+          playerHeadData={playerHeadData}
         />
       </group>
+
+      {thisEntityIsPlayerHead &&
+        thisEntityPlayerHeadProperties != null &&
+        headPainterEnabled && (
+          <PlayerHeadPainter
+            entityId={id}
+            playerHeadProperties={thisEntityPlayerHeadProperties}
+          />
+        )}
     </object3D>
   )
 }

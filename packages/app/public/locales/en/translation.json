@@ -139,6 +139,20 @@
             }
           }
         },
+        "headPainter": {
+          "title": "Head Painter",
+          "options": {
+            "mineskinApiKey": {
+              "title": "MineSkin API Key",
+              "buttons": {
+                "save": "Save"
+              },
+              "toasts": {
+                "saveSuccess": "MineSkin API Key saved"
+              }
+            }
+          }
+        },
         "about": {
           "title": "About"
         },
@@ -194,6 +208,7 @@
       "itemDisplay": "Item Display",
       "textDisplay": "Text Display",
       "addPlayerHead": "Add Player Head",
+      "headPainterMode": "Toggle Head Painter Mode",
       "duplicate": "Duplicate",
       "group": "Group",
       "ungroup": "Ungroup",

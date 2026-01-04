@@ -156,6 +156,8 @@ export interface PlayerHeadProperties {
       }
     | {
         baked: false
+        // paintTexture: string // base64 string of texture
+        paintTexturePixels: number[]
       }
     | null
 }
@@ -270,8 +272,8 @@ export type BDEngineSaveDataItem = {
         Value: string
       }
       textureValueList?: string[] // maybe?
-      paintTexture?: unknown
-      defaultTextureValue?: string
+      paintTexture?: string // unbaked texture data url
+      defaultTextureValue?: string // baked texture url
     }
   | {
       isCollection: true
@@ -349,3 +351,68 @@ type HistoryChangePropertiesState =
           HistoryChangePropertiesStateCommonOmitKeys | 'children'
         >
       >)
+
+// mineskin
+
+export interface MineSkinAPIV2_QueueSkinGenerationBody {
+  url: string // image url or base64 data uri
+  variant?: 'classic' | 'slim' | 'unknown'
+  name?: string
+  visibility?: 'public' | 'unlisted' | 'private'
+  cape?: string // uuid
+}
+
+export type MineSkinAPIV2_QueueSkinGenerationResponse =
+  | {
+      success: true
+      job: {
+        id: string
+        status: 'unknown' | 'waiting' | 'active' | 'failed' | 'completed'
+        result?: string
+        timestamp?: number
+        eta?: number
+      }
+      skin?: {
+        texture: {
+          url: {
+            skin: string
+          }
+        }
+      }
+    }
+  | {
+      success: false
+      errors: {
+        code: string
+        message: string
+      }[]
+    }
+
+export interface MineSkinAPIV2_ListQueueJobsResponse {
+  jobs: {
+    id: string
+    status: 'unknown' | 'waiting' | 'active' | 'failed' | 'completed'
+    result?: string
+    timestamp?: number
+    eta?: number
+  }[]
+}
+
+export type MineSkinAPIV2_QueueJobDetailResponse =
+  | {
+      success: true
+      skin: {
+        texture: {
+          url: {
+            skin: string
+          }
+        }
+      }
+    }
+  | {
+      success: false
+      errors: {
+        code: string
+        message: string
+      }[]
+    }

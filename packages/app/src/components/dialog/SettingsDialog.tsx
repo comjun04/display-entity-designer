@@ -10,6 +10,7 @@ import AboutPage from './settings/AboutPage'
 import AppearancePage from './settings/AppearancePage'
 import DebugOptionsPage from './settings/DebugOptionsPage'
 import GeneralPage from './settings/GeneralPage'
+import HeadPainterPage from './settings/HeadPainterPage'
 import PerformancePage from './settings/PerformancePage'
 import ShortcutsPage from './settings/ShortcutsPage'
 
@@ -18,6 +19,7 @@ type SettingsPageType =
   | 'appearance'
   | 'performance'
   | 'shortcuts'
+  | 'headPainter'
   | 'about'
   | 'debug'
 
@@ -97,6 +99,17 @@ const SettingsDialog: FC = () => {
             >
               {t(($) => $.dialog.settings.page.shortcuts.title)}
             </button>
+            <button
+              className={cn(
+                'w-full rounded px-2 py-1 text-start text-sm transition duration-150',
+                selectedPage === 'headPainter'
+                  ? 'bg-neutral-700'
+                  : 'hover:bg-neutral-700/50',
+              )}
+              onClick={() => setSelectedPage('headPainter')}
+            >
+              {t(($) => $.dialog.settings.page.headPainter.title)}
+            </button>
 
             <hr className="border-t-2 border-neutral-700" />
 
@@ -145,6 +158,9 @@ const SettingsDialog: FC = () => {
             <option value="shortcuts">
               {t(($) => $.dialog.settings.page.shortcuts.title)}
             </option>
+            <option value="headPainter">
+              {t(($) => $.dialog.settings.page.headPainter.title)}
+            </option>
             <option disabled>----------</option>
             <option value="about">
               {t(($) => $.dialog.settings.page.about.title)}
@@ -167,6 +183,9 @@ const SettingsDialog: FC = () => {
 
           {/* Shortcuts */}
           {selectedPage === 'shortcuts' && <ShortcutsPage />}
+
+          {/* Head Painter */}
+          {selectedPage === 'headPainter' && <HeadPainterPage />}
 
           {/* About */}
           {selectedPage === 'about' && <AboutPage />}

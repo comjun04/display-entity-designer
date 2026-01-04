@@ -10,6 +10,7 @@ import QuickActionPanel from './components/QuickActionPanel.tsx'
 import BlockDisplaySelectDialog from './components/dialog/BlockDisplaySelectDialog'
 import ExportToMinecraftDialog from './components/dialog/ExportToMinecraftDialog'
 import ItemDisplaySelectDialog from './components/dialog/ItemDisplaySelectDialog'
+import PlayerHeadBakingDialog from './components/dialog/PlayerHeadBakingDialog.tsx'
 import PromptDialog from './components/dialog/PromptDialog.tsx'
 import SettingsDialog from './components/dialog/SettingsDialog'
 import WelcomeDialog from './components/dialog/WelcomeDialog'
@@ -76,6 +77,7 @@ function App() {
         <BlockDisplaySelectDialog />
         <ItemDisplaySelectDialog />
         <ExportToMinecraftDialog />
+        <PlayerHeadBakingDialog />
       </div>
 
       <BrowserTitleHandler />

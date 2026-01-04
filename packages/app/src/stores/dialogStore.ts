@@ -9,6 +9,7 @@ type DialogType =
   | 'blockDisplaySelect'
   | 'itemDisplaySelect'
   | 'exportToMinecraft'
+  | 'bakingPlayerHeads'
   | null
 type PromptDialogData = {
   title: string
