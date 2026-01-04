@@ -12,6 +12,7 @@ import { rimraf } from 'rimraf'
 import { spawnSync } from 'child_process'
 import {
   BlockStatesFile,
+  FileInfosJson,
   ModelFile,
   ServerJarGeneratedRegistryData,
 } from './types'
@@ -42,6 +43,7 @@ const versionsToSkip = [
   '1.21.1',
   '1.21.3',
   '1.21.8',
+  '1.21.10',
 ]
 
 // =====
@@ -120,6 +122,43 @@ for (const versionToDownload of versions) {
     'assets',
     'minecraft',
   )
+
+  // skip if metadata.json exists with correct format
+  // this skips versions with already generated data from re-generating
+  const metadataFilePath = pathJoin(outputFolderPath, 'metadata.json')
+  if (existsSync(pathJoin(outputFolderPath, 'metadata.json'))) {
+    try {
+      const metadata = JSON.parse(
+        await readFile(metadataFilePath, 'utf8'),
+      ) as VersionMetadata
+
+      if (metadata.gameVersion === versionId) {
+        // load precomputed fileInfos data
+        const tempFileInfos = JSON.parse(
+          await readFile(pathJoin(workdirFolderPath, 'fileInfos.json'), 'utf8'),
+        ) as FileInfosJson
+        for (const [k, v] of Object.entries(tempFileInfos)) {
+          fileInfos.set(k, v)
+        }
+
+        // load precomputed blockRenderables data
+        const tempBlockRenderables = JSON.parse(
+          await readFile(
+            pathJoin(workdirFolderPath, 'blockRenderables.json'),
+            'utf8',
+          ),
+        ) as Record<string, boolean>
+        Object.assign(blockRenderables, tempBlockRenderables)
+
+        console.log(
+          `  Skipping version ${versionId} because this version data is already generated`,
+        )
+        continue
+      }
+    } catch (err) {
+      console.error(err)
+    }
+  }
 
   // 해당 버전 작업 폴더가 없으면 새로 만들기
   await mkdir(workdirFolderPath, { recursive: true })
@@ -211,7 +250,11 @@ for (const versionToDownload of versions) {
   })
   await writeFile(
     pathJoin(workdirFolderPath, 'fileInfos.json'),
-    JSON.stringify(Object.fromEntries(sortedFileInfos), null, 2),
+    JSON.stringify(
+      Object.fromEntries(sortedFileInfos) satisfies FileInfosJson,
+      null,
+      2,
+    ),
   )
 
   const minifiedSortedFileInfos = sortedFileInfos.map(([k, v]) => [
