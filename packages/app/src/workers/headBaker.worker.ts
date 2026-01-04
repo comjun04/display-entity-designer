@@ -141,7 +141,6 @@ async function submitJob(item: QueueItem) {
   if (res.skin != null) {
     // the skin for this custom head was already generated and ready to use
     // TODO: switch to completed
-    console.warn(item.entityId, 'alreadyGenerated')
     headState.set(item.entityId, {
       entityId: item.entityId,
       status: 'completed',
