@@ -5,7 +5,6 @@ import { toast } from 'sonner'
 import { useShallow } from 'zustand/shallow'
 
 import { useEditorStore } from '@/stores/editorStore'
-import type { LogLevel } from '@/types'
 
 const HeadPainterPage: FC = () => {
   const { t } = useTranslation()
