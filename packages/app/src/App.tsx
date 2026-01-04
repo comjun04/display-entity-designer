@@ -3,12 +3,14 @@ import { type FC, useEffect } from 'react'
 
 import Scene from './Scene'
 import Sidebar from './Sidebar'
+import ToastContainer from './ToastContainer.tsx'
 import LeftButtonPanel from './components/LeftButtonPanel'
 import MobileBottomButtonPanel from './components/MobileBottomButtonPanel'
 import QuickActionPanel from './components/QuickActionPanel.tsx'
 import BlockDisplaySelectDialog from './components/dialog/BlockDisplaySelectDialog'
 import ExportToMinecraftDialog from './components/dialog/ExportToMinecraftDialog'
 import ItemDisplaySelectDialog from './components/dialog/ItemDisplaySelectDialog'
+import PlayerHeadBakingDialog from './components/dialog/PlayerHeadBakingDialog.tsx'
 import PromptDialog from './components/dialog/PromptDialog.tsx'
 import SettingsDialog from './components/dialog/SettingsDialog'
 import WelcomeDialog from './components/dialog/WelcomeDialog'
@@ -75,9 +77,12 @@ function App() {
         <BlockDisplaySelectDialog />
         <ItemDisplaySelectDialog />
         <ExportToMinecraftDialog />
+        <PlayerHeadBakingDialog />
       </div>
 
       <BrowserTitleHandler />
+
+      <ToastContainer />
     </QueryClientProvider>
   )
 }

@@ -1,3 +1,6 @@
+import { t } from 'i18next'
+import { toast } from 'sonner'
+
 import { LatestGameVersion, LegacyHardcodedGameVersion } from '@/constants'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
@@ -27,7 +30,7 @@ interface DisplayEntitySaveData_V4 extends DisplayEntitySaveData_V3 {
 type DisplayEntitySaveData_Latest = DisplayEntitySaveData_V4
 
 const FILE_MAGIC = 'DEPL'
-const FILE_VERSION = 5
+const FILE_VERSION = 6
 
 const fileVersionArrayBuffer = new ArrayBuffer(4)
 const fileVersionDataView = new DataView(fileVersionArrayBuffer)
@@ -51,8 +54,13 @@ export function openFromFile() {
       // if not, try to open with bdengine file
       const isBDEProject = await importFromBDE(file)
       if (isBDEProject) return
+
+      toast.error('Unsupported file')
     } catch (err) {
       logger.error(err)
+      toast.error(
+        'An error occured when opening file. Please check browser console for more info.',
+      )
     }
   }
 
@@ -116,15 +124,18 @@ export async function openProjectFile(file: Blob): Promise<boolean> {
 }
 
 export async function saveToFile() {
+  const { projectName } = useProjectStore.getState()
   const saveDataBlob = await createSaveData()
 
   const objectUrl = URL.createObjectURL(saveDataBlob)
   const tempElement = document.createElement('a')
   tempElement.href = objectUrl
-  tempElement.download = 'project.depl'
+  tempElement.download = `${projectName}.depl`
   tempElement.click() // trigger download
 
   URL.revokeObjectURL(objectUrl)
+
+  toast.success(t(($) => $.toast.projectSaved))
 
   useEditorStore.getState().setProjectDirty(false)
   // delete autosave because user already saved to local disk
@@ -164,7 +175,17 @@ export async function importFromBDE(file: Blob): Promise<boolean> {
     }
   })
 
-  const byteArr = decodeBase64ToBinary(rawFileContentUtf8)
+  let byteArr
+  try {
+    byteArr = decodeBase64ToBinary(rawFileContentUtf8)
+  } catch (err) {
+    // failing from base64 -> binary usually means
+    // that the input file is not base64 encoded text
+    // so just process as unsupported file
+    logger.error(err)
+    return false
+  }
+
   const blob = new Blob([byteArr])
   const saveDataString = await gunzip(blob)
   const saveData = JSON.parse(saveDataString) as BDEngineSaveData

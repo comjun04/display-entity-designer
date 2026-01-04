@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { IoMdTrash } from 'react-icons/io'
 import { IoCubeOutline } from 'react-icons/io5'
 import {
+  LuBrush,
   LuChevronDown,
   LuCopyPlus,
   LuGroup,
@@ -46,6 +47,9 @@ const QuickActionPanel: FC = () => {
           state.entities.get(state.selectedEntityIds[0])?.kind === 'group',
       })),
     )
+  const headPainterEnabled = useEditorStore(
+    (state) => state.headPainter.enabled,
+  )
 
   const { panelLocation, panelMargin } = useEditorStore(
     useShallow((state) => ({
@@ -74,6 +78,7 @@ const QuickActionPanel: FC = () => {
             closeDelay={0}
           >
             <FloatingButton
+              disabled={headPainterEnabled}
               onClick={() => {
                 setOpenedDialog('blockDisplaySelect')
               }}
@@ -120,7 +125,7 @@ const QuickActionPanel: FC = () => {
         </div>
         {/* Mobile - show dropdown menu for 'Add Display Entity' action */}
         <DropdownMenu>
-          <DropdownMenuTrigger asChild>
+          <DropdownMenuTrigger asChild disabled={headPainterEnabled}>
             <FloatingButton className="flex flex-row items-center gap-1 sm:hidden">
               <LuPlus size={24} />
               <LuChevronDown size={16} />
@@ -183,6 +188,29 @@ const QuickActionPanel: FC = () => {
             }}
           >
             <LuSmile size={24} />
+          </FloatingButton>
+        </Tooltip>
+
+        <Tooltip
+          content={t(($) => $.editor.topBar.headPainterMode)}
+          placement="bottom"
+          size="sm"
+          offset={0}
+          delay={300}
+          closeDelay={0}
+        >
+          <FloatingButton
+            onClick={() => {
+              const {
+                headPainter: {
+                  enabled: headPainterEnabled,
+                  setEnabled: setHeadPainterEnabled,
+                },
+              } = useEditorStore.getState()
+              setHeadPainterEnabled(!headPainterEnabled)
+            }}
+          >
+            <LuBrush size={24} />
           </FloatingButton>
         </Tooltip>
 

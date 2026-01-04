@@ -4,7 +4,7 @@ import {
   Grid,
   PerspectiveCamera,
 } from '@react-three/drei'
-import { Canvas, invalidate } from '@react-three/fiber'
+import { Canvas, invalidate, useThree } from '@react-three/fiber'
 import { type FC, Suspense, lazy, useEffect, useRef } from 'react'
 import { Color, DoubleSide } from 'three'
 import { useShallow } from 'zustand/shallow'
@@ -16,8 +16,48 @@ import ShortcutHandler from './components/ShortcutHandler'
 import TransformControls from './components/TransformControls'
 import { useDisplayEntityStore } from './stores/displayEntityStore'
 import { useEditorStore } from './stores/editorStore'
+import { useHistoryStore } from './stores/historyStore'
 
 const Perf = lazy(() => import('./components/Perf'))
+
+const InsideCanvas: FC = () => {
+  const headPainting = useEditorStore((state) => state.headPainter.nowPainting)
+
+  const controls = useThree((state) => state.controls)
+  const oldControlsEnabledRef = useRef<boolean>((controls as any)?.enabled)
+
+  useEffect(() => {
+    if (headPainting) {
+      if (controls != null) {
+        oldControlsEnabledRef.current = (controls as any).enabled
+        ;(controls as any).enabled = false
+      }
+    } else {
+      // only change when controls are disabled
+      // to prevent disabling controls on first render
+      if (controls != null && !(controls as any).enabled) {
+        ;(controls as any).enabled = oldControlsEnabledRef.current
+      }
+    }
+  }, [headPainting, controls])
+
+  useEffect(() => {
+    const fn = () => {
+      const { nowPainting } = useEditorStore.getState().headPainter
+      if (!nowPainting) return
+
+      useEditorStore.getState().headPainter.setNowPainting(false)
+      useHistoryStore.getState().playerHead.flushToHistory()
+    }
+
+    document.addEventListener('pointerup', fn)
+    return () => {
+      document.removeEventListener('pointerup', fn)
+    }
+  }, [])
+
+  return null
+}
 
 const Scene: FC = () => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
@@ -25,6 +65,7 @@ const Scene: FC = () => {
   const {
     perfMonitorEnabled,
     reducePixelRatio,
+    headPainterEnabled,
     gizmoLocation,
     gizmoMarginWidth,
     gizmoMarginHeight,
@@ -32,6 +73,7 @@ const Scene: FC = () => {
     useShallow((state) => ({
       perfMonitorEnabled: state.settings.debug.perfMonitorEnabled,
       reducePixelRatio: state.settings.performance.reducePixelRatio,
+      headPainterEnabled: state.headPainter.enabled,
       gizmoLocation: state.settings.appearance.gizmo.location,
       gizmoMarginWidth: state.settings.appearance.gizmo.marginWidth,
       gizmoMarginHeight: state.settings.appearance.gizmo.marginHeight,
@@ -81,6 +123,8 @@ const Scene: FC = () => {
         }
       }}
     >
+      <InsideCanvas />
+
       {/* Axis lines */}
       <line>
         <bufferGeometry>
@@ -132,6 +176,7 @@ const Scene: FC = () => {
       </PerspectiveCamera>
 
       <Grid
+        visible={!headPainterEnabled}
         cellSize={1 / 16}
         cellColor={0x777777}
         sectionColor={0x333333}

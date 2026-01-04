@@ -1,11 +1,12 @@
 import type { FC } from 'react'
 import { useTranslation } from 'react-i18next'
 import { IoCubeOutline } from 'react-icons/io5'
-import { LuChevronRight, LuType } from 'react-icons/lu'
+import { LuChevronRight, LuSmile, LuType } from 'react-icons/lu'
 import { TbDiamondFilled } from 'react-icons/tb'
 import { useShallow } from 'zustand/shallow'
 
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
+import { isItemDisplayPlayerHead } from '@/types'
 import { cn } from '@/utils'
 
 import { SidePanel, SidePanelContent, SidePanelTitle } from '../SidePanel'
@@ -23,6 +24,7 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
     selected,
     children,
     groupName,
+    playerHeadProperties,
   } = useDisplayEntityStore(
     useShallow((state) => {
       const entity = state.entities.get(id)!
@@ -39,6 +41,10 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
         children: entity.kind === 'group' ? entity.children : null,
 
         groupName: entity.kind === 'group' ? entity.name : undefined,
+
+        playerHeadProperties: isItemDisplayPlayerHead(entity)
+          ? entity.playerHeadProperties
+          : undefined,
       }
     }),
   )
@@ -99,7 +105,12 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
           )}
         >
           {kind === 'block' && <IoCubeOutline size={16} />}
-          {kind === 'item' && <TbDiamondFilled size={16} />}
+          {kind === 'item' &&
+            (type === 'player_head' ? (
+              <LuSmile size={16} />
+            ) : (
+              <TbDiamondFilled size={16} />
+            ))}
           {kind === 'text' && <LuType size={16} />}
           {kind === 'group' && <LuChevronRight size={16} />}
         </span>
@@ -110,6 +121,13 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
               ? textDisplayText
               : type}
         </span>
+
+        {playerHeadProperties?.texture?.baked === false && (
+          <div className="rounded bg-neutral-700 px-1 py-0.5 text-xs text-gray-400">
+            Painted
+          </div>
+        )}
+
         {blockstateArr.length > 0 && (
           <span className="truncate opacity-50">
             [{blockstateArr.join(',')}]

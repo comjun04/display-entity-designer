@@ -1,7 +1,9 @@
+import { useDebouncedEffect } from '@react-hookz/web'
 import { type FC, useEffect, useState } from 'react'
 import { LuEllipsisVertical } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
+import HeadPainterPanel from './components/sidebar/HeadPainterPanel'
 import ObjectsPanel from './components/sidebar/ObjectsPanel'
 import PropertiesPanel from './components/sidebar/PropertiesPanel'
 import TransformsPanel from './components/sidebar/TransformsPanel'
@@ -9,19 +11,33 @@ import { useEditorStore } from './stores/editorStore'
 import { cn } from './utils'
 
 const Sidebar: FC = () => {
-  const { mobileSidebarOpened, setMobileSidebarOpened } = useEditorStore(
+  const {
+    mobileSidebarOpened,
+    setMobileSidebarOpened,
+    initialDesktopSidebarWidth,
+    headPainterEnabled,
+  } = useEditorStore(
     useShallow((state) => ({
       mobileSidebarOpened: state.mobileSidebarOpened,
       setMobileSidebarOpened: state.setMobileSidebarOpened,
+      initialDesktopSidebarWidth: state.settings.appearance.sidebar.width,
+      headPainterEnabled: state.headPainter.enabled,
     })),
   )
 
-  const [desktopSidebarWidth, setDesktopSidebarWidth] = useState(400)
+  const [desktopSidebarWidth, setDesktopSidebarWidth] = useState(
+    initialDesktopSidebarWidth,
+  )
   const [handlerDragging, setHandlerDragging] = useState(false)
 
+  // resize desktop sidebar width on drag
   useEffect(() => {
     const handlePointerMove = (evt: PointerEvent) => {
-      setDesktopSidebarWidth(document.body.clientWidth - evt.clientX)
+      const newWidth = Math.min(
+        window.innerWidth - evt.clientX,
+        (window.innerWidth / 10) * 8,
+      )
+      setDesktopSidebarWidth(newWidth)
     }
     const handlePointerUp = () => {
       setHandlerDragging(false)
@@ -40,6 +56,35 @@ const Sidebar: FC = () => {
       document.removeEventListener('pointerup', handlePointerUp)
     }
   }, [handlerDragging])
+
+  // resize desktop sidebar width on window width change
+  useEffect(() => {
+    const handler = () => {
+      const newWidth = Math.min(
+        desktopSidebarWidth,
+        (window.innerWidth / 10) * 8,
+      )
+      setDesktopSidebarWidth(newWidth)
+    }
+
+    window.addEventListener('resize', handler)
+    return () => {
+      window.removeEventListener('resize', handler)
+    }
+  }, [desktopSidebarWidth])
+
+  // save sidebar width to settings on idle state
+  useDebouncedEffect(
+    () => {
+      useEditorStore.getState().setSettings({
+        appearance: {
+          sidebar: { width: desktopSidebarWidth },
+        },
+      })
+    },
+    [desktopSidebarWidth],
+    500,
+  )
 
   return (
     <>
@@ -76,6 +121,7 @@ const Sidebar: FC = () => {
 
         <div className="flex h-full flex-col gap-2 overflow-y-auto">
           <ObjectsPanel />
+          {headPainterEnabled && <HeadPainterPanel />}
           <TransformsPanel />
           <PropertiesPanel />
         </div>

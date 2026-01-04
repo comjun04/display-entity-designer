@@ -1,5 +1,6 @@
 import type { FC } from 'react'
 import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
 import { useShallow } from 'zustand/shallow'
 
 import { useEditorStore } from '@/stores/editorStore'
@@ -98,6 +99,15 @@ const DebugOptionsPage: FC = () => {
           )}
         </label>
       </div>
+
+      <hr />
+
+      <button
+        className="rounded bg-neutral-700 p-2"
+        onClick={() => toast.info('This is a test toast')}
+      >
+        Show Toast
+      </button>
     </>
   )
 }

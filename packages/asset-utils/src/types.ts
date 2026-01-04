@@ -1,5 +1,13 @@
 export type { BlockStatesFile, ModelFile } from '@depl/shared'
 
+export interface FileInfosJson {
+  [x: string]: {
+    fromVersion: string
+    hash: string
+    isHardcodedData: boolean
+  }
+}
+
 // CDN files
 
 export interface CDNVersionManifest {
