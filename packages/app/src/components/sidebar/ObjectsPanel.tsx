@@ -123,7 +123,7 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
         </span>
 
         {playerHeadProperties?.texture?.baked === false && (
-          <div className="rounded bg-neutral-700 px-1 py-0.5 text-xs text-gray-400">
+          <div className="rounded-sm bg-neutral-700 px-1 py-0.5 text-xs text-gray-400">
             Painted
           </div>
         )}

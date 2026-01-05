@@ -93,7 +93,7 @@ const TagValidatorInput: FC<TagValidatorInputProps> = ({ onChange }) => {
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
       <span>{t(($) => $.dialog.exportToMinecraft.baseTag.title)}</span>
       <input
-        className="rounded p-1 text-sm outline-none"
+        className="rounded-sm p-1 text-sm outline-hidden"
         value={input}
         onChange={(evt) => {
           const text = evt.target.value
@@ -114,10 +114,11 @@ const TagValidatorInput: FC<TagValidatorInputProps> = ({ onChange }) => {
             ns="translation"
           >
             Tag must contain only alphabets, numbers,{' '}
-            <code className="rounded bg-neutral-800 p-1 font-mono">_</code>,{' '}
-            <code className="rounded bg-neutral-800 p-1 font-mono">-</code>,{' '}
-            <code className="rounded bg-neutral-800 p-1 font-mono">.</code>, and{' '}
-            <code className="rounded bg-neutral-800 p-1 font-mono">+</code>{' '}
+            <code className="rounded-sm bg-neutral-800 p-1 font-mono">_</code>,{' '}
+            <code className="rounded-sm bg-neutral-800 p-1 font-mono">-</code>,{' '}
+            <code className="rounded-sm bg-neutral-800 p-1 font-mono">.</code>,
+            and{' '}
+            <code className="rounded-sm bg-neutral-800 p-1 font-mono">+</code>{' '}
             characters.
           </Trans>
         </span>
@@ -332,7 +333,7 @@ const ExportToMinecraftDialog: FC = () => {
                 <CopyButton valueToCopy={summonCommand} />
               </div>
               <textarea
-                className="h-24 w-full resize-none break-all rounded-lg p-2 outline-none"
+                className="h-24 w-full resize-none rounded-lg p-2 break-all outline-hidden"
                 readOnly
                 value={summonCommand}
                 onFocus={(evt) => {
@@ -351,7 +352,7 @@ const ExportToMinecraftDialog: FC = () => {
             <CopyButton valueToCopy={removeCommand} />
           </div>
           <textarea
-            className="h-10 w-full resize-none break-all rounded-lg p-2 outline-none"
+            className="h-10 w-full resize-none rounded-lg p-2 break-all outline-hidden"
             readOnly
             value={removeCommand}
             onFocus={(evt) => {

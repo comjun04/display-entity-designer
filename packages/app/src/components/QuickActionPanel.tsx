@@ -60,7 +60,7 @@ const QuickActionPanel: FC = () => {
 
   return (
     <div
-      className="absolute left-1/2 z-[5] -translate-x-1/2"
+      className="absolute left-1/2 z-5 -translate-x-1/2"
       style={{
         top: panelLocation === 'top' ? panelMargin : undefined,
         bottom: panelLocation === 'bottom' ? panelMargin : undefined,

@@ -158,19 +158,19 @@ const PlayerHeadBakingDialog: FC = () => {
         </div>
         <div className="flex flex-col gap-1 sm:flex-row sm:gap-4">
           <div className="flex flex-row items-center gap-2">
-            <div className="h-4 w-12 rounded bg-gray-700" />
+            <div className="h-4 w-12 rounded-sm bg-gray-700" />
             <span>Waiting: {headsWaitingInQueue}</span>
           </div>
           <div className="flex flex-row items-center gap-2">
-            <div className="h-4 w-12 rounded bg-yellow-700" />
+            <div className="h-4 w-12 rounded-sm bg-yellow-700" />
             <span>Generating: {stats.generating}</span>
           </div>
           <div className="flex flex-row items-center gap-2">
-            <div className="h-4 w-12 rounded bg-red-800" />
+            <div className="h-4 w-12 rounded-sm bg-red-800" />
             <span>Error: {stats.error}</span>
           </div>
           <div className="flex flex-row items-center gap-2">
-            <div className="h-4 w-12 rounded bg-green-800" />
+            <div className="h-4 w-12 rounded-sm bg-green-800" />
             <span>Completed: {stats.completed}</span>
           </div>
         </div>
@@ -178,7 +178,7 @@ const PlayerHeadBakingDialog: FC = () => {
 
       <div className="flex flex-row justify-end gap-2">
         <button
-          className="rounded bg-red-700 px-3 py-2 transition disabled:opacity-30"
+          className="rounded-sm bg-red-700 px-3 py-2 transition disabled:opacity-30"
           disabled={!running}
           onClick={() => {
             workerRef.current?.terminate()
@@ -188,7 +188,7 @@ const PlayerHeadBakingDialog: FC = () => {
           Cancel
         </button>
         <button
-          className="rounded bg-gray-700 px-3 py-2 transition disabled:opacity-30"
+          className="rounded-sm bg-gray-700 px-3 py-2 transition disabled:opacity-30"
           disabled={running}
           onClick={closeDialog}
         >

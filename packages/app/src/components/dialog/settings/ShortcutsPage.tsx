@@ -127,9 +127,9 @@ const ShortcutKeyInput: FC<ShortcutKeyInputProps> = ({ id }) => {
   return (
     <div
       className={cn(
-        'group relative w-full max-w-[12rem] rounded border-2 border-transparent bg-neutral-700/70 px-2 py-1 transition-colors',
+        'group relative w-full max-w-48 rounded-sm border-2 border-transparent bg-neutral-700/70 px-2 py-1 transition-colors',
         editMode && 'border-neutral-400',
-        shortcutUnset && 'italic text-gray-500',
+        shortcutUnset && 'text-gray-500 italic',
         !validKeyCombination && 'bg-red-500/30',
       )}
       onClick={() => {
@@ -146,7 +146,7 @@ const ShortcutKeyInput: FC<ShortcutKeyInputProps> = ({ id }) => {
       </span>
       <div
         className={cn(
-          'absolute right-1 top-1/2 flex -translate-y-1/2 flex-row items-center rounded bg-neutral-800/70 text-white transition duration-150',
+          'absolute top-1/2 right-1 flex -translate-y-1/2 flex-row items-center rounded-sm bg-neutral-800/70 text-white transition duration-150',
           'pointer-events-none opacity-0',
           editMode && 'group-hover:pointer-events-auto group-hover:opacity-100',
         )}
@@ -158,7 +158,7 @@ const ShortcutKeyInput: FC<ShortcutKeyInputProps> = ({ id }) => {
           closeDelay={0}
         >
           <button
-            className="rounded p-1 transition-colors duration-150 hover:bg-neutral-900"
+            className="rounded-sm p-1 transition-colors duration-150 hover:bg-neutral-900"
             onClick={(evt) => {
               evt.stopPropagation()
 
@@ -177,7 +177,7 @@ const ShortcutKeyInput: FC<ShortcutKeyInputProps> = ({ id }) => {
           closeDelay={0}
         >
           <button
-            className="rounded p-1 transition-colors duration-150 hover:bg-neutral-900"
+            className="rounded-sm p-1 transition-colors duration-150 hover:bg-neutral-900"
             onClick={(evt) => {
               evt.stopPropagation()
 
@@ -196,7 +196,7 @@ const ShortcutKeyInput: FC<ShortcutKeyInputProps> = ({ id }) => {
           closeDelay={0}
         >
           <button
-            className="rounded p-1 transition-colors duration-150 hover:bg-neutral-900"
+            className="rounded-sm p-1 transition-colors duration-150 hover:bg-neutral-900"
             onClick={(evt) => {
               evt.stopPropagation()
 
@@ -234,16 +234,16 @@ const ShortcutsPage: FC = () => {
       <div className="text-gray-500">
         {t(($) => $.dialog.settings.page.shortcuts.desc)}
       </div>
-      <div className="mt-2 flex flex-row items-center gap-2 rounded bg-neutral-700 px-3 py-2">
+      <div className="mt-2 flex flex-row items-center gap-2 rounded-sm bg-neutral-700 px-3 py-2">
         <span className="grow">
           {t(($) => $.dialog.settings.page.shortcuts.howto)}
         </span>
       </div>
-      <div className="mt-2 rounded bg-yellow-800 px-3 py-2">
+      <div className="mt-2 rounded-sm bg-yellow-800 px-3 py-2">
         {t(($) => $.dialog.settings.page.shortcuts.shortcutNotWorkInThisPage)}
       </div>
       <div className="mt-2">
-        <div className="rounded bg-neutral-800 px-3 py-1 text-gray-400">
+        <div className="rounded-sm bg-neutral-800 px-3 py-1 text-gray-400">
           {t(($) => $.dialog.settings.page.shortcuts.categories.general.title)}
         </div>
         <div className="flex flex-col">
@@ -300,7 +300,7 @@ const ShortcutsPage: FC = () => {
         </div>
       </div>
       <div className="mt-1">
-        <div className="rounded bg-neutral-800 px-3 py-1 text-gray-400">
+        <div className="rounded-sm bg-neutral-800 px-3 py-1 text-gray-400">
           {t(($) => $.dialog.settings.page.shortcuts.categories.editor.title)}
         </div>
         <div className="flex flex-col">

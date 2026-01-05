@@ -47,7 +47,7 @@ const DebugOptionsPage: FC = () => {
         </label>
         <select
           id="settings_debug_minloglevel"
-          className="flex-none rounded bg-neutral-900 px-2 py-1"
+          className="flex-none rounded-sm bg-neutral-900 px-2 py-1"
           value={settings.debug.minLogLevel}
           onChange={(evt) => {
             setSettings({
@@ -103,7 +103,7 @@ const DebugOptionsPage: FC = () => {
       <hr />
 
       <button
-        className="rounded bg-neutral-700 p-2"
+        className="rounded-sm bg-neutral-700 p-2"
         onClick={() => toast.info('This is a test toast')}
       >
         Show Toast
