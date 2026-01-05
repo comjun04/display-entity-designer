@@ -225,6 +225,7 @@ const QuickActionPanel: FC = () => {
           closeDelay={0}
         >
           <FloatingButton
+            disabled={selectedEntityIds.length < 1}
             onClick={() => useDisplayEntityStore.getState().duplicateSelected()}
           >
             <LuCopyPlus size={24} />
@@ -248,7 +249,10 @@ const QuickActionPanel: FC = () => {
               <LuUngroup size={24} />
             </FloatingButton>
           ) : (
-            <FloatingButton onClick={toggleGroup}>
+            <FloatingButton
+              disabled={selectedEntityIds.length < 1}
+              onClick={toggleGroup}
+            >
               <LuGroup size={24} />
             </FloatingButton>
           )}
