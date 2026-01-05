@@ -2,7 +2,10 @@
 layer(base);
 
 @import 'tailwindcss';
+@import 'tw-animate-css';
+
 @plugin '../../src/hero.ts';
+
 @source '../../../../node_modules/@heroui/theme/dist/components/popover.js';
 
 /* darkMode: class */
@@ -23,6 +26,12 @@ layer(base);
   ::backdrop,
   ::file-selector-button {
     border-color: var(--color-gray-200, currentcolor);
+  }
+
+  /* set button default cursor to `pointer` */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
   }
 }
 
