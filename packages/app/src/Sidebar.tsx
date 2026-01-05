@@ -99,7 +99,7 @@ const Sidebar: FC = () => {
 
       <div
         className={cn(
-          'fixed top-0 right-0 z-50 h-full w-full max-w-[300px] bg-neutral-800 p-2 transition duration-200 ease-out sm:relative sm:max-w-none',
+          'fixed top-0 right-0 z-50 h-full w-full max-w-75 bg-neutral-800 p-2 transition duration-200 ease-out sm:relative sm:max-w-none',
           !mobileSidebarOpened && 'translate-x-full sm:translate-x-0',
         )}
         style={{
