@@ -91,15 +91,15 @@ const Sidebar: FC = () => {
       {/* backdrop, used when sidebar shows like overlay (mobile) */}
       <div
         className={cn(
-          'absolute right-0 top-0 z-40 h-full w-full bg-black/50 transition duration-200 sm:hidden',
-          mobileSidebarOpened ? 'opacity-1' : 'pointer-events-none opacity-0',
+          'absolute top-0 right-0 z-40 h-full w-full bg-black/50 transition duration-200 sm:hidden',
+          mobileSidebarOpened ? 'opacity-100' : 'pointer-events-none opacity-0',
         )}
         onClick={() => setMobileSidebarOpened(false)}
       />
 
       <div
         className={cn(
-          'fixed right-0 top-0 z-50 h-full w-full max-w-[300px] bg-neutral-800 p-2 transition duration-200 ease-out sm:relative sm:max-w-none',
+          'fixed top-0 right-0 z-50 h-full w-full max-w-[300px] bg-neutral-800 p-2 transition duration-200 ease-out sm:relative sm:max-w-none',
           !mobileSidebarOpened && 'translate-x-full sm:translate-x-0',
         )}
         style={{
@@ -108,7 +108,7 @@ const Sidebar: FC = () => {
       >
         {/* sidebar resize handler */}
         <div
-          className="fixed left-0 top-[20%] hidden h-12 w-3 -translate-x-3 cursor-ew-resize touch-none flex-col items-center justify-center rounded-l-lg bg-neutral-900 text-gray-500 sm:flex"
+          className="fixed top-[20%] left-0 hidden h-12 w-3 -translate-x-3 cursor-ew-resize touch-none flex-col items-center justify-center rounded-l-lg bg-neutral-900 text-gray-500 sm:flex"
           onPointerDownCapture={() => {
             setHandlerDragging(true)
           }}
