@@ -1,5 +1,6 @@
 import { type FC, useEffect, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
+import { LuUpload } from 'react-icons/lu'
 
 import { openFromFile } from './services/fileService'
 import { cn } from './utils'
@@ -40,7 +41,7 @@ const FileDropzone: FC = () => {
     <div
       {...getRootProps()}
       className={cn(
-        'absolute z-[100] flex h-full w-full items-center justify-center',
+        'absolute z-100 flex h-full w-full items-center justify-center',
         !showOverlay && 'pointer-events-none',
       )}
       // onDrop={(evt) => {
@@ -55,11 +56,12 @@ const FileDropzone: FC = () => {
       />
       <div
         className={cn(
-          'flex h-full w-full items-center justify-center bg-black/50 text-5xl transition',
+          'flex h-full w-full flex-col items-center justify-center gap-4 bg-black/50 transition',
           !showOverlay && 'opacity-0',
         )}
       >
-        Drop Here
+        <LuUpload className="text-7xl" />
+        <div className="text-3xl">Drop project file to open</div>
       </div>
     </div>
   )
