@@ -1,36 +1,31 @@
 import { type FC, useEffect, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
 
+import { openFromFile } from './services/fileService'
 import { cn } from './utils'
 
 const FileDropzone: FC = () => {
   const [showOverlay, setShowOverlay] = useState(false)
 
-  const { acceptedFiles, getRootProps, getInputProps } = useDropzone({
+  const { getRootProps, getInputProps } = useDropzone({
     noClick: true,
-    onDrop: () => {
-      console.log('dropped')
+    onDrop: (acceptedFiles) => {
+      openFromFile(acceptedFiles[0]).catch(console.error)
       setShowOverlay(false)
     },
     onDragEnter: () => {
-      console.log('onDragEnter', showOverlay)
       setShowOverlay(true)
     },
     onDragOver: () => {
-      console.log('onDragOver', showOverlay)
       setShowOverlay(true)
     },
     onDragLeave: () => {
-      console.log('onDragLeave', showOverlay)
       setShowOverlay(false)
     },
   })
 
-  console.log('acceptedFiles', acceptedFiles, showOverlay)
-
   useEffect(() => {
     const enableShowingOverlay = () => {
-      console.log('dragenter on html')
       setShowOverlay(true)
     }
 
