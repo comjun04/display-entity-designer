@@ -53,6 +53,7 @@ export function openFileFromUserSelect() {
 }
 
 export async function openFromFile(file: File) {
+  toast('Opening file...')
   try {
     // first try to open as depl project
     const isDeplProject = await openProjectFile(file)
