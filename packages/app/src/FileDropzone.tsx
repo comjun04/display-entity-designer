@@ -1,0 +1,73 @@
+import { type FC, useEffect, useState } from 'react'
+import { useDropzone } from 'react-dropzone'
+
+import { cn } from './utils'
+
+const FileDropzone: FC = () => {
+  const [showOverlay, setShowOverlay] = useState(false)
+
+  const { acceptedFiles, getRootProps, getInputProps } = useDropzone({
+    noClick: true,
+    onDrop: () => {
+      console.log('dropped')
+      setShowOverlay(false)
+    },
+    onDragEnter: () => {
+      console.log('onDragEnter', showOverlay)
+      setShowOverlay(true)
+    },
+    onDragOver: () => {
+      console.log('onDragOver', showOverlay)
+      setShowOverlay(true)
+    },
+    onDragLeave: () => {
+      console.log('onDragLeave', showOverlay)
+      setShowOverlay(false)
+    },
+  })
+
+  console.log('acceptedFiles', acceptedFiles, showOverlay)
+
+  useEffect(() => {
+    const enableShowingOverlay = () => {
+      console.log('dragenter on html')
+      setShowOverlay(true)
+    }
+
+    document.addEventListener('dragenter', enableShowingOverlay)
+
+    return () => {
+      document.removeEventListener('dragenter', enableShowingOverlay)
+    }
+  }, [])
+
+  return (
+    <div
+      {...getRootProps()}
+      className={cn(
+        'absolute z-[100] flex h-full w-full items-center justify-center',
+        !showOverlay && 'pointer-events-none',
+      )}
+      // onDrop={(evt) => {
+      //   evt.preventDefault()
+      //   console.log(evt)
+      // }}
+    >
+      <input
+        {...getInputProps()}
+        onChange={(evt) => console.log('onChange', evt)}
+        onSelect={(evt) => console.log('onSelect', evt)}
+      />
+      <div
+        className={cn(
+          'flex h-full w-full items-center justify-center bg-black/50 text-5xl transition',
+          !showOverlay && 'opacity-0',
+        )}
+      >
+        Drop Here
+      </div>
+    </div>
+  )
+}
+
+export default FileDropzone

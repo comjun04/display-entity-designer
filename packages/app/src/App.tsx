@@ -1,6 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { type FC, useEffect } from 'react'
 
+import FileDropzone from './FileDropzone.tsx'
 import Scene from './Scene'
 import Sidebar from './Sidebar'
 import ToastContainer from './ToastContainer.tsx'
@@ -78,6 +79,8 @@ function App() {
         <ItemDisplaySelectDialog />
         <ExportToMinecraftDialog />
         <PlayerHeadBakingDialog />
+
+        <FileDropzone />
       </div>
 
       <BrowserTitleHandler />
