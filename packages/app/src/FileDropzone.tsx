@@ -3,13 +3,17 @@ import { useDropzone } from 'react-dropzone'
 import { LuUpload } from 'react-icons/lu'
 
 import { openFromFile } from './services/fileService'
+import { useDialogStore } from './stores/dialogStore'
 import { cn } from './utils'
 
 const FileDropzone: FC = () => {
+  const isAnyDialogOpen = useDialogStore((state) => state.openedDialog != null)
+
   const [showOverlay, setShowOverlay] = useState(false)
 
   const { getRootProps, getInputProps } = useDropzone({
     noClick: true,
+    disabled: isAnyDialogOpen,
     onDrop: (acceptedFiles) => {
       openFromFile(acceptedFiles[0]).catch(console.error)
       setShowOverlay(false)
@@ -27,7 +31,9 @@ const FileDropzone: FC = () => {
 
   useEffect(() => {
     const enableShowingOverlay = () => {
-      setShowOverlay(true)
+      if (!isAnyDialogOpen) {
+        setShowOverlay(true)
+      }
     }
 
     document.addEventListener('dragenter', enableShowingOverlay)
@@ -35,7 +41,7 @@ const FileDropzone: FC = () => {
     return () => {
       document.removeEventListener('dragenter', enableShowingOverlay)
     }
-  }, [])
+  }, [isAnyDialogOpen])
 
   return (
     <div
