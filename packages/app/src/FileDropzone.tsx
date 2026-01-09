@@ -53,16 +53,8 @@ const FileDropzone: FC = () => {
         'absolute z-100 flex h-full w-full items-center justify-center',
         !showOverlay && 'pointer-events-none',
       )}
-      // onDrop={(evt) => {
-      //   evt.preventDefault()
-      //   console.log(evt)
-      // }}
     >
-      <input
-        {...getInputProps()}
-        onChange={(evt) => console.log('onChange', evt)}
-        onSelect={(evt) => console.log('onSelect', evt)}
-      />
+      <input {...getInputProps()} />
       <div
         className={cn(
           'flex h-full w-full flex-col items-center justify-center gap-4 bg-black/50 transition',
