@@ -5,9 +5,9 @@ import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
 import { getLogger } from '@/lib/logger'
+import { getBlockList } from '@/lib/queries/getBlockList'
+import { getItemList } from '@/lib/queries/getItemList'
 import { preloadResources } from '@/lib/resources/preload'
-import { getBlockList } from '@/queries/getBlockList'
-import { getItemList } from '@/queries/getItemList'
 import type {
   BDEngineSaveData,
   BDEngineSaveDataItem,

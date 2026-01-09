@@ -4,7 +4,7 @@ import { type FC, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/shallow'
 
-import { getBlockListQueryFn } from '@/queries/getBlockList'
+import { getBlockListQueryFn } from '@/lib/queries/getBlockList'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useProjectStore } from '@/stores/projectStore'

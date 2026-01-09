@@ -8,7 +8,7 @@ import {
   Texture,
 } from 'three'
 
-import { getVersionMetadata } from '@/queries/getVersionMetadata'
+import { getVersionMetadata } from '@/lib/queries/getVersionMetadata'
 import { useClassObjectCacheStore } from '@/stores/cacheStore'
 import { useProjectStore } from '@/stores/projectStore'
 

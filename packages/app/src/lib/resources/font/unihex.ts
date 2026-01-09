@@ -2,7 +2,7 @@ import { Mutex } from 'async-mutex'
 import { CanvasTexture } from 'three'
 
 import { CDNBaseUrl } from '@/constants'
-import { getVersionMetadata } from '@/queries/getVersionMetadata'
+import { getVersionMetadata } from '@/lib/queries/getVersionMetadata'
 import { useProjectStore } from '@/stores/projectStore'
 import {
   type CDNFontProviderResponse,
