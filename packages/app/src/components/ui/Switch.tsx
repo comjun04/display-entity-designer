@@ -1,7 +1,7 @@
 import { Switch as HeadlessUISwitch } from '@headlessui/react'
 import type { FC } from 'react'
 
-import { cn } from '@/utils'
+import { cn } from '@/lib/utils'
 
 type SwitchProps = {
   checked: boolean

@@ -2,8 +2,8 @@ import { Popover, PopoverButton, PopoverPanel } from '@headlessui/react'
 import Sketch from '@uiw/react-color-sketch'
 import { type JSX, forwardRef } from 'react'
 
+import { cn } from '@/lib/utils'
 import '@/styles/colorpicker-darkmode.css'
-import { cn } from '@/utils'
 
 const ColorPickerInput = forwardRef<
   HTMLDivElement,

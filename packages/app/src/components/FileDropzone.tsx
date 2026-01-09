@@ -3,9 +3,9 @@ import { useDropzone } from 'react-dropzone'
 import { useTranslation } from 'react-i18next'
 import { LuUpload } from 'react-icons/lu'
 
-import { openFromFile } from './lib/file-handler'
-import { useDialogStore } from './stores/dialogStore'
-import { cn } from './utils'
+import { openFromFile } from '../lib/file-handler'
+import { cn } from '../lib/utils'
+import { useDialogStore } from '../stores/dialogStore'
 
 const FileDropzone: FC = () => {
   const { t } = useTranslation()

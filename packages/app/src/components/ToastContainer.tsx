@@ -1,7 +1,7 @@
 import type { FC } from 'react'
 import { createPortal } from 'react-dom'
 
-import { Toaster } from './components/ui/Sonner'
+import { Toaster } from './ui/Sonner'
 
 const ToastContainer: FC = () => {
   // headless ui uses portal to render dialogs and such

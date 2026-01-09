@@ -1,11 +1,11 @@
 import { type FC } from 'react'
 import { useShallow } from 'zustand/shallow'
 
+import { cn } from '@/lib/utils'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { isItemDisplayPlayerHead } from '@/types'
-import { cn } from '@/utils'
 
 import { SidePanel, SidePanelContent, SidePanelTitle } from '../SidePanel'
 import { ColorPickerInput } from '../ui/ColorPicker'

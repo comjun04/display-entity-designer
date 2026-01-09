@@ -10,13 +10,13 @@ import {
 } from 'three'
 import { mergeBufferGeometries, mergeVertices } from 'three-stdlib'
 
+import { isValidTextureUrl, stripMinecraftPrefix } from '@/lib/utils'
 import type {
   ModelElement,
   ModelFaceKey,
   Number3Tuple,
   PlayerHeadProperties,
 } from '@/types'
-import { isValidTextureUrl, stripMinecraftPrefix } from '@/utils'
 
 import { getLogger } from '../logger'
 import { loadMaterial } from './material'

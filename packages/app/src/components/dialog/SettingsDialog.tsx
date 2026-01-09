@@ -2,8 +2,8 @@ import { type FC, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useShallow } from 'zustand/shallow'
 
+import { cn } from '@/lib/utils'
 import { useDialogStore } from '@/stores/dialogStore'
-import { cn } from '@/utils'
 
 import Dialog from './Dialog'
 import AboutPage from './settings/AboutPage'

@@ -9,16 +9,16 @@ import { type FC, Suspense, lazy, useEffect, useRef } from 'react'
 import { Color, DoubleSide } from 'three'
 import { useShallow } from 'zustand/shallow'
 
+import { useDisplayEntityStore } from '../stores/displayEntityStore'
+import { useEditorStore } from '../stores/editorStore'
+import { useHistoryStore } from '../stores/historyStore'
 import CustomCameraControls from './CustomCameraControls'
-import DisplayentitiesRootGroup from './components/DisplayEntitiesRootGroup'
-import DragSelectControl from './components/DragSelectControl'
-import ShortcutHandler from './components/ShortcutHandler'
-import TransformControls from './components/TransformControls'
-import { useDisplayEntityStore } from './stores/displayEntityStore'
-import { useEditorStore } from './stores/editorStore'
-import { useHistoryStore } from './stores/historyStore'
+import DisplayentitiesRootGroup from './DisplayEntitiesRootGroup'
+import DragSelectControl from './DragSelectControl'
+import ShortcutHandler from './ShortcutHandler'
+import TransformControls from './TransformControls'
 
-const Perf = lazy(() => import('./components/Perf'))
+const Perf = lazy(() => import('./Perf'))
 
 const InsideCanvas: FC = () => {
   const headPainting = useEditorStore((state) => state.headPainter.nowPainting)

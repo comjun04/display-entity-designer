@@ -2,8 +2,8 @@ import { type ClassValue, clsx } from 'clsx'
 import { coerce as semverCoerce, satisfies as semverSatisfies } from 'semver'
 import { twMerge } from 'tailwind-merge'
 
-import { AssetFileInfosCache } from './stores/cacheStore'
-import type { ModelElement, ModelFaceKey } from './types'
+import { AssetFileInfosCache } from '../stores/cacheStore'
+import type { ModelElement, ModelFaceKey } from '../types'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

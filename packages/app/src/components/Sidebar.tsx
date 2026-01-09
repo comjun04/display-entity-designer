@@ -3,12 +3,12 @@ import { type FC, useEffect, useState } from 'react'
 import { LuEllipsisVertical } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
-import HeadPainterPanel from './components/sidebar/HeadPainterPanel'
-import ObjectsPanel from './components/sidebar/ObjectsPanel'
-import PropertiesPanel from './components/sidebar/PropertiesPanel'
-import TransformsPanel from './components/sidebar/TransformsPanel'
-import { useEditorStore } from './stores/editorStore'
-import { cn } from './utils'
+import { cn } from '../lib/utils'
+import { useEditorStore } from '../stores/editorStore'
+import HeadPainterPanel from './sidebar/HeadPainterPanel'
+import ObjectsPanel from './sidebar/ObjectsPanel'
+import PropertiesPanel from './sidebar/PropertiesPanel'
+import TransformsPanel from './sidebar/TransformsPanel'
 
 const Sidebar: FC = () => {
   const {

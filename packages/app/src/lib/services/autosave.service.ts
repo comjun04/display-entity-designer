@@ -1,4 +1,4 @@
-import { decodeBase64ToBinary, encodeBinaryToBase64 } from '@/utils'
+import { decodeBase64ToBinary, encodeBinaryToBase64 } from '@/lib/utils'
 
 import { createSaveData, openProjectFile } from '../file-handler'
 import { getLogger } from '../logger'

@@ -7,7 +7,7 @@ import {
 import type { FC, ReactNode } from 'react'
 import { LuX } from 'react-icons/lu'
 
-import { cn } from '@/utils'
+import { cn } from '@/lib/utils'
 
 type DialogProps = {
   open: boolean

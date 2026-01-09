@@ -6,6 +6,7 @@ import { coerce as semverCoerce, satisfies as semverSatisfies } from 'semver'
 import { useShallow } from 'zustand/shallow'
 
 import { getLogger } from '@/lib/logger'
+import { cn } from '@/lib/utils'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEntityRefStore } from '@/stores/entityRefStore'
@@ -15,7 +16,6 @@ import {
   type TextEffects,
   isItemDisplayPlayerHead,
 } from '@/types'
-import { cn } from '@/utils'
 
 import Dialog from './Dialog'
 

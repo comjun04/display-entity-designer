@@ -16,13 +16,13 @@ import useModelData from '@/hooks/useModelData'
 import { getLogger } from '@/lib/logger'
 import { makeMaterial } from '@/lib/resources/material'
 import { loadModelMesh } from '@/lib/resources/modelMesh'
+import { stripMinecraftPrefix } from '@/lib/utils'
 import { useProjectStore } from '@/stores/projectStore'
 import type {
   ModelDisplayPositionKey,
   Number3Tuple,
   PlayerHeadProperties,
 } from '@/types'
-import { stripMinecraftPrefix } from '@/utils'
 
 type ModelNewProps = {
   initialResourceLocation: string

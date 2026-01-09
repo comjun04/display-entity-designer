@@ -2,11 +2,11 @@ import { t } from 'i18next'
 import { toast } from 'sonner'
 
 import { LatestGameVersion, LegacyHardcodedGameVersion } from '@/constants'
+import { decodeBase64ToBinary, gunzip, gzip } from '@/lib/utils'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { useProjectStore } from '@/stores/projectStore'
 import type { BDEngineSaveData, DisplayEntitySaveDataItem } from '@/types'
-import { decodeBase64ToBinary, gunzip, gzip } from '@/utils'
 
 import { getLogger } from './logger'
 import AutosaveService from './services/autosave.service'

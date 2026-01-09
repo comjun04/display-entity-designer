@@ -11,6 +11,7 @@ import { useShallow } from 'zustand/shallow'
 
 import { BackendHost, GameVersions } from '@/constants'
 import useBlockStates from '@/hooks/useBlockStates'
+import { cn, isValidTextureUrl } from '@/lib/utils'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useHistoryStore } from '@/stores/historyStore'
@@ -21,7 +22,6 @@ import {
   type TextDisplayAlignment,
   isItemDisplayPlayerHead,
 } from '@/types'
-import { cn, isValidTextureUrl } from '@/utils'
 
 import { SidePanel, SidePanelContent, SidePanelTitle } from '../SidePanel'
 import { ColorPickerInput } from '../ui/ColorPicker'
