@@ -1,4 +1,4 @@
-import i18n from '@/i18n/config'
+import i18n from '@/lib/i18n/config'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useHistoryStore } from '@/stores/historyStore'
