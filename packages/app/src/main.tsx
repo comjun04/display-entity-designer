@@ -3,7 +3,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { Cache } from 'three'
 
-import App from './App.tsx'
+import App from './App'
 // setup i18n
 import './lib/i18n/config.ts'
 import './styles/global.css'
