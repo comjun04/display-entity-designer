@@ -53,7 +53,6 @@ export function openFileFromUserSelect() {
 }
 
 export async function openFromFile(file: File) {
-  toast('Opening file...')
   try {
     // first try to open as depl project
     const isDeplProject = await openProjectFile(file)
@@ -98,8 +97,9 @@ export async function openProjectFile(file: Blob): Promise<boolean> {
 
   const saveDataString = await gunzip(file.slice(8))
   const saveData = JSON.parse(saveDataString) as DisplayEntitySaveDataBase
-
   // TODO: saveData type validation
+
+  toast('Loading project...')
 
   const { bulkImport, clearEntities } = useDisplayEntityStore.getState()
   const { setTargetGameVersion, setProjectName } = useProjectStore.getState()
@@ -194,6 +194,8 @@ export async function importFromBDE(file: Blob): Promise<boolean> {
   const blob = new Blob([byteArr])
   const saveDataString = await gunzip(blob)
   const saveData = JSON.parse(saveDataString) as BDEngineSaveData
+
+  toast('Importing BDEngine project...')
 
   const { bulkImportFromBDE, clearEntities } = useDisplayEntityStore.getState()
   const { setTargetGameVersion, setProjectName } = useProjectStore.getState()
