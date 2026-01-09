@@ -1,4 +1,4 @@
-import { type FC, useCallback, useEffect, useRef, useState } from 'react'
+import { type FC, useEffect, useRef, useState } from 'react'
 import { useShallow } from 'zustand/shallow'
 
 import { getLogger } from '@/lib/logger'
@@ -17,15 +17,11 @@ import Dialog from './Dialog'
 const logger = getLogger('PlayerHeadBakingDialog')
 
 const PlayerHeadBakingDialog: FC = () => {
-  const { isOpen, setOpenedDialog } = useDialogStore(
+  const { isOpen, closeActiveDialog } = useDialogStore(
     useShallow((state) => ({
-      isOpen: state.openedDialog === 'bakingPlayerHeads',
-      setOpenedDialog: state.setOpenedDialog,
+      isOpen: state.activeDialog === 'bakingPlayerHeads',
+      closeActiveDialog: state.closeActiveDialog,
     })),
-  )
-  const closeDialog = useCallback(
-    () => setOpenedDialog(null),
-    [setOpenedDialog],
   )
 
   const [running, setRunning] = useState(false)
@@ -124,7 +120,7 @@ const PlayerHeadBakingDialog: FC = () => {
       useLargeStaticSize={false}
       modal={running}
       open={isOpen}
-      onClose={closeDialog}
+      onClose={closeActiveDialog}
     >
       <MultiSegmentProgress
         segments={[
@@ -190,7 +186,7 @@ const PlayerHeadBakingDialog: FC = () => {
         <button
           className="rounded-sm bg-gray-700 px-3 py-2 transition disabled:opacity-30"
           disabled={running}
-          onClick={closeDialog}
+          onClick={closeActiveDialog}
         >
           Close
         </button>

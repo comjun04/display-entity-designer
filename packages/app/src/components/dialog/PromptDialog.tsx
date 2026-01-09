@@ -6,17 +6,17 @@ import { useDialogStore } from '@/stores/dialogStore'
 import Dialog from './Dialog'
 
 const PromptDialog: FC = () => {
-  const { isOpen, setOpenedDialog, promptDialogData } = useDialogStore(
+  const { isOpen, closeActiveDialog, promptDialogData } = useDialogStore(
     useShallow((state) => ({
-      isOpen: state.openedDialog === 'prompt',
-      setOpenedDialog: state.setOpenedDialog,
+      isOpen: state.activeDialog === 'prompt',
+      closeActiveDialog: state.closeActiveDialog,
       promptDialogData: state.promptDialogData,
     })),
   )
 
   const closeDialog = () => {
     promptDialogData.onChoice?.(false)
-    setOpenedDialog(null)
+    closeActiveDialog()
   }
 
   return (
@@ -34,7 +34,7 @@ const PromptDialog: FC = () => {
             className="rounded-sm bg-blue-500 px-4 py-2"
             onClick={() => {
               promptDialogData.onChoice?.(true)
-              setOpenedDialog(null)
+              closeActiveDialog()
             }}
           >
             {promptDialogData.buttonText.positive}

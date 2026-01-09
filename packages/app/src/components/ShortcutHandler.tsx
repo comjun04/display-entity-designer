@@ -38,7 +38,8 @@ const ShortcutHandler: FC = () => {
     const { undoHistory, redoHistory } = useHistoryStore.getState()
 
     const handler = (evt: KeyboardEvent) => {
-      const { openedDialog, setOpenedDialog } = useDialogStore.getState()
+      const { activeDialog: openedDialog, openDialog: setOpenedDialog } =
+        useDialogStore.getState()
 
       // prevent default browser actions first
       // ctrl + o (open file)

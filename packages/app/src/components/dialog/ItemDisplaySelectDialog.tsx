@@ -20,7 +20,7 @@ const VirtualList: FC<VirtualListProps> = ({
   isLoading,
 }) => {
   const createNewEntity = useDisplayEntityStore((state) => state.createNew)
-  const setOpenedDialog = useDialogStore((state) => state.setOpenedDialog)
+  const closeActiveDialog = useDialogStore((state) => state.closeActiveDialog)
 
   // virtualizing
   const [parentRef, setParentRef] = useState<HTMLDivElement | null>(null)
@@ -55,7 +55,7 @@ const VirtualList: FC<VirtualListProps> = ({
               }}
               onClick={() => {
                 createNewEntity([{ kind: 'item', type: item }])
-                setOpenedDialog(null)
+                closeActiveDialog()
               }}
             >
               {item}
@@ -86,15 +86,13 @@ const ItemDisplaySelectDialog: FC = () => {
   const [firstOpened, setFirstOpened] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
 
-  const { isOpen, setOpenedDialog } = useDialogStore(
+  const { isOpen, closeActiveDialog } = useDialogStore(
     useShallow((state) => ({
-      isOpen: state.openedDialog === 'itemDisplaySelect',
-      setOpenedDialog: state.setOpenedDialog,
+      isOpen: state.activeDialog === 'itemDisplaySelect',
+      closeActiveDialog: state.closeActiveDialog,
     })),
   )
   const targetGameVersion = useProjectStore((state) => state.targetGameVersion)
-
-  const closeDialog = () => setOpenedDialog(null)
 
   const { data: itemListResponse, isLoading } = useQuery({
     queryKey: ['items.json', targetGameVersion],
@@ -117,7 +115,7 @@ const ItemDisplaySelectDialog: FC = () => {
     <Dialog
       title={t(($) => $.dialog.itemDisplaySelect.title)}
       open={isOpen}
-      onClose={closeDialog}
+      onClose={closeActiveDialog}
       className="relative z-50"
     >
       <div className="flex flex-row items-center gap-4">

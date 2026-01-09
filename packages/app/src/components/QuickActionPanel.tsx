@@ -34,7 +34,7 @@ const QuickActionPanel: FC = () => {
 
   const { setOpenedDialog } = useDialogStore(
     useShallow((state) => ({
-      setOpenedDialog: state.setOpenedDialog,
+      setOpenedDialog: state.openDialog,
     })),
   )
   const { selectedEntityIds, deleteEntities, singleSelectedEntityIsGrouped } =

@@ -130,10 +130,10 @@ const TagValidatorInput: FC<TagValidatorInputProps> = ({ onChange }) => {
 const ExportToMinecraftDialog: FC = () => {
   const { t } = useTranslation()
 
-  const { isOpen, setOpenedDialog } = useDialogStore(
+  const { isOpen, closeActiveDialog } = useDialogStore(
     useShallow((state) => ({
-      isOpen: state.openedDialog === 'exportToMinecraft',
-      setOpenedDialog: state.setOpenedDialog,
+      isOpen: state.activeDialog === 'exportToMinecraft',
+      closeActiveDialog: state.closeActiveDialog,
     })),
   )
   const { entities } = useDisplayEntityStore(
@@ -310,7 +310,7 @@ const ExportToMinecraftDialog: FC = () => {
     <Dialog
       title={t(($) => $.dialog.exportToMinecraft.title)}
       open={isOpen}
-      onClose={() => setOpenedDialog(null)}
+      onClose={closeActiveDialog}
       className="relative z-50"
     >
       <div className="mt-2 rounded-lg bg-neutral-700 p-2">

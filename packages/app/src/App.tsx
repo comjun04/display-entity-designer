@@ -36,7 +36,7 @@ function App() {
   useEffect(() => {
     const { showWelcomeOnStartup } = useEditorStore.getState().settings.general
     if (showWelcomeOnStartup) {
-      useDialogStore.getState().setOpenedDialog('welcome')
+      useDialogStore.getState().openDialog('welcome')
     }
   }, [])
 

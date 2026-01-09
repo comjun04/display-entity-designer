@@ -15,10 +15,10 @@ import Dialog from './Dialog'
 const WelcomeDialog: FC = () => {
   const { t } = useTranslation()
 
-  const { isOpen, setOpenedDialog } = useDialogStore(
+  const { isOpen, closeActiveDialog } = useDialogStore(
     useShallow((state) => ({
-      isOpen: state.openedDialog === 'welcome',
-      setOpenedDialog: state.setOpenedDialog,
+      isOpen: state.activeDialog === 'welcome',
+      closeActiveDialog: state.closeActiveDialog,
     })),
   )
   const { showWelcomeOnStartup, setSettings } = useEditorStore(
@@ -36,7 +36,7 @@ const WelcomeDialog: FC = () => {
 
   const closeDialog = () => {
     setShowRecoverSessionSection(false)
-    setOpenedDialog(null)
+    closeActiveDialog()
   }
 
   return (

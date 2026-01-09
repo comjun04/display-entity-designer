@@ -22,8 +22,9 @@ type PromptDialogData = {
 }
 
 type DialogState = {
-  openedDialog: DialogType
-  setOpenedDialog: (dialog: Exclude<DialogType, 'prompt'>) => void
+  activeDialog: DialogType
+  openDialog: (dialog: NonNullable<Exclude<DialogType, 'prompt'>>) => void
+  closeActiveDialog: () => void
 
   promptDialogData: PromptDialogData
   openPromptDialog: (data: PromptDialogData) => void
@@ -31,10 +32,14 @@ type DialogState = {
 
 export const useDialogStore = create(
   immer<DialogState>((set) => ({
-    openedDialog: null,
-    setOpenedDialog: (dialog) =>
+    activeDialog: null,
+    openDialog: (dialog) =>
       set((state) => {
-        state.openedDialog = dialog
+        state.activeDialog = dialog
+      }),
+    closeActiveDialog: () =>
+      set((state) => {
+        state.activeDialog = null
       }),
 
     promptDialogData: {
@@ -45,7 +50,7 @@ export const useDialogStore = create(
     openPromptDialog: (data) =>
       set((state) => {
         state.promptDialogData = data
-        state.openedDialog = 'prompt'
+        state.activeDialog = 'prompt'
       }),
   })),
 )

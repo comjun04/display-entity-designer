@@ -10,7 +10,7 @@ import { useDialogStore } from '../stores/dialogStore'
 const FileDropzone: FC = () => {
   const { t } = useTranslation()
 
-  const isAnyDialogOpen = useDialogStore((state) => state.openedDialog != null)
+  const isAnyDialogOpen = useDialogStore((state) => state.activeDialog != null)
 
   const [showOverlay, setShowOverlay] = useState(false)
 

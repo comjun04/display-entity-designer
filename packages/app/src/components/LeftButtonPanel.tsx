@@ -58,7 +58,7 @@ const LeftButtonPanel: FC = () => {
     })),
   )
   const { setOpenedDialog } = useDialogStore(
-    useShallow((state) => ({ setOpenedDialog: state.setOpenedDialog })),
+    useShallow((state) => ({ setOpenedDialog: state.openDialog })),
   )
   const { undoHistory, redoHistory } = useHistoryStore(
     useShallow((state) => ({

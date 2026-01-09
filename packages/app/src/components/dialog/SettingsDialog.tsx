@@ -26,22 +26,20 @@ type SettingsPageType =
 const SettingsDialog: FC = () => {
   const { t } = useTranslation()
 
-  const { isOpen, setOpenedDialog } = useDialogStore(
+  const { isOpen, closeActiveDialog } = useDialogStore(
     useShallow((state) => ({
-      isOpen: state.openedDialog === 'settings',
-      setOpenedDialog: state.setOpenedDialog,
+      isOpen: state.activeDialog === 'settings',
+      closeActiveDialog: state.closeActiveDialog,
     })),
   )
 
   const [selectedPage, setSelectedPage] = useState<SettingsPageType>('general')
 
-  const closeDialog = () => setOpenedDialog(null)
-
   return (
     <Dialog
       title={t(($) => $.dialog.settings.title)}
       open={isOpen}
-      onClose={closeDialog}
+      onClose={closeActiveDialog}
       backdropClassName={cn(
         selectedPage === 'appearance' && 'sm:backdrop-blur-none',
       )}

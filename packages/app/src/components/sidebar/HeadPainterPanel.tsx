@@ -112,9 +112,7 @@ const HeadPainterPanel: FC = () => {
                   )}
                   disabled={!mineskinApiKeyFilled}
                   onClick={() => {
-                    useDialogStore
-                      .getState()
-                      .setOpenedDialog('bakingPlayerHeads')
+                    useDialogStore.getState().openDialog('bakingPlayerHeads')
                   }}
                 >
                   Bake textures
