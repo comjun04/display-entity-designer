@@ -1,7 +1,7 @@
 import { decodeBase64ToBinary, encodeBinaryToBase64 } from '@/utils'
 
-import { createSaveData, openProjectFile } from './fileService'
-import { getLogger } from './loggerService'
+import { createSaveData, openProjectFile } from '../file-handler'
+import { getLogger } from '../logger'
 
 const AUTOSAVE_KEY = 'autoSavedProject'
 

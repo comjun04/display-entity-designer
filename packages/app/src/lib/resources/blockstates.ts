@@ -9,7 +9,7 @@ import type {
 } from '@/types'
 import { stripMinecraftPrefix } from '@/utils'
 
-import { getLogger } from '../loggerService'
+import { getLogger } from '../logger'
 
 const logger = getLogger('ResourceLoader/blockstates')
 

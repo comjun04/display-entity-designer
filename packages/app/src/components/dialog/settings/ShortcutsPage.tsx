@@ -11,7 +11,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import { LuCheck, LuEraser, LuUndo } from 'react-icons/lu'
 
-import type { Settings } from '@/services/settings'
+import type { Settings } from '@/lib/settings'
 import { useEditorStore } from '@/stores/editorStore'
 import { cn, getFormattedShortcutKeyString } from '@/utils'
 

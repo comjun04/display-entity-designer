@@ -4,10 +4,10 @@ import { Box3, Euler, Matrix4, Quaternion, Vector3 } from 'three'
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
+import { getLogger } from '@/lib/logger'
+import { preloadResources } from '@/lib/resources/preload'
 import { getBlockList } from '@/queries/getBlockList'
 import { getItemList } from '@/queries/getItemList'
-import { getLogger } from '@/services/loggerService'
-import { preloadResources } from '@/services/resources/preload'
 import type {
   BDEngineSaveData,
   BDEngineSaveDataItem,

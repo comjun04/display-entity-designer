@@ -16,7 +16,7 @@ import {
 import { TbDiamondFilled } from 'react-icons/tb'
 import { useShallow } from 'zustand/shallow'
 
-import { toggleGroup } from '@/services/actions'
+import { toggleGroup } from '@/lib/actions'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'

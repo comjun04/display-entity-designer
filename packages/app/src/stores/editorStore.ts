@@ -3,8 +3,8 @@ import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
 import i18n from '@/lib/i18n/config'
-import { getLogger } from '@/services/loggerService'
-import { type Settings, getStoredSettings } from '@/services/settings'
+import { getLogger } from '@/lib/logger'
+import { type Settings, getStoredSettings } from '@/lib/settings'
 import type { DeepPartial, Number3Tuple, PartialNumber3Tuple } from '@/types'
 
 const logger = getLogger('editorStore')

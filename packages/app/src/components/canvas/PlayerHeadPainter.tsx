@@ -2,7 +2,7 @@ import { Grid } from '@react-three/drei'
 import { type FC, useMemo } from 'react'
 import { MathUtils } from 'three'
 
-import { loadTextureImage } from '@/services/resources/material'
+import { loadTextureImage } from '@/lib/resources/material'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { type HeadPainterLayer, useEditorStore } from '@/stores/editorStore'
 import { useHistoryStore } from '@/stores/historyStore'

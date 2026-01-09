@@ -13,9 +13,9 @@ import {
 } from 'three'
 
 import useModelData from '@/hooks/useModelData'
-import { getLogger } from '@/services/loggerService'
-import { makeMaterial } from '@/services/resources/material'
-import { loadModelMesh } from '@/services/resources/modelMesh'
+import { getLogger } from '@/lib/logger'
+import { makeMaterial } from '@/lib/resources/material'
+import { loadModelMesh } from '@/lib/resources/modelMesh'
 import { useProjectStore } from '@/stores/projectStore'
 import type {
   ModelDisplayPositionKey,

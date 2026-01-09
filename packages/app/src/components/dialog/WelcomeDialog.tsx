@@ -4,9 +4,9 @@ import { LuArchiveRestore, LuFilePlus, LuFolderOpen } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
 import { Disclaimer, SpecialThanks, Title } from '@/components/brandings'
-import { newProject } from '@/services/actions'
-import AutosaveService from '@/services/autosave'
-import { openFileFromUserSelect } from '@/services/fileService'
+import { newProject } from '@/lib/actions'
+import { openFileFromUserSelect } from '@/lib/file-handler'
+import AutosaveService from '@/lib/services/autosave.service'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useEditorStore } from '@/stores/editorStore'
 

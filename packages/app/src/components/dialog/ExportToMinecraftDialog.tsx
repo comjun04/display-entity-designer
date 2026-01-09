@@ -5,7 +5,7 @@ import { LuCopy, LuCopyCheck } from 'react-icons/lu'
 import { coerce as semverCoerce, satisfies as semverSatisfies } from 'semver'
 import { useShallow } from 'zustand/shallow'
 
-import { getLogger } from '@/services/loggerService'
+import { getLogger } from '@/lib/logger'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEntityRefStore } from '@/stores/entityRefStore'

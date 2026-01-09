@@ -3,7 +3,7 @@ import { type FC, type MutableRefObject, useEffect, useRef } from 'react'
 import { Group } from 'three'
 import { useShallow } from 'zustand/shallow'
 
-import { createTextMesh } from '@/services/resources/textMesh'
+import { createTextMesh } from '@/lib/resources/textMesh'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { useProjectStore } from '@/stores/projectStore'

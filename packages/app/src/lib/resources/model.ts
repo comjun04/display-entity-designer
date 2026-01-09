@@ -5,7 +5,7 @@ import { AssetFileInfosCache } from '@/stores/cacheStore'
 import type { ModelData, ModelElement, ModelFile } from '@/types'
 import { generateBuiltinItemModel, stripMinecraftPrefix } from '@/utils'
 
-import { getLogger } from '../loggerService'
+import { getLogger } from '../logger'
 
 const logger = getLogger('ResourceLoader/model')
 

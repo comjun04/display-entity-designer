@@ -1,7 +1,7 @@
 import { type FC, useCallback, useEffect, useRef, useState } from 'react'
 import { useShallow } from 'zustand/shallow'
 
-import { getLogger } from '@/services/loggerService'
+import { getLogger } from '@/lib/logger'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'

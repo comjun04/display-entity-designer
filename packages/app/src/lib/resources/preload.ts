@@ -5,7 +5,7 @@ import {
   isItemDisplayPlayerHead,
 } from '@/types'
 
-import { getLogger } from '../loggerService'
+import { getLogger } from '../logger'
 import { getMatchingBlockstateModel, loadBlockstates } from './blockstates'
 import { loadModel } from './model'
 import { loadModelMaterials } from './modelMesh'

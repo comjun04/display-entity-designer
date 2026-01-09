@@ -1,8 +1,8 @@
 import { create } from 'zustand'
 import { immer } from 'zustand/middleware/immer'
 
-import AutosaveService from '@/services/autosave'
-import { getLogger } from '@/services/loggerService'
+import { getLogger } from '@/lib/logger'
+import AutosaveService from '@/lib/services/autosave.service'
 import {
   type History,
   type Number3Tuple,

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
-import { getLogger } from '@/services/loggerService'
-import { loadModel } from '@/services/resources/model'
+import { getLogger } from '@/lib/logger'
+import { loadModel } from '@/lib/resources/model'
 import { useProjectStore } from '@/stores/projectStore'
 
 const logger = getLogger('useModelData()')

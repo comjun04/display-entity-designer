@@ -2,7 +2,7 @@ import i18n from 'i18next'
 import HttpBackend, { type HttpBackendOptions } from 'i18next-http-backend'
 import { initReactI18next } from 'react-i18next'
 
-import { getStoredSettings } from '@/services/settings'
+import { getStoredSettings } from '@/lib/settings'
 
 export const defaultNS = 'translation'
 

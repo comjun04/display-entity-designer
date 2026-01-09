@@ -8,12 +8,12 @@ import { useProjectStore } from '@/stores/projectStore'
 import type { BDEngineSaveData, DisplayEntitySaveDataItem } from '@/types'
 import { decodeBase64ToBinary, gunzip, gzip } from '@/utils'
 
-import AutosaveService from './autosave'
-import { getLogger } from './loggerService'
+import { getLogger } from './logger'
+import AutosaveService from './services/autosave.service'
 
 // circular import, but not a problem because AutosaveService is a Singleton class
 
-const logger = getLogger('FileService')
+const logger = getLogger('file-handler')
 
 interface DisplayEntitySaveDataBase {
   __version: number

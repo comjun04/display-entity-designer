@@ -18,7 +18,7 @@ import type {
 } from '@/types'
 import { isValidTextureUrl, stripMinecraftPrefix } from '@/utils'
 
-import { getLogger } from '../loggerService'
+import { getLogger } from '../logger'
 import { loadMaterial } from './material'
 
 const logger = getLogger('ResourceLoader/modelMesh')

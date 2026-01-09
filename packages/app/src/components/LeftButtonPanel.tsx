@@ -11,9 +11,9 @@ import {
 } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
-import { newProject } from '@/services/actions'
-import { openFileFromUserSelect, saveToFile } from '@/services/fileService'
-import { getLogger } from '@/services/loggerService'
+import { newProject } from '@/lib/actions'
+import { openFileFromUserSelect, saveToFile } from '@/lib/file-handler'
+import { getLogger } from '@/lib/logger'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { useHistoryStore } from '@/stores/historyStore'

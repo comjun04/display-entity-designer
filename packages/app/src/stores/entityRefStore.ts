@@ -2,7 +2,7 @@ import { type MutableRefObject, createRef } from 'react'
 import { Group } from 'three'
 import { create } from 'zustand'
 
-import { getLogger } from '@/services/loggerService'
+import { getLogger } from '@/lib/logger'
 import type { RefCallbackWithMutableRefObject } from '@/types'
 
 const logger = getLogger('entityRefStore')

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 
-import { getLogger } from '@/services/loggerService'
-import { loadBlockstates } from '@/services/resources/blockstates'
+import { getLogger } from '@/lib/logger'
+import { loadBlockstates } from '@/lib/resources/blockstates'
 import { useProjectStore } from '@/stores/projectStore'
 import type { BlockstatesData } from '@/types'
 

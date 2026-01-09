@@ -3,7 +3,7 @@ import { type FC, useCallback, useEffect } from 'react'
 import { useShallow } from 'zustand/shallow'
 
 import useEntityRefObject from '@/hooks/useEntityRefObject'
-import { getLogger } from '@/services/loggerService'
+import { getLogger } from '@/lib/logger'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { useEntityRefStore } from '@/stores/entityRefStore'
