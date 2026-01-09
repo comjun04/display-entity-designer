@@ -62,7 +62,7 @@ export async function openFromFile(file: File) {
     const isBDEProject = await importFromBDE(file)
     if (isBDEProject) return
 
-    toast.error('Unsupported file')
+    toast.error(t(($) => $.toast.unsupportedFile))
   } catch (err) {
     logger.error(err)
     toast.error(
@@ -99,7 +99,7 @@ export async function openProjectFile(file: Blob): Promise<boolean> {
   const saveData = JSON.parse(saveDataString) as DisplayEntitySaveDataBase
   // TODO: saveData type validation
 
-  toast('Loading project...')
+  toast(t(($) => $.toast.loadingProject))
 
   const { bulkImport, clearEntities } = useDisplayEntityStore.getState()
   const { setTargetGameVersion, setProjectName } = useProjectStore.getState()
@@ -195,7 +195,7 @@ export async function importFromBDE(file: Blob): Promise<boolean> {
   const saveDataString = await gunzip(blob)
   const saveData = JSON.parse(saveDataString) as BDEngineSaveData
 
-  toast('Importing BDEngine project...')
+  toast(t(($) => $.toast.importingBDEProject))
 
   const { bulkImportFromBDE, clearEntities } = useDisplayEntityStore.getState()
   const { setTargetGameVersion, setProjectName } = useProjectStore.getState()

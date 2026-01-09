@@ -1,5 +1,6 @@
 import { type FC, useEffect, useState } from 'react'
 import { useDropzone } from 'react-dropzone'
+import { useTranslation } from 'react-i18next'
 import { LuUpload } from 'react-icons/lu'
 
 import { openFromFile } from './services/fileService'
@@ -7,6 +8,8 @@ import { useDialogStore } from './stores/dialogStore'
 import { cn } from './utils'
 
 const FileDropzone: FC = () => {
+  const { t } = useTranslation()
+
   const isAnyDialogOpen = useDialogStore((state) => state.openedDialog != null)
 
   const [showOverlay, setShowOverlay] = useState(false)
@@ -67,7 +70,7 @@ const FileDropzone: FC = () => {
         )}
       >
         <LuUpload className="text-7xl" />
-        <div className="text-3xl">Drop project file to open</div>
+        <div className="text-3xl">{t(($) => $.dropzone.text)}</div>
       </div>
     </div>
   )
