@@ -1,7 +1,7 @@
 import { type FC, useEffect, useMemo } from 'react'
 
 import { toggleGroup } from '@/services/actions'
-import { openFromFile, saveToFile } from '@/services/fileService'
+import { openFileFromUserSelect, saveToFile } from '@/services/fileService'
 import { getLogger } from '@/services/loggerService'
 import type { ShortcutActionsEnum } from '@/services/settings'
 import { useDialogStore } from '@/stores/dialogStore'
@@ -96,7 +96,7 @@ const ShortcutHandler: FC = () => {
           // general
           case 'general.openFromFile':
             evt.preventDefault()
-            openFromFile()
+            openFileFromUserSelect()
             break
           case 'general.saveToFile':
             evt.preventDefault()

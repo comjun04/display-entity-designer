@@ -6,7 +6,7 @@ import { useShallow } from 'zustand/shallow'
 import { Disclaimer, SpecialThanks, Title } from '@/components/brandings'
 import { newProject } from '@/services/actions'
 import AutosaveService from '@/services/autosave'
-import { openFromFile } from '@/services/fileService'
+import { openFileFromUserSelect } from '@/services/fileService'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useEditorStore } from '@/stores/editorStore'
 
@@ -77,7 +77,7 @@ const WelcomeDialog: FC = () => {
               <button
                 className="flex flex-row items-center gap-2 rounded-sm bg-neutral-900 px-4 py-2"
                 onClick={() => {
-                  openFromFile()
+                  openFileFromUserSelect()
                   closeDialog()
                 }}
               >

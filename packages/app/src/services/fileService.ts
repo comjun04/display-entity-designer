@@ -36,35 +36,39 @@ const fileVersionArrayBuffer = new ArrayBuffer(4)
 const fileVersionDataView = new DataView(fileVersionArrayBuffer)
 fileVersionDataView.setUint32(0, FILE_VERSION, false)
 
-export function openFromFile() {
+export function openFileFromUserSelect() {
   const inputElement = document.createElement('input')
   inputElement.type = 'file'
   inputElement.accept = '.depl,.bdengine'
-  inputElement.onchange = async (evt) => {
+  inputElement.onchange = (evt) => {
     const file = (evt.target as HTMLInputElement).files?.[0]
     if (file == null) {
       return
     }
 
-    try {
-      // first try to open as depl project
-      const isDeplProject = await openProjectFile(file)
-      if (isDeplProject) return
-
-      // if not, try to open with bdengine file
-      const isBDEProject = await importFromBDE(file)
-      if (isBDEProject) return
-
-      toast.error('Unsupported file')
-    } catch (err) {
-      logger.error(err)
-      toast.error(
-        'An error occured when opening file. Please check browser console for more info.',
-      )
-    }
+    openFromFile(file).catch(console.error)
   }
 
   inputElement.click()
+}
+
+export async function openFromFile(file: File) {
+  try {
+    // first try to open as depl project
+    const isDeplProject = await openProjectFile(file)
+    if (isDeplProject) return
+
+    // if not, try to open with bdengine file
+    const isBDEProject = await importFromBDE(file)
+    if (isBDEProject) return
+
+    toast.error(t(($) => $.toast.unsupportedFile))
+  } catch (err) {
+    logger.error(err)
+    toast.error(
+      'An error occured when opening file. Please check browser console for more info.',
+    )
+  }
 }
 
 export async function openProjectFile(file: Blob): Promise<boolean> {
@@ -93,8 +97,9 @@ export async function openProjectFile(file: Blob): Promise<boolean> {
 
   const saveDataString = await gunzip(file.slice(8))
   const saveData = JSON.parse(saveDataString) as DisplayEntitySaveDataBase
-
   // TODO: saveData type validation
+
+  toast(t(($) => $.toast.loadingProject))
 
   const { bulkImport, clearEntities } = useDisplayEntityStore.getState()
   const { setTargetGameVersion, setProjectName } = useProjectStore.getState()
@@ -189,6 +194,8 @@ export async function importFromBDE(file: Blob): Promise<boolean> {
   const blob = new Blob([byteArr])
   const saveDataString = await gunzip(blob)
   const saveData = JSON.parse(saveDataString) as BDEngineSaveData
+
+  toast(t(($) => $.toast.importingBDEProject))
 
   const { bulkImportFromBDE, clearEntities } = useDisplayEntityStore.getState()
   const { setTargetGameVersion, setProjectName } = useProjectStore.getState()

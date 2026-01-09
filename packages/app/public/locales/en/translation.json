@@ -280,6 +280,12 @@
     }
   },
   "toast": {
+    "loadingProject": "Loading project file...",
+    "importingBDEProject": "Importing BDEngine project...",
+    "unsupportedFile": "Unsupported file",
     "projectSaved": "Saved project"
+  },
+  "dropzone": {
+    "text": "Drop project file to open"
   }
 }

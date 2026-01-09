@@ -12,7 +12,7 @@ import {
 import { useShallow } from 'zustand/shallow'
 
 import { newProject } from '@/services/actions'
-import { openFromFile, saveToFile } from '@/services/fileService'
+import { openFileFromUserSelect, saveToFile } from '@/services/fileService'
 import { getLogger } from '@/services/loggerService'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useEditorStore } from '@/stores/editorStore'
@@ -86,7 +86,7 @@ const LeftButtonPanel: FC = () => {
               <span className="grow">{t(($) => $.menu.newProject)}</span>
             </div>
           </DropdownMenuItem>
-          <DropdownMenuItem className="w-full" onClick={openFromFile}>
+          <DropdownMenuItem className="w-full" onClick={openFileFromUserSelect}>
             <div className="flex w-full flex-row items-center gap-2 text-sm">
               <span className="grow">{t(($) => $.menu.open)}</span>
               <span className="text-xs text-neutral-500">
