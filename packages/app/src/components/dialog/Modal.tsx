@@ -6,44 +6,42 @@ import { useDialogStore } from '@/stores/dialogStore'
 import Dialog from './Dialog'
 
 const PromptDialog: FC = () => {
-  const { isOpen, closeActiveDialog, promptDialogData } = useDialogStore(
+  const { isOpen, modalData, setModalResponse } = useDialogStore(
     useShallow((state) => ({
-      isOpen: state.activeDialog === 'prompt',
-      closeActiveDialog: state.closeActiveDialog,
-      promptDialogData: state.promptDialogData,
+      isOpen: state.activeDialog === 'modal',
+      modalData: state.modalData,
+      setModalResponse: state._setModalResponse,
     })),
   )
 
   const closeDialog = () => {
-    promptDialogData.onChoice?.(false)
-    closeActiveDialog()
+    setModalResponse(false)
   }
 
   return (
     <Dialog
-      title={promptDialogData.title}
+      title={modalData.title}
       open={isOpen}
       onClose={closeDialog}
       className="relative z-50"
       useLargeStaticSize={false}
     >
       <div className="flex flex-col">
-        <div>{promptDialogData.content}</div>
+        <div>{modalData.content}</div>
         <div className="flex flex-row-reverse gap-2">
           <button
             className="rounded-sm bg-blue-500 px-4 py-2"
             onClick={() => {
-              promptDialogData.onChoice?.(true)
-              closeActiveDialog()
+              setModalResponse(true)
             }}
           >
-            {promptDialogData.buttonText.positive}
+            {modalData.buttonText.positive}
           </button>
           <button
             className="rounded-sm bg-gray-700 px-4 py-2"
             onClick={closeDialog}
           >
-            {promptDialogData.buttonText.negative}
+            {modalData.buttonText.negative}
           </button>
         </div>
       </div>

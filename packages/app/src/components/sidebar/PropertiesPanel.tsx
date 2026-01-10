@@ -621,26 +621,30 @@ const ProjectProperties: FC = () => {
               (v) => v.id === evt.target.value,
             )!
 
-            useDialogStore.getState().openPromptDialog({
-              title: t(
-                ($) => $.dialog.prompt.changeTargetMinecraftVersion.title,
-              ),
-              content: t(
-                ($) => $.dialog.prompt.changeTargetMinecraftVersion.content,
-                {
-                  newVersionLabel: gameVersionData.label,
+            useDialogStore
+              .getState()
+              .confirmModal({
+                title: t(
+                  ($) => $.dialog.prompt.changeTargetMinecraftVersion.title,
+                ),
+                content: t(
+                  ($) => $.dialog.prompt.changeTargetMinecraftVersion.content,
+                  {
+                    newVersionLabel: gameVersionData.label,
+                  },
+                ),
+                buttonText: {
+                  positive: t(
+                    ($) =>
+                      $.dialog.prompt.changeTargetMinecraftVersion.button.yes,
+                  ),
+                  negative: t(
+                    ($) =>
+                      $.dialog.prompt.changeTargetMinecraftVersion.button.no,
+                  ),
                 },
-              ),
-              buttonText: {
-                positive: t(
-                  ($) =>
-                    $.dialog.prompt.changeTargetMinecraftVersion.button.yes,
-                ),
-                negative: t(
-                  ($) => $.dialog.prompt.changeTargetMinecraftVersion.button.no,
-                ),
-              },
-              onChoice: (choice) => {
+              })
+              .then((choice) => {
                 if (choice) {
                   useProjectStore
                     .getState()
@@ -651,8 +655,8 @@ const ProjectProperties: FC = () => {
                     .catch(console.error)
                   useHistoryStore.getState().clearHistory()
                 }
-              },
-            })
+              })
+              .catch(console.error)
           }}
         >
           {GameVersions.map((version) => (

@@ -11,8 +11,8 @@ import ToastContainer from './components/ToastContainer'
 import BlockDisplaySelectDialog from './components/dialog/BlockDisplaySelectDialog'
 import ExportToMinecraftDialog from './components/dialog/ExportToMinecraftDialog'
 import ItemDisplaySelectDialog from './components/dialog/ItemDisplaySelectDialog'
+import Modal from './components/dialog/Modal.tsx'
 import PlayerHeadBakingDialog from './components/dialog/PlayerHeadBakingDialog'
-import PromptDialog from './components/dialog/PromptDialog'
 import SettingsDialog from './components/dialog/SettingsDialog'
 import WelcomeDialog from './components/dialog/WelcomeDialog'
 import { queryClient } from './lib/query.ts'
@@ -73,7 +73,7 @@ function App() {
         <Sidebar />
 
         <WelcomeDialog />
-        <PromptDialog />
+        <Modal />
         <SettingsDialog />
         <BlockDisplaySelectDialog />
         <ItemDisplaySelectDialog />

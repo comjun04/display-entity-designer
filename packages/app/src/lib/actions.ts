@@ -35,19 +35,22 @@ export function newProject() {
   const dirty =
     entities.size > 0 || undoStack.length > 0 || redoStack.length > 0
   if (dirty) {
-    useDialogStore.getState().openPromptDialog({
-      title: t(($) => $.dialog.prompt.createNewProject.title),
-      content: t(($) => $.dialog.prompt.createNewProject.content),
-      buttonText: {
-        positive: t(($) => $.dialog.prompt.createNewProject.button.yes),
-        negative: t(($) => $.dialog.prompt.createNewProject.button.no),
-      },
-      onChoice: (choice) => {
+    useDialogStore
+      .getState()
+      .confirmModal({
+        title: t(($) => $.dialog.prompt.createNewProject.title),
+        content: t(($) => $.dialog.prompt.createNewProject.content),
+        buttonText: {
+          positive: t(($) => $.dialog.prompt.createNewProject.button.yes),
+          negative: t(($) => $.dialog.prompt.createNewProject.button.no),
+        },
+      })
+      .then((choice) => {
         if (choice) {
           clearProjectFn()
         }
-      },
-    })
+      })
+      .catch(console.error)
   } else {
     clearProjectFn()
   }
