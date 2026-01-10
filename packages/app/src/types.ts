@@ -137,16 +137,10 @@ export type BlockDisplayEntity = BaseDisplayEntity & {
 
 export type ItemDisplayEntity = BaseDisplayEntity & {
   kind: 'item'
+  type: string
   display: ModelDisplayPositionKey | null
-} & (
-    | {
-        type: 'player_head'
-        playerHeadProperties: PlayerHeadProperties
-      }
-    | {
-        type: string
-      }
-  )
+  playerHeadProperties?: PlayerHeadProperties // will be available if type === 'player_head'
+}
 
 export interface PlayerHeadProperties {
   texture:

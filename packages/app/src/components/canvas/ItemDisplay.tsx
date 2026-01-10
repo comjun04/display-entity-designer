@@ -5,7 +5,7 @@ import { useShallow } from 'zustand/shallow'
 
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
-import { type Number3Tuple, isItemDisplayPlayerHead } from '@/types'
+import { type Number3Tuple } from '@/types'
 
 import BoundingBox from './BoundingBox'
 import Model from './Model'
@@ -35,7 +35,6 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
   const {
     thisEntitySelected,
     thisEntityDisplay,
-    thisEntityIsPlayerHead,
     thisEntityPlayerHeadProperties,
   } = useDisplayEntityStore(
     useShallow((state) => {
@@ -45,10 +44,8 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
         thisEntitySelected: state.selectedEntityIds.includes(id),
         thisEntityDisplay:
           thisEntity?.kind === 'item' ? thisEntity.display : undefined,
-        thisEntityIsPlayerHead:
-          thisEntity != null && isItemDisplayPlayerHead(thisEntity),
         thisEntityPlayerHeadProperties:
-          thisEntity != null && isItemDisplayPlayerHead(thisEntity)
+          thisEntity?.kind === 'item'
             ? thisEntity.playerHeadProperties
             : undefined,
       }
@@ -96,14 +93,12 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
         />
       </group>
 
-      {thisEntityIsPlayerHead &&
-        thisEntityPlayerHeadProperties != null &&
-        headPainterEnabled && (
-          <PlayerHeadPainter
-            entityId={id}
-            playerHeadProperties={thisEntityPlayerHeadProperties}
-          />
-        )}
+      {thisEntityPlayerHeadProperties != null && headPainterEnabled && (
+        <PlayerHeadPainter
+          entityId={id}
+          playerHeadProperties={thisEntityPlayerHeadProperties}
+        />
+      )}
     </object3D>
   )
 }

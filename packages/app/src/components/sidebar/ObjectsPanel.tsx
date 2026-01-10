@@ -7,7 +7,6 @@ import { useShallow } from 'zustand/shallow'
 
 import { cn } from '@/lib/utils'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
-import { isItemDisplayPlayerHead } from '@/types'
 
 import { SidePanel, SidePanelContent, SidePanelTitle } from '../SidePanel'
 
@@ -42,9 +41,8 @@ const ObjectItem: FC<ObjectItemProps> = ({ id }) => {
 
         groupName: entity.kind === 'group' ? entity.name : undefined,
 
-        playerHeadProperties: isItemDisplayPlayerHead(entity)
-          ? entity.playerHeadProperties
-          : undefined,
+        playerHeadProperties:
+          entity.kind === 'item' ? entity.playerHeadProperties : undefined,
       }
     }),
   )

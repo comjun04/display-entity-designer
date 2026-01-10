@@ -53,22 +53,6 @@ const generateId = (
   return id
 }
 
-// player_head type guard
-function isCreateNewEntityActionParamIsPlayerHead(
-  param: CreateNewEntityActionParam,
-): param is Pick<
-  ItemDisplayEntity & {
-    type: 'player_head'
-    playerHeadProperties: PlayerHeadProperties
-  },
-  'kind' | 'type' | 'playerHeadProperties'
-> &
-  Partial<Omit<ItemDisplayEntity, 'kind' | 'type'>> {
-  if (param.kind !== 'item') return false
-  else if (param.type !== 'player_head') return false
-  return true
-}
-
 type CreateNewEntityActionParam =
   | (Pick<BlockDisplayEntity, 'kind' | 'type'> &
       Partial<Omit<BlockDisplayEntity, 'kind' | 'type'>>)
@@ -196,19 +180,15 @@ export const useDisplayEntityStore = create(
                 (param.type === 'player_head' ? [0, 0.5, 0] : [0, 0, 0]),
               rotation: param.rotation ?? [0, 0, 0],
               display: param.display ?? null,
+              playerHeadProperties:
+                param.type === 'player_head'
+                  ? param.playerHeadProperties != null
+                    ? param.playerHeadProperties
+                    : {
+                        texture: null,
+                      }
+                  : undefined,
             })
-
-            const entity = state.entities.get(id)!
-            if (isItemDisplayPlayerHead(entity)) {
-              // is player_head
-              entity.playerHeadProperties =
-                isCreateNewEntityActionParamIsPlayerHead(param) &&
-                param.playerHeadProperties != null
-                  ? param.playerHeadProperties
-                  : {
-                      texture: null,
-                    }
-            }
           } else if (param.kind === 'text') {
             state.entities.set(id, {
               kind: 'text',
@@ -855,10 +835,9 @@ export const useDisplayEntityStore = create(
 
             const entity = entities.get(id)!
             if (isItemDisplayPlayerHead(entity)) {
-              if ('playerHeadProperties' in item) {
+              if (item.playerHeadProperties != null) {
                 // is player_head
-                entity.playerHeadProperties =
-                  item.playerHeadProperties as PlayerHeadProperties
+                entity.playerHeadProperties = item.playerHeadProperties
 
                 // savedata v5 -> v6
                 const { texture: textureData } = entity.playerHeadProperties
