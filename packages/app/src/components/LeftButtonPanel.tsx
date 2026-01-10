@@ -11,7 +11,7 @@ import {
 } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
-import { newProject } from '@/lib/actions'
+import { clearProject } from '@/lib/actions'
 import { openFileFromUserSelect, saveToFile } from '@/lib/file-handler'
 import { getLogger } from '@/lib/logger'
 import { getFormattedShortcutKeyString } from '@/lib/utils'
@@ -81,7 +81,10 @@ const LeftButtonPanel: FC = () => {
           align="start"
           className="data-[state=open]:slide-in-from-left-0 origin-top-left sm:min-w-52"
         >
-          <DropdownMenuItem className="w-full" onClick={newProject}>
+          <DropdownMenuItem
+            className="w-full"
+            onClick={() => void clearProject()}
+          >
             <div className="flex w-full flex-row items-center gap-2 text-sm">
               <span className="grow">{t(($) => $.menu.newProject)}</span>
             </div>

@@ -4,7 +4,7 @@ import { LuArchiveRestore, LuFilePlus, LuFolderOpen } from 'react-icons/lu'
 import { useShallow } from 'zustand/shallow'
 
 import { Disclaimer, SpecialThanks, Title } from '@/components/brandings'
-import { newProject } from '@/lib/actions'
+import { clearProject } from '@/lib/actions'
 import { openFileFromUserSelect } from '@/lib/file-handler'
 import AutosaveService from '@/lib/services/autosave.service'
 import { useDialogStore } from '@/stores/dialogStore'
@@ -68,7 +68,7 @@ const WelcomeDialog: FC = () => {
                 className="flex flex-row items-center gap-2 rounded-sm bg-neutral-900 px-4 py-2"
                 onClick={() => {
                   closeDialog()
-                  newProject()
+                  clearProject().catch(console.error)
                 }}
               >
                 <LuFilePlus size={24} />

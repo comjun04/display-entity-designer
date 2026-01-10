@@ -1,6 +1,7 @@
 import i18n from '@/lib/i18n/config'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
+import { useEditorStore } from '@/stores/editorStore'
 import { useHistoryStore } from '@/stores/historyStore'
 
 const { t } = i18n
@@ -23,19 +24,15 @@ export function toggleGroup() {
   }
 }
 
-export function newProject() {
+export async function clearProject() {
   const { entities, clearEntities } = useDisplayEntityStore.getState()
   const { undoStack, redoStack, clearHistory } = useHistoryStore.getState()
-
-  const clearProjectFn = () => {
-    clearHistory()
-    clearEntities()
-  }
+  const { resetProject } = useEditorStore.getState()
 
   const dirty =
     entities.size > 0 || undoStack.length > 0 || redoStack.length > 0
   if (dirty) {
-    useDialogStore
+    const choice = await useDialogStore
       .getState()
       .confirmModal({
         title: t(($) => $.dialog.prompt.createNewProject.title),
@@ -45,13 +42,14 @@ export function newProject() {
           negative: t(($) => $.dialog.prompt.createNewProject.button.no),
         },
       })
-      .then((choice) => {
-        if (choice) {
-          clearProjectFn()
-        }
-      })
       .catch(console.error)
-  } else {
-    clearProjectFn()
+    if (!choice) {
+      return false
+    }
   }
+
+  clearHistory()
+  clearEntities()
+  resetProject()
+  return true
 }
