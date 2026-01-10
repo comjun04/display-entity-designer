@@ -35,11 +35,11 @@ export async function clearProject() {
     const choice = await useDialogStore
       .getState()
       .confirmModal({
-        title: t(($) => $.dialog.prompt.createNewProject.title),
-        content: t(($) => $.dialog.prompt.createNewProject.content),
+        title: t(($) => $.dialog.prompt.discardUnsavedChanges.title),
+        content: t(($) => $.dialog.prompt.discardUnsavedChanges.content),
         buttonText: {
-          positive: t(($) => $.dialog.prompt.createNewProject.button.yes),
-          negative: t(($) => $.dialog.prompt.createNewProject.button.no),
+          positive: t(($) => $.dialog.prompt.discardUnsavedChanges.button.yes),
+          negative: t(($) => $.dialog.prompt.discardUnsavedChanges.button.no),
         },
       })
       .catch(console.error)

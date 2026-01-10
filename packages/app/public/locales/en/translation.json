@@ -177,12 +177,12 @@
       }
     },
     "prompt": {
-      "createNewProject": {
-        "title": "Creating New Project",
-        "content": "Are you sure to want to create new project? Any unsaved changes will be lost.",
+      "discardUnsavedChanges": {
+        "title": "Unsaved changes",
+        "content": "This project has unsaved changes. Do you want to discard this changes? This cannot be undone.",
         "button": {
-          "yes": "Yes",
-          "no": "No"
+          "yes": "Discard",
+          "no": "Cancel"
         }
       },
       "changeTargetMinecraftVersion": {

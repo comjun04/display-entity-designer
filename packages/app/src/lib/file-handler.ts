@@ -8,6 +8,7 @@ import { useEditorStore } from '@/stores/editorStore'
 import { useProjectStore } from '@/stores/projectStore'
 import type { BDEngineSaveData, DisplayEntitySaveDataItem } from '@/types'
 
+import { clearProject } from './actions'
 import { getLogger } from './logger'
 import AutosaveService from './services/autosave.service'
 
@@ -52,7 +53,16 @@ export function openFileFromUserSelect() {
   inputElement.click()
 }
 
-export async function openFromFile(file: File) {
+export async function openFromFile(file: Blob) {
+  // first clear current project and reset editor
+  const projectCleared = await clearProject()
+  if (!projectCleared) {
+    logger.warn(
+      'Project not cleared for some reason. Stopping file opening sequence.',
+    )
+    return false
+  }
+
   try {
     // first try to open as depl project
     const isDeplProject = await openProjectFile(file)
@@ -71,7 +81,7 @@ export async function openFromFile(file: File) {
   }
 }
 
-export async function openProjectFile(file: Blob): Promise<boolean> {
+async function openProjectFile(file: Blob): Promise<boolean> {
   if (file.size < 10) {
     logger.error(
       'Cannot open project file: cannot extract file header, file too small',
@@ -101,12 +111,8 @@ export async function openProjectFile(file: Blob): Promise<boolean> {
 
   toast(t(($) => $.toast.loadingProject))
 
-  const { bulkImport, clearEntities } = useDisplayEntityStore.getState()
+  const { bulkImport } = useDisplayEntityStore.getState()
   const { setTargetGameVersion, setProjectName } = useProjectStore.getState()
-
-  // reset project and load data
-  clearEntities()
-  useEditorStore.getState().resetProject()
 
   // load targetGameVersion
   const targetGameVersion =
@@ -171,7 +177,7 @@ export async function createSaveData() {
 // ===============
 // BDEngine
 
-export async function importFromBDE(file: Blob): Promise<boolean> {
+async function importFromBDE(file: Blob): Promise<boolean> {
   const fileReader = new FileReader()
   fileReader.readAsText(file, 'utf-8')
   const rawFileContentUtf8 = await new Promise<string>((resolve) => {

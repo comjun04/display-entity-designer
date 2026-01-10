@@ -1,6 +1,6 @@
 import { decodeBase64ToBinary, encodeBinaryToBase64 } from '@/lib/utils'
 
-import { createSaveData, openProjectFile } from '../file-handler'
+import { createSaveData, openFromFile } from '../file-handler'
 import { getLogger } from '../logger'
 
 const AUTOSAVE_KEY = 'autoSavedProject'
@@ -82,7 +82,7 @@ export default class AutosaveService {
 
     // base64 decode
     const saveData = decodeBase64ToBinary(saveDataEncoded)
-    await openProjectFile(new Blob([saveData]))
+    await openFromFile(new Blob([saveData]))
   }
 
   deleteSave() {
