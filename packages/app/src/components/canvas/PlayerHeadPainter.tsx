@@ -6,7 +6,11 @@ import { loadTextureImage } from '@/lib/resources/material'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { type HeadPainterLayer, useEditorStore } from '@/stores/editorStore'
 import { useHistoryStore } from '@/stores/historyStore'
-import type { ModelFaceKey, Number3Tuple, PlayerHeadProperties } from '@/types'
+import type {
+  ModelFaceKey,
+  Number3Tuple,
+  PlayerHeadProperties,
+} from '@/types/base'
 
 interface SideProps {
   face: ModelFaceKey

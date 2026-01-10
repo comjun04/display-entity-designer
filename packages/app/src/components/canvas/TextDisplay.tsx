@@ -7,7 +7,7 @@ import { createTextMesh } from '@/lib/resources/textMesh'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { useProjectStore } from '@/stores/projectStore'
-import type { Number3Tuple } from '@/types'
+import type { Number3Tuple } from '@/types/base'
 
 import BoundingBox from './BoundingBox'
 

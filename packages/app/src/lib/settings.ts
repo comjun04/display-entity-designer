@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-import type { LogLevel } from '@/types'
+import type { LogLevel } from '@/types/base'
 
 export const ShortcutActions = [
   // general

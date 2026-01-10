@@ -3,7 +3,7 @@ import { Group } from 'three'
 import { create } from 'zustand'
 
 import { getLogger } from '@/lib/logger'
-import type { RefCallbackWithMutableRefObject } from '@/types'
+import type { RefCallbackWithMutableRefObject } from '@/types/base'
 
 const logger = getLogger('entityRefStore')
 

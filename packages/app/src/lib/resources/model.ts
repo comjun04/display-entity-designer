@@ -3,7 +3,7 @@ import { Mutex } from 'async-mutex'
 import fetcher from '@/fetcher'
 import { generateBuiltinItemModel, stripMinecraftPrefix } from '@/lib/utils'
 import { AssetFileInfosCache } from '@/stores/cacheStore'
-import type { ModelData, ModelElement, ModelFile } from '@/types'
+import type { ModelData, ModelElement, ModelFile } from '@/types/base'
 
 import { getLogger } from '../logger'
 

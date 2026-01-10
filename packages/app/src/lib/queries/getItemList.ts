@@ -2,7 +2,7 @@ import type { QueryFunctionContext } from '@tanstack/react-query'
 
 import { CDNBaseUrl } from '@/constants'
 import { queryClient } from '@/lib/query'
-import type { CDNItemsListResponse } from '@/types'
+import type { CDNItemsListResponse } from '@/types/base'
 
 export async function getItemListQueryFn({
   queryKey,

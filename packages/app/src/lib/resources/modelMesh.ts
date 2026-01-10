@@ -16,7 +16,7 @@ import type {
   ModelFaceKey,
   Number3Tuple,
   PlayerHeadProperties,
-} from '@/types'
+} from '@/types/base'
 
 import { getLogger } from '../logger'
 import { loadMaterial } from './material'

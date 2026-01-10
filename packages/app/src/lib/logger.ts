@@ -1,5 +1,5 @@
 import { useEditorStore } from '@/stores/editorStore'
-import type { LogLevel } from '@/types'
+import type { LogLevel } from '@/types/base'
 
 const logLevelOrder: readonly LogLevel[] = ['debug', 'info', 'warn', 'error']
 

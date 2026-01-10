@@ -16,12 +16,12 @@ import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useHistoryStore } from '@/stores/historyStore'
 import { useProjectStore } from '@/stores/projectStore'
-import {
-  type BackendAPIV1GetPlayerSkinResponse,
-  type ModelDisplayPositionKey,
-  type TextDisplayAlignment,
-  isItemDisplayPlayerHead,
-} from '@/types'
+import type {
+  BackendAPIV1GetPlayerSkinResponse,
+  ModelDisplayPositionKey,
+  TextDisplayAlignment,
+} from '@/types/base'
+import { isItemDisplayPlayerHead } from '@/types/guards'
 
 import { SidePanel, SidePanelContent, SidePanelTitle } from '../SidePanel'
 import { ColorPickerInput } from '../ui/ColorPicker'

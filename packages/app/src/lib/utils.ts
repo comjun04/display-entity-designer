@@ -3,7 +3,7 @@ import { coerce as semverCoerce, satisfies as semverSatisfies } from 'semver'
 import { twMerge } from 'tailwind-merge'
 
 import { AssetFileInfosCache } from '../stores/cacheStore'
-import type { ModelElement, ModelFaceKey } from '../types'
+import type { ModelElement, ModelFaceKey } from '../types/base'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))

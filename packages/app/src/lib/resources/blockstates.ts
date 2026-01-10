@@ -7,7 +7,7 @@ import type {
   BlockStateApplyModelInfo,
   BlockStatesFile,
   BlockstatesData,
-} from '@/types'
+} from '@/types/base'
 
 import { getLogger } from '../logger'
 

@@ -1,9 +1,9 @@
-import {
-  type BlockStateApplyModelInfo,
-  type DisplayEntity,
-  type PlayerHeadProperties,
-  isItemDisplayPlayerHead,
-} from '@/types'
+import type {
+  BlockStateApplyModelInfo,
+  DisplayEntity,
+  PlayerHeadProperties,
+} from '@/types/base'
+import { isItemDisplayPlayerHead } from '@/types/guards'
 
 import { getLogger } from '../logger'
 import { getMatchingBlockstateModel, loadBlockstates } from './blockstates'

@@ -22,7 +22,7 @@ import type {
   ModelDisplayPositionKey,
   Number3Tuple,
   PlayerHeadProperties,
-} from '@/types'
+} from '@/types/base'
 
 type ModelNewProps = {
   initialResourceLocation: string

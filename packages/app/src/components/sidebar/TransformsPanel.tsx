@@ -7,7 +7,7 @@ import { getLogger } from '@/lib/logger'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { useEntityRefStore } from '@/stores/entityRefStore'
-import type { PartialNumber3Tuple } from '@/types'
+import type { PartialNumber3Tuple } from '@/types/base'
 
 import { SidePanel, SidePanelContent, SidePanelTitle } from '../SidePanel'
 import XYZInput from './XYZInput'

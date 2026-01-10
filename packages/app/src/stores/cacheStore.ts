@@ -11,7 +11,7 @@ import type {
   BlockstatesData,
   FontProvider,
   ModelData,
-} from '@/types'
+} from '@/types/base'
 
 import { useProjectStore } from './projectStore'
 

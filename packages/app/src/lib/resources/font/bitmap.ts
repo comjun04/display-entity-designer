@@ -4,7 +4,7 @@ import { CanvasTexture, ImageLoader } from 'three'
 import fetcher from '@/fetcher'
 import { stripMinecraftPrefix } from '@/lib/utils'
 import { AssetFileInfosCache, useCacheStore } from '@/stores/cacheStore'
-import type { CDNFontProviderResponse } from '@/types'
+import type { CDNFontProviderResponse } from '@/types/base'
 
 const imageLoader = new ImageLoader()
 imageLoader.setCrossOrigin('anonymous')

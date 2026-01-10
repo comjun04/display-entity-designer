@@ -7,7 +7,7 @@ import { useProjectStore } from '@/stores/projectStore'
 import {
   type CDNFontProviderResponse,
   type UnifontSizeOverrideEntry,
-} from '@/types'
+} from '@/types/base'
 
 // unifont hex data cache, keys are sharedAsset id and charcode
 const unifontHexDataCache = new Map<number, Map<number, string>>()

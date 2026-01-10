@@ -5,7 +5,7 @@ import { useShallow } from 'zustand/shallow'
 
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
-import { type Number3Tuple } from '@/types'
+import { type Number3Tuple } from '@/types/base'
 
 import BoundingBox from './BoundingBox'
 import Model from './Model'

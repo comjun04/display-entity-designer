@@ -11,11 +11,8 @@ import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEntityRefStore } from '@/stores/entityRefStore'
 import { useProjectStore } from '@/stores/projectStore'
-import {
-  type MinimalTextureValue,
-  type TextEffects,
-  isItemDisplayPlayerHead,
-} from '@/types'
+import type { MinimalTextureValue, TextEffects } from '@/types/base'
+import { isItemDisplayPlayerHead } from '@/types/guards'
 
 import Dialog from './Dialog'
 

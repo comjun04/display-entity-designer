@@ -5,7 +5,7 @@ import { getLogger } from '@/lib/logger'
 import { useDialogStore } from '@/stores/dialogStore'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
-import { isItemDisplayPlayerHead } from '@/types'
+import { isItemDisplayPlayerHead } from '@/types/guards'
 import type {
   HeadBakerWorkerMessage,
   HeadBakerWorkerResponse,

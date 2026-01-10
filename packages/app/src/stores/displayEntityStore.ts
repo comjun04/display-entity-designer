@@ -23,8 +23,8 @@ import type {
   PlayerHeadProperties,
   TextDisplayEntity,
   TextureValue,
-} from '@/types'
-import { isItemDisplayPlayerHead } from '@/types'
+} from '@/types/base'
+import { isItemDisplayPlayerHead } from '@/types/guards'
 
 import { useEditorStore } from './editorStore'
 import { useEntityRefStore } from './entityRefStore'

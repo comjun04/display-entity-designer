@@ -2,7 +2,7 @@ import type { QueryFunctionContext } from '@tanstack/react-query'
 
 import { CDNBaseUrl } from '@/constants'
 import { queryClient } from '@/lib/query'
-import type { CDNBlocksListResponse } from '@/types'
+import type { CDNBlocksListResponse } from '@/types/base'
 
 export async function getBlockListQueryFn({
   queryKey,

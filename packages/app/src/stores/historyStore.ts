@@ -3,12 +3,8 @@ import { immer } from 'zustand/middleware/immer'
 
 import { getLogger } from '@/lib/logger'
 import AutosaveService from '@/lib/services/autosave.service'
-import {
-  type History,
-  type Number3Tuple,
-  type PlayerHeadProperties,
-  isItemDisplayPlayerHead,
-} from '@/types'
+import type { History, Number3Tuple, PlayerHeadProperties } from '@/types/base'
+import { isItemDisplayPlayerHead } from '@/types/guards'
 
 import { useEditorStore } from './editorStore'
 

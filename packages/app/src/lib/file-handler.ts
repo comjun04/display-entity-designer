@@ -6,7 +6,7 @@ import { decodeBase64ToBinary, gunzip, gzip } from '@/lib/utils'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { useProjectStore } from '@/stores/projectStore'
-import type { BDEngineSaveData, DisplayEntitySaveDataItem } from '@/types'
+import type { BDEngineSaveData, DisplayEntitySaveDataItem } from '@/types/base'
 
 import { clearProject } from './actions'
 import { getLogger } from './logger'

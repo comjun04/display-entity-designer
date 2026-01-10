@@ -156,18 +156,6 @@ export interface PlayerHeadProperties {
     | null
 }
 
-// player head type guard
-export function isItemDisplayPlayerHead(
-  entity: DisplayEntity,
-): entity is ItemDisplayEntity & {
-  type: 'player_head'
-  playerHeadProperties: PlayerHeadProperties
-} {
-  if (entity.kind !== 'item') return false
-  else if (entity.type !== 'player_head') return false
-  return true
-}
-
 export type TextDisplayAlignment = 'left' | 'center' | 'right'
 export type TextEffects = {
   bold: boolean

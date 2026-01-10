@@ -24,7 +24,7 @@ import { getLogger } from '@/lib/logger'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 import { useEditorStore } from '@/stores/editorStore'
 import { useEntityRefStore } from '@/stores/entityRefStore'
-import type { Number3Tuple } from '@/types'
+import type { Number3Tuple } from '@/types/base'
 
 const SCALE_SNAP = 0.0625
 
