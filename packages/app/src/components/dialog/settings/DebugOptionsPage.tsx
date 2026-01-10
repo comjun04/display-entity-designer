@@ -1,3 +1,4 @@
+import { reloadResources } from 'i18next'
 import type { FC } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -102,12 +103,26 @@ const DebugOptionsPage: FC = () => {
 
       <hr />
 
-      <button
-        className="rounded-sm bg-neutral-700 p-2"
-        onClick={() => toast.info('This is a test toast')}
-      >
-        Show Toast
-      </button>
+      <div>
+        <button
+          className="rounded-sm bg-neutral-700 p-2"
+          onClick={() => toast.info('This is a test toast')}
+        >
+          Show Toast
+        </button>
+      </div>
+      <div>
+        <button
+          className="rounded-sm bg-neutral-700 p-2"
+          onClick={() => {
+            reloadResources()
+              .then(() => toast.success('Reloaded translations'))
+              .catch(console.error)
+          }}
+        >
+          Reload translations
+        </button>
+      </div>
     </>
   )
 }
