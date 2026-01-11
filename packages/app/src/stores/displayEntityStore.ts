@@ -7,6 +7,10 @@ import { immer } from 'zustand/middleware/immer'
 import { getLogger } from '@/lib/logger'
 import { getBlockList } from '@/lib/queries/getBlockList'
 import { getItemList } from '@/lib/queries/getItemList'
+import {
+  calculateDefaultBlockstates,
+  loadBlockstates,
+} from '@/lib/resources/blockstates'
 import { preloadResources } from '@/lib/resources/preload'
 import type {
   BDEngineSaveData,
@@ -79,7 +83,7 @@ export type DisplayEntityState = {
   createNew: (
     params: CreateNewEntityActionParam[],
     skipHistoryAdd?: boolean,
-  ) => void
+  ) => Promise<void>
 
   setSelected: (ids: string[]) => void
   addToSelected: (id: string) => void
@@ -149,15 +153,17 @@ export const useDisplayEntityStore = create(
     selectedEntityIds: [],
     selectedEntityIdsIncludingParent: new Set(),
 
-    createNew: (params, skipHistoryAdd) => {
+    createNew: async (params, skipHistoryAdd) => {
       const entityIds: string[] = []
 
-      set((state) => {
-        for (const param of params) {
+      const batchJobs = await Promise.allSettled(
+        params.map(async (param) => {
           const id = param.id ?? generateId(ENTITY_ID_LENGTH)
 
           if (param.kind === 'block') {
-            state.entities.set(id, {
+            const blockstatesData = await loadBlockstates(param.type)
+
+            return {
               kind: 'block',
               id,
               type: param.type,
@@ -166,10 +172,13 @@ export const useDisplayEntityStore = create(
               position: param.position ?? [0, 0, 0],
               rotation: param.rotation ?? [0, 0, 0],
               display: param.display ?? null,
-              blockstates: param.blockstates ?? {},
-            })
+              blockstates: calculateDefaultBlockstates(
+                blockstatesData,
+                param.blockstates,
+              ),
+            } as const
           } else if (param.kind === 'item') {
-            state.entities.set(id, {
+            return {
               kind: 'item',
               id,
               type: param.type,
@@ -188,9 +197,9 @@ export const useDisplayEntityStore = create(
                         texture: null,
                       }
                   : undefined,
-            })
+            } as const
           } else if (param.kind === 'text') {
-            state.entities.set(id, {
+            return {
               kind: 'text',
               id,
               parent: param.parent,
@@ -213,13 +222,13 @@ export const useDisplayEntityStore = create(
               seeThrough: param.seeThrough ?? false,
               shadow: param.shadow ?? false,
               textOpacity: param.textOpacity ?? 255,
-            })
+            } as const
           } else if (param.kind === 'group') {
             if (param.children.length < 1) {
-              continue
+              return
             }
 
-            state.entities.set(id, {
+            return {
               kind: 'group',
               id,
               parent: param.parent,
@@ -228,10 +237,22 @@ export const useDisplayEntityStore = create(
               size: param.size ?? [1, 1, 1],
               position: param.position ?? [0, 0, 0],
               rotation: param.rotation ?? [1, 1, 1],
-            })
+            } as const
           }
+        }),
+      )
+      set((state) => {
+        for (const job of batchJobs) {
+          if (job.status === 'rejected') {
+            logger.error('Error while creating entity:', job.reason)
+            continue
+          }
+          if (job.value == null) continue
 
-          entityIds.push(id)
+          const newEntityCreationObj = job.value
+          state.entities.set(newEntityCreationObj.id, newEntityCreationObj)
+
+          entityIds.push(newEntityCreationObj.id)
         }
 
         useEntityRefStore.getState().createEntityRefs(entityIds)

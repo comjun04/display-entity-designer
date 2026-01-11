@@ -1,5 +1,5 @@
 import type { ThreeEvent } from '@react-three/fiber'
-import { type FC, type MutableRefObject, memo, useEffect } from 'react'
+import { type FC, type MutableRefObject, memo } from 'react'
 import { Group } from 'three'
 import { useShallow } from 'zustand/shallow'
 
@@ -41,34 +41,6 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
   // =====
 
   const { data: blockstatesData } = useBlockStates(type)
-
-  // blockstates 데이터가 변경되었을 경우 현재 block display에 적용되어 있는 값을 확인 후
-  // 새 blockstates key 값 목록에 있다면 그대로 두고, 없다면 기본값을 적용
-  useEffect(() => {
-    if (blockstatesData == null) return
-
-    const thisEntity = useDisplayEntityStore.getState().entities.get(id)
-    if (thisEntity?.kind !== 'block') return
-
-    const newBlockstateObject: Record<string, string> = {}
-    for (const [
-      blockstateKey,
-      blockstateValues,
-    ] of blockstatesData.blockstates.entries()) {
-      const existingValue = thisEntity.blockstates[blockstateKey]
-      if (existingValue == null) {
-        newBlockstateObject[blockstateKey] = blockstateValues.states.has(
-          blockstateValues.default,
-        )
-          ? blockstateValues.default
-          : [...blockstateValues.states.values()][0]
-      }
-    }
-
-    useDisplayEntityStore
-      .getState()
-      .setBDEntityBlockstates(id, newBlockstateObject, true)
-  }, [blockstatesData, id])
 
   if (thisEntity?.kind !== 'block') return null
 

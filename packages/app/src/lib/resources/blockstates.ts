@@ -273,3 +273,25 @@ export async function loadBlockstates(
     return { blockstates: blockstateMap, models }
   })
 }
+
+export function calculateDefaultBlockstates(
+  blockstatesData: BlockstatesData,
+  override: Record<string, string> = {},
+) {
+  const newBlockstateObject: Record<string, string> = {}
+  for (const [
+    blockstateKey,
+    blockstateValues,
+  ] of blockstatesData.blockstates.entries()) {
+    const existingValue = override[blockstateKey]
+    if (existingValue == null) {
+      newBlockstateObject[blockstateKey] = blockstateValues.states.has(
+        blockstateValues.default,
+      )
+        ? blockstateValues.default
+        : [...blockstateValues.states.values()][0]
+    }
+  }
+
+  return newBlockstateObject
+}
