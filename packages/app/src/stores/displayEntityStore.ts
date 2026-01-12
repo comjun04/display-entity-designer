@@ -9,6 +9,7 @@ import { getBlockList } from '@/lib/queries/getBlockList'
 import { getItemList } from '@/lib/queries/getItemList'
 import {
   calculateDefaultBlockstates,
+  getMatchingBlockstateModel,
   loadBlockstates,
 } from '@/lib/resources/blockstates'
 import { preloadResources } from '@/lib/resources/preload'
@@ -16,6 +17,7 @@ import type {
   BDEngineSaveData,
   BDEngineSaveDataItem,
   BlockDisplayEntity,
+  BlockStateApplyModelInfo,
   DeepPartial,
   DisplayEntity,
   DisplayEntityGroup,
@@ -73,6 +75,23 @@ export type DisplayEntityState = {
   // currently selected entity ids, and its parents (recursive all the way up to the root)
   // required for ObjectPanel > ObjectItem child (reverse) selection tracking
   selectedEntityIdsIncludingParent: Set<string>
+
+  instancedMeshGroup: Map<
+    string,
+    {
+      modelResourceLocation: string
+      meshes: {
+        // an entity can have same model mesh more than one,
+        // even with same x, y rotation thanks to the `multipart` system...
+        // so we need to make separate *unique* id to check
+        // (this id can contain entityId + xRot + yRot + increment, or just random id value)
+        id: string
+        entityId: string
+        xRotation: number
+        yRotation: number
+      }[]
+    }
+  >
 
   /**
    * 새로운 디스플레이 엔티티를 생성합니다.
@@ -153,6 +172,8 @@ export const useDisplayEntityStore = create(
     selectedEntityIds: [],
     selectedEntityIdsIncludingParent: new Set(),
 
+    instancedMeshGroup: new Map(),
+
     createNew: async (params, skipHistoryAdd) => {
       const entityIds: string[] = []
 
@@ -162,82 +183,105 @@ export const useDisplayEntityStore = create(
 
           if (param.kind === 'block') {
             const blockstatesData = await loadBlockstates(param.type)
+            const blockstates = calculateDefaultBlockstates(
+              blockstatesData,
+              param.blockstates,
+            )
+            const matchingModels = getMatchingBlockstateModel(
+              blockstatesData,
+              blockstates,
+            )
 
             return {
-              kind: 'block',
-              id,
-              type: param.type,
-              parent: param.parent,
-              size: param.size ?? [1, 1, 1],
-              position: param.position ?? [0, 0, 0],
-              rotation: param.rotation ?? [0, 0, 0],
-              display: param.display ?? null,
-              blockstates: calculateDefaultBlockstates(
-                blockstatesData,
-                param.blockstates,
-              ),
-            } as const
+              entity: {
+                kind: 'block',
+                id,
+                type: param.type,
+                parent: param.parent,
+                size: param.size ?? [1, 1, 1],
+                position: param.position ?? [0, 0, 0],
+                rotation: param.rotation ?? [0, 0, 0],
+                display: param.display ?? null,
+                blockstates,
+              } as const,
+              models: matchingModels,
+            }
           } else if (param.kind === 'item') {
             return {
-              kind: 'item',
-              id,
-              type: param.type,
-              parent: param.parent,
-              size: param.size ?? [1, 1, 1],
-              position:
-                param.position ??
-                (param.type === 'player_head' ? [0, 0.5, 0] : [0, 0, 0]),
-              rotation: param.rotation ?? [0, 0, 0],
-              display: param.display ?? null,
-              playerHeadProperties:
-                param.type === 'player_head'
-                  ? param.playerHeadProperties != null
-                    ? param.playerHeadProperties
-                    : {
-                        texture: null,
-                      }
-                  : undefined,
-            } as const
+              entity: {
+                kind: 'item',
+                id,
+                type: param.type,
+                parent: param.parent,
+                size: param.size ?? [1, 1, 1],
+                position:
+                  param.position ??
+                  (param.type === 'player_head' ? [0, 0.5, 0] : [0, 0, 0]),
+                rotation: param.rotation ?? [0, 0, 0],
+                display: param.display ?? null,
+                playerHeadProperties:
+                  param.type === 'player_head'
+                    ? param.playerHeadProperties != null
+                      ? param.playerHeadProperties
+                      : {
+                          texture: null,
+                        }
+                    : undefined,
+              } as const,
+              models: [
+                {
+                  model: `item/${param.type}`,
+                  x: 0,
+                  y: 0,
+                },
+              ] satisfies BlockStateApplyModelInfo[],
+            }
           } else if (param.kind === 'text') {
             return {
-              kind: 'text',
-              id,
-              parent: param.parent,
-              text: param.text,
-              textColor: param.textColor ?? 0xffffffff, // #ffffffff, white
-              textEffects: param.textEffects ?? {
-                bold: false,
-                italic: false,
-                underlined: false,
-                strikethrough: false,
-                obfuscated: false,
-              },
-              size: param.size ?? [1, 1, 1],
-              position: param.position ?? [0, 0, 0],
-              rotation: param.rotation ?? [0, 0, 0],
-              alignment: param.alignment ?? 'center',
-              backgroundColor: param.backgroundColor ?? 0xff000000, // #ff000000, black
-              defaultBackground: param.defaultBackground ?? false,
-              lineWidth: param.lineWidth ?? 200,
-              seeThrough: param.seeThrough ?? false,
-              shadow: param.shadow ?? false,
-              textOpacity: param.textOpacity ?? 255,
-            } as const
+              entity: {
+                kind: 'text',
+                id,
+                parent: param.parent,
+                text: param.text,
+                textColor: param.textColor ?? 0xffffffff, // #ffffffff, white
+                textEffects: param.textEffects ?? {
+                  bold: false,
+                  italic: false,
+                  underlined: false,
+                  strikethrough: false,
+                  obfuscated: false,
+                },
+                size: param.size ?? [1, 1, 1],
+                position: param.position ?? [0, 0, 0],
+                rotation: param.rotation ?? [0, 0, 0],
+                alignment: param.alignment ?? 'center',
+                backgroundColor: param.backgroundColor ?? 0xff000000, // #ff000000, black
+                defaultBackground: param.defaultBackground ?? false,
+                lineWidth: param.lineWidth ?? 200,
+                seeThrough: param.seeThrough ?? false,
+                shadow: param.shadow ?? false,
+                textOpacity: param.textOpacity ?? 255,
+              } as const,
+              models: [],
+            }
           } else if (param.kind === 'group') {
             if (param.children.length < 1) {
               return
             }
 
             return {
-              kind: 'group',
-              id,
-              parent: param.parent,
-              children: param.children,
-              name: 'Group',
-              size: param.size ?? [1, 1, 1],
-              position: param.position ?? [0, 0, 0],
-              rotation: param.rotation ?? [1, 1, 1],
-            } as const
+              entity: {
+                kind: 'group',
+                id,
+                parent: param.parent,
+                children: param.children,
+                name: 'Group',
+                size: param.size ?? [1, 1, 1],
+                position: param.position ?? [0, 0, 0],
+                rotation: param.rotation ?? [1, 1, 1],
+              } as const,
+              models: [],
+            }
           }
         }),
       )
@@ -249,10 +293,35 @@ export const useDisplayEntityStore = create(
           }
           if (job.value == null) continue
 
-          const newEntityCreationObj = job.value
+          const newEntityCreationObj = job.value.entity
           state.entities.set(newEntityCreationObj.id, newEntityCreationObj)
 
           entityIds.push(newEntityCreationObj.id)
+
+          for (const model of job.value.models) {
+            const modelResourceLocation = model.model
+            const item = state.instancedMeshGroup.get(modelResourceLocation)
+            if (item != null) {
+              item.meshes.push({
+                id: generateId(8),
+                entityId: newEntityCreationObj.id,
+                xRotation: model.x ?? 0,
+                yRotation: model.y ?? 0,
+              })
+            } else {
+              state.instancedMeshGroup.set(modelResourceLocation, {
+                modelResourceLocation,
+                meshes: [
+                  {
+                    id: generateId(8),
+                    entityId: newEntityCreationObj.id,
+                    xRotation: model.x ?? 0,
+                    yRotation: model.y ?? 0,
+                  },
+                ],
+              })
+            }
+          }
         }
 
         useEntityRefStore.getState().createEntityRefs(entityIds)
