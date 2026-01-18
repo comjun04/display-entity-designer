@@ -8,6 +8,7 @@ import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 
 import BoundingBox from './BoundingBox'
 import Model from './Model'
+import { InstancedModel } from './instanced'
 
 type BlockDisplayProps = {
   id: string
@@ -21,6 +22,7 @@ type BlockDisplayProps = {
 }
 
 const MemoizedModel = memo(Model)
+const MemoizedInstancedModel = memo(InstancedModel)
 
 const BlockDisplay: FC<BlockDisplayProps> = ({
   id,
@@ -79,13 +81,22 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
 
           // apply가 여러 개 있는 경우(랜덤), 맨 처음 것만 고정으로 사용
           const modelToApply = model.apply[0]
+          const resourceLocation = modelToApply.model
           return (
-            <MemoizedModel
-              key={idx}
-              initialResourceLocation={modelToApply.model}
-              xRotation={modelToApply.x}
-              yRotation={modelToApply.y}
-            />
+            <>
+              {/* <MemoizedModel
+                key={idx}
+                initialResourceLocation={modelToApply.model}
+                xRotation={modelToApply.x}
+                yRotation={modelToApply.y}
+              /> */}
+
+              <MemoizedInstancedModel
+                key={idx}
+                modelId={`${id};${resourceLocation};${idx}`}
+                resourceLocation={resourceLocation}
+              />
+            </>
           )
         })}
       </group>

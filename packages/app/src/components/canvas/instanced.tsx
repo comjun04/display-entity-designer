@@ -1,6 +1,7 @@
 import { Instance, Instances } from '@react-three/drei'
-import { type FC, useEffect, useState } from 'react'
-import { type BufferGeometry, Material } from 'three'
+import { useFrame } from '@react-three/fiber'
+import { type FC, useEffect, useRef, useState } from 'react'
+import { type BufferGeometry, Group, Material } from 'three'
 
 import useEntityRefObject from '@/hooks/useEntityRefObject'
 import useModelData from '@/hooks/useModelData'
@@ -8,6 +9,7 @@ import { getLogger } from '@/lib/logger'
 import { generateModelMeshIngredients } from '@/lib/resources/modelMesh'
 import { stripMinecraftPrefix } from '@/lib/utils'
 import { useDisplayEntityStore } from '@/stores/displayEntityStore'
+import { useInstancedMeshStore } from '@/stores/instancedMeshStore'
 
 interface InstancedEntityProps {
   id: string
@@ -104,4 +106,49 @@ export const InstancedEntityGroup: FC<InstancedEntityGroupProps> = ({ id }) => {
       ))}
     </Instances>
   )
+}
+
+// =====
+
+interface InstacedModelProps {
+  modelId: string
+  resourceLocation: string
+}
+export const InstancedModel: FC<InstacedModelProps> = ({
+  modelId,
+  resourceLocation,
+}) => {
+  const [instanceId, setInstanceId] = useState<number>()
+  const objectRef = useRef<Group>(null)
+
+  useEffect(() => {
+    useInstancedMeshStore
+      .getState()
+      .allocateInstance(resourceLocation, modelId)
+      .then((id) => setInstanceId(id))
+      .catch(console.error)
+  }, [resourceLocation, modelId])
+
+  useEffect(() => {
+    // move cleanup function separate from allocation
+    // to prevent re-allocation on instanceId state change on first render
+    return () => {
+      if (instanceId == null) return
+      useInstancedMeshStore
+        .getState()
+        .freeInstance(resourceLocation, instanceId)
+    }
+  }, [resourceLocation, instanceId, modelId]) // include modelId to run cleanup on modelId change
+
+  useFrame(() => {
+    if (objectRef.current == null || instanceId == null) return
+
+    objectRef.current.updateWorldMatrix(true, false)
+
+    useInstancedMeshStore
+      .getState()
+      .setMatrix(resourceLocation, instanceId, objectRef.current.matrixWorld)
+  })
+
+  return <group ref={objectRef} matrixWorldAutoUpdate />
 }
