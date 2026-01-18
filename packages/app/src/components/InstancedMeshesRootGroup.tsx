@@ -29,15 +29,15 @@ export const InstancedMeshesRootGroup: FC = () => {
 
   return (
     <>
-      {/* <group name="InstancedMesh Root Group">
-        {instancedMeshGroup.map((key) => (
+      <group name="InstancedMesh Root Group">
+        {/* {instancedMeshGroup.map((key) => (
           <InstancedEntityGroup key={key} id={key} />
-        ))}
-      </group> */}
+        ))} */}
 
-      {[...batches.values()].map((batch) => (
-        <primitive key={batch.key} object={batch.mesh} />
-      ))}
+        {[...batches.values()].map((batch) => (
+          <primitive key={batch.key} object={batch.mesh} />
+        ))}
+      </group>
     </>
   )
 }
