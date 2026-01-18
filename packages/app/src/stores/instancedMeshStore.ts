@@ -15,7 +15,9 @@ import { stripMinecraftPrefix } from '@/lib/utils'
 const DEFAULT_CAPACITY = 16
 const ZeroScaleMatrix4 = new Matrix4().makeScale(0, 0, 0)
 
-const instancedMeshMutexMap = new Map<string, Mutex>()
+// Use one global mutex to ensure allocation must be done one at a time
+// This prevents race-condition when setting `batches` map asynchronously
+const instancedMeshMutex = new Mutex()
 
 interface InstancedMeshStoreState {
   batches: Map<
@@ -51,13 +53,7 @@ export const useInstancedMeshStore = create<InstancedMeshStoreState>(
     batches: new Map(),
 
     allocateInstance: async (resourceLocation, modelId) => {
-      let mutex = instancedMeshMutexMap.get(resourceLocation)
-      if (mutex == null) {
-        mutex = new Mutex()
-        instancedMeshMutexMap.set(resourceLocation, mutex)
-      }
-
-      return await mutex.runExclusive(async () => {
+      return await instancedMeshMutex.runExclusive(async () => {
         const { batches } = get()
         const batchesDraft = new Map(batches)
 
@@ -178,10 +174,12 @@ export const useInstancedMeshStore = create<InstancedMeshStoreState>(
         old.capacity,
       )
       newMesh.instanceMatrix.setUsage(DynamicDrawUsage)
+      newMesh.instanceMatrix.copyArray(old.mesh.instanceMatrix.array)
       newMesh.instanceMatrix.set(
         Array((newMesh.count - old.mesh.count) * 16).fill(0),
         old.mesh.count * 16,
       ) // hide newly created instance slots by default
+      newMesh.instanceMatrix.needsUpdate = true
 
       old.mesh = newMesh
       old.dirty = false
