@@ -43,10 +43,7 @@ interface InstancedMeshStoreState {
     }
   >
 
-  allocateInstance: (
-    resourceLocation: string,
-    modelId: string,
-  ) => Promise<number>
+  allocateInstance: (resourceLocation: string, modelId: string) => Promise<void>
   freeInstance: (resourceLocation: string, modelId: string) => void
 
   setMatrix: (key: string, modelId: string, matrix: Matrix4) => void
@@ -60,10 +57,11 @@ export const useInstancedMeshStore = create<InstancedMeshStoreState>(
     allocateInstance: async (resourceLocation, modelId) => {
       return await instancedMeshMutex.runExclusive(async () => {
         const { batches } = get()
-        const batchesDraft = new Map(batches)
 
-        let batch = batches.get(resourceLocation)
+        const batch = batches.get(resourceLocation)
         if (batch == null) {
+          // check 1
+
           const { data: modelData, isBlockShapedItemModel } =
             await loadModel(resourceLocation)
           const isItemModel =
@@ -83,53 +81,66 @@ export const useInstancedMeshStore = create<InstancedMeshStoreState>(
             )
           }
 
-          const newMesh = new InstancedMesh(
-            meshIngredients.geometry,
-            meshIngredients.materials,
-            DEFAULT_CAPACITY,
-          )
-          newMesh.instanceMatrix.setUsage(DynamicDrawUsage)
-          newMesh.instanceMatrix.set(Array(DEFAULT_CAPACITY * 16).fill(0)) // hide all instances by default
-          newMesh.instanceMatrix.needsUpdate = true
+          set((state) => {
+            if (state.batches.has(resourceLocation)) {
+              // check 2
+              return {}
+            }
 
-          batch = {
-            key: resourceLocation,
+            const batchesDraft = new Map(state.batches)
 
-            mesh: newMesh,
-            geometry: meshIngredients.geometry,
-            materials: meshIngredients.materials,
+            const newMesh = new InstancedMesh(
+              meshIngredients.geometry,
+              meshIngredients.materials,
+              DEFAULT_CAPACITY,
+            )
+            newMesh.instanceMatrix.setUsage(DynamicDrawUsage)
+            newMesh.instanceMatrix.set(Array(DEFAULT_CAPACITY * 16).fill(0)) // hide all instances by default
+            newMesh.instanceMatrix.needsUpdate = true
 
-            capacity: DEFAULT_CAPACITY,
-            usedCount: 0,
-            freeSlots: [],
-            dirty: true,
+            batchesDraft.set(resourceLocation, {
+              key: resourceLocation,
 
-            instances: new Map(),
-          }
-          batchesDraft.set(resourceLocation, batch)
+              mesh: newMesh,
+              geometry: meshIngredients.geometry,
+              materials: meshIngredients.materials,
+
+              capacity: DEFAULT_CAPACITY,
+              usedCount: 0,
+              freeSlots: [],
+              dirty: true,
+
+              instances: new Map(),
+            })
+
+            return { batches: batchesDraft }
+          })
         }
 
-        // allocate new space
-        let index: number
-        if (batch.freeSlots.length > 0) {
-          index = batch.freeSlots.shift()! // FIFO
-        } else {
-          if (batch.usedCount + 1 >= batch.capacity) {
-            // grow batch
-            batch.dirty = true
-            batch.capacity *= 2
-            // NOTE: we rebuild lazily
-          }
-          index = batch.usedCount++
-        }
+        set((state) => {
+          const batchesDraft = new Map(state.batches)
+          const batch = batchesDraft.get(resourceLocation)!
 
-        batch.instances.set(modelId, {
-          instanceIndex: index,
+          // allocate new space
+          let index: number
+          if (batch.freeSlots.length > 0) {
+            index = batch.freeSlots.shift()! // FIFO
+          } else {
+            if (batch.usedCount + 1 >= batch.capacity) {
+              // grow batch
+              batch.dirty = true
+              batch.capacity *= 2
+              // NOTE: we rebuild lazily
+            }
+            index = batch.usedCount++
+          }
+
+          batch.instances.set(modelId, {
+            instanceIndex: index,
+          })
+
+          return { batches: batchesDraft }
         })
-
-        set({ batches: batchesDraft })
-
-        return index
       })
     },
     freeInstance: (resourceLocation, modelId) => {
@@ -155,13 +166,13 @@ export const useInstancedMeshStore = create<InstancedMeshStoreState>(
     setMatrix: (key, modelId, matrix) => {
       const batch = get().batches.get(key)
       if (batch == null) {
-        console.error(`Cannot set matrix of unknown batch: ${key}`)
+        errorLog(`Cannot set matrix of unknown batch: ${key}`)
         return
       }
 
       const instance = batch.instances.get(modelId)
       if (instance == null) {
-        console.error(
+        errorLog(
           `Cannot set matrix to unknown instance ${modelId} of batch ${key}`,
         )
         return
@@ -173,7 +184,7 @@ export const useInstancedMeshStore = create<InstancedMeshStoreState>(
         batch.mesh.count <= instanceIndex ||
         batch.freeSlots.includes(instanceIndex)
       ) {
-        console.error(
+        errorLog(
           `Cannot set matrix to unallocated/unused instance ${instanceIndex} at batch ${key} (total capacity: ${batch.mesh.count})`,
         )
         return
@@ -184,32 +195,51 @@ export const useInstancedMeshStore = create<InstancedMeshStoreState>(
     },
 
     rebuildBatch: (resourceLocation) => {
-      const { batches } = get()
-      const old = batches.get(resourceLocation)
-      if (old == null) return
+      set((state) => {
+        const old = state.batches.get(resourceLocation)
+        if (old == null) {
+          return {}
+        }
 
-      const batchesDraft = new Map(batches)
+        const batchesDraft = new Map(state.batches)
 
-      // create new InstancedMesh with updated capacity
-      const newMesh = new InstancedMesh(
-        old.geometry,
-        old.materials,
-        old.capacity,
-      )
-      newMesh.instanceMatrix.setUsage(DynamicDrawUsage)
-      newMesh.instanceMatrix.copyArray(old.mesh.instanceMatrix.array)
-      newMesh.instanceMatrix.set(
-        Array((newMesh.count - old.mesh.count) * 16).fill(0),
-        old.mesh.count * 16,
-      ) // hide newly created instance slots by default
-      newMesh.instanceMatrix.needsUpdate = true
+        // create new InstancedMesh with updated capacity
+        const newMesh = new InstancedMesh(
+          old.geometry,
+          old.materials,
+          old.capacity,
+        )
+        newMesh.instanceMatrix.setUsage(DynamicDrawUsage)
+        newMesh.instanceMatrix.copyArray(old.mesh.instanceMatrix.array)
+        newMesh.instanceMatrix.set(
+          Array((newMesh.count - old.mesh.count) * 16).fill(0),
+          old.mesh.count * 16,
+        ) // hide newly created instance slots by default
+        newMesh.instanceMatrix.needsUpdate = true
 
-      old.mesh.dispose()
+        old.mesh.dispose()
 
-      old.mesh = newMesh
-      old.dirty = false
+        old.mesh = newMesh
+        old.dirty = false
 
-      set({ batches: batchesDraft })
+        return { batches: batchesDraft }
+      })
     },
   }),
 )
+
+function errorLog(...content: unknown[]) {
+  // Some errors from `setMatrix()` can be shown when this store is reloaded via HMR while developing.
+  // The reason is `setMatrix()` is usually called every frame to synchronize between dummy group and instance matrix.
+  //
+  // It may be fine in this case.
+  // If rendered output seems wrong then change below valut and test
+  // (reloading this file when project is loaded always makes error, so do full-refresh and test)
+  const shouldLog = false
+
+  // =====
+  // always log on production (production has no HMR)
+  if (!__IS_DEV__ || shouldLog) {
+    console.error(...content)
+  }
+}
