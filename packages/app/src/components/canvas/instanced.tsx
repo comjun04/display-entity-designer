@@ -118,36 +118,27 @@ export const InstancedModel: FC<InstacedModelProps> = ({
   modelId,
   resourceLocation,
 }) => {
-  const [instanceId, setInstanceId] = useState<number>()
   const objectRef = useRef<Group>(null)
 
   useEffect(() => {
     useInstancedMeshStore
       .getState()
       .allocateInstance(resourceLocation, modelId)
-      .then((id) => setInstanceId(id))
       .catch(console.error)
+
+    return () => {
+      useInstancedMeshStore.getState().freeInstance(resourceLocation, modelId)
+    }
   }, [resourceLocation, modelId])
 
-  useEffect(() => {
-    // move cleanup function separate from allocation
-    // to prevent re-allocation on instanceId state change on first render
-    return () => {
-      if (instanceId == null) return
-      useInstancedMeshStore
-        .getState()
-        .freeInstance(resourceLocation, instanceId)
-    }
-  }, [resourceLocation, instanceId, modelId]) // include modelId to run cleanup on modelId change
-
   useFrame(() => {
-    if (objectRef.current == null || instanceId == null) return
+    if (objectRef.current == null) return
 
     objectRef.current.updateWorldMatrix(true, false)
 
     useInstancedMeshStore
       .getState()
-      .setMatrix(resourceLocation, instanceId, objectRef.current.matrixWorld)
+      .setMatrix(resourceLocation, modelId, objectRef.current.matrixWorld)
   })
 
   return <group ref={objectRef} matrixWorldAutoUpdate />

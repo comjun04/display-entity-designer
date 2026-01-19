@@ -31,10 +31,15 @@ interface InstancedMeshStoreState {
 
       capacity: number
       usedCount: number
-      freeIds: number[]
+      freeSlots: number[]
       dirty: boolean
 
-      instances: Map<number, string> // instance id -> model id (linked with entity id)
+      instances: Map<
+        string,
+        {
+          instanceIndex: number
+        }
+      > // model id -> instance data
     }
   >
 
@@ -42,9 +47,9 @@ interface InstancedMeshStoreState {
     resourceLocation: string,
     modelId: string,
   ) => Promise<number>
-  freeInstance: (resourceLocation: string, instanceId: number) => void
+  freeInstance: (resourceLocation: string, modelId: string) => void
 
-  setMatrix: (key: string, instanceId: number, matrix: Matrix4) => void
+  setMatrix: (key: string, modelId: string, matrix: Matrix4) => void
 
   rebuildBatch: (resourceLocation: string) => void
 }
@@ -96,7 +101,7 @@ export const useInstancedMeshStore = create<InstancedMeshStoreState>(
 
             capacity: DEFAULT_CAPACITY,
             usedCount: 0,
-            freeIds: [],
+            freeSlots: [],
             dirty: true,
 
             instances: new Map(),
@@ -105,9 +110,9 @@ export const useInstancedMeshStore = create<InstancedMeshStoreState>(
         }
 
         // allocate new space
-        let instanceId: number
-        if (batch.freeIds.length > 0) {
-          instanceId = batch.freeIds.shift()! // FIFO
+        let index: number
+        if (batch.freeSlots.length > 0) {
+          index = batch.freeSlots.shift()! // FIFO
         } else {
           if (batch.usedCount + 1 >= batch.capacity) {
             // grow batch
@@ -115,48 +120,66 @@ export const useInstancedMeshStore = create<InstancedMeshStoreState>(
             batch.capacity *= 2
             // NOTE: we rebuild lazily
           }
-          instanceId = batch.usedCount++
+          index = batch.usedCount++
         }
 
-        batch.instances.set(instanceId, modelId)
+        batch.instances.set(modelId, {
+          instanceIndex: index,
+        })
 
         set({ batches: batchesDraft })
 
-        return instanceId
+        return index
       })
     },
-    freeInstance: (resourceLocation, instanceId) => {
+    freeInstance: (resourceLocation, modelId) => {
       const { batches } = get()
       const batch = batches.get(resourceLocation)
       if (batch == null) return
 
       const batchesDraft = new Map(batches)
 
-      batch.instances.delete(instanceId)
-      batch.freeIds.push(instanceId)
+      const existing = batch.instances.get(modelId)
+      if (existing != null) {
+        batch.instances.delete(modelId)
+        batch.freeSlots.push(existing.instanceIndex)
 
-      // hide instance
-      batch.mesh.setMatrixAt(instanceId, ZeroScaleMatrix4)
-      batch.mesh.instanceMatrix.needsUpdate = true
+        // hide instance
+        batch.mesh.setMatrixAt(existing.instanceIndex, ZeroScaleMatrix4)
+        batch.mesh.instanceMatrix.needsUpdate = true
+      }
 
       set({ batches: batchesDraft })
     },
 
-    setMatrix: (key, instanceId, matrix) => {
+    setMatrix: (key, modelId, matrix) => {
       const batch = get().batches.get(key)
-      if (batch == null) return
+      if (batch == null) {
+        console.error(`Cannot set matrix of unknown batch: ${key}`)
+        return
+      }
 
-      if (
-        batch.mesh.count <= instanceId ||
-        batch.freeIds.includes(instanceId)
-      ) {
+      const instance = batch.instances.get(modelId)
+      if (instance == null) {
         console.error(
-          `Cannot set matrix unallocated/unused instance ${instanceId} at batch ${key}`,
+          `Cannot set matrix to unknown instance ${modelId} of batch ${key}`,
         )
         return
       }
 
-      batch.mesh.setMatrixAt(instanceId, matrix)
+      const { instanceIndex } = instance
+
+      if (
+        batch.mesh.count <= instanceIndex ||
+        batch.freeSlots.includes(instanceIndex)
+      ) {
+        console.error(
+          `Cannot set matrix to unallocated/unused instance ${instanceIndex} at batch ${key} (total capacity: ${batch.mesh.count})`,
+        )
+        return
+      }
+
+      batch.mesh.setMatrixAt(instanceIndex, matrix)
       batch.mesh.instanceMatrix.needsUpdate = true
     },
 
@@ -180,6 +203,8 @@ export const useInstancedMeshStore = create<InstancedMeshStoreState>(
         old.mesh.count * 16,
       ) // hide newly created instance slots by default
       newMesh.instanceMatrix.needsUpdate = true
+
+      old.mesh.dispose()
 
       old.mesh = newMesh
       old.dirty = false
