@@ -10,6 +10,7 @@ import { type Number3Tuple } from '@/types/base'
 import BoundingBox from './BoundingBox'
 import Model from './Model'
 import PlayerHeadPainter from './PlayerHeadPainter'
+import { InstancedModel } from './instanced'
 
 type ItemDisplayProps = {
   id: string
@@ -22,6 +23,7 @@ type ItemDisplayProps = {
 }
 
 const MemoizedModel = memo(Model)
+const MemoizedInstancedModel = memo(InstancedModel)
 
 const ItemDisplay: FC<ItemDisplayProps> = ({
   id,
@@ -86,10 +88,15 @@ const ItemDisplay: FC<ItemDisplayProps> = ({
       />
 
       <group onClick={onClick} ref={boundingBoxTargetRef}>
-        <MemoizedModel
+        {/* <MemoizedModel
           initialResourceLocation={`item/${type}`}
           displayType={thisEntityDisplay ?? undefined}
           playerHeadData={playerHeadData}
+        /> */}
+        <MemoizedInstancedModel
+          entityId={id}
+          resourceLocation={`item/${type}`}
+          modelId={`${id};item/${type}`}
         />
       </group>
 
