@@ -1,7 +1,7 @@
 import { Instance, Instances } from '@react-three/drei'
-import { useFrame } from '@react-three/fiber'
+import { invalidate, useFrame } from '@react-three/fiber'
 import { type FC, useEffect, useRef, useState } from 'react'
-import { type BufferGeometry, Group, Material } from 'three'
+import { type BufferGeometry, Group, Material, Matrix4, Vector3 } from 'three'
 
 import useEntityRefObject from '@/hooks/useEntityRefObject'
 import useModelData from '@/hooks/useModelData'
@@ -91,8 +91,6 @@ export const InstancedEntityGroup: FC<InstancedEntityGroupProps> = ({ id }) => {
 
   if (groupData == null || meshData == null) return null
 
-  console.log(groupData)
-
   return (
     <Instances geometry={meshData.geometry} material={meshData.material}>
       {groupData.meshes.map(({ id, entityId, xRotation, yRotation }) => (
@@ -111,34 +109,75 @@ export const InstancedEntityGroup: FC<InstancedEntityGroupProps> = ({ id }) => {
 // =====
 
 interface InstacedModelProps {
+  entityId: string
   modelId: string
   resourceLocation: string
 }
 export const InstancedModel: FC<InstacedModelProps> = ({
+  entityId,
   modelId,
   resourceLocation,
 }) => {
   const objectRef = useRef<Group>(null)
+  const matrixRef = useRef<Matrix4>(new Matrix4())
+  const isProperlyRenderedFirstTime = useRef(false)
 
   useEffect(() => {
     useInstancedMeshStore
       .getState()
-      .allocateInstance(resourceLocation, modelId)
+      .allocateInstance(resourceLocation, modelId, entityId)
+      .then(() => invalidate())
       .catch(console.error)
 
     return () => {
       useInstancedMeshStore.getState().freeInstance(resourceLocation, modelId)
     }
-  }, [resourceLocation, modelId])
+  }, [resourceLocation, modelId, entityId])
 
   useFrame(() => {
-    if (objectRef.current == null) return
+    const { batches, setMatrix } = useInstancedMeshStore.getState()
+
+    if (objectRef.current == null) {
+      if (!isProperlyRenderedFirstTime.current) {
+        invalidate()
+      }
+
+      return
+    }
+
+    if (!isProperlyRenderedFirstTime.current) {
+      // we need to set matrix for the first time... or not?
+      setMatrix(resourceLocation, modelId, objectRef.current.matrixWorld)
+
+      const batch = batches.get(resourceLocation)
+      if (batch == null) return
+
+      const instanceData = batch.instances.get(modelId)
+      if (instanceData == null) return
+
+      // check for matrix are actually applied
+      const mat = new Matrix4()
+      batch.mesh.getMatrixAt(instanceData.instanceIndex, mat)
+      const vec = new Vector3().setFromMatrixScale(mat)
+      // scale vector extracted from matrix can be NaN if scale is zero
+      if (vec.toArray().every((d) => isNaN(d) || d === 0)) {
+        // not yet applied, wait for next frame and do it again
+        invalidate()
+        return
+      } else {
+        // ok applied
+        matrixRef.current.copy(objectRef.current.matrixWorld)
+
+        isProperlyRenderedFirstTime.current = true
+      }
+    }
 
     objectRef.current.updateWorldMatrix(true, false)
 
-    useInstancedMeshStore
-      .getState()
-      .setMatrix(resourceLocation, modelId, objectRef.current.matrixWorld)
+    if (!objectRef.current.matrixWorld.equals(matrixRef.current)) {
+      matrixRef.current.copy(objectRef.current.matrixWorld)
+      setMatrix(resourceLocation, modelId, objectRef.current.matrixWorld)
+    }
   })
 
   return <group ref={objectRef} matrixWorldAutoUpdate />

@@ -19,42 +19,48 @@ const ZeroScaleMatrix4 = new Matrix4().makeScale(0, 0, 0)
 // This prevents race-condition when setting `batches` map asynchronously
 const instancedMeshMutex = new Mutex()
 
-interface InstancedMeshStoreState {
-  batches: Map<
+export interface InstancedMeshBatchData {
+  key: string
+
+  mesh: InstancedMesh
+  geometry: BufferGeometry
+  materials: Material[]
+
+  capacity: number
+  usedCount: number
+  freeSlots: number[]
+
+  shouldComputeBounds: boolean
+  shouldRebuild: boolean
+
+  instances: Map<
     string,
     {
-      key: string
-
-      mesh: InstancedMesh
-      geometry: BufferGeometry
-      materials: Material[]
-
-      capacity: number
-      usedCount: number
-      freeSlots: number[]
-      dirty: boolean
-
-      instances: Map<
-        string,
-        {
-          instanceIndex: number
-        }
-      > // model id -> instance data
+      instanceIndex: number
+      entityId: string
     }
-  >
+  > // model id -> instance data
+}
+export interface InstancedMeshStoreState {
+  batches: Map<string, InstancedMeshBatchData>
 
-  allocateInstance: (resourceLocation: string, modelId: string) => Promise<void>
+  allocateInstance: (
+    resourceLocation: string,
+    modelId: string,
+    entityId: string,
+  ) => Promise<void>
   freeInstance: (resourceLocation: string, modelId: string) => void
 
   setMatrix: (key: string, modelId: string, matrix: Matrix4) => void
 
-  rebuildBatch: (resourceLocation: string) => void
+  _computeBoundsForBatch: (key: string) => void
+  _rebuildBatch: (resourceLocation: string) => void
 }
 export const useInstancedMeshStore = create<InstancedMeshStoreState>(
   (set, get) => ({
     batches: new Map(),
 
-    allocateInstance: async (resourceLocation, modelId) => {
+    allocateInstance: async (resourceLocation, modelId, entityId) => {
       return await instancedMeshMutex.runExclusive(async () => {
         const { batches } = get()
 
@@ -108,7 +114,9 @@ export const useInstancedMeshStore = create<InstancedMeshStoreState>(
               capacity: DEFAULT_CAPACITY,
               usedCount: 0,
               freeSlots: [],
-              dirty: true,
+
+              shouldComputeBounds: false,
+              shouldRebuild: true,
 
               instances: new Map(),
             })
@@ -128,7 +136,7 @@ export const useInstancedMeshStore = create<InstancedMeshStoreState>(
           } else {
             if (batch.usedCount + 1 >= batch.capacity) {
               // grow batch
-              batch.dirty = true
+              batch.shouldRebuild = true
               batch.capacity *= 2
               // NOTE: we rebuild lazily
             }
@@ -137,6 +145,7 @@ export const useInstancedMeshStore = create<InstancedMeshStoreState>(
 
           batch.instances.set(modelId, {
             instanceIndex: index,
+            entityId,
           })
 
           return { batches: batchesDraft }
@@ -164,6 +173,8 @@ export const useInstancedMeshStore = create<InstancedMeshStoreState>(
     },
 
     setMatrix: (key, modelId, matrix) => {
+      const { batches } = get()
+
       const batch = get().batches.get(key)
       if (batch == null) {
         errorLog(`Cannot set matrix of unknown batch: ${key}`)
@@ -190,11 +201,42 @@ export const useInstancedMeshStore = create<InstancedMeshStoreState>(
         return
       }
 
+      const batchesDraft = new Map(batches)
+
       batch.mesh.setMatrixAt(instanceIndex, matrix)
       batch.mesh.instanceMatrix.needsUpdate = true
+
+      batch.shouldComputeBounds = true
+
+      set({ batches: batchesDraft })
     },
 
-    rebuildBatch: (resourceLocation) => {
+    _computeBoundsForBatch: (key) => {
+      const { batches } = get()
+      const batch = batches.get(key)
+      if (batch == null) {
+        errorLog(`Cannot set matrix of unknown batch: ${key}`)
+        return
+      }
+
+      if (!batch.shouldComputeBounds) return
+
+      const batchesDraft = new Map(batches)
+
+      // We should run this to be able to get bounding box (borders)
+      // and sphere (for raycasting for click detection) to work
+      // But computing bounding box / sphere can be expensive when called per instance
+      // so process at batch level at once
+      batch.mesh.computeBoundingBox()
+      // need to compute bounding sphere manually to get raycasting work
+      // (r3f elements do this automatically)
+      batch.mesh.computeBoundingSphere()
+      batch.shouldComputeBounds = false
+
+      set({ batches: batchesDraft })
+    },
+
+    _rebuildBatch: (resourceLocation) => {
       set((state) => {
         const old = state.batches.get(resourceLocation)
         if (old == null) {
@@ -220,7 +262,7 @@ export const useInstancedMeshStore = create<InstancedMeshStoreState>(
         old.mesh.dispose()
 
         old.mesh = newMesh
-        old.dirty = false
+        old.shouldRebuild = false
 
         return { batches: batchesDraft }
       })

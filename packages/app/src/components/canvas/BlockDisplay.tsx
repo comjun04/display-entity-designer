@@ -93,6 +93,7 @@ const BlockDisplay: FC<BlockDisplayProps> = ({
 
               <MemoizedInstancedModel
                 key={idx}
+                entityId={id}
                 modelId={`${id};${resourceLocation};${idx}`}
                 resourceLocation={resourceLocation}
               />

@@ -1,14 +1,61 @@
-import { useFrame } from '@react-three/fiber'
-import type { FC } from 'react'
+import { type ThreeEvent, useFrame } from '@react-three/fiber'
+import { type FC } from 'react'
 
 // import { useShallow } from 'zustand/shallow'
 import { getLogger } from '@/lib/logger'
+import { useDisplayEntityStore } from '@/stores/displayEntityStore'
 // import { useDisplayEntityStore } from '@/stores/displayEntityStore'
-import { useInstancedMeshStore } from '@/stores/instancedMeshStore'
+import {
+  type InstancedMeshBatchData,
+  useInstancedMeshStore,
+} from '@/stores/instancedMeshStore'
 
 // import { InstancedEntityGroup } from './canvas/instanced'
 
 const logger = getLogger('InstancedMeshesRootGroup')
+
+interface InstancedMeshBatchProps {
+  batch: InstancedMeshBatchData
+}
+const InstancedMeshBatch: FC<InstancedMeshBatchProps> = ({ batch }) => {
+  const handleClick = (event: ThreeEvent<MouseEvent>, batchKey: string) => {
+    // event.stopPropagation()
+    // console.log(event)
+
+    const latestBatchData = useInstancedMeshStore
+      .getState()
+      .batches.get(batchKey)
+    if (latestBatchData == null) return
+
+    const instance = [...latestBatchData.instances.values()].find(
+      (d) => d.instanceIndex === event.instanceId,
+    )
+    if (instance == null) return
+
+    useDisplayEntityStore.getState().setSelected([instance.entityId])
+  }
+
+  useFrame(() => {
+    const { _rebuildBatch, _computeBoundsForBatch } =
+      useInstancedMeshStore.getState()
+    if (batch.shouldRebuild) {
+      logger.debug(`Rebuilding batch ${batch.key}`)
+      _rebuildBatch(batch.key)
+    }
+
+    if (batch.shouldComputeBounds) {
+      _computeBoundsForBatch(batch.key)
+    }
+  })
+
+  return (
+    <primitive
+      key={batch.key}
+      object={batch.mesh}
+      onClick={(evt: ThreeEvent<MouseEvent>) => handleClick(evt, batch.key)}
+    />
+  )
+}
 
 export const InstancedMeshesRootGroup: FC = () => {
   // const instancedMeshGroup = useDisplayEntityStore(
@@ -16,16 +63,6 @@ export const InstancedMeshesRootGroup: FC = () => {
   // )
 
   const batches = useInstancedMeshStore((state) => state.batches)
-
-  useFrame(() => {
-    const { batches, rebuildBatch } = useInstancedMeshStore.getState()
-    batches.forEach((batch) => {
-      if (batch.dirty) {
-        logger.debug(`Rebuilding batch ${batch.key}`)
-        rebuildBatch(batch.key)
-      }
-    })
-  })
 
   return (
     <>
@@ -35,7 +72,7 @@ export const InstancedMeshesRootGroup: FC = () => {
         ))} */}
 
         {[...batches.values()].map((batch) => (
-          <primitive key={batch.key} object={batch.mesh} />
+          <InstancedMeshBatch key={batch.key} batch={batch} />
         ))}
       </group>
     </>
