@@ -19,12 +19,9 @@ const ZeroScaleMatrix4 = new Matrix4().makeScale(0, 0, 0)
 // This prevents race-condition when setting `batches` map asynchronously
 const instancedMeshMutex = new Mutex()
 
-export interface InstancedMeshBatchData {
+export type InstancedMeshBatchData = {
+  status: 'loading' | 'ready'
   key: string
-
-  mesh: InstancedMesh
-  geometry: BufferGeometry
-  materials: Material[]
 
   capacity: number
   usedCount: number
@@ -40,7 +37,17 @@ export interface InstancedMeshBatchData {
       entityId: string
     }
   > // model id -> instance data
-}
+} & (
+  | {
+      status: 'loading'
+    }
+  | {
+      status: 'ready'
+      mesh: InstancedMesh
+      geometry: BufferGeometry
+      materials: Material[]
+    }
+)
 export interface InstancedMeshStoreState {
   batches: Map<string, InstancedMeshBatchData>
 
@@ -61,55 +68,16 @@ export const useInstancedMeshStore = create<InstancedMeshStoreState>(
     batches: new Map(),
 
     allocateInstance: async (resourceLocation, modelId, entityId) => {
-      return await instancedMeshMutex.runExclusive(async () => {
+      return await instancedMeshMutex.runExclusive(() => {
         const { batches } = get()
 
         const batch = batches.get(resourceLocation)
         if (batch == null) {
-          // check 1
-
-          const { data: modelData, isBlockShapedItemModel } =
-            await loadModel(resourceLocation)
-          const isItemModel =
-            stripMinecraftPrefix(resourceLocation).startsWith('item/')
-
-          const meshIngredients = await generateModelMeshIngredients({
-            modelResourceLocation: resourceLocation,
-            elements: modelData.elements,
-            textures: modelData.textures,
-            isItemModel,
-            isBlockShapedItemModel,
-            playerHeadData: undefined,
-          })
-          if (meshIngredients == null) {
-            throw new Error(
-              `Failed to load model mesh data for ${resourceLocation}`,
-            )
-          }
-
           set((state) => {
-            if (state.batches.has(resourceLocation)) {
-              // check 2
-              return {}
-            }
-
             const batchesDraft = new Map(state.batches)
-
-            const newMesh = new InstancedMesh(
-              meshIngredients.geometry,
-              meshIngredients.materials,
-              DEFAULT_CAPACITY,
-            )
-            newMesh.instanceMatrix.setUsage(DynamicDrawUsage)
-            newMesh.instanceMatrix.set(Array(DEFAULT_CAPACITY * 16).fill(0)) // hide all instances by default
-            newMesh.instanceMatrix.needsUpdate = true
-
             batchesDraft.set(resourceLocation, {
               key: resourceLocation,
-
-              mesh: newMesh,
-              geometry: meshIngredients.geometry,
-              materials: meshIngredients.materials,
+              status: 'loading', // indicate as loading
 
               capacity: DEFAULT_CAPACITY,
               usedCount: 0,
@@ -123,6 +91,40 @@ export const useInstancedMeshStore = create<InstancedMeshStoreState>(
 
             return { batches: batchesDraft }
           })
+
+          // TODO: switch from async function to plain sync function with .then() chain on promises
+          prepareMeshIngredients(resourceLocation)
+            .then((meshIngredients) => {
+              set((state) => {
+                const batchesDraft = new Map(state.batches)
+                const oldBatch = batchesDraft.get(resourceLocation)!
+
+                const newMesh = new InstancedMesh(
+                  meshIngredients.geometry,
+                  meshIngredients.materials,
+                  oldBatch.capacity,
+                )
+                newMesh.instanceMatrix.setUsage(DynamicDrawUsage)
+                newMesh.instanceMatrix.copyArray(
+                  Array(16 * oldBatch.capacity).fill(0),
+                )
+                newMesh.instanceMatrix.needsUpdate = true
+
+                const newBatch: InstancedMeshBatchData = {
+                  ...oldBatch,
+                  status: 'ready',
+
+                  mesh: newMesh,
+                  geometry: meshIngredients.geometry,
+                  materials: meshIngredients.materials,
+
+                  shouldRebuild: false, // we already rebuilt instancedmesh
+                }
+                batchesDraft.set(resourceLocation, newBatch)
+                return { batches: batchesDraft }
+              })
+            })
+            .catch(console.error)
         }
 
         set((state) => {
@@ -165,8 +167,10 @@ export const useInstancedMeshStore = create<InstancedMeshStoreState>(
         batch.freeSlots.push(existing.instanceIndex)
 
         // hide instance
-        batch.mesh.setMatrixAt(existing.instanceIndex, ZeroScaleMatrix4)
-        batch.mesh.instanceMatrix.needsUpdate = true
+        if (batch.status === 'ready') {
+          batch.mesh.setMatrixAt(existing.instanceIndex, ZeroScaleMatrix4)
+          batch.mesh.instanceMatrix.needsUpdate = true
+        }
       }
 
       set({ batches: batchesDraft })
@@ -178,6 +182,13 @@ export const useInstancedMeshStore = create<InstancedMeshStoreState>(
       const batch = get().batches.get(key)
       if (batch == null) {
         errorLog(`Cannot set matrix of unknown batch: ${key}`)
+        return
+      }
+
+      if (batch.status === 'loading') {
+        errorLog(
+          `Cannot set matrix to instance of batch ${key} which is still loading`,
+        )
         return
       }
 
@@ -215,7 +226,10 @@ export const useInstancedMeshStore = create<InstancedMeshStoreState>(
       const { batches } = get()
       const batch = batches.get(key)
       if (batch == null) {
-        errorLog(`Cannot set matrix of unknown batch: ${key}`)
+        errorLog(`Cannot compute bounds of unknown batch: ${key}`)
+        return
+      } else if (batch.status === 'loading') {
+        errorLog(`Cannot compute bounds of batch ${key} which is still loading`)
         return
       }
 
@@ -238,8 +252,8 @@ export const useInstancedMeshStore = create<InstancedMeshStoreState>(
 
     _rebuildBatch: (resourceLocation) => {
       set((state) => {
-        const old = state.batches.get(resourceLocation)
-        if (old == null) {
+        const oldBatch = state.batches.get(resourceLocation)
+        if (oldBatch == null || oldBatch.status === 'loading') {
           return {}
         }
 
@@ -247,22 +261,22 @@ export const useInstancedMeshStore = create<InstancedMeshStoreState>(
 
         // create new InstancedMesh with updated capacity
         const newMesh = new InstancedMesh(
-          old.geometry,
-          old.materials,
-          old.capacity,
+          oldBatch.geometry,
+          oldBatch.materials,
+          oldBatch.capacity,
         )
         newMesh.instanceMatrix.setUsage(DynamicDrawUsage)
-        newMesh.instanceMatrix.copyArray(old.mesh.instanceMatrix.array)
+        newMesh.instanceMatrix.copyArray(oldBatch.mesh.instanceMatrix.array)
         newMesh.instanceMatrix.set(
-          Array((newMesh.count - old.mesh.count) * 16).fill(0),
-          old.mesh.count * 16,
+          Array((newMesh.count - oldBatch.mesh.count) * 16).fill(0),
+          oldBatch.mesh.count * 16,
         ) // hide newly created instance slots by default
         newMesh.instanceMatrix.needsUpdate = true
 
-        old.mesh.dispose()
+        oldBatch.mesh.dispose()
 
-        old.mesh = newMesh
-        old.shouldRebuild = false
+        oldBatch.mesh = newMesh
+        oldBatch.shouldRebuild = false
 
         return { batches: batchesDraft }
       })
@@ -284,4 +298,24 @@ function errorLog(...content: unknown[]) {
   if (!__IS_DEV__ || shouldLog) {
     console.error(...content)
   }
+}
+
+async function prepareMeshIngredients(resourceLocation: string) {
+  const { data: modelData, isBlockShapedItemModel } =
+    await loadModel(resourceLocation)
+  const isItemModel = stripMinecraftPrefix(resourceLocation).startsWith('item/')
+
+  const meshIngredients = await generateModelMeshIngredients({
+    modelResourceLocation: resourceLocation,
+    elements: modelData.elements,
+    textures: modelData.textures,
+    isItemModel,
+    isBlockShapedItemModel,
+    playerHeadData: undefined,
+  })
+  if (meshIngredients == null) {
+    throw new Error(`Failed to load model mesh data for ${resourceLocation}`)
+  }
+
+  return meshIngredients
 }

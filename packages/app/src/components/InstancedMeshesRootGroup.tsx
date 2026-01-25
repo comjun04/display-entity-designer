@@ -48,13 +48,13 @@ const InstancedMeshBatch: FC<InstancedMeshBatchProps> = ({ batch }) => {
     }
   })
 
-  return (
+  return batch.status === 'ready' ? (
     <primitive
       key={batch.key}
       object={batch.mesh}
       onClick={(evt: ThreeEvent<MouseEvent>) => handleClick(evt, batch.key)}
     />
-  )
+  ) : null
 }
 
 export const InstancedMeshesRootGroup: FC = () => {

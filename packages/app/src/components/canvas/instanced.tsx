@@ -119,10 +119,19 @@ export const InstancedModel: FC<InstacedModelProps> = ({
   resourceLocation,
 }) => {
   const objectRef = useRef<Group>(null)
-  const matrixRef = useRef<Matrix4>(new Matrix4())
+  const matrixRef = useRef(new Matrix4().fromArray(Array(16).fill(0)))
   const isProperlyRenderedFirstTime = useRef(false)
 
+  const isInstancedMeshLoading = useInstancedMeshStore((state) => {
+    const batch = state.batches.get(resourceLocation)
+    if (batch == null) return false
+
+    return batch.status === 'loading'
+  })
+
   useEffect(() => {
+    if (isInstancedMeshLoading) return
+
     useInstancedMeshStore
       .getState()
       .allocateInstance(resourceLocation, modelId, entityId)
@@ -132,7 +141,7 @@ export const InstancedModel: FC<InstacedModelProps> = ({
     return () => {
       useInstancedMeshStore.getState().freeInstance(resourceLocation, modelId)
     }
-  }, [resourceLocation, modelId, entityId])
+  }, [resourceLocation, modelId, entityId, isInstancedMeshLoading])
 
   useFrame(() => {
     const { batches, setMatrix } = useInstancedMeshStore.getState()
