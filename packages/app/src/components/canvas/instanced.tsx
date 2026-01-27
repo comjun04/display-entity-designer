@@ -1,7 +1,7 @@
 import { Instance, Instances } from '@react-three/drei'
 import { invalidate, useFrame } from '@react-three/fiber'
 import { type FC, useEffect, useRef, useState } from 'react'
-import { type BufferGeometry, Group, Material, Matrix4, Vector3 } from 'three'
+import { type BufferGeometry, Group, Material, Matrix4 } from 'three'
 
 import useEntityRefObject from '@/hooks/useEntityRefObject'
 import useModelData from '@/hooks/useModelData'
@@ -120,72 +120,53 @@ export const InstancedModel: FC<InstacedModelProps> = ({
 }) => {
   const objectRef = useRef<Group>(null)
   const matrixRef = useRef(new Matrix4().fromArray(Array(16).fill(0)))
-  const isProperlyRenderedFirstTime = useRef(false)
 
-  const isInstancedMeshLoading = useInstancedMeshStore((state) => {
+  const batchStatus = useInstancedMeshStore((state) => {
     const batch = state.batches.get(resourceLocation)
-    if (batch == null) return false
+    if (batch == null) return
 
-    return batch.status === 'loading'
+    return batch.status
   })
 
   useEffect(() => {
-    if (isInstancedMeshLoading) return
+    invalidate()
+  }, [batchStatus])
+
+  useEffect(() => {
+    if (batchStatus === 'loading') return
 
     useInstancedMeshStore
       .getState()
       .allocateInstance(resourceLocation, modelId, entityId)
-      .then(() => invalidate())
-      .catch(console.error)
+    invalidate()
 
     return () => {
       useInstancedMeshStore.getState().freeInstance(resourceLocation, modelId)
     }
-  }, [resourceLocation, modelId, entityId, isInstancedMeshLoading])
+  }, [resourceLocation, modelId, entityId, batchStatus])
 
   useFrame(() => {
-    const { batches, setMatrix } = useInstancedMeshStore.getState()
-
-    if (objectRef.current == null) {
-      if (!isProperlyRenderedFirstTime.current) {
-        invalidate()
-      }
-
+    // if batch is not ready, retry on next frame
+    if (batchStatus !== 'ready' || objectRef.current == null) {
+      invalidate()
       return
     }
 
-    if (!isProperlyRenderedFirstTime.current) {
-      // we need to set matrix for the first time... or not?
-      setMatrix(resourceLocation, modelId, objectRef.current.matrixWorld)
+    const { setMatrix } = useInstancedMeshStore.getState()
 
-      const batch = batches.get(resourceLocation)
-      if (batch == null) return
-
-      const instanceData = batch.instances.get(modelId)
-      if (instanceData == null) return
-
-      // check for matrix are actually applied
-      const mat = new Matrix4()
-      batch.mesh.getMatrixAt(instanceData.instanceIndex, mat)
-      const vec = new Vector3().setFromMatrixScale(mat)
-      // scale vector extracted from matrix can be NaN if scale is zero
-      if (vec.toArray().every((d) => isNaN(d) || d === 0)) {
-        // not yet applied, wait for next frame and do it again
-        invalidate()
-        return
-      } else {
-        // ok applied
-        matrixRef.current.copy(objectRef.current.matrixWorld)
-
-        isProperlyRenderedFirstTime.current = true
-      }
-    }
-
-    objectRef.current.updateWorldMatrix(true, false)
-
+    // if object world matrix changed, set matrix of batch instance
     if (!objectRef.current.matrixWorld.equals(matrixRef.current)) {
-      matrixRef.current.copy(objectRef.current.matrixWorld)
-      setMatrix(resourceLocation, modelId, objectRef.current.matrixWorld)
+      const success = setMatrix(
+        resourceLocation,
+        modelId,
+        objectRef.current.matrixWorld,
+      )
+      if (success) {
+        matrixRef.current.copy(objectRef.current.matrixWorld)
+      } else {
+        // retry on next frame if failed to set matrix
+        invalidate()
+      }
     }
   })
 
